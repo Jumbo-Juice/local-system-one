@@ -50,4 +50,15 @@ Reasons:
 
 ## Model choice
 
-See `docs/research.md` → Observed → "Model selection" for the evaluation that picked the model.
+**Default: Qwen2.5-1.5B-Instruct, bfloat16, on the XPU** (`config/default.toml`).
+
+- No model was on disk, so candidates were downloaded from Hugging Face in size order:
+  Qwen2.5-0.5B-Instruct (1.0 GB), Qwen2.5-1.5B-Instruct (3.1 GB), Qwen3-1.7B (4.1 GB),
+  Qwen2.5-3B-Instruct (6.2 GB). All are ungated. The 3B uses the Qwen Research licence
+  (non-commercial); the others are Apache-2.0.
+- None met the pre-registered accuracy rule; all four fail rule-based goal selection. The
+  1.5B was chosen as the best speed/accuracy/memory trade-off that fits the iGPU with batch 32.
+  Details: `docs/research.md` → Observed → Model selection.
+- Rejected: Qwen3.5 small models (multimodal hybrids with linear-attention layers, which makes
+  padded batching riskier); Gemma 3 1B (gated, needs a licence click-through and a token).
+- Alternative on this machine: `config/lenovo-3b.toml` (Qwen2.5-3B, `max_batch = 8`).

@@ -26,8 +26,8 @@ VARIANTS = [
 OUT = Path(__file__).parent / "results"
 
 
-def run(model: str, device: str, dtype: str) -> dict:
-    backend = HFBackend(model, device=device, dtype=dtype)
+def run(model: str, device: str, dtype: str, max_batch: int = 32) -> dict:
+    backend = HFBackend(model, device=device, dtype=dtype, max_batch=max_batch)
     items = eval_items()
     report = {"backend": backend.info(), "variants": []}
     for answer, template in VARIANTS:
@@ -76,11 +76,12 @@ def main() -> None:
     ap.add_argument("--models", nargs="+", required=True)
     ap.add_argument("--device", default="auto")
     ap.add_argument("--dtype", default="auto")
+    ap.add_argument("--max-batch", type=int, default=32)
     args = ap.parse_args()
     OUT.mkdir(exist_ok=True)
-    reports = [run(m, args.device, args.dtype) for m in args.models]
+    reports = [run(m, args.device, args.dtype, args.max_batch) for m in args.models]
     path = OUT / f"model_eval_{time.strftime('%Y%m%d_%H%M%S')}.json"
-    path.write_text(json.dumps(reports, indent=1))
+    path.write_text(json.dumps(reports, indent=1), encoding="utf-8")
     print("wrote", path)
 
 

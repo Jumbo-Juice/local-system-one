@@ -1,0 +1,12 @@
+# Lenovo alternative: more accurate on navigation/targets, ~2x slower, near the 8 GB XPU limit.
+# Qwen2.5-3B-Instruct uses the Qwen Research licence (non-commercial), unlike the Apache-2.0 1.5B.
+[backend]
+kind = "hf"
+model = "Qwen/Qwen2.5-3B-Instruct"
+device = "auto"
+dtype = "bfloat16"
+max_batch = 8          # batch 32 ran out of XPU memory (Observed)
+
+[engine]
+answer = "label"
+answer_template = '{"choice": "<label>"}'
