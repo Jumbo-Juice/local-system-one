@@ -1,0 +1,135 @@
+{
+ "host": {
+  "hostname": "Reuben",
+  "os": "Windows-11-10.0.26200-SP0",
+  "cpu": "Intel(R) Core(TM) Ultra 7 256V",
+  "cpu_count": 8,
+  "ram_gb": 15.6,
+  "python": "3.13.9"
+ },
+ "backend": {
+  "kind": "hf",
+  "model": "Qwen/Qwen2.5-1.5B-Instruct",
+  "commit": "989aa7980e4cf806f80c7fef2b1adb7bc71aa306",
+  "parameters": 1543714304,
+  "dtype": "bfloat16",
+  "quantisation": "none (weights in bfloat16)",
+  "device": "xpu",
+  "device_name": "Intel(R) Arc(TM) 140V GPU (8GB)",
+  "attn_implementation": "sdpa",
+  "torch": "2.14.0+xpu",
+  "transformers": "5.17.0",
+  "max_batch": 32
+ },
+ "args": {
+  "config": "config/default.toml",
+  "sizes": [
+   10,
+   20,
+   26,
+   27
+  ],
+  "groups": [
+   10
+  ],
+  "problems": 30
+ },
+ "runs": [
+  {
+   "n": 10,
+   "full": {
+    "accuracy": 0.9333333333333333,
+    "latency_ms_per_problem": 58.72374666675265,
+    "prompt_tokens_mean": 108.86666666666666,
+    "mean_chosen_prob": 0.9926220204706885,
+    "mean_outside_mass": 0.001572971740764854
+   },
+   "tournaments": [
+    {
+     "group_size": 10,
+     "accuracy": 0.9333333333333333,
+     "agreement_with_full": 1.0,
+     "latency_ms_per_problem": 54.387349999160506,
+     "latency_ms_range": [
+      53.16019999736454,
+      56.12249999830965
+     ],
+     "rounds_mean": 1,
+     "answer_survived_round1": 0.9333333333333333
+    }
+   ]
+  },
+  {
+   "n": 20,
+   "full": {
+    "accuracy": 0.8,
+    "latency_ms_per_problem": 66.68961666679631,
+    "prompt_tokens_mean": 153.16666666666666,
+    "mean_chosen_prob": 0.8533548054830554,
+    "mean_outside_mass": 0.010870682525480473
+   },
+   "tournaments": [
+    {
+     "group_size": 10,
+     "accuracy": 0.9666666666666667,
+     "agreement_with_full": 0.7666666666666667,
+     "latency_ms_per_problem": 124.79144999815617,
+     "latency_ms_range": [
+      122.95430000085616,
+      714.3266000057338
+     ],
+     "rounds_mean": 2,
+     "answer_survived_round1": 0.9666666666666667
+    }
+   ]
+  },
+  {
+   "n": 26,
+   "full": {
+    "accuracy": 0.8666666666666667,
+    "latency_ms_per_problem": 68.32037666681572,
+    "prompt_tokens_mean": 179.5,
+    "mean_chosen_prob": 0.7970444536186078,
+    "mean_outside_mass": 0.012015492938262269
+   },
+   "tournaments": [
+    {
+     "group_size": 10,
+     "accuracy": 0.9333333333333333,
+     "agreement_with_full": 0.9,
+     "latency_ms_per_problem": 140.19555000049877,
+     "latency_ms_range": [
+      138.33639999938896,
+      193.68350000149803
+     ],
+     "rounds_mean": 2,
+     "answer_survived_round1": 0.9333333333333333
+    }
+   ]
+  },
+  {
+   "n": 27,
+   "full": {
+    "accuracy": 0.7,
+    "latency_ms_per_problem": 67.78339333322947,
+    "prompt_tokens_mean": 183.6,
+    "mean_chosen_prob": 0.7861281659184306,
+    "mean_outside_mass": 0.13779758560277752
+   },
+   "tournaments": [
+    {
+     "group_size": 10,
+     "accuracy": 0.9666666666666667,
+     "agreement_with_full": 0.7,
+     "latency_ms_per_problem": 141.46194999921136,
+     "latency_ms_range": [
+      139.40399999410147,
+      152.54940000158967
+     ],
+     "rounds_mean": 2,
+     "answer_survived_round1": 0.9666666666666667
+    }
+   ]
+  }
+ ]
+}
