@@ -12,6 +12,9 @@ Implementation choices (the sources leave these open):
 - When a tier's choice changes, every tier below it is re-decided on the next tick.
 - All due decisions of all agents in a tick go into ONE batch. Each uses the goals that
   were current at the start of the tick, so a new goal reaches lower tiers one tick later.
+- With ``group_size`` set, a tier with more options than that is decided by tournament
+  sampling, ONE round per tick, inside the same batch. This keeps per-tick work bounded.
+  The tier keeps its previous goal until the tournament finishes.
 """
 
 from __future__ import annotations
@@ -20,6 +23,7 @@ from dataclasses import dataclass
 from typing import Callable, Sequence, Union
 
 from .engine import Decision, DecisionResult
+from .tournament import Tournament
 
 Options = Union[Sequence[str], Callable[[dict], Sequence[str]]]
 
@@ -50,6 +54,7 @@ class GoalStack:
         self._decided_at: dict[str, int] = {}
         self._stale: set[str] = set()
         self._pending: set[str] = set()  # decided over several ticks (e.g. a tournament)
+        self.tournaments: dict[str, Tournament] = {}  # tier name -> tournament in progress
 
     def tier(self, name: str) -> Tier:
         return next(t for t in self.tiers if t.name == name)
@@ -80,6 +85,10 @@ class GoalStack:
     def decision(self, tier: Tier, state: str) -> Decision:
         return Decision(tier.instruction, self.options(tier), state=state, context=self.context(tier))
 
+    def invalidate(self, name: str) -> None:
+        """Re-decide this tier on the next tick (e.g. its target was reached or disappeared)."""
+        self._stale.add(name)
+
     def mark_pending(self, tier: Tier) -> None:
         """The tier is being decided over several ticks; do not schedule it again meanwhile."""
         self._pending.add(tier.name)
@@ -99,18 +108,53 @@ class GoalStack:
         return changed
 
 
-def step_all(engine, agents: Sequence[tuple[GoalStack, str]], tick: int) -> list[tuple[int, Tier, DecisionResult]]:
+State = Union[str, Callable[[Tier], str]]
+
+
+def step_all(
+    engine, agents: Sequence[tuple[GoalStack, State]], tick: int, group_size: int | None = None
+) -> list[tuple[int, Tier, DecisionResult, Tournament | None]]:
     """One tick for many agents: all due tier decisions in ONE batched engine call.
 
-    ``agents`` is a list of (goal stack, state text). Results are applied bottom-up so
-    that a higher tier that changes in this tick still marks its lower tiers stale.
+    ``agents`` is a list of (goal stack, state), where state is a string or a function
+    tier -> state text. With ``group_size``, tiers with more options than that run as
+    tournaments, one round per tick. Results are applied bottom-up, so a higher tier that
+    changes in this tick still marks its lower tiers stale.
+
+    Returns (agent index, tier, result, tournament or None) for every decision made.
     """
-    jobs = []
+    jobs: list[tuple[int, Tier, Decision, Tournament | None]] = []
     for i, (stack, state) in enumerate(agents):
+        state_of = state if callable(state) else (lambda _tier, s=state: s)
         for tier in stack.due(tick):
-            jobs.append((i, tier, stack.decision(tier, state)))
-    results = engine.decide_batch([d for _, _, d in jobs]) if jobs else []
-    out = [(i, tier, r) for (i, tier, _), r in zip(jobs, results)]
-    for i, tier, r in sorted(out, key=lambda x: -agents[x[0]][0].tiers.index(x[1])):
-        agents[i][0].apply(tier, r.choice, tick, r.prob)
+            options = stack.options(tier)
+            if not options:
+                continue
+            if group_size and len(options) > group_size:
+                snapshot, context = state_of(tier), stack.context(tier)
+                stack.tournaments[tier.name] = Tournament(
+                    options, group_size,
+                    lambda opts, t=tier, s=snapshot, c=context: Decision(t.instruction, tuple(opts), state=s, context=c),
+                )
+                stack.mark_pending(tier)
+            else:
+                jobs.append((i, tier, stack.decision(tier, state_of(tier)), None))
+        for name, tour in stack.tournaments.items():
+            jobs.extend((i, stack.tier(name), d, tour) for d in tour.pending())
+
+    results = engine.decide_batch([d for _, _, d, _ in jobs]) if jobs else []
+    out = [(i, tier, r, tour) for (i, tier, _, tour), r in zip(jobs, results)]
+
+    commits = [(i, tier, r.choice, r.prob) for i, tier, r, tour in out if tour is None]
+    rounds: dict[int, tuple[int, Tier, Tournament, list]] = {}
+    for i, tier, r, tour in out:
+        if tour is not None:
+            rounds.setdefault(id(tour), (i, tier, tour, []))[3].append(r)
+    for i, tier, tour, rs in rounds.values():
+        tour.submit(rs)
+        if tour.done:
+            del agents[i][0].tournaments[tier.name]
+            commits.append((i, tier, tour.winner, tour.final_probs()[tour.winner]))
+    for i, tier, choice, p in sorted(commits, key=lambda c: -agents[c[0]][0].tiers.index(c[1])):
+        agents[i][0].apply(tier, choice, tick, p)
     return out

@@ -287,3 +287,32 @@ Text-generation baseline (same run; 16 decisions, ~350-token prompts, greedy, no
   read-out of what the model would have said.
 - Batched bare-label generation (85.2 ms) was ~3% faster than the batched single-token read
   (88.3 ms), although it does strictly more work. Not explained; not investigated.
+
+### Tournament sampling vs one full decision (step 6)
+
+Task: "Which of these is a <category>?", with exactly one category member hidden among n−1
+words from nine other categories (`bench/tournament_compare.py`). 30 problems per size,
+Qwen2.5-1.5B bf16. A full decision uses letters up to 26 options and two-letter labels above.
+Tournament groups are contiguous and near-equal in size; one batched pass per round. Raw data:
+`bench/results/tournament_compare_*.json`.
+
+| options | full decision | tournament, groups ≤10 | tournament, groups ≤26 | full ms | tournament(10) ms |
+|---:|---:|---:|---:|---:|---:|
+| 10 | 93% | 93% (1 round, identical) | — | 59 | 54 |
+| 20 | 80% | 97% | — | 67 | 125 |
+| 26 | 87% | 93% | — | 68 | 140 |
+| 27 | 70% (two-letter labels) | 97% | — | 68 | 141 |
+| 40 | 47% | 100% | 83% | 92 | 173 |
+| 80 | 17% | 80% | 73% | 120 | 268 |
+
+- **One full decision degrades quickly with the number of options** on this 1.5B model: already
+  47% at 40 options and 17% at 80. S1 saw its layer stop working well after ~100 options
+  with an 8B model.
+- **Tournaments fix most of it**, as S1 reports: 100% at 40 options and 80% at 80 with groups
+  of 10, at about 2× the latency (two rounds). Smaller groups did better than groups of 26.
+- The switch from single letters to two-letter labels (26 → 27 options) coincides with a drop
+  from 87% to 70%. With 30 problems per cell (±~8 points), this suggests but does not prove
+  that two-letter labels hurt this model. S1 found labels better than indexes for many
+  choices, but it did not compare single letters with letter pairs.
+- Where the tournament loses, the answer usually fell in the final round rather than in its
+  group: with groups of 10 the right answer won its first-round group in 93–100% of problems.
