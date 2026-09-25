@@ -6,6 +6,7 @@ model = "Qwen/Qwen2.5-1.5B-Instruct"
 device = "auto"        # auto -> cuda, then xpu, then cpu
 dtype = "bfloat16"     # "float32" makes batched == sequential exact, but is ~7x slower on this iGPU
 max_batch = 32         # decisions per forward pass (larger batches are split)
+head_dtype = "float32"   # LM head in float32: finer probabilities, no exact ties (+0.9 GB). See docs/research.md.
 
 [engine]
 answer = "label"                          # single-token labels A, B, C ... (AA, AB ... above 26)

@@ -78,3 +78,26 @@ def test_hf_continuation_matches_generic_implementation(hf_backend, logit_tolera
     for f, s in zip(fast, slow):
         assert f.shape == s.shape
         assert np.abs(f - s).max() < logit_tolerance
+
+
+@pytest.mark.model
+def test_hf_float32_head_gives_float32_logits_close_to_model_head(hf_backend):
+    import torch
+
+    from system_one.backends.hf import _Float32Head
+
+    be = hf_backend
+    if be.dtype_name == "float32" or be.head_dtype == "float32":
+        pytest.skip("head already runs in float32")
+    seqs = [be.encode(be.render_chat("Answer briefly.", "Capital of France? One word."))]
+    b = be.next_token_logits(seqs)[0]
+    original = be.model.get_output_embeddings()
+    be.model.set_output_embeddings(_Float32Head.build(torch, original).to(be.device))
+    try:
+        a = be.next_token_logits(seqs)[0]
+    finally:  # the backend is shared by the whole test session
+        be.model.set_output_embeddings(original)
+    assert a.argmax() == b.argmax()
+    # The bf16 head rounds logits to ~0.125 steps; the float32 head does not.
+    assert 0 < np.abs(a - b).max() < 0.5
+    assert len(np.unique(a)) > len(np.unique(b))

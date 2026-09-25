@@ -29,22 +29,23 @@ facts with speculation. Its claims about Jev internals are treated as unverified
 - **Documented [S2]:** the name comes from Kahneman's System One (fast) vs System Two (slow and
   reflective).
 - **Documented [S1, S2]:** Jev takes a human-language prompt but outputs only *decisions*: answers to
-  user-provided multiple-choice questions. S3 calls such models "fast general classifiers".
-- **Documented [S5]:** end-to-end latency of "70ms-500ms"; up to 255 choices per question.
+  user-provided multiple-choice questions. S3 describes such models as fast, general-purpose
+  classifiers.
+- **Documented [S5]:** end-to-end latency of 70–500 ms; up to 255 choices per question.
 - **Documented [S1]:** any LLM can be turned into a System One-style model without changing the model,
   as long as you can read the logits and prefill the prompt.
 
 ## Single-token decisions and logits
 
-- **Documented [S2]:** instead of generating a structured answer token by token, "prefill the response
-  with `"choice": "` and generate one token, restricted to the user-provided choices". The model reads
-  all input tokens in parallel, so one forward pass gives the answer.
+- **Documented [S2]:** instead of generating a structured answer token by token, prefill the
+  response with `"choice": "` and generate a single token, restricted to the allowed choices. The
+  model reads all input tokens in parallel, so one forward pass gives the answer.
 - **Documented [S4]:** the reference code applies the chat template and appends the prefill
   `choice_index:`. Only the logits of the allowed tokens are kept, and a softmax is taken over them.
   It checks at start-up that each index is one token that decodes correctly after the prefill.
   It reports `confidence = 1 - normalised entropy`.
-- **Documented [S1, footnote 3]:** indexes vs labels. Labels ("just picking some token to associate
-  with the choice") worked "way better" on Wikiracing but not on Doom. **Documented [S4]:** the label
+- **Documented [S1, footnote 3]:** indexes vs labels. Labels (an arbitrary token associated with each
+  choice) worked much better than indexes on Wikiracing, but not on Doom. **Documented [S4]:** the label
   variant uses the first 100 two-letter upper-case strings (`AA`, `AB`, ...) that are single tokens.
 - **Documented [S2, footnote 5]:** multi-token options are an open question. Suggestions include
   mapping them to single tokens, having the model output an index, or scoring only the first token.
@@ -65,9 +66,10 @@ facts with speculation. Its claims about Jev internals are treated as unverified
 ## Batching
 
 - **Documented [S1, S2]:** many single-token decisions go into one forward pass through ordinary
-  inference batching. This is what makes the approach "consistently fast".
-- **Documented [S1, footnote 2]:** the Qwen3-8B Doom demo made 6–7 batched decisions every ~500 ms on
-  an RTX 4090 and every ~190 ms on an H100. The tool-calling version made one decision every ~600 ms.
+  inference batching. S1 credits this for the approach's consistent speed.
+- **Documented [S1 and its footnote 2]:** the Qwen3-8B Doom demo made 6–7 batched decisions per loop.
+  The loop took ~500 ms on an RTX 4090 and ~190 ms on an H100. The tool-calling version made one
+  decision every ~600 ms (also on the H100).
 - **Documented [S4]:** left padding, `position_ids` from the cumulative attention mask, and
   `logits_to_keep=1`. Optional shared-prefix KV caching (`cache_prefix`) is recommended for more than
   3 questions.
@@ -86,18 +88,23 @@ facts with speculation. Its claims about Jev internals are treated as unverified
 - **Documented [S4]:** the Doom demo plans with `goal`, then `target` (whose candidates depend on the
   *newly chosen* goal). Both are committed together, and it re-plans after 3 *applied* control
   inferences. This is a count of decisions, not a wall-clock timer.
-- **Implementation choice:** see `system_one/goals.py`. Tier periods are counted in ticks. A child
-  tier's options may depend on the parent's current goal.
+- **Implementation choices** (`system_one/goals.py`): tier periods are counted in ticks, not
+  seconds. A tier's options may depend on the goals above it, and its prompt context lists those
+  goals. When a goal changes, every lower tier is re-decided on the next tick. All due decisions
+  of all agents in a tick share one batch, so a new goal reaches lower tiers one tick later. A
+  tier with more options than the tournament group size runs as a tournament, one round per
+  tick, and keeps its old goal until the tournament ends. The demo uses three tiers (strategy,
+  target, action) instead of S1's four.
 
 ## Tournament choice sampling
 
-- **Documented [S1]:** a Wikipedia page can have more than 1000 links. S1's layer "stopped working
-  well" after about 100 choices. Jev's own approach for large sets is "a 2 stage-system of scoring
-  independently then making an explicit choice" [S5]. That failed for Qwen3-8B: hundreds of links got
-  the same top score.
-- **Documented [S1]:** tournament sampling is to "fed a hundred links at a time into each choice, then
-  did a second pass with the chosen links". "Ordinary LLMs are way better at relative judgements than
-  absolute ratings."
+- **Documented [S1]:** a Wikipedia page can have more than 1000 links. S1's layer stopped working
+  well after about 100 choices. For large sets Jev first scores options independently, then makes
+  an explicit choice [S5]. S1 tried that with Qwen3-8B, and it failed: hundreds of links got the
+  same top score.
+- **Documented [S1]:** tournament sampling. S1 put about a hundred links into each choice, then
+  ran a second pass over the winners. In S1's words: "Ordinary LLMs are way better at relative
+  judgements than absolute ratings."
 - **Documented [S4]:** groups are contiguous, at most `group_size` each, in the original order. The
   winners are regrouped recursively until one remains.
 - **Inferred:** a tournament can eliminate the best option if a group mis-ranks it. Its final
@@ -122,10 +129,10 @@ facts with speculation. Its claims about Jev internals are treated as unverified
 
 ## What is unknown about Jev
 
-- **Documented [S1]:** "We don't know exactly how Jev works" (people guess diffusion, Transformer
-  tweaks, or a new model type). **Documented [S5]:** TypeSafe mentions "a new model architecture,
-  parallel sampler ... and training method we call Reinforcement Learning for Calibrated Decisions
-  (RLCD)". It gives no details on architecture, size, training data, or RLCD.
+- **Documented [S1]:** how Jev works is not known. People guess diffusion, Transformer tweaks, or a
+  new model type. **Documented [S5]:** TypeSafe says it built a new model architecture, a parallel
+  sampler and a training method called Reinforcement Learning for Calibrated Decisions (RLCD). It
+  gives no details on the architecture, model size, training data, or RLCD.
 - **Unverified (from R only):** that "JEV" means "Joint Embedding Vectors"; per-question output heads;
   CLIP-style joint embedding of state and options; a 32k context window; a "Noul" question type;
   benchmark and pricing tables beyond S5. No primary source above states any of these.
@@ -164,8 +171,23 @@ Measured on the Lenovo (Core Ultra 7 256V, Arc 140V iGPU via PyTorch XPU; see
 - With transformers 5.17, *omitting* explicit `position_ids` also gave correct results for
   Qwen2.5 (same ~5e-5 error). The library seems to derive positions from the mask. We still
   pass them explicitly, which is safe across library versions and models.
-- The first XPU forward pass in a process takes ~3–4 s (kernel compilation). Later ones take
-  tens of ms. Benchmarks warm up first.
+- The first XPU forward pass in a process takes 1.5–4 s (kernel compilation). Later ones take
+  tens of ms. Benchmarks and the demo warm up first.
+
+### Probability resolution in bf16
+
+- In bfloat16 the LM head's output logits are rounded to steps of ~0.125 at typical magnitudes
+  (20–40). Options whose logits differ by less than a step **tie exactly**. That step is ~13% in
+  relative probability. Example: in text mode, Qwen2.5-1.5B scored "move north" and "move south"
+  exactly 0.500 / 0.500.
+- **Implementation choice:** `head_dtype = "float32"` swaps in a float32 copy of the LM head only.
+  The transformer layers stay bf16. On the 58-item eval set (1.5B) this removed both exact ties
+  (the example became 0.501 / 0.499). Accuracy (66%) was unchanged, and latency was not
+  measurably affected (58-decision batch: 3.2 s vs 3.5 s). It costs +0.93 GB of device memory.
+  It does **not** reduce batched-vs-sequential drift (max |Δp| 0.061 vs 0.048); that comes from
+  the bf16 layers.
+- The Lenovo default config enables it. The 3B config does not (memory). The benchmark tables
+  and the demo comparison below were measured before it was enabled, with the bf16 head.
 
 ### Tokenisation of labels (Qwen2.5 tokenizer)
 
@@ -342,8 +364,8 @@ mock backend with tiered goals. Mean of 3 seeds
 | model, flat | 15.7 | 11.0 | 5.7 | 0.7 | 4.0 | 198, 202 |
 | random decisions, tiered goals | 17.7 | 10.7 | 8.3 | 1.7 | 6.0 | 3, 6 |
 
-- Flat control was **no better than random** at collecting gems and food. This matches S1:
-  "just supplying the game inputs as choices doesn't work very well".
+- Flat control was **no better than random** at collecting gems and food. This matches S1's
+  report that passing only the raw game inputs as choices did not work well.
 - Tiered goals gave 2.3× the gems and 5.4× the food of flat control, at ~1.6× the tick latency.
   They also took **more hazard hits** (10.7 vs 5.7): purposeful movement walked into roaming
   hazards more often. Three seeds only.
