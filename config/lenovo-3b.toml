@@ -6,6 +6,7 @@ model = "Qwen/Qwen2.5-3B-Instruct"
 device = "auto"
 dtype = "bfloat16"
 max_batch = 8          # batch 32 ran out of XPU memory (Observed)
+head_dtype = "model"   # bf16 head: a float32 copy (+1.2 GB) would leave ~0.5 GB for activations (not tested).
 
 [engine]
 answer = "label"
