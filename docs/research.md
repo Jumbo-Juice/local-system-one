@@ -1,0 +1,155 @@
+# Research notes
+
+Short, implementation-focused notes for this proof of concept. Every claim has a label:
+
+- **Documented**: stated in a source (cited as [S1]..[S5], [R]).
+- **Observed**: measured on this machine (see the "Observed" section at the end).
+- **Inferred**: follows from the sources but is not stated in them.
+- **Implementation choice**: our own decision.
+
+This project is **not** Jev and does not reproduce Jev. It reproduces only the publicly described
+*inference pattern* on an ordinary open-weight LLM.
+
+## Sources
+
+| Id | Source | Where read |
+|----|--------|-----------|
+| S1 (primary) | Sean Goedecke, [Two techniques for working with System One models](https://www.seangoedecke.com/two-techniques-for-working-with-system-one-models/) | Obsidian vault `OneDrive/Documents/Obsidian/Juji's/Clippings/` (byte-identical copy in repo root) |
+| S2 | Sean Goedecke, [Jev means structured output is interesting again](https://www.seangoedecke.com/jev-means-structured-output-is-interesting-again/) | same vault folder |
+| S3 | Sean Goedecke, [System One models like Jev can train their own replacements](https://www.seangoedecke.com/system-one-models-can-train-their-own-replacements/) | same vault folder |
+| S4 | [sgoedecke/system-one](https://github.com/sgoedecke/system-one) (linked from S1): `system_one/inference.py`, `demo/labels.py`, `demo/wikirace/run.py`, `demo/README.md` | GitHub `main`, read 2026-09-26 |
+| S5 | TypeSafe, [Introducing System One models and Jev](https://typesafe.ai/blog/introducing-system-one-models-and-jev) (linked from S1 and S2) | web, read 2026-09-26 |
+| R (secondary) | `deep-research-report.md` in the repo root | local file |
+
+R was supposed to be pasted into the prompt. It was not, so the copy in the repo was used. R mixes
+facts with speculation. Its claims about Jev internals are treated as unverified (see "Unknown").
+
+## What "System One" means in the sources
+
+- **Documented [S2]:** the name comes from Kahneman's System One (fast) vs System Two (slow and
+  reflective).
+- **Documented [S1, S2]:** Jev takes a human-language prompt but outputs only *decisions*: answers to
+  user-provided multiple-choice questions. S3 calls such models "fast general classifiers".
+- **Documented [S5]:** end-to-end latency of "70ms-500ms"; up to 255 choices per question.
+- **Documented [S1]:** any LLM can be turned into a System One-style model without changing the model,
+  as long as you can read the logits and prefill the prompt.
+
+## Single-token decisions and logits
+
+- **Documented [S2]:** instead of generating a structured answer token by token, "prefill the response
+  with `"choice": "` and generate one token, restricted to the user-provided choices". The model reads
+  all input tokens in parallel, so one forward pass gives the answer.
+- **Documented [S4]:** the reference code applies the chat template and appends the prefill
+  `choice_index:`. Only the logits of the allowed tokens are kept, and a softmax is taken over them.
+  It checks at start-up that each index is one token that decodes correctly after the prefill.
+  It reports `confidence = 1 - normalised entropy`.
+- **Documented [S1, footnote 3]:** indexes vs labels. Labels ("just picking some token to associate
+  with the choice") worked "way better" on Wikiracing but not on Doom. **Documented [S4]:** the label
+  variant uses the first 100 two-letter upper-case strings (`AA`, `AB`, ...) that are single tokens.
+- **Documented [S2, footnote 5]:** multi-token options are an open question. Suggestions include
+  mapping them to single tokens, having the model output an index, or scoring only the first token.
+- **How this differs from normal generation. Documented [S2]:** normal LLM output is autoregressive:
+  one forward pass per output token, each conditioned on the last. A decision needs exactly one forward
+  pass over the prompt, then one read of the next-token distribution at the last position. There is
+  no sampling loop.
+- **Inferred:** the returned probabilities are the model's next-token softmax, re-normalised over the
+  allowed tokens. Nothing in the method makes them calibrated. S2 (footnote 6) doubts Jev's own
+  calibration claim.
+- **Implementation choice:** labels are validated by tokenising `prompt + label + closing text` and
+  checking that the prompt tokens are an exact prefix and the label is exactly one token. S4 checks
+  decoding only. A decode check can pass even when the tokenizer would merge the label with the
+  character before or after it.
+- **Implementation choice:** we also report the probability mass that falls *outside* the allowed
+  tokens, as a diagnostic of how well the prompt constrains the model.
+
+## Batching
+
+- **Documented [S1, S2]:** many single-token decisions go into one forward pass through ordinary
+  inference batching. This is what makes the approach "consistently fast".
+- **Documented [S1, footnote 2]:** the Qwen3-8B Doom demo made 6–7 batched decisions every ~500 ms on
+  an RTX 4090 and every ~190 ms on an H100. The tool-calling version made one decision every ~600 ms.
+- **Documented [S4]:** left padding, `position_ids` from the cumulative attention mask, and
+  `logits_to_keep=1`. Optional shared-prefix KV caching (`cache_prefix`) is recommended for more than
+  3 questions.
+- **Implementation choice:** we use the same padding scheme. Shared-prefix caching is not implemented
+  (see Limitations in the README).
+
+## Tiered goals
+
+- **Documented [S1]:** passing only game inputs as choices did not work. The model held "shoot" 100%
+  of the time and wandered. One ~200 ms forward pass is enough to react, but not enough to work out a
+  short-term goal. The fix: periodically ask the model to choose from a *fixed* set of short-term
+  goals, and put the chosen goal into the fast prompt.
+- **Documented [S1]:** a proposed layered system: a strategic goal every ~10 s, a tactical subgoal
+  every ~5 s based on it, specific targets every ~1 s, and an inner input loop every ~100 ms. S1
+  suggests writing all possible goals down ahead of time rather than generating them with an LLM.
+- **Documented [S4]:** the Doom demo plans with `goal`, then `target` (whose candidates depend on the
+  *newly chosen* goal). Both are committed together, and it re-plans after 3 *applied* control
+  inferences. This is a count of decisions, not a wall-clock timer.
+- **Implementation choice:** see `system_one/goals.py`. Tier periods are counted in ticks. A child
+  tier's options may depend on the parent's current goal.
+
+## Tournament choice sampling
+
+- **Documented [S1]:** a Wikipedia page can have more than 1000 links. S1's layer "stopped working
+  well" after about 100 choices. Jev's own approach for large sets is "a 2 stage-system of scoring
+  independently then making an explicit choice" [S5]. That failed for Qwen3-8B: hundreds of links got
+  the same top score.
+- **Documented [S1]:** tournament sampling is to "fed a hundred links at a time into each choice, then
+  did a second pass with the chosen links". "Ordinary LLMs are way better at relative judgements than
+  absolute ratings."
+- **Documented [S4]:** groups are contiguous, at most `group_size` each, in the original order. The
+  winners are regrouped recursively until one remains.
+- **Inferred:** a tournament can eliminate the best option if a group mis-ranks it. Its final
+  probabilities only cover the last round's options. They are not a distribution over all options.
+
+## Stated limitations and edge cases
+
+- **Documented [S1, S2]:** far less flexible than an LLM. No long-form output.
+- **Documented [S2]:** no test-time compute, so quality is capped near non-reasoning LLMs.
+- **Documented [S2]:** "can't hallucinate" is a semantic dodge. The model can still pick the wrong
+  option.
+- **Documented [S2, footnote 6]:** the calibration claim is unsupported. The probabilities may be plain
+  logit probabilities.
+- **Documented [S1, S2]:** multi-token options, the choice-count ceiling (~100 in S1's layer), and
+  labels vs indexes are all open issues.
+- **Documented [S1]:** latency depends on the hardware (4090 vs H100). The state must be converted to
+  text for a text-only model.
+- **Documented [S1, S3]:** a generic System One model is larger and slower than a task-specific
+  classifier.
+- **Documented [S2]:** a model fine-tuned only for structured output (such as Jev) will likely beat
+  retrofitted open models.
+
+## What is unknown about Jev
+
+- **Documented [S1]:** "We don't know exactly how Jev works" (people guess diffusion, Transformer
+  tweaks, or a new model type). **Documented [S5]:** TypeSafe mentions "a new model architecture,
+  parallel sampler ... and training method we call Reinforcement Learning for Calibrated Decisions
+  (RLCD)". It gives no details on architecture, size, training data, or RLCD.
+- **Unverified (from R only):** that "JEV" means "Joint Embedding Vectors"; per-question output heads;
+  CLIP-style joint embedding of state and options; a 32k context window; a "Noul" question type;
+  benchmark and pricing tables beyond S5. No primary source above states any of these.
+- **Not used:** R's "OpenJev" per-option entailment scoring (one forward pass per option, then a
+  softmax over entailment scores). It is a different technique from single-token decisions and is not
+  used here.
+
+## What this project reproduces, and what it does not
+
+Reproduces (the inference pattern only):
+
+- single-token choice decisions read from the next-token logits of an ordinary local LLM
+- batching of independent decisions into one forward pass
+- tiered goals
+- tournament sampling for large choice sets
+
+Does not reproduce:
+
+- Jev's model, architecture, training, or RLCD
+- calibrated probabilities
+- TypeSafe's API or SDK
+- Score or yes/no question types
+- any remote inference
+
+## Observed
+
+Filled in from experiments on this machine; see the sections below and `bench/results/`.

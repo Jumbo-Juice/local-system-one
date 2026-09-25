@@ -1,0 +1,10 @@
+# No model: seeded pseudo-random logits. For tests and for running the demo without weights.
+[backend]
+kind = "mock"
+seed = 0
+delay_ms = 0.0          # optional fake latency per forward pass
+delay_per_seq_ms = 0.0  # optional fake latency per sequence in the batch
+
+[engine]
+answer = "label"
+answer_template = '{"choice": "<label>"}'

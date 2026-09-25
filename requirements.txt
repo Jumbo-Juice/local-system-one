@@ -1,0 +1,8 @@
+# PyTorch: install the build for your hardware FIRST, e.g.
+#   Intel GPU (Arc / Core Ultra):  pip install torch --index-url https://download.pytorch.org/whl/xpu
+#   NVIDIA GPU:                    pip install torch --index-url https://download.pytorch.org/whl/cu128
+#   CPU only:                      pip install torch --index-url https://download.pytorch.org/whl/cpu
+torch>=2.8
+transformers>=5.0
+numpy
+pytest
