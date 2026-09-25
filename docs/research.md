@@ -314,5 +314,8 @@ Tournament groups are contiguous and near-equal in size; one batched pass per ro
   from 87% to 70%. With 30 problems per cell (±~8 points), this suggests but does not prove
   that two-letter labels hurt this model. S1 found labels better than indexes for many
   choices, but it did not compare single letters with letter pairs.
-- Where the tournament loses, the answer usually fell in the final round rather than in its
-  group: with groups of 10 the right answer won its first-round group in 93–100% of problems.
+- Where the errors happen: with groups of 10 and up to 40 options, every tournament error was
+  a round-1 loss (accuracy equals round-1 survival). At 80 options the answer survived round 1
+  in 93% of problems but won the final of 8 in only 80% overall, so most errors came in the
+  final. With groups of 26, most errors were round-1 losses (40 options: 87% survived, 83%
+  won).
