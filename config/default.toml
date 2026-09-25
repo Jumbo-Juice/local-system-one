@@ -1,0 +1,13 @@
+# Lenovo (Core Ultra 7 256V, Arc 140V iGPU, 16 GB): PyTorch XPU + transformers.
+# Why this model: docs/research.md -> Observed -> Model selection. Why this runtime: docs/machine.md.
+[backend]
+kind = "hf"
+model = "Qwen/Qwen2.5-1.5B-Instruct"
+device = "auto"        # auto -> cuda, then xpu, then cpu
+dtype = "bfloat16"     # "float32" makes batched == sequential exact, but is ~7x slower on this iGPU
+max_batch = 32         # decisions per forward pass (larger batches are split)
+
+[engine]
+answer = "label"                          # single-token labels A, B, C ... (AA, AB ... above 26)
+answer_template = '{"choice": "<label>"}' # prefill + label + suffix
+multi_token = "auto"                      # only used when answer = "text"
