@@ -1,0 +1,19 @@
+# Example for the NUC 12. Copy to config/nuc.toml, edit, then run with --config config/nuc.toml
+# (or set SYSTEM_ONE_CONFIG=config/nuc.toml). No code changes are needed.
+#
+# Pick the device for the NUC's hardware:
+#   NVIDIA GPU        device = "cuda"  (install the CUDA build of torch)
+#   Intel Arc / Iris  device = "xpu"   (install the XPU build of torch)
+#   CPU only          device = "cpu", dtype = "float32" or "bfloat16"
+# Any decoder-only Hugging Face chat model should work. The engine checks at runtime that
+# its labels are single tokens after the prefill and fails with a clear error if not.
+[backend]
+kind = "hf"
+model = "Qwen/Qwen2.5-7B-Instruct"   # larger model; ~15 GB of weights in bfloat16
+device = "auto"
+dtype = "bfloat16"
+max_batch = 16          # lower this if the device runs out of memory
+
+[engine]
+answer = "label"
+answer_template = '{"choice": "<label>"}'

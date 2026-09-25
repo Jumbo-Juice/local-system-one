@@ -189,3 +189,101 @@ On the 58-item eval set (`bench/eval_set.py`), one batched pass vs 58 single pas
 
 The two bf16 flips were near-ties in the sequential run (top-2 margins 0.056 and 0.000).
 Batching is exact in float32. In bf16 it changes probabilities by a few percent.
+
+### Model selection
+
+Rule, fixed before running: *pick the smallest model with ≥ 80% accuracy in every category*
+(general, navigation, goal, target) of `bench/eval_set.py` (58 items; a smoke test, not a
+benchmark). Label mode, `{"choice": "<label>"}` template, bf16 on the Arc 140V.
+
+| Model | general | navigation | goal (numeric rules) | target (nearest of 4–12) | goal in words* | mean chosen p |
+|-------|--------:|-----------:|------:|-------:|------:|------:|
+| Qwen2.5-0.5B-Instruct | 79% | 38% | 30% | 12% | 20% | 0.57 |
+| Qwen2.5-1.5B-Instruct | 93% | 81% | 30% | 50% | 50% | 0.77 |
+| Qwen3-1.7B (no thinking) | 93% | 38% | 30% | 75% | 50% | 0.99 |
+| Qwen2.5-3B-Instruct | 86% | 94% | 40% | 75% | 40% | 0.97 |
+
+\* `goal_words` was added after the first run and is not part of the rule. It gives the
+same situations with the condition named in words ("Energy: LOW") and no rule list.
+
+- **No model passes the rule.** Every model fails goal selection from numeric rules: the Qwen2.5
+  models answer "find food" for all 10 items. This matches S1's report that one forward pass is
+  not enough to derive a goal (its Doom model held "shoot" 100% of the time).
+- Qwen2.5-3B in bf16 ran **out of XPU memory** at batch 32. It works with `max_batch = 8`.
+- The `Answer: <label>` template scored the same or 1–3 items better than `{"choice": "` on every
+  model. That is within noise on 58 items, so we keep the S2-documented JSON prefill.
+- Text mode (the model writes the option text) with the multi-token fallback was the most
+  accurate for the 3B (78%), but 2.4× slower than label mode.
+- **Fallback choice (made after seeing the results, so it is an implementation choice, not the
+  rule):** Qwen2.5-1.5B-Instruct as the Lenovo default. It is Apache-2.0, about 2× faster than
+  the 3B, and fits batch 32. `config/lenovo-3b.toml` selects the 3B. Consequences for the demo:
+  the state names conditions in words, targets are given as relative offsets, and goals come
+  from a slower tier. These are the design responses S1 describes.
+
+### Confidence vs accuracy (not calibration training, just a measurement)
+
+Chosen-option probability vs correctness on the same 58 items (label mode):
+
+| Model | mean chosen p | accuracy | ECE (5 bins) | items with p ≥ 0.9: accuracy |
+|-------|------:|------:|------:|------:|
+| Qwen2.5-0.5B-Instruct | 0.57 | 0.40 | 0.19 | 4 items: 1.00 |
+| Qwen2.5-1.5B-Instruct | 0.77 | 0.66 | 0.11 | 22 items: 0.86 |
+| Qwen3-1.7B | 0.99 | 0.57 | 0.42 | 56 items: 0.59 |
+| Qwen2.5-3B-Instruct | 0.97 | 0.71 | 0.27 | 51 items: 0.75 |
+
+All four are overconfident. Qwen3-1.7B is the worst case: 0.99 average confidence at 57%
+accuracy. The engine's probabilities are softmax values, **not calibrated** probabilities. The
+sample is small.
+
+### Latency and throughput (step 4)
+
+Qwen2.5-1.5B-Instruct, bf16, Arc 140V, torch 2.14 XPU, transformers 5.17. Median of 5 runs after
+warm-up, on an otherwise idle machine. Raw data and the full table:
+`bench/results/bench_Qwen2.5-1.5B-Instruct_bfloat16_20260926_050240.{json,md}`. An earlier run
+overlapped a model download and was 10–15% slower; its files are kept but not used here.
+
+| prompt tokens | batch | sequential ms/decision | batched ms/decision | batched speed-up |
+|---:|---:|---:|---:|---:|
+| ~165 | 1 | 64.2 | 66.1 | 1.0× |
+| ~165 | 8 | 65.0 | 39.8 | 1.6× |
+| ~165 | 32 | 65.2 | 36.3 | 1.8× |
+| ~350 | 8 | 101.5 | 88.3 | 1.15× |
+| ~350 | 32 | 101.0 | 77.0 | 1.3× |
+| ~1120 | 8 | 272.1 | 270.2 | 1.0× |
+| ~1120 | 32 | 267.7 | 297.9 | **0.9× (slower)** |
+
+Run-to-run spread (min–max over the 5 runs) was mostly within ±3% of the median, up to +5% in a
+few cells. There was one outlier run: 97.9 ms in the ~165-token, batch-1 cell (median 66.1 ms).
+
+- **Surprising, negative result:** batching helps far less here than S1/S2 imply. On this iGPU,
+  prompt processing is compute-bound. A batch of 32 × 165 tokens is ~16 TFLOP of matmuls, and bf16
+  matmul peaks at ~20–28 TFLOPS (measured). So per-decision cost falls at most 1.8×. Throughput
+  tops out at ~27 decisions/s for short prompts and ~13/s at ~350 tokens.
+- For ~1100-token prompts, batch 32 was 10% *slower* per decision than running sequentially.
+  **Inferred, not verified:** a padded batch needs an explicit attention mask, which may push SDPA
+  onto a slower kernel than the unmasked causal path a single sequence can use.
+- **Inferred:** batching mainly raises matmul efficiency (small matmuls ran at ~7 TFLOPS, large
+  ones at ~25). A data-centre GPU has far more compute per byte of weights, so the gain there
+  should be larger. Not measured.
+- fp32 matmuls run at ~3.9 TFLOPS on this GPU (7× slower than bf16), so exact fp32 batching is
+  expensive.
+
+Text-generation baseline (same run; 16 decisions, ~350-token prompts, greedy, no prefill):
+
+| answer | batch | ms/decision | new tokens | same choice as single-token |
+|---|---:|---:|---:|---:|
+| single-token read (prefill, one pass) | 1 | 99.8 | 0 | — |
+| single-token read (prefill, one pass) | 8 | 88.3 | 0 | — |
+| generate JSON `{"choice": "X"}` | 1 | 358.0 | 7 | 88% |
+| generate JSON `{"choice": "X"}` | 8 | 127.4 | 7 | 88% |
+| generate bare label | 1 | 147.2 | 2 | 50% |
+| generate bare label | 8 | 85.2 | 2 | 56% |
+
+- At batch 1, a single-token decision is 3.6× faster than generating the JSON answer (S2 reports
+  2–3× with Qwen2.5-1.5B). At batch 8 the gap shrinks to 1.4×, because extra decode steps are cheap
+  next to the compute-bound prefill.
+- A bare-label reply agrees with the single-token read only ~50% of the time on these (ambiguous,
+  synthetic) decisions. **The `{"choice": "` prefill changes the answer**; it is not a neutral
+  read-out of what the model would have said.
+- Batched bare-label generation (85.2 ms) was ~3% faster than the batched single-token read
+  (88.3 ms), although it does strictly more work. Not explained; not investigated.
