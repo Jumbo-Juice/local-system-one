@@ -14,6 +14,28 @@ import numpy as np
 from .base import Backend, NextTokenScores
 
 
+class _Float32Head:
+    """Replacement LM head that projects (bf16/fp16) hidden states with a float32 weight copy.
+
+    In bf16 the head's output logits are rounded to steps of ~0.125 at typical magnitudes, so close
+    options can tie exactly. The transformer layers are unchanged.
+    """
+
+    @staticmethod
+    def build(torch, old):
+        class Head(torch.nn.Module):
+            def __init__(self):
+                super().__init__()
+                self.weight = torch.nn.Parameter(old.weight.detach().float(), requires_grad=False)
+                bias = getattr(old, "bias", None)
+                self.bias = None if bias is None else torch.nn.Parameter(bias.detach().float(), requires_grad=False)
+
+            def forward(self, hidden):
+                return torch.nn.functional.linear(hidden.float(), self.weight, self.bias)
+
+        return Head()
+
+
 def resolve_device(requested: str) -> str:
     import torch
 
@@ -37,6 +59,7 @@ class HFBackend(Backend):
         max_batch: int = 32,
         revision: str | None = None,
         attn_implementation: str | None = None,
+        head_dtype: str = "model",
     ):
         import torch
         from transformers import AutoModelForCausalLM, AutoTokenizer
@@ -57,6 +80,12 @@ class HFBackend(Backend):
         self.model.to(self.device).eval()
         if self.model.config.is_encoder_decoder:
             raise ValueError("HFBackend needs a decoder-only causal LM")
+        if head_dtype not in ("model", "float32"):
+            raise ValueError("head_dtype must be 'model' or 'float32'")
+        self.head_dtype = head_dtype
+        if head_dtype == "float32" and dtype != "float32":
+            head = _Float32Head.build(torch, self.model.get_output_embeddings()).to(self.device)
+            self.model.set_output_embeddings(head)
 
         pad = self.tokenizer.pad_token_id
         if pad is None:
@@ -195,6 +224,7 @@ class HFBackend(Backend):
             "commit": getattr(self.model.config, "_commit_hash", None),
             "parameters": params,
             "dtype": self.dtype_name,
+            "head_dtype": self.head_dtype,
             "quantisation": "none (weights in %s)" % self.dtype_name,
             "device": self.device,
             "device_name": device_name,

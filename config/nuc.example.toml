@@ -13,6 +13,7 @@ model = "Qwen/Qwen2.5-7B-Instruct"   # larger model; ~15 GB of weights in bfloat
 device = "auto"
 dtype = "bfloat16"
 max_batch = 16          # lower this if the device runs out of memory
+head_dtype = "float32"   # "float32" computes only the LM head in fp32 (finer probabilities; costs vocab x hidden x 4 bytes).
 
 [engine]
 answer = "label"

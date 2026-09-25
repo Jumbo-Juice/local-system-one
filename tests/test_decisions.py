@@ -146,7 +146,15 @@ def test_hf_simple_decision(hf_backend):
 
 @pytest.mark.model
 def test_hf_text_mode_multi_token(hf_backend):
+    # Checks the mechanism, not the model's judgement: this item is a near-tie for some models
+    # (Observed: Qwen2.5-1.5B gives 0.501 / 0.499).
     d = Decision("Which move brings you closer to the target?", ("move north", "move south"),
                  state="The target is 4 cells north of you.")
-    r = Engine(hf_backend, answer="text").decide(d)
-    assert r.method == "multi_token" and r.choice == "move north"
+    eng = Engine(hf_backend, answer="text")
+    r = eng.decide(d)
+    assert r.method == "multi_token"
+    prep = eng.prepare(d)
+    seq = [lp.sum() for lp in hf_backend.continuation_logprobs([prep.ids] * 2, prep.continuations)]
+    expected = np.exp(np.array(seq) - max(seq))
+    np.testing.assert_allclose(r.probs, expected / expected.sum(), atol=1e-6)
+    assert r.index == int(np.argmax(seq))
