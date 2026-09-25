@@ -1,0 +1,239 @@
+{
+ "host": {
+  "hostname": "Reuben",
+  "os": "Windows-11-10.0.26200-SP0",
+  "cpu": "Intel(R) Core(TM) Ultra 7 256V",
+  "cpu_count": 8,
+  "ram_gb": 15.6,
+  "python": "3.13.9"
+ },
+ "backend": {
+  "kind": "hf",
+  "model": "Qwen/Qwen2.5-1.5B-Instruct",
+  "commit": "989aa7980e4cf806f80c7fef2b1adb7bc71aa306",
+  "parameters": 1543714304,
+  "dtype": "bfloat16",
+  "quantisation": "none (weights in bfloat16)",
+  "device": "xpu",
+  "device_name": "Intel(R) Arc(TM) 140V GPU (8GB)",
+  "attn_implementation": "sdpa",
+  "torch": "2.14.0+xpu",
+  "transformers": "5.17.0",
+  "max_batch": 32
+ },
+ "args": {
+  "config": null,
+  "ticks": 100,
+  "seeds": [
+   0,
+   1,
+   2
+  ],
+  "group_size": 8
+ },
+ "runs": [
+  {
+   "setup": "model, tiered goals",
+   "seed": 0,
+   "gems": 36,
+   "food_eaten": 61,
+   "hazard_hits": 12,
+   "deaths": 2,
+   "forward_ms_median": 317.2194500002661,
+   "forward_ms_p90": 467.0183200032625,
+   "decisions_per_tick_mean": 6.87,
+   "tournament_decisions": 242,
+   "action_counts": {
+    "move north": 125,
+    "move south": 121,
+    "move east": 68,
+    "move west": 86,
+    "stay": 0
+   }
+  },
+  {
+   "setup": "model, tiered goals",
+   "seed": 1,
+   "gems": 35,
+   "food_eaten": 50,
+   "hazard_hits": 11,
+   "deaths": 2,
+   "forward_ms_median": 312.18389999776264,
+   "forward_ms_p90": 479.3529099988518,
+   "decisions_per_tick_mean": 6.78,
+   "tournament_decisions": 234,
+   "action_counts": {
+    "move north": 112,
+    "move south": 89,
+    "move east": 118,
+    "move west": 81,
+    "stay": 0
+   }
+  },
+  {
+   "setup": "model, tiered goals",
+   "seed": 2,
+   "gems": 37,
+   "food_eaten": 67,
+   "hazard_hits": 9,
+   "deaths": 1,
+   "forward_ms_median": 308.1332999972801,
+   "forward_ms_p90": 470.84532999797375,
+   "decisions_per_tick_mean": 6.91,
+   "tournament_decisions": 246,
+   "action_counts": {
+    "move north": 129,
+    "move south": 134,
+    "move east": 79,
+    "move west": 58,
+    "stay": 0
+   }
+  },
+  {
+   "setup": "model, flat",
+   "seed": 0,
+   "gems": 21,
+   "food_eaten": 11,
+   "hazard_hits": 7,
+   "deaths": 1,
+   "forward_ms_median": 196.79110000288347,
+   "forward_ms_p90": 198.9000700006727,
+   "decisions_per_tick_mean": 4,
+   "tournament_decisions": 0,
+   "action_counts": {
+    "move north": 10,
+    "move south": 95,
+    "move east": 27,
+    "move west": 10,
+    "stay": 258
+   }
+  },
+  {
+   "setup": "model, flat",
+   "seed": 1,
+   "gems": 12,
+   "food_eaten": 9,
+   "hazard_hits": 7,
+   "deaths": 1,
+   "forward_ms_median": 196.67494999885093,
+   "forward_ms_p90": 201.04936999778147,
+   "decisions_per_tick_mean": 4,
+   "tournament_decisions": 0,
+   "action_counts": {
+    "move north": 0,
+    "move south": 19,
+    "move east": 36,
+    "move west": 26,
+    "stay": 319
+   }
+  },
+  {
+   "setup": "model, flat",
+   "seed": 2,
+   "gems": 14,
+   "food_eaten": 13,
+   "hazard_hits": 3,
+   "deaths": 0,
+   "forward_ms_median": 201.38349999615457,
+   "forward_ms_p90": 205.43265999804134,
+   "decisions_per_tick_mean": 4,
+   "tournament_decisions": 0,
+   "action_counts": {
+    "move north": 8,
+    "move south": 17,
+    "move east": 70,
+    "move west": 56,
+    "stay": 249
+   }
+  },
+  {
+   "setup": "random (mock), tiered goals",
+   "seed": 0,
+   "gems": 21,
+   "food_eaten": 12,
+   "hazard_hits": 2,
+   "deaths": 0,
+   "forward_ms_median": 4.54034999711439,
+   "forward_ms_p90": 7.779029998346232,
+   "decisions_per_tick_mean": 6.05,
+   "tournament_decisions": 133,
+   "action_counts": {
+    "move north": 81,
+    "move south": 95,
+    "move east": 84,
+    "move west": 63,
+    "stay": 77
+   }
+  },
+  {
+   "setup": "random (mock), tiered goals",
+   "seed": 1,
+   "gems": 14,
+   "food_eaten": 6,
+   "hazard_hits": 10,
+   "deaths": 2,
+   "forward_ms_median": 2.8480999972089194,
+   "forward_ms_p90": 5.2174000011291355,
+   "decisions_per_tick_mean": 5.85,
+   "tournament_decisions": 108,
+   "action_counts": {
+    "move north": 75,
+    "move south": 85,
+    "move east": 96,
+    "move west": 73,
+    "stay": 71
+   }
+  },
+  {
+   "setup": "random (mock), tiered goals",
+   "seed": 2,
+   "gems": 18,
+   "food_eaten": 14,
+   "hazard_hits": 13,
+   "deaths": 3,
+   "forward_ms_median": 2.4976499989861622,
+   "forward_ms_p90": 5.385400001250673,
+   "decisions_per_tick_mean": 5.95,
+   "tournament_decisions": 119,
+   "action_counts": {
+    "move north": 78,
+    "move south": 83,
+    "move east": 78,
+    "move west": 85,
+    "stay": 76
+   }
+  }
+ ],
+ "summary": {
+  "model, tiered goals": {
+   "gems": 36,
+   "food_eaten": 59.333333333333336,
+   "hazard_hits": 10.666666666666666,
+   "deaths": 1.6666666666666667,
+   "forward_ms_median": 312.5122166651029,
+   "forward_ms_p90": 472.40552000002936,
+   "decisions_per_tick_mean": 6.8533333333333335,
+   "tournament_decisions": 240.66666666666666
+  },
+  "model, flat": {
+   "gems": 15.666666666666666,
+   "food_eaten": 11,
+   "hazard_hits": 5.666666666666667,
+   "deaths": 0.6666666666666666,
+   "forward_ms_median": 198.28318333262965,
+   "forward_ms_p90": 201.79403333216518,
+   "decisions_per_tick_mean": 4,
+   "tournament_decisions": 0
+  },
+  "random (mock), tiered goals": {
+   "gems": 17.666666666666668,
+   "food_eaten": 10.666666666666666,
+   "hazard_hits": 8.333333333333334,
+   "deaths": 1.6666666666666667,
+   "forward_ms_median": 3.2953666644364907,
+   "forward_ms_p90": 6.1272766669086804,
+   "decisions_per_tick_mean": 5.95,
+   "tournament_decisions": 120
+  }
+ }
+}

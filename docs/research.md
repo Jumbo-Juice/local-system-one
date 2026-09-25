@@ -319,3 +319,36 @@ Tournament groups are contiguous and near-equal in size; one batched pass per ro
   in 93% of problems but won the final of 8 in only 80% overall, so most errors came in the
   final. With groups of 26, most errors were round-1 losses (40 options: 87% survived, 83%
   won).
+
+### Goal selection is sensitive to option order
+
+Same 20 goal items (10 numeric-rule, 10 in-words), four orderings of the four goals
+(Qwen2.5-1.5B). In two orderings the model picked "find food" in 16 and 18 of 20 items. With
+"find food" first (label `A`), it picked label `B` ("collect gems") in 9 of 10 numeric-rule
+items. In the fourth ordering its choices split between "find food", "collect gems" and
+"explore". So the choice depends on both content and position. Accuracy ranged from 20% to 50%
+across orderings.
+
+### Demo: tiered goals vs flat control (step 7)
+
+`bench/demo_compare.py`: 100 ticks, 4 agents, seeds 0–2, Qwen2.5-1.5B bf16. "Flat" is the
+action tier only: its prompt lists the nearest gem, food and hazard as offsets. "Random" is the
+mock backend with tiered goals. Mean of 3 seeds
+(`bench/results/demo_compare_20260926_051317.json`):
+
+| setup | gems | food eaten | hazard hits | deaths | decisions/tick | forward ms/tick (median, p90) |
+|---|---:|---:|---:|---:|---:|---:|
+| model, tiered goals | 36.0 | 59.3 | 10.7 | 1.7 | 6.9 | 312, 472 |
+| model, flat | 15.7 | 11.0 | 5.7 | 0.7 | 4.0 | 198, 202 |
+| random decisions, tiered goals | 17.7 | 10.7 | 8.3 | 1.7 | 6.0 | 3, 6 |
+
+- Flat control was **no better than random** at collecting gems and food. This matches S1:
+  "just supplying the game inputs as choices doesn't work very well".
+- Tiered goals gave 2.3× the gems and 5.4× the food of flat control, at ~1.6× the tick latency.
+  They also took **more hazard hits** (10.7 vs 5.7): purposeful movement walked into roaming
+  hazards more often. Three seeds only.
+- The strategy tier chose "find food" most of the time, consistent with the eval above.
+- In the window, the real model ran at ~3 ticks/s (300–450 ms per tick with 6–9 decisions
+  per batch).
+- This comparison ran just before a wording fix in the demo state text ("1 steps" → "1 step").
+  The results were not re-run after it.
