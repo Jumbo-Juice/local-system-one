@@ -1,0 +1,258 @@
+{
+ "host": {
+  "hostname": "Reuben",
+  "os": "Windows-11-10.0.26200-SP0",
+  "cpu": "Intel(R) Core(TM) Ultra 7 256V",
+  "cpu_count": 8,
+  "ram_gb": 15.6,
+  "python": "3.13.9"
+ },
+ "backend": {
+  "kind": "hf",
+  "model": "Qwen/Qwen2.5-1.5B-Instruct",
+  "commit": "989aa7980e4cf806f80c7fef2b1adb7bc71aa306",
+  "parameters": 1543714304,
+  "dtype": "bfloat16",
+  "quantisation": "none (weights in bfloat16)",
+  "device": "xpu",
+  "device_name": "Intel(R) Arc(TM) 140V GPU (8GB)",
+  "attn_implementation": "sdpa",
+  "torch": "2.14.0+xpu",
+  "transformers": "5.17.0",
+  "max_batch": 32
+ },
+ "config": {
+  "backend": {
+   "kind": "hf",
+   "model": "Qwen/Qwen2.5-1.5B-Instruct",
+   "device": "auto",
+   "dtype": "bfloat16",
+   "max_batch": 32
+  },
+  "engine": {
+   "answer": "label",
+   "answer_template": "{\"choice\": \"<label>\"}",
+   "multi_token": "auto"
+  },
+  "_path": "config\\default.toml"
+ },
+ "engine": {
+  "answer": "label",
+  "prefill": "{\"choice\": \"",
+  "suffix": "\"}"
+ },
+ "args": {
+  "config": "config/default.toml",
+  "batches": [
+   1,
+   2,
+   4,
+   8,
+   16,
+   32
+  ],
+  "lengths": [
+   64,
+   256,
+   1024
+  ],
+  "repeats": 5,
+  "gen_baseline": true,
+  "gen_batches": [
+   1,
+   8
+  ],
+  "gen_length": 256,
+  "gen_decisions": 16,
+  "gen_styles": [
+   "label",
+   "json"
+  ],
+  "no_sweep": true,
+  "tag": "_generation"
+ },
+ "started": "2026-09-26 04:54:52",
+ "rows": [],
+ "generation": [
+  {
+   "runs_s": [
+    2.3816494999991846,
+    2.3882296000010683
+   ],
+   "median_s": 2.3849395500001265,
+   "min_s": 2.3816494999991846,
+   "max_s": 2.3882296000010683,
+   "p25_s": 2.3800044749987137,
+   "p75_s": 2.3898746250015392,
+   "per_decision_ms": 149.0587218750079,
+   "per_decision_ms_min": 148.85309374994904,
+   "per_decision_ms_max": 149.26435000006677,
+   "decisions_per_s": 6.708765427618134,
+   "style": "label",
+   "new_tokens_mean": 2,
+   "parse_failures": 0,
+   "answers": [
+    "move north",
+    "move north",
+    "move north",
+    "move north",
+    "move north",
+    "move south",
+    "move south",
+    "move north",
+    "move north",
+    "move west",
+    "move west",
+    "move south",
+    "move south",
+    "move north",
+    "move north",
+    "move north"
+   ],
+   "sample_text": [
+    "A<|im_end|>",
+    "A<|im_end|>",
+    "A<|im_end|>"
+   ],
+   "batch": 1,
+   "decisions": 16,
+   "state_tokens": 256,
+   "agreement_with_single_token": 0.5
+  },
+  {
+   "runs_s": [
+    1.3135191000037594,
+    1.3280474999992293
+   ],
+   "median_s": 1.3207833000014944,
+   "min_s": 1.3135191000037594,
+   "max_s": 1.3280474999992293,
+   "p25_s": 1.3098870000048919,
+   "p75_s": 1.3316795999980968,
+   "per_decision_ms": 82.5489562500934,
+   "per_decision_ms_min": 82.09494375023496,
+   "per_decision_ms_max": 83.00296874995183,
+   "decisions_per_s": 12.114023549496649,
+   "style": "label",
+   "new_tokens_mean": 2,
+   "parse_failures": 0,
+   "answers": [
+    "move north",
+    "move north",
+    "move north",
+    "move north",
+    "move north",
+    "move south",
+    "move south",
+    "move north",
+    "move north",
+    "move west",
+    "move west",
+    "move south",
+    "move east",
+    "move north",
+    "move north",
+    "move south"
+   ],
+   "sample_text": [
+    "A<|im_end|>",
+    "A<|im_end|>",
+    "A<|im_end|>"
+   ],
+   "batch": 8,
+   "decisions": 16,
+   "state_tokens": 256,
+   "agreement_with_single_token": 0.5625
+  },
+  {
+   "runs_s": [
+    5.879958800003806,
+    5.8976911999998265
+   ],
+   "median_s": 5.888825000001816,
+   "min_s": 5.879958800003806,
+   "max_s": 5.8976911999998265,
+   "p25_s": 5.8755257000048005,
+   "p75_s": 5.902124299998832,
+   "per_decision_ms": 368.0515625001135,
+   "per_decision_ms_min": 367.49742500023785,
+   "per_decision_ms_max": 368.60569999998916,
+   "decisions_per_s": 2.717010609076525,
+   "style": "json",
+   "new_tokens_mean": 7,
+   "parse_failures": 0,
+   "answers": [
+    "move north",
+    "move south",
+    "move east",
+    "move east",
+    "move north",
+    "move south",
+    "move east",
+    "move west",
+    "move north",
+    "move east",
+    "move west",
+    "move south",
+    "move east",
+    "move east",
+    "move north",
+    "move east"
+   ],
+   "sample_text": [
+    "{\"choice\": \"A\"}<|im_end|>",
+    "{\"choice\": \"B\"}<|im_end|>",
+    "{\"choice\": \"C\"}<|im_end|>"
+   ],
+   "batch": 1,
+   "decisions": 16,
+   "state_tokens": 256,
+   "agreement_with_single_token": 0.875
+  },
+  {
+   "runs_s": [
+    1.814318099997763,
+    1.814322700003686
+   ],
+   "median_s": 1.8143204000007245,
+   "min_s": 1.814318099997763,
+   "max_s": 1.814322700003686,
+   "p25_s": 1.8143169499962823,
+   "p75_s": 1.8143238500051666,
+   "per_decision_ms": 113.39502500004528,
+   "per_decision_ms_min": 113.39488124986019,
+   "per_decision_ms_max": 113.39516875023037,
+   "decisions_per_s": 8.818729040357818,
+   "style": "json",
+   "new_tokens_mean": 7,
+   "parse_failures": 0,
+   "answers": [
+    "move north",
+    "move south",
+    "move east",
+    "move east",
+    "move north",
+    "move south",
+    "move east",
+    "move west",
+    "move north",
+    "move east",
+    "move west",
+    "move south",
+    "move east",
+    "move east",
+    "move north",
+    "move east"
+   ],
+   "sample_text": [
+    "{\"choice\": \"A\"}<|im_end|>",
+    "{\"choice\": \"B\"}<|im_end|>",
+    "{\"choice\": \"C\"}<|im_end|>"
+   ],
+   "batch": 8,
+   "decisions": 16,
+   "state_tokens": 256,
+   "agreement_with_single_token": 0.875
+  }
+ ]
+}
