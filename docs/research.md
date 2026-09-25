@@ -152,4 +152,40 @@ Does not reproduce:
 
 ## Observed
 
-Filled in from experiments on this machine; see the sections below and `bench/results/`.
+Measured on the Lenovo (Core Ultra 7 256V, Arc 140V iGPU via PyTorch XPU; see
+`docs/machine.md`). Raw data is in `bench/results/`.
+
+### Logits and padding
+
+- One forward pass with `logits_to_keep=1` returns full `[B, 151936]` next-token logits for Qwen2.5.
+  No text is generated.
+- Left-padded rows vs the same sequence run alone: max |Δlogit| ≈ 5e-5 in float32 (XPU and CPU).
+  In bfloat16 it is up to 0.33 (kernel-shape precision noise); the argmax is the same.
+- With transformers 5.17, *omitting* explicit `position_ids` also gave correct results for
+  Qwen2.5 (same ~5e-5 error). The library seems to derive positions from the mask. We still
+  pass them explicitly, which is safe across library versions and models.
+- The first XPU forward pass in a process takes ~3–4 s (kernel compilation). Later ones take
+  tens of ms. Benchmarks warm up first.
+
+### Tokenisation of labels (Qwen2.5 tokenizer)
+
+- `{"choice": "` + `A` → tokens `[..., ' "', 'A', '"}']`. `Answer:` + ` A` → `[..., ':', ' A']`.
+  Both give clean single-token labels.
+- `choice_label:` + `A` → `[..., ':A']`: the letter **merges** with the colon, so `A` is not the
+  natural next token. `choice_label:` + `AB` → `[..., ':', 'AB']` is fine. S4 only checks by
+  decoding, which would not catch the single-letter case. Our in-context check rejects it
+  (`tests/test_decisions.py::test_hf_colon_prefill_merges_single_letters`).
+
+### Batching vs sequential
+
+On the 58-item eval set (`bench/eval_set.py`), one batched pass vs 58 single passes:
+
+| Model | dtype | same choice | max \|Δp\| | median \|Δp\| |
+|-------|-------|-------------|-----------|--------------|
+| Qwen2.5-0.5B-Instruct | float32 | 58/58 | < 1e-4 | < 1e-4 |
+| Qwen2.5-0.5B-Instruct | bfloat16 | 56/58 | 0.065 | 0.010 |
+| Qwen2.5-1.5B-Instruct | float32 | 58/58 | < 1e-4 | < 1e-4 |
+| Qwen2.5-1.5B-Instruct | bfloat16 | 58/58 | 0.048 | 0.004 |
+
+The two bf16 flips were near-ties in the sequential run (top-2 margins 0.056 and 0.000).
+Batching is exact in float32. In bf16 it changes probabilities by a few percent.
