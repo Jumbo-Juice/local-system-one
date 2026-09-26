@@ -78,3 +78,76 @@ def test_world_items_never_share_a_cell():
         w = World(seed=seed, n_food=12, n_gems=24)
         cells = w.gems + w.food + w.hazards + [a.pos for a in w.agents]
         assert len(cells) == len(set(cells)) and not set(cells) & w.walls
+
+
+def test_starvation_death_is_counted():
+    w = World(seed=0, n_agents=1, n_hazards=0)
+    a = w.agents[0]
+    a.energy, a.health = 0, 5
+    w.food.clear()
+    w.step({a.id: "stay"})
+    assert a.deaths == 1 and a.starved == 1
+
+
+def test_condition_change_triggers_strategy_replan():
+    from demo.brain import Brain
+
+    w = World(seed=0, n_agents=1, n_hazards=0)
+    b = Brain(w, w.agents[0])
+    b.refresh()
+    for t in b.stack.due(0):
+        b.stack.apply(t, b.stack.options(t)[0], 0)
+    assert "strategy" not in [t.name for t in b.stack.due(1)]
+    w.agents[0].energy = 30  # crosses the 35 band
+    b.refresh()
+    assert "strategy" in [t.name for t in b.stack.due(1)]
+    b.stack.apply(b.stack.tier("strategy"), "find food", 1)
+    b.refresh()  # same band: no new trigger
+    assert "strategy" not in [t.name for t in b.stack.due(2)]
+
+
+def test_strategy_state_spells_out_low_energy():
+    from demo.brain import Brain
+
+    w = World(seed=0, n_agents=1)
+    w.agents[0].energy = 20
+    b = Brain(w, w.agents[0])
+    b.refresh()
+    assert "about 20 ticks until starving" in b.strategy_state()
+    assert "until starving" not in Brain(w, w.agents[0], aware=False).strategy_state()
+
+
+def test_move_labels_describe_outcomes():
+    from demo.brain import annotate_moves
+
+    w = World(seed=0, n_agents=1, n_hazards=0)
+    a = w.agents[0]
+    a.pos = (w.width - 1, 5)  # east edge: east is a wall
+    w.hazards = [(w.width - 1, 4)]  # north is a hazard
+    labels = dict(o.split(" (", 1) for o in annotate_moves(w, a, (w.width - 2, 5)))
+    assert labels["move east"] == "wall)" and labels["move north"] == "HAZARD: -25 health)"
+    assert labels["move west"] == "reach the target)" and labels["stay"] == "target: 1 step)"
+
+
+def test_target_shown_to_move_tier_without_stale_distance():
+    from demo.brain import Brain
+
+    w = World(seed=0, n_agents=1)
+    b = Brain(w, w.agents[0])
+    b.stack.apply(b.stack.tier("strategy"), "find food", 0)
+    b.stack.apply(b.stack.tier("target"), "food at (7,0), 1 step away", 0)
+    ctx = b.stack.context(b.stack.tier("action"))
+    assert "Current target: food at (7,0)" in ctx and "step" not in ctx
+
+
+def test_labelled_action_choice_still_moves_the_agent():
+    be = MockBackend()
+    ctrl = Controller(World(seed=0, n_agents=1), Engine(be), group_size=8)
+    start = ctrl.world.agents[0].pos
+    moved = False
+    for _ in range(10):
+        rep = ctrl.tick()
+        choice = next(r.choice for _, tier, r, _ in rep.updates if tier == "action")
+        assert " (" in choice  # labelled option
+        moved |= ctrl.world.agents[0].pos != start
+    assert moved

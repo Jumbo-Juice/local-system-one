@@ -1,0 +1,3646 @@
+{
+ "backend": {
+  "kind": "hf",
+  "model": "Qwen/Qwen2.5-3B-Instruct",
+  "commit": "aa8e72537993ba99e69dfaafa59ed015b17504d1",
+  "parameters": 3085938688,
+  "dtype": "bfloat16",
+  "head_dtype": "model",
+  "quantisation": "none (weights in bfloat16)",
+  "device": "xpu",
+  "device_name": "Intel(R) Arc(TM) 140V GPU (8GB)",
+  "attn_implementation": "sdpa",
+  "torch": "2.14.0+xpu",
+  "transformers": "5.17.0",
+  "max_batch": 8,
+  "prefix_cache": {
+   "size": 32,
+   "min_prefix": 32,
+   "hits": 0,
+   "misses": 0,
+   "stores": 0
+  }
+ },
+ "variants": {
+  "v0 context: target with stale distance": {
+   "approach_rate": 0.9666666666666667,
+   "rows": [
+    {
+     "pos": [
+      9,
+      7
+     ],
+     "target": [
+      5,
+      10
+     ],
+     "stated": 8,
+     "choice": "move west",
+     "before": 7,
+     "after": 6,
+     "p": 0.8332923159495602
+    },
+    {
+     "pos": [
+      12,
+      5
+     ],
+     "target": [
+      14,
+      2
+     ],
+     "stated": 7,
+     "choice": "move east",
+     "before": 5,
+     "after": 4,
+     "p": 0.9974784085131607
+    },
+    {
+     "pos": [
+      8,
+      9
+     ],
+     "target": [
+      11,
+      9
+     ],
+     "stated": 7,
+     "choice": "move east",
+     "before": 7,
+     "after": 6,
+     "p": 0.9999634438585654
+    },
+    {
+     "pos": [
+      4,
+      7
+     ],
+     "target": [
+      8,
+      10
+     ],
+     "stated": 7,
+     "choice": "move south",
+     "before": 7,
+     "after": 6,
+     "p": 0.9812550010460004
+    },
+    {
+     "pos": [
+      3,
+      2
+     ],
+     "target": [
+      1,
+      4
+     ],
+     "stated": 6,
+     "choice": "move south",
+     "before": 4,
+     "after": 3,
+     "p": 0.6147069399365659
+    },
+    {
+     "pos": [
+      15,
+      2
+     ],
+     "target": [
+      13,
+      4
+     ],
+     "stated": 3,
+     "choice": "move south",
+     "before": 4,
+     "after": 3,
+     "p": 0.9009497531938523
+    },
+    {
+     "pos": [
+      11,
+      11
+     ],
+     "target": [
+      9,
+      11
+     ],
+     "stated": 4,
+     "choice": "move west",
+     "before": 2,
+     "after": 1,
+     "p": 0.9724896349259458
+    },
+    {
+     "pos": [
+      15,
+      8
+     ],
+     "target": [
+      14,
+      5
+     ],
+     "stated": 6,
+     "choice": "move west",
+     "before": 4,
+     "after": 3,
+     "p": 0.5193992325656858
+    },
+    {
+     "pos": [
+      4,
+      2
+     ],
+     "target": [
+      2,
+      0
+     ],
+     "stated": 4,
+     "choice": "move north",
+     "before": 4,
+     "after": 3,
+     "p": 0.7327965295653566
+    },
+    {
+     "pos": [
+      6,
+      8
+     ],
+     "target": [
+      6,
+      5
+     ],
+     "stated": 3,
+     "choice": "move north",
+     "before": 3,
+     "after": 2,
+     "p": 0.9955544483995127
+    },
+    {
+     "pos": [
+      2,
+      0
+     ],
+     "target": [
+      8,
+      0
+     ],
+     "stated": 4,
+     "choice": "move east",
+     "before": 6,
+     "after": 5,
+     "p": 0.9984537187351827
+    },
+    {
+     "pos": [
+      11,
+      3
+     ],
+     "target": [
+      15,
+      5
+     ],
+     "stated": 6,
+     "choice": "move east",
+     "before": 6,
+     "after": 5,
+     "p": 0.994713922328677
+    },
+    {
+     "pos": [
+      13,
+      4
+     ],
+     "target": [
+      11,
+      2
+     ],
+     "stated": 6,
+     "choice": "move north",
+     "before": 4,
+     "after": 3,
+     "p": 0.9082417510682259
+    },
+    {
+     "pos": [
+      3,
+      8
+     ],
+     "target": [
+      2,
+      2
+     ],
+     "stated": 9,
+     "choice": "move north",
+     "before": 7,
+     "after": 6,
+     "p": 0.9497442456710524
+    },
+    {
+     "pos": [
+      2,
+      8
+     ],
+     "target": [
+      2,
+      10
+     ],
+     "stated": 4,
+     "choice": "move south",
+     "before": 2,
+     "after": 1,
+     "p": 0.9999253342557195
+    },
+    {
+     "pos": [
+      4,
+      10
+     ],
+     "target": [
+      4,
+      11
+     ],
+     "stated": 1,
+     "choice": "move south",
+     "before": 1,
+     "after": 0,
+     "p": 0.9999018646098494
+    },
+    {
+     "pos": [
+      8,
+      1
+     ],
+     "target": [
+      3,
+      2
+     ],
+     "stated": 4,
+     "choice": "move south",
+     "before": 6,
+     "after": 7,
+     "p": 0.7225529045993229
+    },
+    {
+     "pos": [
+      11,
+      1
+     ],
+     "target": [
+      11,
+      9
+     ],
+     "stated": 8,
+     "choice": "move south",
+     "before": 8,
+     "after": 7,
+     "p": 0.9998825143660008
+    },
+    {
+     "pos": [
+      8,
+      9
+     ],
+     "target": [
+      12,
+      11
+     ],
+     "stated": 4,
+     "choice": "move east",
+     "before": 6,
+     "after": 5,
+     "p": 0.99974655811686
+    },
+    {
+     "pos": [
+      12,
+      0
+     ],
+     "target": [
+      6,
+      2
+     ],
+     "stated": 10,
+     "choice": "move west",
+     "before": 8,
+     "after": 7,
+     "p": 0.651895528378394
+    },
+    {
+     "pos": [
+      12,
+      10
+     ],
+     "target": [
+      10,
+      11
+     ],
+     "stated": 2,
+     "choice": "move west",
+     "before": 3,
+     "after": 2,
+     "p": 0.7730982562989814
+    },
+    {
+     "pos": [
+      3,
+      6
+     ],
+     "target": [
+      7,
+      10
+     ],
+     "stated": 9,
+     "choice": "move east",
+     "before": 8,
+     "after": 7,
+     "p": 0.9986445411942365
+    },
+    {
+     "pos": [
+      15,
+      9
+     ],
+     "target": [
+      15,
+      11
+     ],
+     "stated": 2,
+     "choice": "move south",
+     "before": 2,
+     "after": 1,
+     "p": 0.9998720633142513
+    },
+    {
+     "pos": [
+      6,
+      9
+     ],
+     "target": [
+      1,
+      7
+     ],
+     "stated": 8,
+     "choice": "move west",
+     "before": 7,
+     "after": 6,
+     "p": 0.9513735818819888
+    },
+    {
+     "pos": [
+      6,
+      5
+     ],
+     "target": [
+      6,
+      11
+     ],
+     "stated": 8,
+     "choice": "move south",
+     "before": 6,
+     "after": 5,
+     "p": 0.9986363571154924
+    },
+    {
+     "pos": [
+      6,
+      8
+     ],
+     "target": [
+      8,
+      9
+     ],
+     "stated": 5,
+     "choice": "move east",
+     "before": 3,
+     "after": 2,
+     "p": 0.9858954091437626
+    },
+    {
+     "pos": [
+      12,
+      9
+     ],
+     "target": [
+      14,
+      3
+     ],
+     "stated": 10,
+     "choice": "move east",
+     "before": 8,
+     "after": 7,
+     "p": 0.9987413326106085
+    },
+    {
+     "pos": [
+      8,
+      8
+     ],
+     "target": [
+      9,
+      3
+     ],
+     "stated": 7,
+     "choice": "move east",
+     "before": 6,
+     "after": 5,
+     "p": 0.9996291986893473
+    },
+    {
+     "pos": [
+      15,
+      9
+     ],
+     "target": [
+      11,
+      6
+     ],
+     "stated": 8,
+     "choice": "move west",
+     "before": 7,
+     "after": 6,
+     "p": 0.9209447434341494
+    },
+    {
+     "pos": [
+      5,
+      11
+     ],
+     "target": [
+      10,
+      11
+     ],
+     "stated": 5,
+     "choice": "move east",
+     "before": 5,
+     "after": 4,
+     "p": 0.9999449653780194
+    },
+    {
+     "pos": [
+      7,
+      4
+     ],
+     "target": [
+      8,
+      7
+     ],
+     "stated": 3,
+     "choice": "move east",
+     "before": 4,
+     "after": 3,
+     "p": 0.999821365337462
+    },
+    {
+     "pos": [
+      5,
+      10
+     ],
+     "target": [
+      3,
+      7
+     ],
+     "stated": 6,
+     "choice": "move west",
+     "before": 5,
+     "after": 4,
+     "p": 0.8857551360309227
+    },
+    {
+     "pos": [
+      3,
+      4
+     ],
+     "target": [
+      3,
+      1
+     ],
+     "stated": 2,
+     "choice": "move north",
+     "before": 3,
+     "after": 2,
+     "p": 0.9999742829574164
+    },
+    {
+     "pos": [
+      1,
+      0
+     ],
+     "target": [
+      0,
+      2
+     ],
+     "stated": 1,
+     "choice": "move south",
+     "before": 3,
+     "after": 2,
+     "p": 0.9667972069364821
+    },
+    {
+     "pos": [
+      6,
+      10
+     ],
+     "target": [
+      4,
+      10
+     ],
+     "stated": 4,
+     "choice": "move west",
+     "before": 2,
+     "after": 1,
+     "p": 0.986705192400467
+    },
+    {
+     "pos": [
+      11,
+      3
+     ],
+     "target": [
+      6,
+      2
+     ],
+     "stated": 8,
+     "choice": "move west",
+     "before": 6,
+     "after": 6,
+     "p": 0.8588138619319865
+    },
+    {
+     "pos": [
+      1,
+      10
+     ],
+     "target": [
+      0,
+      5
+     ],
+     "stated": 5,
+     "choice": "move north",
+     "before": 6,
+     "after": 5,
+     "p": 0.4865030254113021
+    },
+    {
+     "pos": [
+      13,
+      10
+     ],
+     "target": [
+      12,
+      8
+     ],
+     "stated": 5,
+     "choice": "move west",
+     "before": 3,
+     "after": 2,
+     "p": 0.7154433623943266
+    },
+    {
+     "pos": [
+      1,
+      4
+     ],
+     "target": [
+      2,
+      7
+     ],
+     "stated": 6,
+     "choice": "move east",
+     "before": 4,
+     "after": 3,
+     "p": 0.9997543410048779
+    },
+    {
+     "pos": [
+      0,
+      4
+     ],
+     "target": [
+      0,
+      9
+     ],
+     "stated": 6,
+     "choice": "move south",
+     "before": 5,
+     "after": 4,
+     "p": 0.9992080845567846
+    },
+    {
+     "pos": [
+      0,
+      10
+     ],
+     "target": [
+      0,
+      2
+     ],
+     "stated": 8,
+     "choice": "move north",
+     "before": 8,
+     "after": 7,
+     "p": 0.9999382201356627
+    },
+    {
+     "pos": [
+      9,
+      0
+     ],
+     "target": [
+      4,
+      1
+     ],
+     "stated": 8,
+     "choice": "move south",
+     "before": 6,
+     "after": 5,
+     "p": 0.6082121841572152
+    },
+    {
+     "pos": [
+      3,
+      11
+     ],
+     "target": [
+      3,
+      5
+     ],
+     "stated": 8,
+     "choice": "move north",
+     "before": 6,
+     "after": 5,
+     "p": 0.9996979573597495
+    },
+    {
+     "pos": [
+      6,
+      9
+     ],
+     "target": [
+      1,
+      9
+     ],
+     "stated": 4,
+     "choice": "move west",
+     "before": 5,
+     "after": 4,
+     "p": 0.9978098378178144
+    },
+    {
+     "pos": [
+      13,
+      11
+     ],
+     "target": [
+      14,
+      11
+     ],
+     "stated": 1,
+     "choice": "move east",
+     "before": 1,
+     "after": 0,
+     "p": 0.9998923926315119
+    },
+    {
+     "pos": [
+      9,
+      2
+     ],
+     "target": [
+      6,
+      3
+     ],
+     "stated": 4,
+     "choice": "move south",
+     "before": 4,
+     "after": 3,
+     "p": 0.7243734643880091
+    },
+    {
+     "pos": [
+      4,
+      0
+     ],
+     "target": [
+      0,
+      0
+     ],
+     "stated": 4,
+     "choice": "move west",
+     "before": 4,
+     "after": 3,
+     "p": 0.9796167707753932
+    },
+    {
+     "pos": [
+      12,
+      7
+     ],
+     "target": [
+      15,
+      3
+     ],
+     "stated": 5,
+     "choice": "move east",
+     "before": 7,
+     "after": 6,
+     "p": 0.9980181045624703
+    },
+    {
+     "pos": [
+      14,
+      11
+     ],
+     "target": [
+      13,
+      9
+     ],
+     "stated": 2,
+     "choice": "move north",
+     "before": 3,
+     "after": 2,
+     "p": 0.4987847678874176
+    },
+    {
+     "pos": [
+      2,
+      6
+     ],
+     "target": [
+      1,
+      7
+     ],
+     "stated": 1,
+     "choice": "move west",
+     "before": 2,
+     "after": 1,
+     "p": 0.5610978716970726
+    },
+    {
+     "pos": [
+      1,
+      9
+     ],
+     "target": [
+      3,
+      11
+     ],
+     "stated": 6,
+     "choice": "move east",
+     "before": 4,
+     "after": 3,
+     "p": 0.9996531370634909
+    },
+    {
+     "pos": [
+      15,
+      7
+     ],
+     "target": [
+      12,
+      4
+     ],
+     "stated": 4,
+     "choice": "move west",
+     "before": 6,
+     "after": 5,
+     "p": 0.5296134981653827
+    },
+    {
+     "pos": [
+      9,
+      8
+     ],
+     "target": [
+      9,
+      11
+     ],
+     "stated": 3,
+     "choice": "move south",
+     "before": 3,
+     "after": 2,
+     "p": 0.9998703855799745
+    },
+    {
+     "pos": [
+      12,
+      4
+     ],
+     "target": [
+      14,
+      3
+     ],
+     "stated": 1,
+     "choice": "move east",
+     "before": 3,
+     "after": 2,
+     "p": 0.99800325350696
+    },
+    {
+     "pos": [
+      7,
+      6
+     ],
+     "target": [
+      8,
+      6
+     ],
+     "stated": 1,
+     "choice": "move east",
+     "before": 1,
+     "after": 0,
+     "p": 0.9999822908875904
+    },
+    {
+     "pos": [
+      3,
+      7
+     ],
+     "target": [
+      1,
+      5
+     ],
+     "stated": 2,
+     "choice": "move west",
+     "before": 4,
+     "after": 3,
+     "p": 0.5382416073062808
+    },
+    {
+     "pos": [
+      15,
+      8
+     ],
+     "target": [
+      13,
+      9
+     ],
+     "stated": 1,
+     "choice": "move south",
+     "before": 3,
+     "after": 2,
+     "p": 0.9694927330306867
+    },
+    {
+     "pos": [
+      15,
+      3
+     ],
+     "target": [
+      14,
+      9
+     ],
+     "stated": 5,
+     "choice": "move south",
+     "before": 7,
+     "after": 6,
+     "p": 0.9678117218772575
+    },
+    {
+     "pos": [
+      0,
+      8
+     ],
+     "target": [
+      4,
+      7
+     ],
+     "stated": 7,
+     "choice": "move east",
+     "before": 5,
+     "after": 4,
+     "p": 0.9998488419499483
+    },
+    {
+     "pos": [
+      14,
+      11
+     ],
+     "target": [
+      11,
+      10
+     ],
+     "stated": 2,
+     "choice": "move west",
+     "before": 4,
+     "after": 3,
+     "p": 0.6613288532694207
+    }
+   ]
+  },
+  "v1 context: target without distance": {
+   "approach_rate": 0.9833333333333333,
+   "rows": [
+    {
+     "pos": [
+      9,
+      7
+     ],
+     "target": [
+      5,
+      10
+     ],
+     "stated": 8,
+     "choice": "move west",
+     "before": 7,
+     "after": 6,
+     "p": 0.9176545560915379
+    },
+    {
+     "pos": [
+      12,
+      5
+     ],
+     "target": [
+      14,
+      2
+     ],
+     "stated": 7,
+     "choice": "move east",
+     "before": 5,
+     "after": 4,
+     "p": 0.9996463477307248
+    },
+    {
+     "pos": [
+      8,
+      9
+     ],
+     "target": [
+      11,
+      9
+     ],
+     "stated": 7,
+     "choice": "move east",
+     "before": 7,
+     "after": 6,
+     "p": 0.99997840261483
+    },
+    {
+     "pos": [
+      4,
+      7
+     ],
+     "target": [
+      8,
+      10
+     ],
+     "stated": 7,
+     "choice": "move south",
+     "before": 7,
+     "after": 6,
+     "p": 0.9758637978770038
+    },
+    {
+     "pos": [
+      3,
+      2
+     ],
+     "target": [
+      1,
+      4
+     ],
+     "stated": 6,
+     "choice": "move south",
+     "before": 4,
+     "after": 3,
+     "p": 0.5509382345458946
+    },
+    {
+     "pos": [
+      15,
+      2
+     ],
+     "target": [
+      13,
+      4
+     ],
+     "stated": 3,
+     "choice": "move south",
+     "before": 4,
+     "after": 3,
+     "p": 0.7737107842234704
+    },
+    {
+     "pos": [
+      11,
+      11
+     ],
+     "target": [
+      9,
+      11
+     ],
+     "stated": 4,
+     "choice": "move west",
+     "before": 2,
+     "after": 1,
+     "p": 0.9792800753325802
+    },
+    {
+     "pos": [
+      15,
+      8
+     ],
+     "target": [
+      14,
+      5
+     ],
+     "stated": 6,
+     "choice": "move west",
+     "before": 4,
+     "after": 3,
+     "p": 0.9461245297402372
+    },
+    {
+     "pos": [
+      4,
+      2
+     ],
+     "target": [
+      2,
+      0
+     ],
+     "stated": 4,
+     "choice": "move west",
+     "before": 4,
+     "after": 3,
+     "p": 0.8312764083091302
+    },
+    {
+     "pos": [
+      6,
+      8
+     ],
+     "target": [
+      6,
+      5
+     ],
+     "stated": 3,
+     "choice": "move north",
+     "before": 3,
+     "after": 2,
+     "p": 0.9621682328071915
+    },
+    {
+     "pos": [
+      2,
+      0
+     ],
+     "target": [
+      8,
+      0
+     ],
+     "stated": 4,
+     "choice": "move east",
+     "before": 6,
+     "after": 5,
+     "p": 0.9999158456426891
+    },
+    {
+     "pos": [
+      11,
+      3
+     ],
+     "target": [
+      15,
+      5
+     ],
+     "stated": 6,
+     "choice": "move east",
+     "before": 6,
+     "after": 5,
+     "p": 0.9992212087171564
+    },
+    {
+     "pos": [
+      13,
+      4
+     ],
+     "target": [
+      11,
+      2
+     ],
+     "stated": 6,
+     "choice": "move west",
+     "before": 4,
+     "after": 3,
+     "p": 0.5495790718200273
+    },
+    {
+     "pos": [
+      3,
+      8
+     ],
+     "target": [
+      2,
+      2
+     ],
+     "stated": 9,
+     "choice": "move west",
+     "before": 7,
+     "after": 6,
+     "p": 0.8379028689096785
+    },
+    {
+     "pos": [
+      2,
+      8
+     ],
+     "target": [
+      2,
+      10
+     ],
+     "stated": 4,
+     "choice": "move south",
+     "before": 2,
+     "after": 1,
+     "p": 0.9999464800673644
+    },
+    {
+     "pos": [
+      4,
+      10
+     ],
+     "target": [
+      4,
+      11
+     ],
+     "stated": 1,
+     "choice": "move south",
+     "before": 1,
+     "after": 0,
+     "p": 0.9996064744405779
+    },
+    {
+     "pos": [
+      8,
+      1
+     ],
+     "target": [
+      3,
+      2
+     ],
+     "stated": 4,
+     "choice": "move west",
+     "before": 6,
+     "after": 5,
+     "p": 0.6082147800108841
+    },
+    {
+     "pos": [
+      11,
+      1
+     ],
+     "target": [
+      11,
+      9
+     ],
+     "stated": 8,
+     "choice": "move south",
+     "before": 8,
+     "after": 7,
+     "p": 0.9997568765019297
+    },
+    {
+     "pos": [
+      8,
+      9
+     ],
+     "target": [
+      12,
+      11
+     ],
+     "stated": 4,
+     "choice": "move east",
+     "before": 6,
+     "after": 5,
+     "p": 0.9998516966075209
+    },
+    {
+     "pos": [
+      12,
+      0
+     ],
+     "target": [
+      6,
+      2
+     ],
+     "stated": 10,
+     "choice": "move west",
+     "before": 8,
+     "after": 7,
+     "p": 0.9622306586033803
+    },
+    {
+     "pos": [
+      12,
+      10
+     ],
+     "target": [
+      10,
+      11
+     ],
+     "stated": 2,
+     "choice": "move west",
+     "before": 3,
+     "after": 2,
+     "p": 0.7279410312994732
+    },
+    {
+     "pos": [
+      3,
+      6
+     ],
+     "target": [
+      7,
+      10
+     ],
+     "stated": 9,
+     "choice": "move east",
+     "before": 8,
+     "after": 7,
+     "p": 0.9995808943129065
+    },
+    {
+     "pos": [
+      15,
+      9
+     ],
+     "target": [
+      15,
+      11
+     ],
+     "stated": 2,
+     "choice": "move south",
+     "before": 2,
+     "after": 1,
+     "p": 0.999735870617803
+    },
+    {
+     "pos": [
+      6,
+      9
+     ],
+     "target": [
+      1,
+      7
+     ],
+     "stated": 8,
+     "choice": "move west",
+     "before": 7,
+     "after": 6,
+     "p": 0.9717717919803179
+    },
+    {
+     "pos": [
+      6,
+      5
+     ],
+     "target": [
+      6,
+      11
+     ],
+     "stated": 8,
+     "choice": "move south",
+     "before": 6,
+     "after": 5,
+     "p": 0.997659204948663
+    },
+    {
+     "pos": [
+      6,
+      8
+     ],
+     "target": [
+      8,
+      9
+     ],
+     "stated": 5,
+     "choice": "move east",
+     "before": 3,
+     "after": 2,
+     "p": 0.9889411004407341
+    },
+    {
+     "pos": [
+      12,
+      9
+     ],
+     "target": [
+      14,
+      3
+     ],
+     "stated": 10,
+     "choice": "move east",
+     "before": 8,
+     "after": 7,
+     "p": 0.9995920182955744
+    },
+    {
+     "pos": [
+      8,
+      8
+     ],
+     "target": [
+      9,
+      3
+     ],
+     "stated": 7,
+     "choice": "move east",
+     "before": 6,
+     "after": 5,
+     "p": 0.999730170922818
+    },
+    {
+     "pos": [
+      15,
+      9
+     ],
+     "target": [
+      11,
+      6
+     ],
+     "stated": 8,
+     "choice": "move west",
+     "before": 7,
+     "after": 6,
+     "p": 0.9920688393751006
+    },
+    {
+     "pos": [
+      5,
+      11
+     ],
+     "target": [
+      10,
+      11
+     ],
+     "stated": 5,
+     "choice": "move east",
+     "before": 5,
+     "after": 4,
+     "p": 0.9999514153923474
+    },
+    {
+     "pos": [
+      7,
+      4
+     ],
+     "target": [
+      8,
+      7
+     ],
+     "stated": 3,
+     "choice": "move east",
+     "before": 4,
+     "after": 3,
+     "p": 0.999908483900428
+    },
+    {
+     "pos": [
+      5,
+      10
+     ],
+     "target": [
+      3,
+      7
+     ],
+     "stated": 6,
+     "choice": "move west",
+     "before": 5,
+     "after": 4,
+     "p": 0.9793647745475004
+    },
+    {
+     "pos": [
+      3,
+      4
+     ],
+     "target": [
+      3,
+      1
+     ],
+     "stated": 2,
+     "choice": "move north",
+     "before": 3,
+     "after": 2,
+     "p": 0.999962512061042
+    },
+    {
+     "pos": [
+      1,
+      0
+     ],
+     "target": [
+      0,
+      2
+     ],
+     "stated": 1,
+     "choice": "move south",
+     "before": 3,
+     "after": 2,
+     "p": 0.6103914286969947
+    },
+    {
+     "pos": [
+      6,
+      10
+     ],
+     "target": [
+      4,
+      10
+     ],
+     "stated": 4,
+     "choice": "move west",
+     "before": 2,
+     "after": 1,
+     "p": 0.9936932627993323
+    },
+    {
+     "pos": [
+      11,
+      3
+     ],
+     "target": [
+      6,
+      2
+     ],
+     "stated": 8,
+     "choice": "move west",
+     "before": 6,
+     "after": 6,
+     "p": 0.9377859967211938
+    },
+    {
+     "pos": [
+      1,
+      10
+     ],
+     "target": [
+      0,
+      5
+     ],
+     "stated": 5,
+     "choice": "move west",
+     "before": 6,
+     "after": 5,
+     "p": 0.9844678279410474
+    },
+    {
+     "pos": [
+      13,
+      10
+     ],
+     "target": [
+      12,
+      8
+     ],
+     "stated": 5,
+     "choice": "move west",
+     "before": 3,
+     "after": 2,
+     "p": 0.9820496510002525
+    },
+    {
+     "pos": [
+      1,
+      4
+     ],
+     "target": [
+      2,
+      7
+     ],
+     "stated": 6,
+     "choice": "move east",
+     "before": 4,
+     "after": 3,
+     "p": 0.9998818848948096
+    },
+    {
+     "pos": [
+      0,
+      4
+     ],
+     "target": [
+      0,
+      9
+     ],
+     "stated": 6,
+     "choice": "move south",
+     "before": 5,
+     "after": 4,
+     "p": 0.9992553632679777
+    },
+    {
+     "pos": [
+      0,
+      10
+     ],
+     "target": [
+      0,
+      2
+     ],
+     "stated": 8,
+     "choice": "move north",
+     "before": 8,
+     "after": 7,
+     "p": 0.9983370350309191
+    },
+    {
+     "pos": [
+      9,
+      0
+     ],
+     "target": [
+      4,
+      1
+     ],
+     "stated": 8,
+     "choice": "move west",
+     "before": 6,
+     "after": 5,
+     "p": 0.8854422881136002
+    },
+    {
+     "pos": [
+      3,
+      11
+     ],
+     "target": [
+      3,
+      5
+     ],
+     "stated": 8,
+     "choice": "move north",
+     "before": 6,
+     "after": 5,
+     "p": 0.9997643330344043
+    },
+    {
+     "pos": [
+      6,
+      9
+     ],
+     "target": [
+      1,
+      9
+     ],
+     "stated": 4,
+     "choice": "move west",
+     "before": 5,
+     "after": 4,
+     "p": 0.9989151753084771
+    },
+    {
+     "pos": [
+      13,
+      11
+     ],
+     "target": [
+      14,
+      11
+     ],
+     "stated": 1,
+     "choice": "move east",
+     "before": 1,
+     "after": 0,
+     "p": 0.999937473652779
+    },
+    {
+     "pos": [
+      9,
+      2
+     ],
+     "target": [
+      6,
+      3
+     ],
+     "stated": 4,
+     "choice": "move south",
+     "before": 4,
+     "after": 3,
+     "p": 0.555366550439279
+    },
+    {
+     "pos": [
+      4,
+      0
+     ],
+     "target": [
+      0,
+      0
+     ],
+     "stated": 4,
+     "choice": "move west",
+     "before": 4,
+     "after": 3,
+     "p": 0.987735297721274
+    },
+    {
+     "pos": [
+      12,
+      7
+     ],
+     "target": [
+      15,
+      3
+     ],
+     "stated": 5,
+     "choice": "move east",
+     "before": 7,
+     "after": 6,
+     "p": 0.9997298823774157
+    },
+    {
+     "pos": [
+      14,
+      11
+     ],
+     "target": [
+      13,
+      9
+     ],
+     "stated": 2,
+     "choice": "move west",
+     "before": 3,
+     "after": 2,
+     "p": 0.9419531255903105
+    },
+    {
+     "pos": [
+      2,
+      6
+     ],
+     "target": [
+      1,
+      7
+     ],
+     "stated": 1,
+     "choice": "move west",
+     "before": 2,
+     "after": 1,
+     "p": 0.5608817953206199
+    },
+    {
+     "pos": [
+      1,
+      9
+     ],
+     "target": [
+      3,
+      11
+     ],
+     "stated": 6,
+     "choice": "move east",
+     "before": 4,
+     "after": 3,
+     "p": 0.9997782103503169
+    },
+    {
+     "pos": [
+      15,
+      7
+     ],
+     "target": [
+      12,
+      4
+     ],
+     "stated": 4,
+     "choice": "move west",
+     "before": 6,
+     "after": 5,
+     "p": 0.965992407351114
+    },
+    {
+     "pos": [
+      9,
+      8
+     ],
+     "target": [
+      9,
+      11
+     ],
+     "stated": 3,
+     "choice": "move south",
+     "before": 3,
+     "after": 2,
+     "p": 0.9996599131602842
+    },
+    {
+     "pos": [
+      12,
+      4
+     ],
+     "target": [
+      14,
+      3
+     ],
+     "stated": 1,
+     "choice": "move east",
+     "before": 3,
+     "after": 2,
+     "p": 0.9997000811519484
+    },
+    {
+     "pos": [
+      7,
+      6
+     ],
+     "target": [
+      8,
+      6
+     ],
+     "stated": 1,
+     "choice": "move east",
+     "before": 1,
+     "after": 0,
+     "p": 0.999985154667547
+    },
+    {
+     "pos": [
+      3,
+      7
+     ],
+     "target": [
+      1,
+      5
+     ],
+     "stated": 2,
+     "choice": "move west",
+     "before": 4,
+     "after": 3,
+     "p": 0.7485933932822466
+    },
+    {
+     "pos": [
+      15,
+      8
+     ],
+     "target": [
+      13,
+      9
+     ],
+     "stated": 1,
+     "choice": "move south",
+     "before": 3,
+     "after": 2,
+     "p": 0.9390332703875894
+    },
+    {
+     "pos": [
+      15,
+      3
+     ],
+     "target": [
+      14,
+      9
+     ],
+     "stated": 5,
+     "choice": "move south",
+     "before": 7,
+     "after": 6,
+     "p": 0.8135849893207098
+    },
+    {
+     "pos": [
+      0,
+      8
+     ],
+     "target": [
+      4,
+      7
+     ],
+     "stated": 7,
+     "choice": "move east",
+     "before": 5,
+     "after": 4,
+     "p": 0.9998312698820002
+    },
+    {
+     "pos": [
+      14,
+      11
+     ],
+     "target": [
+      11,
+      10
+     ],
+     "stated": 2,
+     "choice": "move west",
+     "before": 4,
+     "after": 3,
+     "p": 0.9623887880700509
+    }
+   ]
+  },
+  "v2 context: target kind only": {
+   "approach_rate": 0.9666666666666667,
+   "rows": [
+    {
+     "pos": [
+      9,
+      7
+     ],
+     "target": [
+      5,
+      10
+     ],
+     "stated": 8,
+     "choice": "move west",
+     "before": 7,
+     "after": 6,
+     "p": 0.7266214486825173
+    },
+    {
+     "pos": [
+      12,
+      5
+     ],
+     "target": [
+      14,
+      2
+     ],
+     "stated": 7,
+     "choice": "move east",
+     "before": 5,
+     "after": 4,
+     "p": 0.9999064476885968
+    },
+    {
+     "pos": [
+      8,
+      9
+     ],
+     "target": [
+      11,
+      9
+     ],
+     "stated": 7,
+     "choice": "move east",
+     "before": 7,
+     "after": 6,
+     "p": 0.9999841432505728
+    },
+    {
+     "pos": [
+      4,
+      7
+     ],
+     "target": [
+      8,
+      10
+     ],
+     "stated": 7,
+     "choice": "move south",
+     "before": 7,
+     "after": 6,
+     "p": 0.9981348434948368
+    },
+    {
+     "pos": [
+      3,
+      2
+     ],
+     "target": [
+      1,
+      4
+     ],
+     "stated": 6,
+     "choice": "move south",
+     "before": 4,
+     "after": 3,
+     "p": 0.6730326666440903
+    },
+    {
+     "pos": [
+      15,
+      2
+     ],
+     "target": [
+      13,
+      4
+     ],
+     "stated": 3,
+     "choice": "move south",
+     "before": 4,
+     "after": 3,
+     "p": 0.8161504825303877
+    },
+    {
+     "pos": [
+      11,
+      11
+     ],
+     "target": [
+      9,
+      11
+     ],
+     "stated": 4,
+     "choice": "move west",
+     "before": 2,
+     "after": 1,
+     "p": 0.9582647149035525
+    },
+    {
+     "pos": [
+      15,
+      8
+     ],
+     "target": [
+      14,
+      5
+     ],
+     "stated": 6,
+     "choice": "move west",
+     "before": 4,
+     "after": 3,
+     "p": 0.9841270349304192
+    },
+    {
+     "pos": [
+      4,
+      2
+     ],
+     "target": [
+      2,
+      0
+     ],
+     "stated": 4,
+     "choice": "move west",
+     "before": 4,
+     "after": 3,
+     "p": 0.9463160807266409
+    },
+    {
+     "pos": [
+      6,
+      8
+     ],
+     "target": [
+      6,
+      5
+     ],
+     "stated": 3,
+     "choice": "move north",
+     "before": 3,
+     "after": 2,
+     "p": 0.9995562547559548
+    },
+    {
+     "pos": [
+      2,
+      0
+     ],
+     "target": [
+      8,
+      0
+     ],
+     "stated": 4,
+     "choice": "move east",
+     "before": 6,
+     "after": 5,
+     "p": 0.9999579787390207
+    },
+    {
+     "pos": [
+      11,
+      3
+     ],
+     "target": [
+      15,
+      5
+     ],
+     "stated": 6,
+     "choice": "move east",
+     "before": 6,
+     "after": 5,
+     "p": 0.8173123057975705
+    },
+    {
+     "pos": [
+      13,
+      4
+     ],
+     "target": [
+      11,
+      2
+     ],
+     "stated": 6,
+     "choice": "move west",
+     "before": 4,
+     "after": 3,
+     "p": 0.6109631144486116
+    },
+    {
+     "pos": [
+      3,
+      8
+     ],
+     "target": [
+      2,
+      2
+     ],
+     "stated": 9,
+     "choice": "move west",
+     "before": 7,
+     "after": 6,
+     "p": 0.991881437402349
+    },
+    {
+     "pos": [
+      2,
+      8
+     ],
+     "target": [
+      2,
+      10
+     ],
+     "stated": 4,
+     "choice": "move south",
+     "before": 2,
+     "after": 1,
+     "p": 0.9999528790599415
+    },
+    {
+     "pos": [
+      4,
+      10
+     ],
+     "target": [
+      4,
+      11
+     ],
+     "stated": 1,
+     "choice": "move south",
+     "before": 1,
+     "after": 0,
+     "p": 0.9998704405281573
+    },
+    {
+     "pos": [
+      8,
+      1
+     ],
+     "target": [
+      3,
+      2
+     ],
+     "stated": 4,
+     "choice": "move south",
+     "before": 6,
+     "after": 7,
+     "p": 0.9640385928230104
+    },
+    {
+     "pos": [
+      11,
+      1
+     ],
+     "target": [
+      11,
+      9
+     ],
+     "stated": 8,
+     "choice": "move south",
+     "before": 8,
+     "after": 7,
+     "p": 0.9997302651892356
+    },
+    {
+     "pos": [
+      8,
+      9
+     ],
+     "target": [
+      12,
+      11
+     ],
+     "stated": 4,
+     "choice": "move east",
+     "before": 6,
+     "after": 5,
+     "p": 0.9995795677576899
+    },
+    {
+     "pos": [
+      12,
+      0
+     ],
+     "target": [
+      6,
+      2
+     ],
+     "stated": 10,
+     "choice": "move west",
+     "before": 8,
+     "after": 7,
+     "p": 0.8014261571310334
+    },
+    {
+     "pos": [
+      12,
+      10
+     ],
+     "target": [
+      10,
+      11
+     ],
+     "stated": 2,
+     "choice": "move south",
+     "before": 3,
+     "after": 2,
+     "p": 0.6722895426191411
+    },
+    {
+     "pos": [
+      3,
+      6
+     ],
+     "target": [
+      7,
+      10
+     ],
+     "stated": 9,
+     "choice": "move east",
+     "before": 8,
+     "after": 7,
+     "p": 0.9994048971090777
+    },
+    {
+     "pos": [
+      15,
+      9
+     ],
+     "target": [
+      15,
+      11
+     ],
+     "stated": 2,
+     "choice": "move south",
+     "before": 2,
+     "after": 1,
+     "p": 0.99973642418215
+    },
+    {
+     "pos": [
+      6,
+      9
+     ],
+     "target": [
+      1,
+      7
+     ],
+     "stated": 8,
+     "choice": "move west",
+     "before": 7,
+     "after": 6,
+     "p": 0.9791463021297152
+    },
+    {
+     "pos": [
+      6,
+      5
+     ],
+     "target": [
+      6,
+      11
+     ],
+     "stated": 8,
+     "choice": "move south",
+     "before": 6,
+     "after": 5,
+     "p": 0.9973604858999776
+    },
+    {
+     "pos": [
+      6,
+      8
+     ],
+     "target": [
+      8,
+      9
+     ],
+     "stated": 5,
+     "choice": "move east",
+     "before": 3,
+     "after": 2,
+     "p": 0.5621112684952295
+    },
+    {
+     "pos": [
+      12,
+      9
+     ],
+     "target": [
+      14,
+      3
+     ],
+     "stated": 10,
+     "choice": "move east",
+     "before": 8,
+     "after": 7,
+     "p": 0.9999219178935052
+    },
+    {
+     "pos": [
+      8,
+      8
+     ],
+     "target": [
+      9,
+      3
+     ],
+     "stated": 7,
+     "choice": "move east",
+     "before": 6,
+     "after": 5,
+     "p": 0.9999140402869766
+    },
+    {
+     "pos": [
+      15,
+      9
+     ],
+     "target": [
+      11,
+      6
+     ],
+     "stated": 8,
+     "choice": "move west",
+     "before": 7,
+     "after": 6,
+     "p": 0.9888384474653968
+    },
+    {
+     "pos": [
+      5,
+      11
+     ],
+     "target": [
+      10,
+      11
+     ],
+     "stated": 5,
+     "choice": "move east",
+     "before": 5,
+     "after": 4,
+     "p": 0.999973188963466
+    },
+    {
+     "pos": [
+      7,
+      4
+     ],
+     "target": [
+      8,
+      7
+     ],
+     "stated": 3,
+     "choice": "move east",
+     "before": 4,
+     "after": 3,
+     "p": 0.9996400190882404
+    },
+    {
+     "pos": [
+      5,
+      10
+     ],
+     "target": [
+      3,
+      7
+     ],
+     "stated": 6,
+     "choice": "move west",
+     "before": 5,
+     "after": 4,
+     "p": 0.99174624437552
+    },
+    {
+     "pos": [
+      3,
+      4
+     ],
+     "target": [
+      3,
+      1
+     ],
+     "stated": 2,
+     "choice": "move north",
+     "before": 3,
+     "after": 2,
+     "p": 0.9999795302127785
+    },
+    {
+     "pos": [
+      1,
+      0
+     ],
+     "target": [
+      0,
+      2
+     ],
+     "stated": 1,
+     "choice": "move south",
+     "before": 3,
+     "after": 2,
+     "p": 0.6695625589080658
+    },
+    {
+     "pos": [
+      6,
+      10
+     ],
+     "target": [
+      4,
+      10
+     ],
+     "stated": 4,
+     "choice": "move west",
+     "before": 2,
+     "after": 1,
+     "p": 0.9982654643289226
+    },
+    {
+     "pos": [
+      11,
+      3
+     ],
+     "target": [
+      6,
+      2
+     ],
+     "stated": 8,
+     "choice": "move west",
+     "before": 6,
+     "after": 6,
+     "p": 0.9675295095717634
+    },
+    {
+     "pos": [
+      1,
+      10
+     ],
+     "target": [
+      0,
+      5
+     ],
+     "stated": 5,
+     "choice": "move west",
+     "before": 6,
+     "after": 5,
+     "p": 0.9955142283822669
+    },
+    {
+     "pos": [
+      13,
+      10
+     ],
+     "target": [
+      12,
+      8
+     ],
+     "stated": 5,
+     "choice": "move west",
+     "before": 3,
+     "after": 2,
+     "p": 0.9637919580961688
+    },
+    {
+     "pos": [
+      1,
+      4
+     ],
+     "target": [
+      2,
+      7
+     ],
+     "stated": 6,
+     "choice": "move east",
+     "before": 4,
+     "after": 3,
+     "p": 0.9995894408033267
+    },
+    {
+     "pos": [
+      0,
+      4
+     ],
+     "target": [
+      0,
+      9
+     ],
+     "stated": 6,
+     "choice": "move south",
+     "before": 5,
+     "after": 4,
+     "p": 0.9992674337665023
+    },
+    {
+     "pos": [
+      0,
+      10
+     ],
+     "target": [
+      0,
+      2
+     ],
+     "stated": 8,
+     "choice": "move north",
+     "before": 8,
+     "after": 7,
+     "p": 0.9993879373316897
+    },
+    {
+     "pos": [
+      9,
+      0
+     ],
+     "target": [
+      4,
+      1
+     ],
+     "stated": 8,
+     "choice": "move south",
+     "before": 6,
+     "after": 5,
+     "p": 0.7223618023476936
+    },
+    {
+     "pos": [
+      3,
+      11
+     ],
+     "target": [
+      3,
+      5
+     ],
+     "stated": 8,
+     "choice": "move north",
+     "before": 6,
+     "after": 5,
+     "p": 0.9997633092787266
+    },
+    {
+     "pos": [
+      6,
+      9
+     ],
+     "target": [
+      1,
+      9
+     ],
+     "stated": 4,
+     "choice": "move west",
+     "before": 5,
+     "after": 4,
+     "p": 0.9994706166683563
+    },
+    {
+     "pos": [
+      13,
+      11
+     ],
+     "target": [
+      14,
+      11
+     ],
+     "stated": 1,
+     "choice": "move east",
+     "before": 1,
+     "after": 0,
+     "p": 0.9999583844068636
+    },
+    {
+     "pos": [
+      9,
+      2
+     ],
+     "target": [
+      6,
+      3
+     ],
+     "stated": 4,
+     "choice": "move south",
+     "before": 4,
+     "after": 3,
+     "p": 0.9361033001270751
+    },
+    {
+     "pos": [
+      4,
+      0
+     ],
+     "target": [
+      0,
+      0
+     ],
+     "stated": 4,
+     "choice": "move west",
+     "before": 4,
+     "after": 3,
+     "p": 0.9901701828898226
+    },
+    {
+     "pos": [
+      12,
+      7
+     ],
+     "target": [
+      15,
+      3
+     ],
+     "stated": 5,
+     "choice": "move east",
+     "before": 7,
+     "after": 6,
+     "p": 0.9999277374651454
+    },
+    {
+     "pos": [
+      14,
+      11
+     ],
+     "target": [
+      13,
+      9
+     ],
+     "stated": 2,
+     "choice": "move west",
+     "before": 3,
+     "after": 2,
+     "p": 0.8864854908278389
+    },
+    {
+     "pos": [
+      2,
+      6
+     ],
+     "target": [
+      1,
+      7
+     ],
+     "stated": 1,
+     "choice": "move south",
+     "before": 2,
+     "after": 1,
+     "p": 0.6201897747060484
+    },
+    {
+     "pos": [
+      1,
+      9
+     ],
+     "target": [
+      3,
+      11
+     ],
+     "stated": 6,
+     "choice": "move east",
+     "before": 4,
+     "after": 3,
+     "p": 0.9996774512230502
+    },
+    {
+     "pos": [
+      15,
+      7
+     ],
+     "target": [
+      12,
+      4
+     ],
+     "stated": 4,
+     "choice": "move west",
+     "before": 6,
+     "after": 5,
+     "p": 0.9621903365275113
+    },
+    {
+     "pos": [
+      9,
+      8
+     ],
+     "target": [
+      9,
+      11
+     ],
+     "stated": 3,
+     "choice": "move south",
+     "before": 3,
+     "after": 2,
+     "p": 0.9996610858612649
+    },
+    {
+     "pos": [
+      12,
+      4
+     ],
+     "target": [
+      14,
+      3
+     ],
+     "stated": 1,
+     "choice": "move east",
+     "before": 3,
+     "after": 2,
+     "p": 0.9998888948377765
+    },
+    {
+     "pos": [
+      7,
+      6
+     ],
+     "target": [
+      8,
+      6
+     ],
+     "stated": 1,
+     "choice": "move east",
+     "before": 1,
+     "after": 0,
+     "p": 0.9999844696588518
+    },
+    {
+     "pos": [
+      3,
+      7
+     ],
+     "target": [
+      1,
+      5
+     ],
+     "stated": 2,
+     "choice": "move west",
+     "before": 4,
+     "after": 3,
+     "p": 0.9155003297846759
+    },
+    {
+     "pos": [
+      15,
+      8
+     ],
+     "target": [
+      13,
+      9
+     ],
+     "stated": 1,
+     "choice": "move south",
+     "before": 3,
+     "after": 2,
+     "p": 0.9519027472734739
+    },
+    {
+     "pos": [
+      15,
+      3
+     ],
+     "target": [
+      14,
+      9
+     ],
+     "stated": 5,
+     "choice": "move south",
+     "before": 7,
+     "after": 6,
+     "p": 0.9511948970279054
+    },
+    {
+     "pos": [
+      0,
+      8
+     ],
+     "target": [
+      4,
+      7
+     ],
+     "stated": 7,
+     "choice": "move east",
+     "before": 5,
+     "after": 4,
+     "p": 0.9998379324993485
+    },
+    {
+     "pos": [
+      14,
+      11
+     ],
+     "target": [
+      11,
+      10
+     ],
+     "stated": 2,
+     "choice": "move west",
+     "before": 4,
+     "after": 3,
+     "p": 0.8949852518082825
+    }
+   ]
+  },
+  "v3 = v2 + options labelled with outcomes": {
+   "approach_rate": 0.9666666666666667,
+   "rows": [
+    {
+     "pos": [
+      9,
+      7
+     ],
+     "target": [
+      5,
+      10
+     ],
+     "stated": 8,
+     "choice": "move west (target: 6 steps)",
+     "before": 7,
+     "after": 6,
+     "p": 0.7733225655503235
+    },
+    {
+     "pos": [
+      12,
+      5
+     ],
+     "target": [
+      14,
+      2
+     ],
+     "stated": 7,
+     "choice": "move east (target: 4 steps)",
+     "before": 5,
+     "after": 4,
+     "p": 0.999548847199097
+    },
+    {
+     "pos": [
+      8,
+      9
+     ],
+     "target": [
+      11,
+      9
+     ],
+     "stated": 7,
+     "choice": "move east (target: 6 steps)",
+     "before": 7,
+     "after": 6,
+     "p": 0.9999788934171172
+    },
+    {
+     "pos": [
+      4,
+      7
+     ],
+     "target": [
+      8,
+      10
+     ],
+     "stated": 7,
+     "choice": "move south (target: 6 steps)",
+     "before": 7,
+     "after": 6,
+     "p": 0.9989615660434056
+    },
+    {
+     "pos": [
+      3,
+      2
+     ],
+     "target": [
+      1,
+      4
+     ],
+     "stated": 6,
+     "choice": "move west (target: 3 steps)",
+     "before": 4,
+     "after": 3,
+     "p": 0.9950125701112014
+    },
+    {
+     "pos": [
+      15,
+      2
+     ],
+     "target": [
+      13,
+      4
+     ],
+     "stated": 3,
+     "choice": "move west (target: 3 steps)",
+     "before": 4,
+     "after": 3,
+     "p": 0.5612241911938435
+    },
+    {
+     "pos": [
+      11,
+      11
+     ],
+     "target": [
+      9,
+      11
+     ],
+     "stated": 4,
+     "choice": "move west (target: 1 step)",
+     "before": 2,
+     "after": 1,
+     "p": 0.9999357997679875
+    },
+    {
+     "pos": [
+      15,
+      8
+     ],
+     "target": [
+      14,
+      5
+     ],
+     "stated": 6,
+     "choice": "move north (target: 3 steps)",
+     "before": 4,
+     "after": 3,
+     "p": 0.8164519817701048
+    },
+    {
+     "pos": [
+      4,
+      2
+     ],
+     "target": [
+      2,
+      0
+     ],
+     "stated": 4,
+     "choice": "move west (target: 3 steps)",
+     "before": 4,
+     "after": 3,
+     "p": 0.9961668560711393
+    },
+    {
+     "pos": [
+      6,
+      8
+     ],
+     "target": [
+      6,
+      5
+     ],
+     "stated": 3,
+     "choice": "move north (target: 2 steps)",
+     "before": 3,
+     "after": 2,
+     "p": 0.9999655102902509
+    },
+    {
+     "pos": [
+      2,
+      0
+     ],
+     "target": [
+      8,
+      0
+     ],
+     "stated": 4,
+     "choice": "move south (target: 7 steps)",
+     "before": 6,
+     "after": 7,
+     "p": 0.9992869976828654
+    },
+    {
+     "pos": [
+      11,
+      3
+     ],
+     "target": [
+      15,
+      5
+     ],
+     "stated": 6,
+     "choice": "move south (target: 5 steps)",
+     "before": 6,
+     "after": 5,
+     "p": 0.556005582821051
+    },
+    {
+     "pos": [
+      13,
+      4
+     ],
+     "target": [
+      11,
+      2
+     ],
+     "stated": 6,
+     "choice": "move west (target: 3 steps)",
+     "before": 4,
+     "after": 3,
+     "p": 0.9856736899679516
+    },
+    {
+     "pos": [
+      3,
+      8
+     ],
+     "target": [
+      2,
+      2
+     ],
+     "stated": 9,
+     "choice": "move west (target: 6 steps)",
+     "before": 7,
+     "after": 6,
+     "p": 0.9797875492217839
+    },
+    {
+     "pos": [
+      2,
+      8
+     ],
+     "target": [
+      2,
+      10
+     ],
+     "stated": 4,
+     "choice": "move south (target: 1 step)",
+     "before": 2,
+     "after": 1,
+     "p": 0.9999910035197949
+    },
+    {
+     "pos": [
+      4,
+      10
+     ],
+     "target": [
+      4,
+      11
+     ],
+     "stated": 1,
+     "choice": "move south (reach the target)",
+     "before": 1,
+     "after": 0,
+     "p": 0.999992369202292
+    },
+    {
+     "pos": [
+      8,
+      1
+     ],
+     "target": [
+      3,
+      2
+     ],
+     "stated": 4,
+     "choice": "move west (target: 5 steps)",
+     "before": 6,
+     "after": 5,
+     "p": 0.9995337034178752
+    },
+    {
+     "pos": [
+      11,
+      1
+     ],
+     "target": [
+      11,
+      9
+     ],
+     "stated": 8,
+     "choice": "move south (target: 7 steps)",
+     "before": 8,
+     "after": 7,
+     "p": 0.9992779836450989
+    },
+    {
+     "pos": [
+      8,
+      9
+     ],
+     "target": [
+      12,
+      11
+     ],
+     "stated": 4,
+     "choice": "move south (target: 5 steps)",
+     "before": 6,
+     "after": 5,
+     "p": 0.8147948789139097
+    },
+    {
+     "pos": [
+      12,
+      0
+     ],
+     "target": [
+      6,
+      2
+     ],
+     "stated": 10,
+     "choice": "move south (target: 7 steps)",
+     "before": 8,
+     "after": 7,
+     "p": 0.9999707281117141
+    },
+    {
+     "pos": [
+      12,
+      10
+     ],
+     "target": [
+      10,
+      11
+     ],
+     "stated": 2,
+     "choice": "move west (target: 2 steps)",
+     "before": 3,
+     "after": 2,
+     "p": 0.9614219692704568
+    },
+    {
+     "pos": [
+      3,
+      6
+     ],
+     "target": [
+      7,
+      10
+     ],
+     "stated": 9,
+     "choice": "move south (target: 7 steps)",
+     "before": 8,
+     "after": 7,
+     "p": 0.8162133287916663
+    },
+    {
+     "pos": [
+      15,
+      9
+     ],
+     "target": [
+      15,
+      11
+     ],
+     "stated": 2,
+     "choice": "move south (target: 1 step)",
+     "before": 2,
+     "after": 1,
+     "p": 0.9997946739753625
+    },
+    {
+     "pos": [
+      6,
+      9
+     ],
+     "target": [
+      1,
+      7
+     ],
+     "stated": 8,
+     "choice": "move west (target: 6 steps)",
+     "before": 7,
+     "after": 6,
+     "p": 0.9998521459187021
+    },
+    {
+     "pos": [
+      6,
+      5
+     ],
+     "target": [
+      6,
+      11
+     ],
+     "stated": 8,
+     "choice": "move south (target: 5 steps)",
+     "before": 6,
+     "after": 5,
+     "p": 0.9974070033881917
+    },
+    {
+     "pos": [
+      6,
+      8
+     ],
+     "target": [
+      8,
+      9
+     ],
+     "stated": 5,
+     "choice": "move south (target: 2 steps)",
+     "before": 3,
+     "after": 2,
+     "p": 0.90424942151006
+    },
+    {
+     "pos": [
+      12,
+      9
+     ],
+     "target": [
+      14,
+      3
+     ],
+     "stated": 10,
+     "choice": "move east (target: 7 steps)",
+     "before": 8,
+     "after": 7,
+     "p": 0.9984405760086954
+    },
+    {
+     "pos": [
+      8,
+      8
+     ],
+     "target": [
+      9,
+      3
+     ],
+     "stated": 7,
+     "choice": "move east (target: 5 steps)",
+     "before": 6,
+     "after": 5,
+     "p": 0.9985879432579827
+    },
+    {
+     "pos": [
+      15,
+      9
+     ],
+     "target": [
+      11,
+      6
+     ],
+     "stated": 8,
+     "choice": "move west (target: 6 steps)",
+     "before": 7,
+     "after": 6,
+     "p": 0.9943224629221512
+    },
+    {
+     "pos": [
+      5,
+      11
+     ],
+     "target": [
+      10,
+      11
+     ],
+     "stated": 5,
+     "choice": "move east (target: 4 steps)",
+     "before": 5,
+     "after": 4,
+     "p": 0.9997914552248188
+    },
+    {
+     "pos": [
+      7,
+      4
+     ],
+     "target": [
+      8,
+      7
+     ],
+     "stated": 3,
+     "choice": "move south (target: 3 steps)",
+     "before": 4,
+     "after": 3,
+     "p": 0.9524696974408077
+    },
+    {
+     "pos": [
+      5,
+      10
+     ],
+     "target": [
+      3,
+      7
+     ],
+     "stated": 6,
+     "choice": "move west (target: 4 steps)",
+     "before": 5,
+     "after": 4,
+     "p": 0.9946304425587955
+    },
+    {
+     "pos": [
+      3,
+      4
+     ],
+     "target": [
+      3,
+      1
+     ],
+     "stated": 2,
+     "choice": "move north (target: 2 steps)",
+     "before": 3,
+     "after": 2,
+     "p": 0.9999963624670999
+    },
+    {
+     "pos": [
+      1,
+      0
+     ],
+     "target": [
+      0,
+      2
+     ],
+     "stated": 1,
+     "choice": "move south (target: 2 steps)",
+     "before": 3,
+     "after": 2,
+     "p": 0.9992858682199922
+    },
+    {
+     "pos": [
+      6,
+      10
+     ],
+     "target": [
+      4,
+      10
+     ],
+     "stated": 4,
+     "choice": "move west (target: 1 step)",
+     "before": 2,
+     "after": 1,
+     "p": 0.9998861473219042
+    },
+    {
+     "pos": [
+      11,
+      3
+     ],
+     "target": [
+      6,
+      2
+     ],
+     "stated": 8,
+     "choice": "move west (wall)",
+     "before": 6,
+     "after": 6,
+     "p": 0.8732637462233455
+    },
+    {
+     "pos": [
+      1,
+      10
+     ],
+     "target": [
+      0,
+      5
+     ],
+     "stated": 5,
+     "choice": "move west (target: 5 steps)",
+     "before": 6,
+     "after": 5,
+     "p": 0.9818959950677363
+    },
+    {
+     "pos": [
+      13,
+      10
+     ],
+     "target": [
+      12,
+      8
+     ],
+     "stated": 5,
+     "choice": "move west (target: 2 steps)",
+     "before": 3,
+     "after": 2,
+     "p": 0.9739718895419112
+    },
+    {
+     "pos": [
+      1,
+      4
+     ],
+     "target": [
+      2,
+      7
+     ],
+     "stated": 6,
+     "choice": "move south (target: 3 steps)",
+     "before": 4,
+     "after": 3,
+     "p": 0.5620975926083969
+    },
+    {
+     "pos": [
+      0,
+      4
+     ],
+     "target": [
+      0,
+      9
+     ],
+     "stated": 6,
+     "choice": "move south (target: 4 steps)",
+     "before": 5,
+     "after": 4,
+     "p": 0.9997878029915812
+    },
+    {
+     "pos": [
+      0,
+      10
+     ],
+     "target": [
+      0,
+      2
+     ],
+     "stated": 8,
+     "choice": "move north (target: 7 steps)",
+     "before": 8,
+     "after": 7,
+     "p": 0.9225256501408572
+    },
+    {
+     "pos": [
+      9,
+      0
+     ],
+     "target": [
+      4,
+      1
+     ],
+     "stated": 8,
+     "choice": "move south (target: 5 steps)",
+     "before": 6,
+     "after": 5,
+     "p": 0.9999758214284153
+    },
+    {
+     "pos": [
+      3,
+      11
+     ],
+     "target": [
+      3,
+      5
+     ],
+     "stated": 8,
+     "choice": "move north (target: 5 steps)",
+     "before": 6,
+     "after": 5,
+     "p": 0.99999590679109
+    },
+    {
+     "pos": [
+      6,
+      9
+     ],
+     "target": [
+      1,
+      9
+     ],
+     "stated": 4,
+     "choice": "move west (target: 4 steps)",
+     "before": 5,
+     "after": 4,
+     "p": 0.9999088422508784
+    },
+    {
+     "pos": [
+      13,
+      11
+     ],
+     "target": [
+      14,
+      11
+     ],
+     "stated": 1,
+     "choice": "move east (reach the target)",
+     "before": 1,
+     "after": 0,
+     "p": 0.9999851448135973
+    },
+    {
+     "pos": [
+      9,
+      2
+     ],
+     "target": [
+      6,
+      3
+     ],
+     "stated": 4,
+     "choice": "move west (target: 3 steps)",
+     "before": 4,
+     "after": 3,
+     "p": 0.9520284569044815
+    },
+    {
+     "pos": [
+      4,
+      0
+     ],
+     "target": [
+      0,
+      0
+     ],
+     "stated": 4,
+     "choice": "move west (target: 3 steps)",
+     "before": 4,
+     "after": 3,
+     "p": 0.9957060641320853
+    },
+    {
+     "pos": [
+      12,
+      7
+     ],
+     "target": [
+      15,
+      3
+     ],
+     "stated": 5,
+     "choice": "move east (target: 6 steps)",
+     "before": 7,
+     "after": 6,
+     "p": 0.9994340912195047
+    },
+    {
+     "pos": [
+      14,
+      11
+     ],
+     "target": [
+      13,
+      9
+     ],
+     "stated": 2,
+     "choice": "move west (target: 2 steps)",
+     "before": 3,
+     "after": 2,
+     "p": 0.8078666156036135
+    },
+    {
+     "pos": [
+      2,
+      6
+     ],
+     "target": [
+      1,
+      7
+     ],
+     "stated": 1,
+     "choice": "move west (target: 1 step)",
+     "before": 2,
+     "after": 1,
+     "p": 0.9955903334804498
+    },
+    {
+     "pos": [
+      1,
+      9
+     ],
+     "target": [
+      3,
+      11
+     ],
+     "stated": 6,
+     "choice": "move east (target: 3 steps)",
+     "before": 4,
+     "after": 3,
+     "p": 0.9992585597624514
+    },
+    {
+     "pos": [
+      15,
+      7
+     ],
+     "target": [
+      12,
+      4
+     ],
+     "stated": 4,
+     "choice": "move west (target: 5 steps)",
+     "before": 6,
+     "after": 5,
+     "p": 0.7721155324740302
+    },
+    {
+     "pos": [
+      9,
+      8
+     ],
+     "target": [
+      9,
+      11
+     ],
+     "stated": 3,
+     "choice": "move south (target: 2 steps)",
+     "before": 3,
+     "after": 2,
+     "p": 0.9992885042043119
+    },
+    {
+     "pos": [
+      12,
+      4
+     ],
+     "target": [
+      14,
+      3
+     ],
+     "stated": 1,
+     "choice": "move east (target: 2 steps)",
+     "before": 3,
+     "after": 2,
+     "p": 0.9889373198255945
+    },
+    {
+     "pos": [
+      7,
+      6
+     ],
+     "target": [
+      8,
+      6
+     ],
+     "stated": 1,
+     "choice": "move east (reach the target)",
+     "before": 1,
+     "after": 0,
+     "p": 0.9999919547645847
+    },
+    {
+     "pos": [
+      3,
+      7
+     ],
+     "target": [
+      1,
+      5
+     ],
+     "stated": 2,
+     "choice": "move west (target: 3 steps)",
+     "before": 4,
+     "after": 3,
+     "p": 0.9958132120878621
+    },
+    {
+     "pos": [
+      15,
+      8
+     ],
+     "target": [
+      13,
+      9
+     ],
+     "stated": 1,
+     "choice": "move south (target: 2 steps)",
+     "before": 3,
+     "after": 2,
+     "p": 0.9932162255601767
+    },
+    {
+     "pos": [
+      15,
+      3
+     ],
+     "target": [
+      14,
+      9
+     ],
+     "stated": 5,
+     "choice": "move south (target: 6 steps)",
+     "before": 7,
+     "after": 6,
+     "p": 0.9927447628301054
+    },
+    {
+     "pos": [
+      0,
+      8
+     ],
+     "target": [
+      4,
+      7
+     ],
+     "stated": 7,
+     "choice": "move east (target: 4 steps)",
+     "before": 5,
+     "after": 4,
+     "p": 0.9989231475348276
+    },
+    {
+     "pos": [
+      14,
+      11
+     ],
+     "target": [
+      11,
+      10
+     ],
+     "stated": 2,
+     "choice": "move west (target: 3 steps)",
+     "before": 4,
+     "after": 3,
+     "p": 0.9971498617478622
+    }
+   ]
+  }
+ }
+}

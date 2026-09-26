@@ -110,7 +110,14 @@ decisions go through the engine in one batched forward pass**. Each agent has th
 |---|---|---|
 | strategy | 12 ticks | collect gems / find food / avoid hazards / explore |
 | target | 6 ticks, or when the target is reached or gone | every gem (24) or food item (12) on the map, safe spots, or regions. Sets larger than 8 use a **tournament**, one round per tick |
-| action | every tick | move north / south / east / west / stay |
+| action | every tick | move north / south / east / west / stay, each labelled with its outcome, e.g. `move west (target: 2 steps)`, `move north (wall)` |
+
+The agent is **aware of its condition**. The strategy state spells out consequences ("about 20
+ticks until starving"). A change in condition (an energy band, low health, an adjacent hazard)
+makes the strategy re-decide on the next tick. Lower tiers see the target without its stale
+distance. In a 4-seed × 250-tick comparison with the 3B, this took starvation from 2 of 4 runs to
+0 of 4, halved "stuck" time and raised gems by 22%. `docs/research.md` → Observed → Agent
+awareness has the diagnosis.
 
 The window shows each agent's strategy and target with their probabilities, the tournament
 progress, the action probabilities as bars, the outside-token mass, and per tick the batch size
@@ -276,6 +283,10 @@ tests/                 pytest suite (mock tests always; `model` tests when weigh
   of any kind.
 - The eval sets are small (58 items; 30 problems per tournament cell). Treat the accuracy
   numbers as smoke tests.
+- **Averages hide traps.** Single decisions were 97–100% correct in a move probe. But a
+  deterministic model repeats a mistake every time it returns to the same state, so an agent can
+  loop forever. Test agents in closed loop, not only per decision. Hazard avoidance by the
+  strategy tier is still weak (11–44% in the probe).
 - The demo state text gives relative offsets and names conditions in words, because the model
   cannot do the arithmetic in one pass. That is part of the demo design, not of the engine.
 

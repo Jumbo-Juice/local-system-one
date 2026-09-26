@@ -1,0 +1,249 @@
+{
+ "host": {
+  "hostname": "Reuben",
+  "os": "Windows-11-10.0.26200-SP0",
+  "cpu": "Intel(R) Core(TM) Ultra 7 256V",
+  "cpu_count": 8,
+  "ram_gb": 15.6,
+  "python": "3.13.9"
+ },
+ "backend": {
+  "kind": "hf",
+  "model": "Qwen/Qwen2.5-3B-Instruct",
+  "commit": "aa8e72537993ba99e69dfaafa59ed015b17504d1",
+  "parameters": 3085938688,
+  "dtype": "bfloat16",
+  "head_dtype": "model",
+  "quantisation": "none (weights in bfloat16)",
+  "device": "xpu",
+  "device_name": "Intel(R) Arc(TM) 140V GPU (8GB)",
+  "attn_implementation": "sdpa",
+  "torch": "2.14.0+xpu",
+  "transformers": "5.17.0",
+  "max_batch": 8,
+  "prefix_cache": {
+   "size": 32,
+   "min_prefix": 32,
+   "hits": 4895,
+   "misses": 2,
+   "stores": 1
+  }
+ },
+ "args": {
+  "config": "config/lenovo-3b.toml",
+  "ticks": 250,
+  "seeds": [
+   0,
+   1,
+   2,
+   3
+  ],
+  "plan_budget": 1
+ },
+ "runs": [
+  {
+   "setup": "old prompts",
+   "seed": 0,
+   "stuck_ticks": 35,
+   "deaths": 0,
+   "starved": 0,
+   "gems": 33,
+   "food_eaten": 9,
+   "min_energy": 55,
+   "ticks_at_zero_energy": 0,
+   "ticks_low_energy": 0,
+   "strategy_while_low": {},
+   "forward_ms_median": 206.32800000021234
+  },
+  {
+   "setup": "old prompts",
+   "seed": 1,
+   "stuck_ticks": 26,
+   "deaths": 0,
+   "starved": 0,
+   "gems": 25,
+   "food_eaten": 9,
+   "min_energy": 21,
+   "ticks_at_zero_energy": 0,
+   "ticks_low_energy": 34,
+   "strategy_while_low": {
+    "collect gems": 23,
+    "avoid hazards": 11
+   },
+   "forward_ms_median": 206.37054999679094
+  },
+  {
+   "setup": "old prompts",
+   "seed": 2,
+   "stuck_ticks": 81,
+   "deaths": 1,
+   "starved": 1,
+   "gems": 15,
+   "food_eaten": 3,
+   "min_energy": 0,
+   "ticks_at_zero_energy": 9,
+   "ticks_low_energy": 85,
+   "strategy_while_low": {
+    "collect gems": 85
+   },
+   "forward_ms_median": 205.00255000661127
+  },
+  {
+   "setup": "old prompts",
+   "seed": 3,
+   "stuck_ticks": 24,
+   "deaths": 1,
+   "starved": 1,
+   "gems": 32,
+   "food_eaten": 3,
+   "min_energy": 0,
+   "ticks_at_zero_energy": 19,
+   "ticks_low_energy": 56,
+   "strategy_while_low": {
+    "collect gems": 32,
+    "avoid hazards": 24
+   },
+   "forward_ms_median": 207.2249000048032
+  },
+  {
+   "setup": "aware (consequences, re-plan triggers, no stale distance)",
+   "seed": 0,
+   "stuck_ticks": 45,
+   "deaths": 0,
+   "starved": 0,
+   "gems": 23,
+   "food_eaten": 8,
+   "min_energy": 2,
+   "ticks_at_zero_energy": 0,
+   "ticks_low_energy": 54,
+   "strategy_while_low": {
+    "collect gems": 26,
+    "find food": 25,
+    "avoid hazards": 3
+   },
+   "forward_ms_median": 201.98660000460222
+  },
+  {
+   "setup": "aware (consequences, re-plan triggers, no stale distance)",
+   "seed": 1,
+   "stuck_ticks": 6,
+   "deaths": 0,
+   "starved": 0,
+   "gems": 37,
+   "food_eaten": 7,
+   "min_energy": 25,
+   "ticks_at_zero_energy": 0,
+   "ticks_low_energy": 10,
+   "strategy_while_low": {
+    "collect gems": 10
+   },
+   "forward_ms_median": 202.41320000059204
+  },
+  {
+   "setup": "aware (consequences, re-plan triggers, no stale distance)",
+   "seed": 2,
+   "stuck_ticks": 76,
+   "deaths": 0,
+   "starved": 0,
+   "gems": 12,
+   "food_eaten": 12,
+   "min_energy": 19,
+   "ticks_at_zero_energy": 0,
+   "ticks_low_energy": 16,
+   "strategy_while_low": {
+    "find food": 16
+   },
+   "forward_ms_median": 144.19485000689747
+  },
+  {
+   "setup": "aware (consequences, re-plan triggers, no stale distance)",
+   "seed": 3,
+   "stuck_ticks": 24,
+   "deaths": 0,
+   "starved": 0,
+   "gems": 29,
+   "food_eaten": 5,
+   "min_energy": 21,
+   "ticks_at_zero_energy": 0,
+   "ticks_low_energy": 23,
+   "strategy_while_low": {
+    "collect gems": 4,
+    "avoid hazards": 1,
+    "find food": 18
+   },
+   "forward_ms_median": 202.7274500069325
+  },
+  {
+   "setup": "aware + move options labelled with outcomes",
+   "seed": 0,
+   "stuck_ticks": 17,
+   "deaths": 0,
+   "starved": 0,
+   "gems": 30,
+   "food_eaten": 9,
+   "min_energy": 20,
+   "ticks_at_zero_energy": 0,
+   "ticks_low_energy": 22,
+   "strategy_while_low": {
+    "collect gems": 7,
+    "avoid hazards": 10,
+    "find food": 5
+   },
+   "forward_ms_median": 215.18145000300137
+  },
+  {
+   "setup": "aware + move options labelled with outcomes",
+   "seed": 1,
+   "stuck_ticks": 15,
+   "deaths": 0,
+   "starved": 0,
+   "gems": 27,
+   "food_eaten": 9,
+   "min_energy": 16,
+   "ticks_at_zero_energy": 0,
+   "ticks_low_energy": 38,
+   "strategy_while_low": {
+    "collect gems": 12,
+    "avoid hazards": 18,
+    "find food": 8
+   },
+   "forward_ms_median": 214.3607499965583
+  },
+  {
+   "setup": "aware + move options labelled with outcomes",
+   "seed": 2,
+   "stuck_ticks": 27,
+   "deaths": 0,
+   "starved": 0,
+   "gems": 34,
+   "food_eaten": 8,
+   "min_energy": 16,
+   "ticks_at_zero_energy": 0,
+   "ticks_low_energy": 51,
+   "strategy_while_low": {
+    "collect gems": 14,
+    "find food": 29,
+    "avoid hazards": 8
+   },
+   "forward_ms_median": 213.9680500040413
+  },
+  {
+   "setup": "aware + move options labelled with outcomes",
+   "seed": 3,
+   "stuck_ticks": 12,
+   "deaths": 0,
+   "starved": 0,
+   "gems": 37,
+   "food_eaten": 6,
+   "min_energy": 16,
+   "ticks_at_zero_energy": 0,
+   "ticks_low_energy": 42,
+   "strategy_while_low": {
+    "collect gems": 13,
+    "find food": 19,
+    "avoid hazards": 10
+   },
+   "forward_ms_median": 213.97759999672417
+  }
+ ]
+}

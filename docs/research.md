@@ -448,3 +448,45 @@ positions. Only full-attention models are supported.
   helps only a little unless the prompt is reordered, and reordering hurt these small models.
   Larger models may be less order-sensitive; not tested.
 
+### Agent awareness: why the 3B agent starved, and the fix
+
+Symptom (user report): with the 3B model and one agent, the agent ran out of energy and died.
+
+- **Strategy tier ignored energy.** `bench/strategy_probe.py`: 36 demo-style states (energy 95 → 0,
+  hazard far/adjacent, food near/far). Truth was fixed in advance. With the demo's wording
+  ("Energy: LOW (24/100)"), the 3B chose "collect gems" in **36/36**, with P(find food) = 0.00
+  even at energy 0. Spelling out consequences ("about 24 ticks until starving, then 5 health lost
+  per tick") gave P(find food) of 0.38 / 0.73 / 0.85 / 0.95 / 1.00 at energy 34 / 25 / 15 / 5 / 0, and
+  0.00 at 36 and above (food cases 80%, gem cases 100%). Adding a priority sentence to the
+  question overcorrected: food in every state, even at 95 energy. Adjacent hazards were handled
+  poorly by all variants (11–44%).
+- **Move tier got trapped.** A tick-by-tick trace showed the agent, with strategy "find food",
+  alternating between (8,0) and (8,1) for 38 ticks, one cell from its food at (7,0), until it
+  starved. Cause: the goal context repeated the target's option text, "food at (7,0), 1 step
+  away". That distance was measured when the target was chosen and had gone stale. With that
+  context the 3B chose "move south" (p=0.55). Without the distance it chose "move west" (0.81),
+  and with no target line at all "move west" (1.00).
+- **Averages hide traps.** A 60-case single-decision probe (`bench/action_probe.py`) found 97–100%
+  of moves approaching the target for every variant. But the model is deterministic, so one wrong
+  answer in one spot repeats each time the agent comes back, and a 2-cell loop never ends. Only
+  closed-loop runs show this.
+- **Implementation choices** (on by default, `aware=True`): consequence wording in the strategy
+  state; re-deciding the strategy on the next tick when the agent's condition changes band
+  (energy 35/25/15/5/0, health < 40, hazard adjacent) instead of waiting up to 12 ticks; showing
+  lower tiers the target without its stale distance (`Tier.describe`); and move options labelled
+  with their outcome, e.g. `move west (reach the target)`, `move north (wall)`, `move east (HAZARD:
+  -25 health)`, using true walking distances. The model still makes every decision. Precedent for
+  the labels: S4's Doom demo fed its model an A*-computed waypoint bearing.
+- **Closed-loop result** (`bench/survival_compare.py`, 3B, one agent, budget 1, 4 seeds × 250 ticks):
+
+| setup | runs that starved | stuck ticks* | gems | food eaten | lowest energy | forward ms/tick (median) |
+|---|---:|---:|---:|---:|---:|---:|
+| old prompts | 2 of 4 | 41.5 | 26.2 | 6.0 | 0 (twice) | 206 |
+| aware, plain move options | 0 of 4 | 37.8 | 25.2 | 8.0 | 2–25 | 188 |
+| aware + labelled move options | 0 of 4 | 17.8 | 32.0 | 8.0 | 16–20 | 214 |
+
+\* ticks spent in streaks of 6+ ticks without getting closer to the current target.
+
+Four seeds is a small sample. The labels cost ~25 ms per tick (longer options). One of the
+"aware, plain" runs came within 2 energy of starving; every labelled run kept at least 16.
+
