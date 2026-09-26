@@ -20,6 +20,16 @@ Pre-registered before the first evaluation run (committed with this file):
   averaging does; they are not the demo.
 - The replays shown in the docs are seed 0 with 1.5b and with 3b, whatever their outcome.
 
+Pre-registered results (bench/results/shooter_eval_20260927_002315.json): escaped 1.5b 7/10,
+3b 2/10, 1.5b-listed 0/10, 3b-listed 7/10, random 0/10, bot-reference 10/10, bot-nododge 5/10.
+
+Added after those results (post hoc), fixed before running: a replication on seeds 10-19 (never
+run) with 1.5b, 3b and 3b-listed, because 3b vs 3b-listed (2 vs 7 of 10) was the one surprising
+difference (two-sided Fisher p = 0.07). Decision rule: switch the 3B demo to the listed order
+only if 3b-listed also escapes more often than 3b on seeds 10-19; otherwise keep order
+averaging for both models. Nothing else changes.
+    python -m bench.shooter_eval --setups 1.5b 3b 3b-listed --seeds 10 11 12 13 14 15 16 17 18 19
+
 Usage:
     python -m bench.shooter_eval                          # all setups, seeds 0-9
     python -m bench.shooter_eval --setups random bot-reference --seeds 0 1
