@@ -13,3 +13,6 @@ prefix_cache = true     # reuse keys/values of repeated prompt prefixes (~9% fas
 answer = "label"
 answer_template = '{"choice": "<label>"}'
 prompt_order = "state_first"  # question/options first reuse more but cost accuracy (docs/research.md)
+
+[shooter]
+order_debias = false  # demo.shooter: the 3B escaped 14 of 20 seeds without it, 8 of 20 with it (docs/research.md)

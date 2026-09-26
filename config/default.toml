@@ -14,3 +14,6 @@ answer = "label"                          # single-token labels A, B, C ... (AA,
 answer_template = '{"choice": "<label>"}' # prefill + label + suffix
 prompt_order = "state_first"  # question/options first reuse more but cost accuracy (docs/research.md)
 multi_token = "auto"                      # only used when answer = "text"
+
+[shooter]
+order_debias = true  # demo.shooter: without it the 1.5B's shots followed the option order (0 of 10 escaped) (docs/research.md)

@@ -29,6 +29,9 @@ difference (two-sided Fisher p = 0.07). Decision rule: switch the 3B demo to the
 only if 3b-listed also escapes more often than 3b on seeds 10-19; otherwise keep order
 averaging for both models. Nothing else changes.
     python -m bench.shooter_eval --setups 1.5b 3b 3b-listed --seeds 10 11 12 13 14 15 16 17 18 19
+Replication result (bench/results/shooter_eval_20260927_005732.json): escaped 1.5b 7/10, 3b 6/10,
+3b-listed 7/10. By the rule the 3B demo now reads options in the listed order
+([shooter] order_debias = false in config/lenovo-3b.toml); the setups above are unchanged.
 
 Usage:
     python -m bench.shooter_eval                          # all setups, seeds 0-9
