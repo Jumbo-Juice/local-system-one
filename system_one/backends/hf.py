@@ -83,6 +83,9 @@ class HFBackend(Backend):
         if head_dtype not in ("model", "float32"):
             raise ValueError("head_dtype must be 'model' or 'float32'")
         self.head_dtype = head_dtype
+        # Count before any head swap: a float32 head copy unties tied embeddings and would
+        # otherwise be counted as extra model parameters.
+        self.n_parameters = sum(p.numel() for p in self.model.parameters())
         if head_dtype == "float32" and dtype != "float32":
             head = _Float32Head.build(torch, self.model.get_output_embeddings()).to(self.device)
             self.model.set_output_embeddings(head)
@@ -217,12 +220,11 @@ class HFBackend(Backend):
             device_name = torch.cuda.get_device_name(0)
         elif self.device.startswith("xpu"):
             device_name = torch.xpu.get_device_name(0)
-        params = sum(p.numel() for p in self.model.parameters())
         return {
             "kind": self.kind,
             "model": self.model_name,
             "commit": getattr(self.model.config, "_commit_hash", None),
-            "parameters": params,
+            "parameters": self.n_parameters,
             "dtype": self.dtype_name,
             "head_dtype": self.head_dtype,
             "quantisation": "none (weights in %s)" % self.dtype_name,

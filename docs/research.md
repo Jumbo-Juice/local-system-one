@@ -351,6 +351,15 @@ items. In the fourth ordering its choices split between "find food", "collect ge
 "explore". So the choice depends on both content and position. Accuracy ranged from 20% to 50%
 across orderings.
 
+### East/west confusion with terse prompts
+
+With a bare state ("The target is 3 cells east of you.") and options north/south/east/west,
+Qwen2.5-1.5B answered "west" for east targets (p≈0.77). With the options reordered it got both
+east and west wrong. With the demo-style context ("You are at (5,5). North is up. ...") it chose
+east, but only at p=0.47. The label mapping is correct: the probabilities follow the labels
+consistently across orderings. `python -m system_one check` prints this as an informational
+score (4/6 on the Lenovo). It is not a pass/fail criterion.
+
 ### Demo: tiered goals vs flat control (step 7)
 
 `bench/demo_compare.py`: 100 ticks, 4 agents, seeds 0–2, Qwen2.5-1.5B bf16. "Flat" is the

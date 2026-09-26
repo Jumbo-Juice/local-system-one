@@ -34,15 +34,19 @@ def check(engine) -> int:
         distinct = len(set(prep.tokens)) == n
         print(f"labels for {n} options: {prep.labels[:3]}... distinct single tokens: {distinct}")
         ok &= distinct
+    targets = ("north", "south", "east", "west", "north", "east")
     ds = [Decision("Which move brings you closer to the target?", ("north", "south", "east", "west"),
-                   state=f"The target is {i + 1} cells {d} of you.")
-          for i, d in enumerate(("north", "south", "east", "west", "north", "east"))]
+                   state=f"The target is {i + 1} cell{'s' if i else ''} {d} of you.")
+          for i, d in enumerate(targets)]
     batched, seq = engine.decide_batch(ds), engine.decide_sequential(ds)
     dp = max(abs(a - b) for rb, rs in zip(batched, seq) for a, b in zip(rb.probs, rs.probs))
     same = sum(rb.index == rs.index for rb, rs in zip(batched, seq))
     print(f"batched vs sequential: same choice {same}/{len(ds)}, max |dp| {dp:.4f}; "
           f"choices {[r.choice for r in batched]}")
-    print("OK" if ok else "FAILED")
+    right = sum(r.choice == t for r, t in zip(batched, targets))
+    print(f"model answers correct: {right}/{len(ds)} (informational: this check tests the "
+          f"mechanics, not the model's judgement)")
+    print("OK (mechanics)" if ok else "FAILED")
     return 0 if ok else 1
 
 
