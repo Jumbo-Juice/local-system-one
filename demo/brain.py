@@ -20,7 +20,7 @@ from dataclasses import dataclass, field
 
 from system_one.goals import GoalStack, Tier, step_all
 
-from .world import MOVES, Agent, Cell, World
+from .world import MOVES, STEP, Agent, Cell, World
 
 GOALS = ("collect gems", "find food", "avoid hazards", "explore")
 REGIONS = ("north-west", "north", "north-east", "south-west", "south", "south-east")
@@ -29,6 +29,41 @@ _CELL = re.compile(r"\((\d+),(\d+)\)")
 
 def _steps(n: int) -> str:
     return f"{n} step" if n == 1 else f"{n} steps"
+
+
+def base_move(choice: str) -> str:
+    """'move west (target: 2 steps)' -> 'move west'."""
+    return choice.split(" (")[0]
+
+
+def annotate_moves(world: World, agent: Agent, target: Cell | None) -> list[str]:
+    """Move options labelled with their outcome: walking distance to the target after the move,
+    or what is in the way. The model still chooses. Precedent: S4's Doom demo gave its model an
+    A*-computed waypoint bearing. Observed need: with plain options the 3B oscillated next to food
+    it was told was "1 cell west" until it starved.
+    """
+    dist = world.distances(target) if target else {}
+    others = {o.pos for o in world.agents if o is not agent}
+    out = []
+    for move in MOVES:
+        dx, dy = STEP[move]
+        c = (agent.pos[0] + dx, agent.pos[1] + dy)
+        if not world.passable(c):
+            label = "wall"
+        elif move != "stay" and c in others:
+            label = "blocked by another agent"
+        elif c in world.hazards:
+            label = "HAZARD: -25 health"
+        elif target is None:
+            label = "free"
+        elif c == target:
+            label = "on the target" if move == "stay" else "reach the target"
+        elif c in dist:
+            label = f"target: {_steps(dist[c])}"
+        else:
+            label = "target unreachable"
+        out.append(f"{move} ({label})")
+    return out
 
 
 def _offset(dx: int, dy_north: int) -> str:
@@ -44,17 +79,23 @@ class Brain:
     """The goal stack and state text of one agent."""
 
     def __init__(self, world: World, agent: Agent, use_goals: bool = True,
-                 strategy_every: int = 12, target_every: int = 6):
-        self.world, self.agent, self.use_goals = world, agent, use_goals
+                 strategy_every: int = 12, target_every: int = 6, aware: bool = True,
+                 label_moves: bool = True):
+        self.world, self.agent, self.use_goals, self.aware = world, agent, use_goals, aware
+        self.label_moves = label_moves
+        self._bands: tuple | None = None
         if use_goals:
             tiers = [
                 Tier("strategy", "Which goal should the agent pursue now?", GOALS,
                      every=strategy_every, title="Strategic goal"),
                 Tier("target", "Which target best serves the strategic goal?",
                      lambda goals: self.target_options(goals.get("strategy", "explore")),
-                     every=target_every, title="Current target"),
+                     every=target_every, title="Current target",
+                     # The option's "N steps away" was measured when it was chosen and goes stale;
+                     # Observed: the stale number made the 3B step away from food 1 cell west.
+                     describe=(lambda c: c.split(", ")[0]) if aware else None),
                 Tier("action", "Which move brings you closer to your current target? "
-                     "Do not move into a wall or a hazard.", MOVES, every=1),
+                     "Do not move into a wall or a hazard.", lambda goals: self.move_options(), every=1),
             ]
         else:
             tiers = [Tier("action", "Which move is best right now? Collect gems, eat food when "
@@ -64,9 +105,24 @@ class Brain:
 
     # -- world -> text ----------------------------------------------------------------
 
+    def _condition_bands(self) -> tuple:
+        a = self.agent
+        energy = 0 if a.energy == 0 else 1 if a.energy < 5 else 2 if a.energy < 15 else 3 if a.energy < 25             else 4 if a.energy < 35 else 5
+        hz = self._nearest(self.world.hazards)
+        return energy, a.health < 40, bool(hz and hz[1] <= 1)
+
     def refresh(self) -> None:
-        """Recompute distances; drop a target that was reached or no longer exists."""
+        """Recompute distances; drop a target that was reached or no longer exists.
+
+        With ``aware``, a change in the agent's condition (energy band, low health, adjacent
+        hazard) makes the strategy tier re-decide on this tick instead of waiting for its period.
+        """
         self._dist = self.world.distances(self.agent.pos)
+        if self.aware and self.use_goals:
+            bands = self._condition_bands()
+            if self._bands is not None and bands != self._bands:
+                self.stack.invalidate("strategy")
+            self._bands = bands
         cell = self.target_cell()
         if cell is None or "target" not in self.stack.current:
             return
@@ -74,6 +130,11 @@ class Brain:
             cell not in self.world.gems and cell not in self.world.food
         if cell == self.agent.pos or gone:
             self.stack.invalidate("target")
+
+    def move_options(self) -> list[str]:
+        if self.aware and self.label_moves:
+            return annotate_moves(self.world, self.agent, self.target_cell())
+        return list(MOVES)
 
     def target_cell(self) -> Cell | None:
         m = _CELL.search(self.stack.current.get("target", ""))
@@ -83,9 +144,18 @@ class Brain:
         reach = [(c, self._dist[c]) for c in cells if c in self._dist]
         return min(reach, key=lambda x: x[1]) if reach else None
 
-    def _status(self) -> str:
+    def _status(self, detailed: bool = False) -> str:
+        """``detailed`` spells out consequences. Observed: without them the 3B chose "collect gems"
+        in all 36 probe states, even at energy 0 (bench/strategy_probe.py)."""
         a = self.agent
-        energy = f"LOW ({a.energy}/100)" if a.energy < 35 else f"ok ({a.energy}/100)"
+        if detailed and a.energy == 0:
+            energy = "EMPTY (0/100): the agent is starving and loses 5 health every tick"
+        elif detailed and a.energy < 35:
+            energy = f"LOW ({a.energy}/100): about {a.energy} ticks until starving, then 5 health lost per tick"
+        elif detailed:
+            energy = f"ok ({a.energy}/100): about {a.energy} ticks left"
+        else:
+            energy = f"LOW ({a.energy}/100)" if a.energy < 35 else f"ok ({a.energy}/100)"
         health = f"LOW ({a.health}/100)" if a.health < 40 else f"fine ({a.health}/100)"
         return f"Energy: {energy}. Health: {health}."
 
@@ -95,12 +165,12 @@ class Brain:
         food_t = f"nearest {_steps(food[1])} away" if food else "none reachable"
         gem_t = f"{len(self.world.gems)} visible, nearest {_steps(gem[1])} away" if gem else "none visible"
         if hz and hz[1] <= 1:
-            hz_t = "ADJACENT"
+            hz_t = "ADJACENT: it hits for 25 health if it reaches you" if self.aware else "ADJACENT"
         elif hz and hz[1] <= 3:
             hz_t = f"close, {_steps(hz[1])} away"
         else:
             hz_t = "far"
-        return f"{self._status()} Food: {food_t}. Gems: {gem_t}. Hazard: {hz_t}."
+        return f"{self._status(detailed=self.aware)} Food: {food_t}. Gems: {gem_t}. Hazard: {hz_t}."
 
     def _neighbours(self) -> str:
         return "Neighbouring cells: " + ", ".join(f"{d} {v}" for d, v in self.world.neighbours(self.agent).items()) + "."
@@ -175,9 +245,9 @@ class Controller:
     """Runs the world: each tick = ONE batched engine call for every agent's due decisions."""
 
     def __init__(self, world: World, engine, use_goals: bool = True, group_size: int = 8,
-                 plan_budget: int | None = None, **tier_periods):
+                 plan_budget: int | None = None, **brain_options):
         self.world, self.engine, self.group_size, self.plan_budget = world, engine, group_size, plan_budget
-        self.brains = [Brain(world, a, use_goals, **tier_periods) for a in world.agents]
+        self.brains = [Brain(world, a, use_goals, **brain_options) for a in world.agents]
 
     def tick(self) -> TickReport:
         t0 = time.perf_counter()
@@ -187,7 +257,7 @@ class Controller:
         updates = step_all(self.engine, agents, self.world.tick, group_size=self.group_size,
                            plan_budget=self.plan_budget)
         stats = dict(self.engine.last_stats) if updates else {}
-        moves = {b.agent.id: b.stack.current.get("action", "stay") for b in self.brains}
+        moves = {b.agent.id: base_move(b.stack.current.get("action", "stay")) for b in self.brains}
         events = self.world.step(moves)
         return TickReport(
             tick=self.world.tick - 1, decisions=len(updates), forward_s=stats.get("forward_s", 0.0),

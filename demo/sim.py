@@ -19,7 +19,7 @@ import time
 
 from system_one import Decision, load_config, make_engine
 
-from .brain import Controller
+from .brain import Controller, base_move
 from .world import MOVES, World
 
 CELL = 34
@@ -49,7 +49,7 @@ def agent_view(ctrl: Controller, display: dict) -> list[dict]:
         tours = {name: t for name, t in b.stack.tournaments.items()}
         out.append({
             "id": a.id, "pos": a.pos, "colour": a.colour, "score": a.score, "energy": a.energy,
-            "health": a.health, "deaths": a.deaths, "target_cell": b.target_cell(),
+            "health": a.health, "deaths": a.deaths, "starved": a.starved, "target_cell": b.target_cell(),
             "current": dict(b.stack.current), "prob": dict(b.stack.probability),
             "tournaments": {n: (len(t.rounds) + 1, len(t.alive), len(t.options)) for n, t in tours.items()},
             "last": display.get(a.id, {}),
@@ -60,7 +60,7 @@ def agent_view(ctrl: Controller, display: dict) -> list[dict]:
 def remember(display: dict, report) -> None:
     """Keep the latest result per agent and tier for the side panel."""
     for agent_id, tier, r, tour in report.updates:
-        entry = {"choice": r.choice, "probs": dict(zip(r.decision.options, r.probs)),
+        entry = {"choice": base_move(r.choice), "probs": {base_move(o): p for o, p in zip(r.decision.options, r.probs)},
                  "outside": r.outside_mass, "method": r.method, "in_tournament": tour is not None}
         display.setdefault(agent_id, {})[tier] = entry
 
@@ -71,13 +71,14 @@ def run_headless(ctrl: Controller, ticks: int, verbose: bool = True) -> dict:
         rep = ctrl.tick()
         reports.append(rep)
         if verbose:
-            acts = " ".join(f"{aid}:{r.choice.replace('move ', '')}" for aid, tier, r, _ in rep.updates if tier == "action")
+            acts = " ".join(f"{aid}:{base_move(r.choice).replace('move ', '')}" for aid, tier, r, _ in rep.updates if tier == "action")
             print(f"tick {rep.tick:4} decisions {rep.decisions:3} forward {1000 * rep.forward_s:7.1f} ms  {acts}", flush=True)
     fw = [1000 * r.forward_s for r in reports if r.decisions]
     agents = ctrl.world.agents
     summary = {
         "ticks": ticks, "agents": len(agents), "use_goals": ctrl.brains[0].use_goals,
         "gems": sum(a.score for a in agents), "deaths": sum(a.deaths for a in agents),
+        "starved": sum(a.starved for a in agents),
         "hazard_hits": sum(r.events["hits"] for r in reports), "food_eaten": sum(r.events["food"] for r in reports),
         "decisions_per_tick_mean": statistics.mean(r.decisions for r in reports),
         "forward_ms_median": statistics.median(fw) if fw else 0.0,
@@ -85,7 +86,7 @@ def run_headless(ctrl: Controller, ticks: int, verbose: bool = True) -> dict:
         "forward_ms_max": max(fw, default=0.0),
         "tick_ms_median": 1000 * statistics.median(r.total_s for r in reports),
         "tournament_decisions": sum(1 for r in reports for u in r.updates if u[3] is not None),
-        "action_counts": {m: sum(1 for r in reports for u in r.updates if u[1] == "action" and u[2].choice == m)
+        "action_counts": {m: sum(1 for r in reports for u in r.updates if u[1] == "action" and base_move(u[2].choice) == m)
                           for m in MOVES},
     }
     return summary
@@ -216,7 +217,8 @@ class App:
         for a in s["agents"]:
             c.create_rectangle(x0, y + 2, x0 + 12, y + 14, fill=a["colour"], outline="", tags="dyn")
             c.create_text(x0 + 18, y, anchor="nw", tags="dyn", font=("Segoe UI", 9, "bold"),
-                          text=f"Agent {a['id']}  gems {a['score']}  energy {a['energy']}  health {a['health']}  deaths {a['deaths']}")
+                          text=f"Agent {a['id']}  gems {a['score']}  energy {a['energy']}  health {a['health']}  "
+                               f"deaths {a['deaths']} (starved {a['starved']})")
             y += 17
             for tier in ("strategy", "target"):
                 if tier in a["tournaments"]:
