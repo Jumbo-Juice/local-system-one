@@ -24,7 +24,7 @@ from collections import Counter
 
 from system_one.goals import ONLY_OPTION, GoalStack, Tier, step_all
 
-from ..brain import _offset, _steps, base_move
+from ..brain import _steps, base_move
 from .world import DIRS, MOVES, STEP, Cell, Dungeon
 
 STANDING_ORDER = "Find the key, then leave through the exit alive. Gems are a bonus. Eat and heal when needed."
@@ -33,6 +33,13 @@ GOALS = ("explore", "get the key", "go to the exit", "collect gems", "eat food",
 ITEM_GOALS = {"collect gems": ("gem", "gems"), "eat food": ("food", "food"),
               "drink a health potion": ("health potion", "potions")}
 _CELL = re.compile(r"\((\d+),(\d+)\)")
+
+
+def _offset(dx: int, dy_north: int) -> str:
+    """'3 cells east and 1 cell north' (relative position; the model cannot do the arithmetic)."""
+    parts = [f"{abs(v)} {'cell' if abs(v) == 1 else 'cells'} {pos if v > 0 else neg}"
+             for v, pos, neg in ((dx, "east", "west"), (dy_north, "north", "south")) if v]
+    return " and ".join(parts) or "0 cells away"
 
 
 def cell_of(text: str | None) -> Cell | None:
@@ -46,11 +53,21 @@ def drop_distance(option: str) -> str:
     return option.split(", ")[0]
 
 
+def _ticks(n: int) -> str:
+    return f"{n} tick" if n == 1 else f"{n} ticks"
+
+
 class DungeonBrain:
     """Goal stack and state text of the one agent."""
 
-    def __init__(self, dungeon: Dungeon, strategy_every: int = 12, target_every: int = 6):
-        self.d = dungeon
+    def __init__(self, dungeon: Dungeon, strategy_every: int = 12, target_every: int = 6,
+                 label_style: str = "closer"):
+        """``label_style`` words the move outcomes: "closer" ('closer: 2 steps to the target') or
+        "steps" ('target: 2 steps', the first demo's wording). Observed on the dev seed: with
+        "steps" the 3B walked away from its target in one doorway state and looped until it starved."""
+        if label_style not in ("closer", "steps"):
+            raise ValueError("label_style must be 'closer' or 'steps'")
+        self.d, self.label_style = dungeon, label_style
         self.stack = GoalStack([
             Tier("strategy", "Which goal should the agent pursue now?", lambda goals: self.goal_options(),
                  every=strategy_every, title="Strategic goal"),
@@ -180,7 +197,8 @@ class DungeonBrain:
         """Each move labelled with its outcome. The model still chooses."""
         d, target = self.d, self.target_cell()
         tdist = d.distances(target, within=self._known | {target}) if target else {}
-        threats = [e.pos for e, _ in self._enemies if not e.stunned]
+        here = tdist.get(d.pos)
+        nearby = [(e.pos, e.stunned) for e, _ in self._enemies]
         out = []
         for move in MOVES:
             dx, dy = STEP[move]
@@ -190,8 +208,8 @@ class DungeonBrain:
                 out.append(f"{move} (wall)")
                 continue
             if enemy is not None:
-                out.append(f"{move} (blocked by a stunned enemy)" if enemy.stunned
-                           else f"{move} (ENEMY: -{d.rules.enemy_damage} health)")
+                out.append(f"{move} (blocked by a stunned enemy; it recovers in {_ticks(enemy.stunned)})"
+                           if enemy.stunned else f"{move} (ENEMY: -{d.rules.enemy_damage} health)")
                 continue
             notes = []
             if move != "stay":
@@ -205,13 +223,19 @@ class DungeonBrain:
                     notes.append(f"food: +{d.rules.food_energy} energy")
                 elif c in d.potions:
                     notes.append(f"potion: +{d.rules.potion_health} health")
-            if any(abs(c[0] - p[0]) + abs(c[1] - p[1]) == 1 for p in threats):
-                notes.append("next to an enemy")
+            beside = [st for p, st in nearby if abs(c[0] - p[0]) + abs(c[1] - p[1]) == 1]
+            if beside:
+                notes.append("next to an enemy" if min(beside) == 0 else
+                             f"next to a stunned enemy that recovers in {_ticks(min(beside))}")
             if target is not None:
                 if c == target:
                     notes.append("on the target" if move == "stay" else "reach the target")
-                elif c in tdist:
+                elif c in tdist and (self.label_style == "steps" or here is None):
                     notes.append(f"target: {_steps(tdist[c])}")
+                elif c in tdist:
+                    n = tdist[c]
+                    rel = "closer" if n < here else "farther" if n > here else "no closer"
+                    notes.append(f"{rel}: {_steps(n)} to the target")
                 else:
                     notes.append("target unreachable")
             out.append(f"{move} ({'; '.join(notes) or 'free'})")
@@ -282,7 +306,7 @@ class DungeonBrain:
         dmg, radius = self.d.rules.enemy_damage, self.d.rules.chase_radius
         who = "Enemy" if len(self._enemies) == 1 else f"{len(self._enemies)} enemies in sight. Nearest enemy"
         if e.stunned:
-            what = f"{_steps(s)} away, stunned for {e.stunned} more {'tick' if e.stunned == 1 else 'ticks'}"
+            what = f"{_steps(s)} away, stunned for {_ticks(e.stunned)} more"
         elif s == 1:
             what = f"ADJACENT: it hits you for {dmg} health"
         elif e.mode == "chase":
