@@ -1,0 +1,920 @@
+{
+ "backend": {
+  "kind": "hf",
+  "model": "Qwen/Qwen2.5-3B-Instruct",
+  "commit": "aa8e72537993ba99e69dfaafa59ed015b17504d1",
+  "parameters": 3085938688,
+  "dtype": "bfloat16",
+  "head_dtype": "model",
+  "quantisation": "none (weights in bfloat16)",
+  "device": "xpu",
+  "device_name": "Intel(R) Arc(TM) 140V GPU (8GB)",
+  "attn_implementation": "sdpa",
+  "torch": "2.14.0+xpu",
+  "transformers": "5.17.0",
+  "max_batch": 8,
+  "prefix_cache": {
+   "size": 32,
+   "min_prefix": 32,
+   "hits": 0,
+   "misses": 0,
+   "stores": 0
+  }
+ },
+ "variants": {
+  "v0 current": {
+   "accuracy": 0.2222222222222222,
+   "by_truth": {
+    "find food": 0.0,
+    "collect gems": 1.0,
+    "avoid hazards": 0.0
+   },
+   "rows": [
+    {
+     "energy": 95,
+     "hazard_adjacent": false,
+     "food": 4,
+     "truth": "collect gems",
+     "choice": "collect gems",
+     "p_food": 0.00017936845571472397
+    },
+    {
+     "energy": 95,
+     "hazard_adjacent": false,
+     "food": 10,
+     "truth": "collect gems",
+     "choice": "collect gems",
+     "p_food": 0.0001791408760403622
+    },
+    {
+     "energy": 95,
+     "hazard_adjacent": true,
+     "food": 4,
+     "truth": "avoid hazards",
+     "choice": "collect gems",
+     "p_food": 0.00022609621769393966
+    },
+    {
+     "energy": 95,
+     "hazard_adjacent": true,
+     "food": 10,
+     "truth": "avoid hazards",
+     "choice": "collect gems",
+     "p_food": 0.00017454928684899342
+    },
+    {
+     "energy": 70,
+     "hazard_adjacent": false,
+     "food": 4,
+     "truth": "collect gems",
+     "choice": "collect gems",
+     "p_food": 9.604008385275931e-05
+    },
+    {
+     "energy": 70,
+     "hazard_adjacent": false,
+     "food": 10,
+     "truth": "collect gems",
+     "choice": "collect gems",
+     "p_food": 0.0001395837891630611
+    },
+    {
+     "energy": 70,
+     "hazard_adjacent": true,
+     "food": 4,
+     "truth": "avoid hazards",
+     "choice": "collect gems",
+     "p_food": 0.00013606657185315736
+    },
+    {
+     "energy": 70,
+     "hazard_adjacent": true,
+     "food": 10,
+     "truth": "avoid hazards",
+     "choice": "collect gems",
+     "p_food": 0.00013473228435932874
+    },
+    {
+     "energy": 50,
+     "hazard_adjacent": false,
+     "food": 4,
+     "truth": "collect gems",
+     "choice": "collect gems",
+     "p_food": 0.00012331922181783595
+    },
+    {
+     "energy": 50,
+     "hazard_adjacent": false,
+     "food": 10,
+     "truth": "collect gems",
+     "choice": "collect gems",
+     "p_food": 9.594096332686746e-05
+    },
+    {
+     "energy": 50,
+     "hazard_adjacent": true,
+     "food": 4,
+     "truth": "avoid hazards",
+     "choice": "collect gems",
+     "p_food": 0.00014818695542438584
+    },
+    {
+     "energy": 50,
+     "hazard_adjacent": true,
+     "food": 10,
+     "truth": "avoid hazards",
+     "choice": "collect gems",
+     "p_food": 0.0001358259700245866
+    },
+    {
+     "energy": 36,
+     "hazard_adjacent": false,
+     "food": 4,
+     "truth": "collect gems",
+     "choice": "collect gems",
+     "p_food": 0.00012334717506226665
+    },
+    {
+     "energy": 36,
+     "hazard_adjacent": false,
+     "food": 10,
+     "truth": "collect gems",
+     "choice": "collect gems",
+     "p_food": 0.00015828045530316118
+    },
+    {
+     "energy": 36,
+     "hazard_adjacent": true,
+     "food": 4,
+     "truth": "avoid hazards",
+     "choice": "collect gems",
+     "p_food": 9.419548365768143e-05
+    },
+    {
+     "energy": 36,
+     "hazard_adjacent": true,
+     "food": 10,
+     "truth": "avoid hazards",
+     "choice": "collect gems",
+     "p_food": 8.2858826024446e-05
+    },
+    {
+     "energy": 34,
+     "hazard_adjacent": false,
+     "food": 4,
+     "truth": "find food",
+     "choice": "collect gems",
+     "p_food": 0.00023040513371545612
+    },
+    {
+     "energy": 34,
+     "hazard_adjacent": false,
+     "food": 10,
+     "truth": "find food",
+     "choice": "collect gems",
+     "p_food": 0.00026057517937431583
+    },
+    {
+     "energy": 34,
+     "hazard_adjacent": true,
+     "food": 4,
+     "truth": "avoid hazards",
+     "choice": "collect gems",
+     "p_food": 0.00032597648967835696
+    },
+    {
+     "energy": 34,
+     "hazard_adjacent": true,
+     "food": 10,
+     "truth": "avoid hazards",
+     "choice": "collect gems",
+     "p_food": 0.00017680738468058086
+    },
+    {
+     "energy": 25,
+     "hazard_adjacent": false,
+     "food": 4,
+     "truth": "find food",
+     "choice": "collect gems",
+     "p_food": 0.00029578078591692566
+    },
+    {
+     "energy": 25,
+     "hazard_adjacent": false,
+     "food": 10,
+     "truth": "find food",
+     "choice": "collect gems",
+     "p_food": 0.0002032677727535695
+    },
+    {
+     "energy": 25,
+     "hazard_adjacent": true,
+     "food": 4,
+     "truth": "avoid hazards",
+     "choice": "collect gems",
+     "p_food": 0.00032663190836671466
+    },
+    {
+     "energy": 25,
+     "hazard_adjacent": true,
+     "food": 10,
+     "truth": "avoid hazards",
+     "choice": "collect gems",
+     "p_food": 0.0002558188843727948
+    },
+    {
+     "energy": 15,
+     "hazard_adjacent": false,
+     "food": 4,
+     "truth": "find food",
+     "choice": "collect gems",
+     "p_food": 0.0002303778713375898
+    },
+    {
+     "energy": 15,
+     "hazard_adjacent": false,
+     "food": 10,
+     "truth": "find food",
+     "choice": "collect gems",
+     "p_food": 0.0002030535799010955
+    },
+    {
+     "energy": 15,
+     "hazard_adjacent": true,
+     "food": 4,
+     "truth": "avoid hazards",
+     "choice": "collect gems",
+     "p_food": 0.00022581225150923739
+    },
+    {
+     "energy": 15,
+     "hazard_adjacent": true,
+     "food": 10,
+     "truth": "avoid hazards",
+     "choice": "collect gems",
+     "p_food": 0.0003241303172953365
+    },
+    {
+     "energy": 5,
+     "hazard_adjacent": false,
+     "food": 4,
+     "truth": "find food",
+     "choice": "collect gems",
+     "p_food": 0.00043017498236986993
+    },
+    {
+     "energy": 5,
+     "hazard_adjacent": false,
+     "food": 10,
+     "truth": "find food",
+     "choice": "collect gems",
+     "p_food": 0.00033487697219160544
+    },
+    {
+     "energy": 5,
+     "hazard_adjacent": true,
+     "food": 4,
+     "truth": "avoid hazards",
+     "choice": "collect gems",
+     "p_food": 0.0004089067702947597
+    },
+    {
+     "energy": 5,
+     "hazard_adjacent": true,
+     "food": 10,
+     "truth": "avoid hazards",
+     "choice": "collect gems",
+     "p_food": 0.000371240216670272
+    },
+    {
+     "energy": 0,
+     "hazard_adjacent": false,
+     "food": 4,
+     "truth": "find food",
+     "choice": "collect gems",
+     "p_food": 0.00020328642031108843
+    },
+    {
+     "energy": 0,
+     "hazard_adjacent": false,
+     "food": 10,
+     "truth": "find food",
+     "choice": "collect gems",
+     "p_food": 0.0001233042584675785
+    },
+    {
+     "energy": 0,
+     "hazard_adjacent": true,
+     "food": 4,
+     "truth": "avoid hazards",
+     "choice": "collect gems",
+     "p_food": 0.000250675595717208
+    },
+    {
+     "energy": 0,
+     "hazard_adjacent": true,
+     "food": 10,
+     "truth": "avoid hazards",
+     "choice": "collect gems",
+     "p_food": 0.0001987448848372245
+    }
+   ]
+  },
+  "v1 consequences": {
+   "accuracy": 0.5,
+   "by_truth": {
+    "find food": 0.8,
+    "collect gems": 1.0,
+    "avoid hazards": 0.1111111111111111
+   },
+   "rows": [
+    {
+     "energy": 95,
+     "hazard_adjacent": false,
+     "food": 4,
+     "truth": "collect gems",
+     "choice": "collect gems",
+     "p_food": 0.0005527182959069371
+    },
+    {
+     "energy": 95,
+     "hazard_adjacent": false,
+     "food": 10,
+     "truth": "collect gems",
+     "choice": "collect gems",
+     "p_food": 0.0024721452989633053
+    },
+    {
+     "energy": 95,
+     "hazard_adjacent": true,
+     "food": 4,
+     "truth": "avoid hazards",
+     "choice": "collect gems",
+     "p_food": 0.006429394295807384
+    },
+    {
+     "energy": 95,
+     "hazard_adjacent": true,
+     "food": 10,
+     "truth": "avoid hazards",
+     "choice": "collect gems",
+     "p_food": 0.025759739942999026
+    },
+    {
+     "energy": 70,
+     "hazard_adjacent": false,
+     "food": 4,
+     "truth": "collect gems",
+     "choice": "collect gems",
+     "p_food": 0.0004305072571418621
+    },
+    {
+     "energy": 70,
+     "hazard_adjacent": false,
+     "food": 10,
+     "truth": "collect gems",
+     "choice": "collect gems",
+     "p_food": 0.001169346590037092
+    },
+    {
+     "energy": 70,
+     "hazard_adjacent": true,
+     "food": 4,
+     "truth": "avoid hazards",
+     "choice": "collect gems",
+     "p_food": 0.006274578031153669
+    },
+    {
+     "energy": 70,
+     "hazard_adjacent": true,
+     "food": 10,
+     "truth": "avoid hazards",
+     "choice": "collect gems",
+     "p_food": 0.030458604813296958
+    },
+    {
+     "energy": 50,
+     "hazard_adjacent": false,
+     "food": 4,
+     "truth": "collect gems",
+     "choice": "collect gems",
+     "p_food": 0.0005527031575135853
+    },
+    {
+     "energy": 50,
+     "hazard_adjacent": false,
+     "food": 10,
+     "truth": "collect gems",
+     "choice": "collect gems",
+     "p_food": 0.001926370294760669
+    },
+    {
+     "energy": 50,
+     "hazard_adjacent": true,
+     "food": 4,
+     "truth": "avoid hazards",
+     "choice": "collect gems",
+     "p_food": 0.004958827531575588
+    },
+    {
+     "energy": 50,
+     "hazard_adjacent": true,
+     "food": 10,
+     "truth": "avoid hazards",
+     "choice": "collect gems",
+     "p_food": 0.030383295136902525
+    },
+    {
+     "energy": 36,
+     "hazard_adjacent": false,
+     "food": 4,
+     "truth": "collect gems",
+     "choice": "collect gems",
+     "p_food": 0.00043050768304468684
+    },
+    {
+     "energy": 36,
+     "hazard_adjacent": false,
+     "food": 10,
+     "truth": "collect gems",
+     "choice": "collect gems",
+     "p_food": 0.0011693744989466055
+    },
+    {
+     "energy": 36,
+     "hazard_adjacent": true,
+     "food": 4,
+     "truth": "avoid hazards",
+     "choice": "avoid hazards",
+     "p_food": 0.0013890748560785456
+    },
+    {
+     "energy": 36,
+     "hazard_adjacent": true,
+     "food": 10,
+     "truth": "avoid hazards",
+     "choice": "avoid hazards",
+     "p_food": 0.006261274182106083
+    },
+    {
+     "energy": 34,
+     "hazard_adjacent": false,
+     "food": 4,
+     "truth": "find food",
+     "choice": "collect gems",
+     "p_food": 0.3772119554073556
+    },
+    {
+     "energy": 34,
+     "hazard_adjacent": false,
+     "food": 10,
+     "truth": "find food",
+     "choice": "collect gems",
+     "p_food": 0.4993736972925949
+    },
+    {
+     "energy": 34,
+     "hazard_adjacent": true,
+     "food": 4,
+     "truth": "avoid hazards",
+     "choice": "find food",
+     "p_food": 0.9631405377731364
+    },
+    {
+     "energy": 34,
+     "hazard_adjacent": true,
+     "food": 10,
+     "truth": "avoid hazards",
+     "choice": "find food",
+     "p_food": 0.974790617752305
+    },
+    {
+     "energy": 25,
+     "hazard_adjacent": false,
+     "food": 4,
+     "truth": "find food",
+     "choice": "find food",
+     "p_food": 0.7303840629439152
+    },
+    {
+     "energy": 25,
+     "hazard_adjacent": false,
+     "food": 10,
+     "truth": "find food",
+     "choice": "find food",
+     "p_food": 0.561632182610469
+    },
+    {
+     "energy": 25,
+     "hazard_adjacent": true,
+     "food": 4,
+     "truth": "avoid hazards",
+     "choice": "find food",
+     "p_food": 0.9860670921054489
+    },
+    {
+     "energy": 25,
+     "hazard_adjacent": true,
+     "food": 10,
+     "truth": "avoid hazards",
+     "choice": "find food",
+     "p_food": 0.9893882233715766
+    },
+    {
+     "energy": 15,
+     "hazard_adjacent": false,
+     "food": 4,
+     "truth": "find food",
+     "choice": "find food",
+     "p_food": 0.851561814455191
+    },
+    {
+     "energy": 15,
+     "hazard_adjacent": false,
+     "food": 10,
+     "truth": "find food",
+     "choice": "find food",
+     "p_food": 0.8171124791282444
+    },
+    {
+     "energy": 15,
+     "hazard_adjacent": true,
+     "food": 4,
+     "truth": "avoid hazards",
+     "choice": "find food",
+     "p_food": 0.9947743750098059
+    },
+    {
+     "energy": 15,
+     "hazard_adjacent": true,
+     "food": 10,
+     "truth": "avoid hazards",
+     "choice": "find food",
+     "p_food": 0.9948049849264161
+    },
+    {
+     "energy": 5,
+     "hazard_adjacent": false,
+     "food": 4,
+     "truth": "find food",
+     "choice": "find food",
+     "p_food": 0.9523240491641745
+    },
+    {
+     "energy": 5,
+     "hazard_adjacent": false,
+     "food": 10,
+     "truth": "find food",
+     "choice": "find food",
+     "p_food": 0.9237201783617013
+    },
+    {
+     "energy": 5,
+     "hazard_adjacent": true,
+     "food": 4,
+     "truth": "avoid hazards",
+     "choice": "find food",
+     "p_food": 0.9917160947519136
+    },
+    {
+     "energy": 5,
+     "hazard_adjacent": true,
+     "food": 10,
+     "truth": "avoid hazards",
+     "choice": "find food",
+     "p_food": 0.993518262704781
+    },
+    {
+     "energy": 0,
+     "hazard_adjacent": false,
+     "food": 4,
+     "truth": "find food",
+     "choice": "find food",
+     "p_food": 0.9987986324817377
+    },
+    {
+     "energy": 0,
+     "hazard_adjacent": false,
+     "food": 10,
+     "truth": "find food",
+     "choice": "find food",
+     "p_food": 0.9984346490805605
+    },
+    {
+     "energy": 0,
+     "hazard_adjacent": true,
+     "food": 4,
+     "truth": "avoid hazards",
+     "choice": "find food",
+     "p_food": 0.9983628004702272
+    },
+    {
+     "energy": 0,
+     "hazard_adjacent": true,
+     "food": 10,
+     "truth": "avoid hazards",
+     "choice": "find food",
+     "p_food": 0.9982560740107377
+    }
+   ]
+  },
+  "v2 consequences + priority": {
+   "accuracy": 0.5,
+   "by_truth": {
+    "find food": 1.0,
+    "collect gems": 0.0,
+    "avoid hazards": 0.4444444444444444
+   },
+   "rows": [
+    {
+     "energy": 95,
+     "hazard_adjacent": false,
+     "food": 4,
+     "truth": "collect gems",
+     "choice": "find food",
+     "p_food": 0.9992714857499044
+    },
+    {
+     "energy": 95,
+     "hazard_adjacent": false,
+     "food": 10,
+     "truth": "collect gems",
+     "choice": "find food",
+     "p_food": 0.9992714855468969
+    },
+    {
+     "energy": 95,
+     "hazard_adjacent": true,
+     "food": 4,
+     "truth": "avoid hazards",
+     "choice": "avoid hazards",
+     "p_food": 0.14803203608953097
+    },
+    {
+     "energy": 95,
+     "hazard_adjacent": true,
+     "food": 10,
+     "truth": "avoid hazards",
+     "choice": "avoid hazards",
+     "p_food": 0.07585264563360362
+    },
+    {
+     "energy": 70,
+     "hazard_adjacent": false,
+     "food": 4,
+     "truth": "collect gems",
+     "choice": "find food",
+     "p_food": 0.9994725924040583
+    },
+    {
+     "energy": 70,
+     "hazard_adjacent": false,
+     "food": 10,
+     "truth": "collect gems",
+     "choice": "find food",
+     "p_food": 0.9995138989946165
+    },
+    {
+     "energy": 70,
+     "hazard_adjacent": true,
+     "food": 4,
+     "truth": "avoid hazards",
+     "choice": "avoid hazards",
+     "p_food": 0.11919123347355096
+    },
+    {
+     "energy": 70,
+     "hazard_adjacent": true,
+     "food": 10,
+     "truth": "avoid hazards",
+     "choice": "avoid hazards",
+     "p_food": 0.047422848134519614
+    },
+    {
+     "energy": 50,
+     "hazard_adjacent": false,
+     "food": 4,
+     "truth": "collect gems",
+     "choice": "find food",
+     "p_food": 0.9995051124722196
+    },
+    {
+     "energy": 50,
+     "hazard_adjacent": false,
+     "food": 10,
+     "truth": "collect gems",
+     "choice": "find food",
+     "p_food": 0.9994598086954224
+    },
+    {
+     "energy": 50,
+     "hazard_adjacent": true,
+     "food": 4,
+     "truth": "avoid hazards",
+     "choice": "avoid hazards",
+     "p_food": 0.06008282726561138
+    },
+    {
+     "energy": 50,
+     "hazard_adjacent": true,
+     "food": 10,
+     "truth": "avoid hazards",
+     "choice": "avoid hazards",
+     "p_food": 0.017985603790351634
+    },
+    {
+     "energy": 36,
+     "hazard_adjacent": false,
+     "food": 4,
+     "truth": "collect gems",
+     "choice": "find food",
+     "p_food": 0.9987010218100892
+    },
+    {
+     "energy": 36,
+     "hazard_adjacent": false,
+     "food": 10,
+     "truth": "collect gems",
+     "choice": "find food",
+     "p_food": 0.9986416715990949
+    },
+    {
+     "energy": 36,
+     "hazard_adjacent": true,
+     "food": 4,
+     "truth": "avoid hazards",
+     "choice": "avoid hazards",
+     "p_food": 0.005219997202952053
+    },
+    {
+     "energy": 36,
+     "hazard_adjacent": true,
+     "food": 10,
+     "truth": "avoid hazards",
+     "choice": "avoid hazards",
+     "p_food": 0.0031726024403173295
+    },
+    {
+     "energy": 34,
+     "hazard_adjacent": false,
+     "food": 4,
+     "truth": "find food",
+     "choice": "find food",
+     "p_food": 0.9999710914468218
+    },
+    {
+     "energy": 34,
+     "hazard_adjacent": false,
+     "food": 10,
+     "truth": "find food",
+     "choice": "find food",
+     "p_food": 0.9999681694005449
+    },
+    {
+     "energy": 34,
+     "hazard_adjacent": true,
+     "food": 4,
+     "truth": "avoid hazards",
+     "choice": "find food",
+     "p_food": 0.9992558809347492
+    },
+    {
+     "energy": 34,
+     "hazard_adjacent": true,
+     "food": 10,
+     "truth": "avoid hazards",
+     "choice": "find food",
+     "p_food": 0.9994843055515351
+    },
+    {
+     "energy": 25,
+     "hazard_adjacent": false,
+     "food": 4,
+     "truth": "find food",
+     "choice": "find food",
+     "p_food": 0.9999694830897509
+    },
+    {
+     "energy": 25,
+     "hazard_adjacent": false,
+     "food": 10,
+     "truth": "find food",
+     "choice": "find food",
+     "p_food": 0.9999540705093196
+    },
+    {
+     "energy": 25,
+     "hazard_adjacent": true,
+     "food": 4,
+     "truth": "avoid hazards",
+     "choice": "find food",
+     "p_food": 0.9990488810832641
+    },
+    {
+     "energy": 25,
+     "hazard_adjacent": true,
+     "food": 10,
+     "truth": "avoid hazards",
+     "choice": "find food",
+     "p_food": 0.9990568182952537
+    },
+    {
+     "energy": 15,
+     "hazard_adjacent": false,
+     "food": 4,
+     "truth": "find food",
+     "choice": "find food",
+     "p_food": 0.9999721550491341
+    },
+    {
+     "energy": 15,
+     "hazard_adjacent": false,
+     "food": 10,
+     "truth": "find food",
+     "choice": "find food",
+     "p_food": 0.9999569474570262
+    },
+    {
+     "energy": 15,
+     "hazard_adjacent": true,
+     "food": 4,
+     "truth": "avoid hazards",
+     "choice": "find food",
+     "p_food": 0.9987973279530564
+    },
+    {
+     "energy": 15,
+     "hazard_adjacent": true,
+     "food": 10,
+     "truth": "avoid hazards",
+     "choice": "find food",
+     "p_food": 0.9994150677182341
+    },
+    {
+     "energy": 5,
+     "hazard_adjacent": false,
+     "food": 4,
+     "truth": "find food",
+     "choice": "find food",
+     "p_food": 0.999979494188449
+    },
+    {
+     "energy": 5,
+     "hazard_adjacent": false,
+     "food": 10,
+     "truth": "find food",
+     "choice": "find food",
+     "p_food": 0.9999679238653167
+    },
+    {
+     "energy": 5,
+     "hazard_adjacent": true,
+     "food": 4,
+     "truth": "avoid hazards",
+     "choice": "find food",
+     "p_food": 0.9995985454049138
+    },
+    {
+     "energy": 5,
+     "hazard_adjacent": true,
+     "food": 10,
+     "truth": "avoid hazards",
+     "choice": "find food",
+     "p_food": 0.9996812110340902
+    },
+    {
+     "energy": 0,
+     "hazard_adjacent": false,
+     "food": 4,
+     "truth": "find food",
+     "choice": "find food",
+     "p_food": 0.9998958072415125
+    },
+    {
+     "energy": 0,
+     "hazard_adjacent": false,
+     "food": 10,
+     "truth": "find food",
+     "choice": "find food",
+     "p_food": 0.9998882097524805
+    },
+    {
+     "energy": 0,
+     "hazard_adjacent": true,
+     "food": 4,
+     "truth": "avoid hazards",
+     "choice": "find food",
+     "p_food": 0.9958719320625183
+    },
+    {
+     "energy": 0,
+     "hazard_adjacent": true,
+     "food": 10,
+     "truth": "avoid hazards",
+     "choice": "find food",
+     "p_food": 0.9858537740673058
+    }
+   ]
+  }
+ }
+}
