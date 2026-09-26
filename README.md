@@ -202,7 +202,9 @@ Only the config changes. There are no code changes.
 3. Select it per command with `--config config/nuc.toml`, or for the whole shell with the
    environment variable `SYSTEM_ONE_CONFIG=config/nuc.toml`.
 4. Verify it: `python -m system_one --config config/nuc.toml check`. This checks full-vocabulary
-   logits, single-token labels for the new tokenizer, and batched vs sequential agreement.
+   logits, single-token labels for the new tokenizer, and batched vs sequential agreement. It
+   also prints how many of 6 easy direction questions the model gets right. That score is
+   informational (the 1.5B gets 4/6; it mixes up east and west) and does not affect OK/FAILED.
 
 Adding a different runtime (for example llama.cpp or OpenVINO) means one class that implements
 `system_one.backends.base.Backend` (tokenize, chat template, `next_token_logits` for a batch)
