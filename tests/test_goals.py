@@ -114,3 +114,28 @@ def test_goal_change_cancels_tournament_below():
     s.apply(s.tier("strategy"), "find food", 3)
     assert "target" not in s.tournaments
     assert "target" in [t.name for t in s.due(4)]
+
+
+def test_skip_single_commits_without_a_model_call():
+    be = MockBackend()
+    one = [
+        Tier("strategy", "Which goal?", ("find food",), every=6, title="Strategic goal"),
+        Tier("target", "Which target?", lambda goals: TARGETS[goals.get("strategy", "collect gems")], every=3),
+        Tier("action", "Which move?", ("north", "south"), every=1),
+    ]
+    s = GoalStack(one)
+    out = step_all(Engine(be), [(s, "state")], 0, skip_single=True, plan_budget=1)
+    assert be.forward_calls == 1  # target and action only
+    methods = {tier.name: r.method for _, tier, r, _ in out}
+    assert methods["strategy"] == "only_option" and methods["target"] == methods["action"] == "single_token"
+    # The target was built from the instantly committed strategy, in the same tick.
+    target = next(r for _, tier, r, _ in out if tier.name == "target")
+    assert target.decision.options == ("apple", "bread") and "Strategic goal: find food" in target.decision.context
+    assert s.probability["strategy"] == 1.0 and s.decided_at("strategy") == 0 and not s.waiting("strategy")
+
+
+def test_skip_single_off_keeps_the_model_call():
+    be = MockBackend()
+    s = GoalStack([Tier("action", "Which move?", ("stay",), every=1)])
+    out = step_all(Engine(be), [(s, "state")], 0)
+    assert be.forward_calls == 1 and out[0][2].method == "single_token"

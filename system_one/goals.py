@@ -95,6 +95,14 @@ class GoalStack:
         """Re-decide this tier on the next tick (e.g. its target was reached or disappeared)."""
         self._stale.add(name)
 
+    def waiting(self, name: str) -> bool:
+        """True while a new choice for this tier is owed: invalidated, or a tournament running."""
+        return name in self._stale or name in self._pending
+
+    def decided_at(self, name: str) -> int | None:
+        """Tick of the tier's last committed choice (None if never decided)."""
+        return self._decided_at.get(name)
+
     def mark_pending(self, tier: Tier) -> None:
         """The tier is being decided over several ticks; do not schedule it again meanwhile."""
         self._pending.add(tier.name)
@@ -120,9 +128,17 @@ class GoalStack:
 State = Union[str, Callable[[Tier], str]]
 
 
+ONLY_OPTION = "only_option"  # DecisionResult.method of a choice committed without a model call
+
+
+def _only_option(decision: Decision) -> DecisionResult:
+    return DecisionResult(decision=decision, index=0, probs=[1.0], labels=[""], outside_mass=0.0,
+                          method=ONLY_OPTION, top_token=None, prompt_tokens=0)
+
+
 def step_all(
     engine, agents: Sequence[tuple[GoalStack, State]], tick: int, group_size: int | None = None,
-    plan_budget: int | None = None,
+    plan_budget: int | None = None, skip_single: bool = False,
 ) -> list[tuple[int, Tier, DecisionResult, Tournament | None]]:
     """One tick for many agents: all due tier decisions in ONE batched engine call.
 
@@ -136,15 +152,28 @@ def step_all(
     Deferred tiers stay due, and tournaments continue with their remaining groups next tick.
     ``None`` means unlimited (a whole tournament round per tick).
 
+    ``skip_single`` commits a tier that has exactly one option at once, without a model call
+    and without using the budget. Its result has ``method == ONLY_OPTION`` and p = 1. The
+    tiers below it see the new goal in the same tick.
+
     Returns (agent index, tier, result, tournament or None) for every decision made.
     """
     jobs: list[tuple[int, Tier, Decision, Tournament | None]] = []
+    instant: list[tuple[int, Tier, DecisionResult, None]] = []
     for i, (stack, state) in enumerate(agents):
         state_of = state if callable(state) else (lambda _tier, s=state: s)
         budget = plan_budget
-        for tier in stack.due(tick):  # top-down, so a strategy is decided before its target
+        for tier in stack.tiers:  # top-down, so a strategy is decided before its target
+            # Re-checked per tier: an instant commit above makes the tiers below it due.
+            if tier not in stack.due(tick):
+                continue
             options = stack.options(tier)
             if not options:
+                continue
+            if skip_single and len(options) == 1:
+                r = _only_option(stack.decision(tier, state_of(tier)))
+                stack.apply(tier, options[0], tick, 1.0)
+                instant.append((i, tier, r, None))
                 continue
             if tier.every > 1 and budget == 0:
                 continue  # budget used up: stays due; built next tick with fresh context
@@ -182,4 +211,4 @@ def step_all(
             commits.append((i, tier, tour.winner, tour.final_probs()[tour.winner]))
     for i, tier, choice, p in sorted(commits, key=lambda c: -agents[c[0]][0].tiers.index(c[1])):
         agents[i][0].apply(tier, choice, tick, p)
-    return out
+    return instant + out
