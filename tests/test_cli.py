@@ -7,4 +7,4 @@ from system_one.config import REPO_ROOT
 
 def test_check_passes_on_mock(capsys):
     assert check(make_engine(load_config(REPO_ROOT / "config" / "mock.toml"))) == 0
-    assert capsys.readouterr().out.strip().endswith("OK")
+    assert capsys.readouterr().out.strip().endswith("OK (mechanics)")
