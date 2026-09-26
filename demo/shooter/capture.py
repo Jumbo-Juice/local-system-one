@@ -25,6 +25,13 @@ from .world import Dungeon, Rules
 VIEWER = Path(__file__).with_name("viewer.html")
 
 
+def order_debias(cfg: dict, flag: bool | None = None) -> bool:
+    """Order averaging for this model: the command-line flag, else ``[shooter] order_debias`` in the
+    config, else on. The 1.5B needs it; the 3B escaped more often without it (docs/research.md ->
+    Shooter demo: pre-registered seeds 0-9 and the replication on seeds 10-19)."""
+    return flag if flag is not None else bool(cfg.get("shooter", {}).get("order_debias", True))
+
+
 def capture(engine, seed: int, rules: Rules | None = None, group_size: int = 8, plan_budget: int | None = 1,
             verbose: bool = True, **brain_options) -> list[dict]:
     runner = Runner(Dungeon(seed, rules), engine, group_size=group_size, plan_budget=plan_budget, **brain_options)
@@ -53,8 +60,9 @@ def main() -> None:
     ap.add_argument("--max-ticks", type=int, default=None, help="override the tick limit (default 400)")
     ap.add_argument("--group-size", type=int, default=8)
     ap.add_argument("--plan-budget", type=int, default=1, help="planning decisions per tick; -1 = unlimited")
-    ap.add_argument("--order-debias", action=argparse.BooleanOptionalAction, default=True,
-                    help="read each decision in two option orders and average (default on)")
+    ap.add_argument("--order-debias", action=argparse.BooleanOptionalAction, default=None,
+                    help="read each decision in two option orders and average (default: [shooter] order_debias "
+                         "in the config, else on)")
     ap.add_argument("--rebuild", default=None, help="only rebuild replay.html next to this trace.jsonl")
     ap.add_argument("--quiet", action="store_true")
     args = ap.parse_args()
@@ -69,7 +77,7 @@ def main() -> None:
         warm_up(engine)
     rules = Rules(max_ticks=args.max_ticks) if args.max_ticks else None
     records = capture(engine, args.seed, rules, args.group_size, args.plan_budget if args.plan_budget >= 0 else None,
-                      verbose=not args.quiet, order_debias=args.order_debias)
+                      verbose=not args.quiet, order_debias=order_debias(cfg, args.order_debias))
     model = str(engine.backend.info().get("model", engine.backend.info().get("kind"))).split("/")[-1]
     out = Path(args.out) if args.out else OUT / f"shooter_{model}_seed{args.seed}"
     out.mkdir(parents=True, exist_ok=True)

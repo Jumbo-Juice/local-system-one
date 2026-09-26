@@ -146,7 +146,99 @@ GPU, so reuse cannot go much further. Prompt orders that reuse more (`prompt_ord
 "question_first"` or `"options_first"`) were up to 21% faster but hurt accuracy, and the agent
 played badly. Details: `docs/research.md` → Observed → Prefix caching.
 
-### The dungeon demo: one agent, recorded and replayed
+### The shooter demo: the dungeon redone, one agent, recorded and replayed
+
+The dungeon below was never escaped. This is its redo as a room-clearing shooter in the spirit of
+*Enter the Gungeon*: the agent shoots, rooms lock it in until their enemies are dead, and
+doorways are three cells wide, so no enemy can trap it in one. One agent per run, in a seeded
+dungeon of nine rooms with a key, an exit, gunners that aim for a tick and then fire slow
+bullets, and brutes that walk up and hit. Its standing order, as the model reads it: *"Find the
+key, then leave through the exit alive. Rooms lock you in until their enemies are dead: shoot
+them and keep out of their bullets."* The model makes every decision, and failed runs are shown
+as they happened.
+
+Two variants, one per model:
+
+```bash
+.venv/Scripts/python -m demo.shooter.capture --config config/default.toml --seed 0
+```
+
+```bash
+.venv/Scripts/python -m demo.shooter.capture --config config/lenovo-3b.toml --seed 0
+```
+
+The first runs Qwen2.5-1.5B, the second Qwen2.5-3B. Each writes `trace.jsonl` and `replay.html`
+to `demo/output/shooter_<model>_seed0/`; open `replay.html` in a browser (no server, no network).
+`--config config/mock.toml` runs without a model, `--rebuild <trace.jsonl>` rebuilds the page.
+
+Recorded runs, the pre-registered showcase (seed 0, whatever the outcome): [`docs/shooter_replay_1.5b_seed0.html`](docs/shooter_replay_1.5b_seed0.html)
+(the 1.5B picks up the key and dies to a gunner at tick 98) and
+[`docs/shooter_replay_3b_seed0.html`](docs/shooter_replay_3b_seed0.html) (the 3B dies to a gunner at
+tick 48, with order averaging, its pre-registered setting). Also included:
+[`docs/shooter_replay_3b_listed_seed0.html`](docs/shooter_replay_3b_listed_seed0.html), seed 0 with the
+3B's current setting (it escapes at tick 163), and
+[`docs/shooter_replay_1.5b_seed1_escaped.html`](docs/shooter_replay_1.5b_seed1_escaped.html), the
+1.5B's first escaped seed, chosen after the results. Download them and open locally.
+
+Each tick is one batched forward pass with up to three decisions (strategy or target, move, shoot):
+
+| tier | every | options |
+|---|---|---|
+| strategy | 12 ticks, or at once when the situation changes | the goals possible now: explore, fight the enemies here, get the key, go to the exit, drink a health potion |
+| target | 6 ticks, or when reached, gone or unsafe | unexplored rooms, the key, the exit, potions, or up to 5 firing spots (a clear line to an enemy, away from enemies, out of every bullet's path) |
+| move (control head) | every tick | open moves and stay, labelled with outcomes: `move west (safe; closer: 4 steps to the target)`, `stay (BULLET: -15 health)` |
+| shoot (control head) | every tick | `shoot gunner #4, 3 cells east (AIMING at you; 3 hits to kill; clear line)` or `hold fire`; committed without a model call while the gun reloads |
+
+**Order averaging (implementation choice, per model).** Small models often pick an option for its
+position. On a development seed the 1.5B's decision to fire followed the option order in 34 of 34
+recorded states (hold fire listed last: never fired; listed first: always fired). With order
+averaging (`Engine(order_debias=True)`), every decision is read twice in the same batch, with the
+options as listed and reversed, and the two readings are averaged; it doubles the rows per pass,
+and the replay shows both readings as ticks on each probability bar. It is on for the 1.5B and,
+after the evaluation below, off for the 3B (`[shooter] order_debias` in each config; `--order-debias`
+overrides).
+
+The replay page is the dungeon viewer with more contrast (lighter floors, darker walls, bright
+enemies and bullets): the map with fog, sealed doorways (red bars), aim telegraphs (red dashed
+lines), bullets in flight and enemy health pips; one card per tier and head; the latency
+timeline with hits and kills; a prompt inspector; `#tick-N` deep links; WebM recording.
+
+Closed-loop evaluation (`bench/shooter_eval.py`; seeds, setups, metrics and showcase fixed and
+committed before the first run on those seeds):
+
+```bash
+.venv/Scripts/python -m bench.shooter_eval
+```
+
+Results on the reference machine (Observed; seeds 0–9; `bench/results/shooter_eval_20260927_002315.json`):
+
+| setup | escaped | died | out of time | key picked up | rooms cleared | kills | hits taken | forward ms/tick (median / p90) |
+|---|---:|---:|---:|---:|---:|---:|---:|---:|
+| **1.5B, order averaging (the 1.5B demo)** | **7 / 10** | 2 | 1 | 9 | 4.6 | 8.5 | 3.0 | 245 / 410 |
+| 3B, order averaging (pre-registered default) | 2 / 10 | 8 | 0 | 10 | 4.8 | 9.1 | 6.7 | 338 / 803 |
+| 1.5B, listed order only | 0 / 10 | 8 | 2 | 5 | 0.7 | 0.7 | 6.1 | 176 / 317 |
+| **3B, listed order (the 3B demo since the replication)** | **7 / 10** | 2 | 1 | 9 | 6.5 | 11.4 | 5.4 | 195 / 387 |
+| random decisions (mock) | 0 / 10 | 0 | 10 | 0 | 0 | 0 | 0 | 0.8 / 1.9 |
+| reference bot (hand-written, not a model): the ceiling | 10 / 10 | 0 | 0 | 10 | 6.1 | 11.2 | 0.4 | – |
+| the same bot, never dodging | 5 / 10 | 5 | 0 | 9 | 4.7 | 9.1 | 8.1 | – |
+
+- **Beatable.** The rules were tuned against the bots before any model ran (reference bot 60/60 on
+  dev seeds), and the 1.5B escaped 7 of 10 evaluation seeds. The first dungeon: 0 of 32.
+- **Order averaging is what makes the 1.5B play**: without it, it held fire in 98% of its shoot
+  decisions and never escaped.
+- **The 3B did worse with averaging than without** (2 vs 7 of 10, p = 0.07). A post-hoc
+  replication on new seeds 10–19, with its decision rule committed before the run, gave 6 vs 7:
+  by that rule the 3B demo now uses the listed order. Over all 20 seeds: 3B listed 14/20,
+  3B averaged 8/20 (p = 0.11), 1.5B averaged 14/20. Both demos escape about 7 runs in 10.
+- **Nearly every hit was a chosen risk**: 29 of 30 (1.5B) and 66 of 67 (3B) hits came from a
+  move labelled `BULLET` or `next to a brute` while a safe move was offered. The 3B often steps
+  toward the gunner it is fighting.
+
+Details, development probes and the rule calibration: `docs/research.md` → Observed → Shooter demo.
+
+### The first dungeon demo (replaced by the shooter): one agent, recorded and replayed
+
+Kept with its results: the shooter above is its redo.
 
 One agent in a seeded dungeon: nine rooms joined by corridors, a key that opens the exit, two
 enemies that chase, and gems, food and potions. The agent knows only the rooms it has seen.
@@ -328,7 +420,10 @@ system_one/            engine.py (decisions), goals.py (tiers), tournament.py, c
 system_one/backends/   base.py (interface), hf.py (PyTorch + transformers), mock.py (no model)
 demo/                  world.py (grid world), brain.py (tiers + state text), sim.py (window / headless)
 demo/dungeon/          world.py (rules), brain.py (tiers, text, runner), capture.py (trace + replay), viewer.html
-bench/                 bench.py, model_eval.py, tournament_compare.py, demo_compare.py, dungeon_eval.py, results/
+demo/shooter/          world.py (rules), bots.py (non-model reference bots), brain.py (tiers, heads, runner),
+                        capture.py (trace + replay), viewer.html
+bench/                 bench.py, model_eval.py, tournament_compare.py, demo_compare.py, dungeon_eval.py,
+                        shooter_calibration.py, shooter_eval.py, results/
 config/                default.toml (Lenovo), lenovo-3b.toml, nuc.example.toml, mock.toml
 docs/                  research.md (sources + Observed results), machine.md
 tests/                 pytest suite (mock tests always; `model` tests when weights are cached)
@@ -369,8 +464,12 @@ tests/                 pytest suite (mock tests always; `model` tests when weigh
   deterministic model repeats a mistake every time it returns to the same state, so an agent can
   loop forever. Test agents in closed loop, not only per decision. Hazard avoidance by the
   strategy tier is still weak (11–44% in the probe).
-- **The dungeon is not solved.** 0 of 48 model runs escaped (3B, 1.5B, two wordings, a post-hoc
-  variant). The planning tiers do not steer away from enemies; see Demo results above.
+- **The first dungeon was not solved** (0 of 48 model runs escaped). Its shooter redo is beatable
+  (1.5B: 7 of 10 escaped), but the models still step into bullets they are warned about: nearly
+  every hit was a move labelled `BULLET` chosen while a safe move was offered.
+- **Option order sways small models.** In the shooter the 1.5B's decision to fire followed the
+  option order; order averaging (`Engine(order_debias=True)`) fixes that at the cost of twice the
+  rows per forward pass. It is off by default outside the shooter.
 - The demo state text gives relative offsets and names conditions in words, because the model
   cannot do the arithmetic in one pass. That is part of the demo design, not of the engine.
 

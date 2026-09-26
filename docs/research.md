@@ -603,3 +603,197 @@ traces for seeds 0–7).
   the second ("do not move into a wall or an enemy") when they conflict. The fix has to come from
   the target and strategy tiers choosing targets away from the enemies, or from a bigger model.
   The 3B is the largest model tested here; larger ones are planned for the NUC.
+
+### Shooter demo: the dungeon redone as a room-clearing shooter (1.5B and 3B)
+
+The dungeon above was never escaped. Its doorways were one cell wide, so a chasing enemy could
+trap the agent in one, and the agent's only answer to an enemy was to walk away. The redo
+(`demo/shooter/`) keeps one agent, the fog of war, the key and the exit, and changes the game into
+a room-clearing shooter in the spirit of *Enter the Gungeon*. The first dungeon and its results
+stay as they were (`demo/dungeon/`).
+
+**Rules (implementation choices, frozen before any model run; commit `879a339`).**
+
+- Nine rooms, 6–9 × 5–7 cells, in a 3 × 3 layout. Doorways and corridors are **three cells wide**.
+- Every room except the start holds 1–2 enemies (the key room 3, the exit room 2). Each enemy is
+  a gunner (3 HP) or, with probability 0.3, a brute (4 HP). Enemies wake when the agent steps
+  into their room or shoots one of them. They never leave their room.
+- **Rooms seal.** While the agent is inside a room with living enemies, its doorways are walls
+  (for walking and for bullets) until every enemy in it is dead. Fights happen in open rooms.
+- The agent's gun fires one bullet every 2 ticks at the enemy the agent chooses. The bullet flies
+  3 cells per tick toward where the enemy stood and stops at the first wall or enemy, so a moving
+  enemy can be missed. Gunners aim visibly for one tick, then fire a bullet that flies 1 cell per
+  tick (15 damage); the agent can step out of its line. Brutes walk at the agent, hit for 20 when
+  adjacent, then back off for 3 ticks. The agent has 100 health; 3 potions heal 40.
+- No hunger (starvation was a failure mode of the first dungeon that had nothing to do with
+  enemies).
+
+**Beatable before any model ran (Observed; `bench/shooter_calibration.py`,
+`bench/results/shooter_calibration_20260926_233244.json`).** A hand-written reference bot (BFS
+plus "shoot the nearest visible enemy", seeing only what the prompts describe) set the ceiling.
+Rule variants were compared on dev seeds 1000–1059 with four bots; none is the model.
+
+| rule variant (60 dev seeds) | reference bot | dodges on half the ticks | never dodges | random |
+|---|---:|---:|---:|---:|
+| first draft (enemy bullets 20, brutes 25) | 60 | 47 | 15 | 0 |
+| **enemy bullets 15, brutes 20 (frozen)** | **60** | **55** | **31** | **0** |
+| draft + gunners fire every 6 ticks | 60 | 49 | 26 | 0 |
+| bullets 15 + every 6 ticks | 60 | 55 | 43 | 0 |
+| draft + 5 potions | 60 | 55 | 23 | 0 |
+| draft + fewer enemy HP (2/3) | 60 | 57 | 53 | 0 |
+
+Decision rule (implementation choice): keep the variant in which the reference bot always wins
+and a bot that never dodges wins about half the time. Dodging decides survival: the same bot
+without dodging lost 29 of 60 seeds.
+
+**Decisions and text (implementation choices).**
+
+| tier | every | options |
+|---|---|---|
+| strategy | 12 ticks, or at once when health band, fighting, sealed room, key, rooms seen or key reachability change | the goals possible now, from: explore, fight the enemies here, get the key, go to the exit, drink a health potion |
+| target | 6 ticks, or when reached, gone or unsafe | unexplored rooms behind known doorways, the key, the exit, potions, or up to 5 **firing spots**: cells with a clear line to an enemy, ≥ 3 cells from every enemy, out of every bullet's path |
+| move (control head) | every tick | the open moves and stay, e.g. `move west (safe; closer: 4 steps to the target)`, `stay (BULLET: -15 health)` |
+| shoot (control head) | every tick | `shoot gunner #4, 3 cells east (AIMING at you; 3 hits to kill; clear line)` … and `hold fire`; only-option (no model call) while the gun reloads or no enemy is in sight |
+
+- The two control heads run side by side in one batched pass, like the Doom demo's control
+  heads [S4], and neither sees the other's answer (`Tier.context_from`).
+- Moves into walls, sealed doorways and enemies are not offered: they would be trap options, like
+  an impossible goal.
+- "closer/farther" is measured along routes that avoid every cell an enemy can hurt next tick; a
+  move into danger is labelled only with its damage.
+- The move state gives the bearing of the route's next waypoint (the farthest route cell in a
+  straight line), not of the target. Precedent: the Doom demo gave its model an A*-computed
+  waypoint bearing [S4].
+
+**Development on dev seeds 1000–1001 (Observed; excluded from the evaluation).** Each change
+below came from a failure in a recorded run, checked by re-asking the recorded prompts.
+
+1. *The shoot head's answer was the option order.* In the first 1.5B run (seed 1000) it chose
+   "hold fire" in 34 of 34 decisions and died at tick 38 without firing. Re-asking the same 34
+   prompts:
+
+   | variant of the shoot prompt | 1.5B fires | 3B fires |
+   |---|---:|---:|
+   | as recorded (hold fire listed last) | 0 / 34 | 34 / 34 |
+   | hold fire listed first | 34 / 34 | 34 / 34 |
+
+   Asked only which of the two enemies to aim at, the 1.5B picked the nearest in 11 of 34 states
+   when it was listed first and in 34 of 34 when it was listed last; the 3B in 23 and 26 of 34.
+   The 3B fires whatever the order; the 1.5B's choice follows the order. Order mattered for the
+   other tiers too: reversing the options changed the chosen move in 19 of 39 recorded states
+   (1.5B) and 14 of 39 (3B), and the target in 7 of 12 and 10 of 12.
+
+   **Change: order averaging** (`Engine(order_debias=True)`, off by default; on in the evaluated
+   shooter, later set per model after the replication below).
+   Every decision with two or more options is read twice in the same batch, with the options as
+   listed and reversed, and the two softmaxes are averaged. It doubles the rows per pass. It does
+   not remove the model's bias; it stops a fixed order from deciding for it. The viewer shows both
+   readings. The evaluation also runs both models without it (`-listed`) to measure what it does.
+2. *"closer" led next to a brute.* With plain walking distance, the 1.5B chose
+   `move west (next to a brute: -20 health; closer: 3 steps)` at p = 0.78 when the short route
+   passed the brute. Change: "closer" along routes that avoid danger (above).
+3. *The 3B stood still.* It chose `stay (safe; no closer)` in 235 of 362 states where a safe move
+   toward the target existed, and timed out. Re-asking recorded move prompts with other questions
+   (states with a safe closer move / states with a risky option):
+
+   | move question | 3B: safe closer chosen | 3B: risky chosen | 1.5B: safe closer | 1.5B: risky |
+   |---|---:|---:|---:|---:|
+   | "Which move is best? Never step into a bullet's path; otherwise get closer to your target." (first) | 70 / 130 | 15 / 64 | 103 / 130 | 7 / 64 |
+   | "Which move brings you closer to your target? Do not step into a bullet's path or next to a brute." | 71 / 130 | 14 / 64 | 130 / 130 | 8 / 64 |
+   | "Which move brings you closer to your current target?" | 129 / 130 | 13 / 64 | 130 / 130 | 10 / 64 |
+   | **"Which move is best? Get closer to your target, but never step into a bullet's path."** (adopted) | 128 / 130 | 11 / 64 | 130 / 130 | 9 / 64 |
+
+4. *The 3B followed the compass, not the route.* With the adopted question it still timed out on
+   both dev seeds (277 and 223 stuck ticks). In each run one state repeated for over 200 ticks:
+   `move west (wall)` at p = 0.71 (target "3 cells west and 6 cells north"), and a doorway where
+   it chose `move east (farther)` because the target lay east but the route went west first.
+   Over unique recorded states it chose the safe closer move 400 of 417 times: the failures were
+   single states that repeat forever, because nothing moves in an empty corridor. Changes: walls
+   are no longer options, and the move state gives the waypoint bearing.
+
+| dev runs (ticks until the run ended) | 1.5B seed 1000 | 1.5B seed 1001 | 3B seed 1000 | 3B seed 1001 |
+|---|---|---|---|---|
+| first version | died at 38, 0 shots | – | – | – |
+| + order averaging, safe-route "closer" | escaped, 137 | – | out of time, 231 stuck | – |
+| + adopted move question | escaped, 125 | escaped, 210 | out of time, 277 stuck | out of time, 223 stuck |
+| + waypoint bearing, no wall options (evaluated version) | escaped, 141 | escaped, 125 | escaped, 236 | escaped, 262 |
+
+Four dev runs are not evidence of a win rate; the evaluation below is.
+
+**Pre-registered evaluation** (`bench/shooter_eval.py` at commit `7951472`, seeds 0–9, every run
+reported). Raw data: `bench/results/shooter_eval_20260927_002315.json`; traces in
+`demo/output/shooter_eval_main/` (not committed; the runs are deterministic).
+
+| setup (seeds 0–9) | escaped | died: gunner | died: brute | out of time | key picked up | rooms seen | rooms cleared | kills | hits taken | shots on target | held fire* | forward ms, median / p90 |
+|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
+| **1.5B, order averaging (pre-registered default; still the demo)** | **7** | 2 | 0 | 1 | 9 | 6.5 | 4.6 | 8.5 | 3.0 | 89% | 63% | 245 / 410 |
+| **3B, order averaging (pre-registered default)** | **2** | 8 | 0 | 0 | 10 | 6.9 | 4.8 | 9.1 | 6.7 | 93% | 0% | 338 / 803 |
+| 1.5B, listed order | 0 | 6 | 2 | 2 | 5 | 3.1 | 0.7 | 0.7 | 6.1 | 89% | 98% | 176 / 317 |
+| 3B, listed order (the 3B demo since the replication below) | 7 | 2 | 0 | 1 | 9 | 7.9 | 6.5 | 11.4 | 5.4 | 91% | 3% | 195 / 387 |
+| random decisions (mock) | 0 | 0 | 0 | 10 | 0 | 1.0 | 0 | 0 | 0 | – | – | 0.8 / 1.9 |
+| reference bot (not a model) | 10 | 0 | 0 | 0 | 10 | 7.5 | 6.1 | 11.2 | 0.4 | – | – | – |
+| bot that never dodges (not a model) | 5 | 5 | 0 | 0 | 9 | 6.3 | 4.7 | 9.1 | 8.1 | – | – | – |
+
+Means over the 10 runs, except counts. \* Share of the shoot decisions put to the model (with an
+enemy in sight and the gun ready) answered "hold fire". Latency: per-run medians, then the median
+over runs. Median escape tick: 1.5B 151, 3B 234 (2 runs), 3B listed 163, reference bot 148.
+
+- **The level is beatable, and the 1.5B beats it most of the time.** 7 of 10 escapes with the
+  1.5B, against 0 of 32 model runs in the first dungeon. The 1.5B holds fire in 63% of its shoot
+  decisions and still clears rooms: shots that are fired hit 89% of the time.
+- **Order averaging decides whether the 1.5B plays at all.** Without it the 1.5B held fire in 98%
+  of shoot decisions, killed 0.7 enemies per run and never escaped (0 vs 7 of 10; two-sided
+  Fisher exact p = 0.003).
+- **For the 3B the pre-registered default did worse than the listed order** (2 vs 7 of 10;
+  p = 0.07, so not conclusive on 10 seeds). Per decision, averaging did not make its moves
+  riskier: in the 275 states with both a risky and a safe move, the averaged choice was risky 61
+  times, the listed-order reading alone 58 times. It changed 14% of the 3B's moves and 29% of its
+  targets relative to the listed reading, so the runs diverge early; which difference matters is
+  not known. Replication on new seeds: below.
+- **Almost every hit was a chosen risk.** Classifying every hit by the move chosen on that tick:
+
+  | setup | hits | chose a move labelled `BULLET` or `next to a brute` while a safe move existed | no safe move | chose a move labelled safe |
+  |---|---:|---:|---:|---:|
+  | 1.5B, averaged | 30 | 29 | 0 | 1 |
+  | 3B, averaged | 67 | 66 | 0 | 1 |
+  | 1.5B, listed | 61 | 43 | 18 | 0 |
+  | 3B, listed | 54 | 52 | 1 | 1 |
+
+  The 3B took the risky move in 22% of the states where both were offered (61 of 275), the
+  1.5B in 6% (24 of 387). A typical 3B case: standing on its firing spot with a gunner 3 cells
+  north, it chose `move north (BULLET: -15 health)` at p = 0.97 over `stay (safe; on the target)`
+  (seed 0, tick 24). Inferred, not tested: while "fight the enemies here" is the goal, the 3B moves
+  toward the enemy it reads about, as the first dungeon's move tier moved toward its target.
+- The two hits after a move labelled safe were not investigated.
+- **Labelling defect found after the run (not fixed, so the demo stays the evaluated version):**
+  when the agent stands on its target and a bullet will cross its cell, the stay option reads
+  `stay (BULLET: -15 health; reach the target)` instead of "on the target".
+- One 1.5B run (seed 3) never left the start area: 389 stuck ticks on one explore target.
+- Random decisions never left the start room: the mock backend's choice is a fixed function of
+  the prompt, so it repeats in a static state.
+- The pre-registered replays (seed 0) both die to a gunner: the 1.5B at tick 98 after the key, the
+  3B at tick 48.
+
+**Post-hoc replication on seeds 10–19** (never run before; decision rule written into
+`bench/shooter_eval.py` and committed as `88d739d` before the run: switch the 3B demo to the listed
+order only if it also escapes more often than averaging there). Raw data:
+`bench/results/shooter_eval_20260927_005732.json`.
+
+| setup | seeds 10–19: escaped | died: gunner | out of time | hits taken | forward ms, median / p90 | seeds 0–19: escaped |
+|---|---:|---:|---:|---:|---:|---:|
+| 1.5B, order averaging | 7 | 3 | 0 | 4.3 | 207 / 444 | 14 / 20 |
+| 3B, order averaging | 6 | 4 | 0 | 6.0 | 323 / 784 | 8 / 20 |
+| 3B, listed order | 7 | 2 | 1 | 4.2 | 195 / 404 | 14 / 20 |
+
+- 7 > 6, so by the rule **the 3B demo now reads options in the listed order**
+  (`[shooter] order_debias = false` in `config/lenovo-3b.toml`); the 1.5B keeps order averaging
+  (`true` in `config/default.toml`). `Engine`'s own default stays off.
+- The margin on the new seeds is one run, and over all 20 seeds the difference (8 vs 14) has a
+  two-sided Fisher p = 0.11. The switch follows the pre-stated rule; it is not evidence that
+  averaging harms the 3B. It does cost the 3B latency (p90 ~790 vs ~400 ms) and, in both seed
+  sets, more hits (6.7 and 6.0 vs 5.4 and 4.2).
+- Both models now escape about 7 in 10 runs (14 of 20 each). The reference bot's ceiling on
+  seeds 0–9 was 10 of 10.
+- Replays in `docs/`: the pre-registered seed-0 runs of both models (both died), the 3B's current
+  setting on seed 0 (`shooter_replay_3b_listed_seed0.html`, escaped at tick 163), and the 1.5B's
+  first escaped seed (`shooter_replay_1.5b_seed1_escaped.html`, chosen after the results).
