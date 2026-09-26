@@ -260,3 +260,19 @@ def test_replay_embeds_the_trace_safely(tmp_path):
     assert json.loads(inner)["note"] == "</script><b>"
     build_replay(text, out, out)  # rebuilding an already-built replay replaces the old trace
     assert out.read_text(encoding="utf-8").count("application/x-ndjson") == 1
+
+
+def test_move_labels_say_closer_or_farther():
+    d = quiet(0)
+    b = DungeonBrain(d)
+    b.stack.apply(b.stack.tier("strategy"), "explore", 0)
+    b.stack.apply(b.stack.tier("target"), b.target_options("explore")[0], 0)
+    b.refresh()
+    opts = [o for o in b.move_options() if "to the target" in o]
+    assert any("(closer:" in o or "; closer:" in o for o in opts) and any("farther:" in o or "no closer" in o for o in opts)
+    steps = DungeonBrain(d, label_style="steps")
+    steps.stack.current.update(b.stack.current)
+    steps.refresh()
+    assert any("target: " in o for o in steps.move_options()) and not any("closer" in o for o in steps.move_options())
+    with pytest.raises(ValueError):
+        DungeonBrain(d, label_style="other")
