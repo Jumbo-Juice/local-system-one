@@ -101,3 +101,19 @@ def test_hf_float32_head_gives_float32_logits_close_to_model_head(hf_backend):
     # The bf16 head rounds logits to ~0.125 steps; the float32 head does not.
     assert 0 < np.abs(a - b).max() < 0.5
     assert len(np.unique(a)) > len(np.unique(b))
+
+
+@pytest.mark.model
+def test_hf_parameter_count_ignores_float32_head_copy(hf_backend):
+    import torch
+
+    from system_one.backends.hf import _Float32Head
+
+    be = hf_backend
+    reported = be.info()["parameters"]
+    original = be.model.get_output_embeddings()
+    be.model.set_output_embeddings(_Float32Head.build(torch, original).to(be.device))
+    try:
+        assert be.info()["parameters"] == reported  # counted once, at load time
+    finally:
+        be.model.set_output_embeddings(original)
