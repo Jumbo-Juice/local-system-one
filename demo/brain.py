@@ -174,8 +174,9 @@ class TickReport:
 class Controller:
     """Runs the world: each tick = ONE batched engine call for every agent's due decisions."""
 
-    def __init__(self, world: World, engine, use_goals: bool = True, group_size: int = 8, **tier_periods):
-        self.world, self.engine, self.group_size = world, engine, group_size
+    def __init__(self, world: World, engine, use_goals: bool = True, group_size: int = 8,
+                 plan_budget: int | None = None, **tier_periods):
+        self.world, self.engine, self.group_size, self.plan_budget = world, engine, group_size, plan_budget
         self.brains = [Brain(world, a, use_goals, **tier_periods) for a in world.agents]
 
     def tick(self) -> TickReport:
@@ -183,7 +184,8 @@ class Controller:
         for b in self.brains:
             b.refresh()
         agents = [(b.stack, b.state_for) for b in self.brains]
-        updates = step_all(self.engine, agents, self.world.tick, group_size=self.group_size)
+        updates = step_all(self.engine, agents, self.world.tick, group_size=self.group_size,
+                           plan_budget=self.plan_budget)
         stats = dict(self.engine.last_stats) if updates else {}
         moves = {b.agent.id: b.stack.current.get("action", "stay") for b in self.brains}
         events = self.world.step(moves)

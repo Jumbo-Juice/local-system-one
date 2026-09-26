@@ -146,3 +146,49 @@ def test_invalidate_forces_redecision():
     assert stack.due(1) == []
     stack.invalidate("target")
     assert [t.name for t in stack.due(1)] == ["target"]
+
+
+def test_partial_rounds_give_the_same_winner():
+    scorer = MaxScorer()
+    full = run_tournament(scorer, items(50, seed=4), group_size=8, make_decision=make)
+    t = Tournament(tuple(items(50, seed=4)), 8, make)
+    calls = 0
+    while not t.done:
+        ds = t.pending(limit=1)
+        assert len(ds) == 1
+        t.submit(scorer(ds))
+        calls += 1
+    assert t.winner == full.winner == "item 49"
+    assert calls == t.model_decisions == full.model_decisions  # same work, one group at a time
+    assert len(t.rounds) == len(full.rounds)
+
+
+def test_progress_reports_resolved_groups():
+    t = Tournament(tuple(items(24)), 8, make)
+    assert t.progress() == (1, 0, 3)
+    t.submit(MaxScorer()(t.pending(limit=2)))
+    assert t.progress() == (1, 2, 3)
+    t.submit(MaxScorer()(t.pending()))
+    assert t.progress() == (2, 0, 1)
+
+
+def test_plan_budget_limits_planning_per_tick():
+    from system_one.goals import GoalStack, Tier, step_all
+
+    be = MockBackend()
+    eng = Engine(be)
+    gems = tuple(f"gem {i}" for i in range(24))
+    stack = GoalStack([Tier("strategy", "Which goal?", ("gems", "food"), every=50),
+                       Tier("target", "Which gem?", gems, every=50),
+                       Tier("action", "Which move?", ("north", "south"), every=1)])
+    per_tick = []
+    for tick in range(8):
+        before = be.forward_calls
+        out = step_all(eng, [(stack, "s")], tick, group_size=8, plan_budget=1)
+        assert be.forward_calls - before == 1
+        assert sum(1 for _, tier, _, _ in out if tier.name == "action") == 1
+        per_tick.append(sum(1 for _, tier, _, _ in out if tier.name != "action"))
+    assert max(per_tick) == 1  # never more than one planning decision next to the move
+    # tick 0: strategy; ticks 1-3: the 3 first-round groups; tick 4: the final; then nothing due
+    assert per_tick == [1, 1, 1, 1, 1, 0, 0, 0]
+    assert stack.current["target"] in gems and not stack.tournaments
