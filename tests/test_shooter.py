@@ -212,3 +212,174 @@ def test_snapshot_is_json():
         d.step(*bots.reference(d))
     json.dumps(d.layout())
     json.dumps(d.snapshot())
+
+
+# -- engine and goal-stack additions ----------------------------------------------------------
+
+from system_one import Decision, Engine  # noqa: E402
+from system_one.backends.mock import MockBackend  # noqa: E402
+from system_one.goals import GoalStack, Tier  # noqa: E402
+
+
+def test_order_debias_averages_the_two_orders_in_one_pass():
+    be = MockBackend()
+    eng = Engine(be)
+    ds = [Decision("q?", ("a", "b", "c"), state="s1"), Decision("q?", ("only",), state="s2")]
+    fwd = eng.decide_batch([ds[0]])[0]
+    rev = eng.decide_batch([Decision("q?", ("c", "b", "a"), state="s1")])[0]
+    eng.order_debias = True
+    before = be.forward_calls
+    out = eng.decide_batch(ds)
+    assert be.forward_calls - before == 1 and eng.last_stats["decisions"] == 3  # one mirror row
+    avg = [(a + b) / 2 for a, b in zip(fwd.probs, rev.probs[::-1])]
+    assert out[0].probs == pytest.approx(avg) and out[0].index == avg.index(max(avg))
+    assert out[0].orders == [pytest.approx(fwd.probs), pytest.approx(rev.probs[::-1])]
+    assert out[0].decision is ds[0] and out[1].orders is None
+
+
+def test_context_from_limits_what_a_tier_sees():
+    stack = GoalStack([Tier("plan", "p?", ("x", "y"), every=5, title="Plan"),
+                       Tier("move", "m?", ("l", "r")), Tier("shoot", "s?", ("f", "h"), context_from=("plan",)),
+                       Tier("other", "o?", ("a", "b"))])
+    for t, c in zip(stack.tiers, ("x", "l", "f", "a")):
+        stack.apply(t, c, 0)
+    assert stack.context(stack.tier("shoot")) == "Plan: x"
+    assert stack.context(stack.tier("other")).splitlines() == ["Plan: x", "move: l", "shoot: f"]
+
+
+# -- brain, runner, trace ---------------------------------------------------------------------
+
+from demo.shooter.brain import GOALS, HOLD, Runner, ShooterBrain, cell_of, enemy_of  # noqa: E402
+from demo.shooter.capture import VIEWER, build_replay, to_jsonl  # noqa: E402
+
+
+def fight(kind="gunner"):
+    """The agent inside a room with one awake enemy three cells away on the same row."""
+    d = quiet()
+    e, room = place_enemy(d, kind=kind)
+    d.pos = next(c for c in room.cells if c[1] == e.pos[1] and abs(c[0] - e.pos[0]) == 3)
+    d.seen.add(room.id)
+    d._known = None
+    d.step("stay")  # seals the room
+    return d, e, room
+
+
+def test_goals_offered_only_when_possible():
+    d = quiet()
+    b = ShooterBrain(d)
+    assert b.goal_options() == ["explore"]
+    d.seen = set(range(9))
+    d._known = None
+    b.refresh()
+    assert "get the key" in b.goal_options() and "explore" not in b.goal_options()
+    d, e, room = fight()
+    b = ShooterBrain(d)
+    assert d.sealed == room.id and b.goal_options()[0] == "fight the enemies here"
+    assert "explore" not in b.goal_options()  # the doorways are sealed
+    assert all(g in GOALS for g in b.goal_options())
+    assert "sealed until its 1 enemy is dead" in b.strategy_state()
+
+
+def test_firing_spots_have_a_clear_line_and_keep_distance():
+    d, e, room = fight()
+    b = ShooterBrain(d)
+    spots = b.target_options("fight the enemies here")
+    assert spots and all(s.startswith("firing spot at (") for s in spots)
+    for s in spots:
+        c = cell_of(s)
+        assert c in room and d.clear_line(c, e.pos) and ((c[0] - e.pos[0]) ** 2 + (c[1] - e.pos[1]) ** 2) >= 9
+    assert any("where you stand" in s for s in spots)  # the agent is 3 cells from the enemy
+
+
+def test_shoot_options_hold_fire_last_or_only_option():
+    d, e, room = fight()
+    b = ShooterBrain(d)
+    d.cooldown = 0
+    b.refresh()
+    opts = b.shoot_options()
+    assert opts[-1] == HOLD and opts[0].startswith(f"shoot gunner #{e.id}, ") and " cells " in opts[0]
+    assert "3 hits to kill; clear line" in opts[0] and enemy_of(opts[0]) == e.id and enemy_of(HOLD) is None
+    d.cooldown = 1
+    assert b.shoot_options() == ["hold fire (the gun is reloading: ready in 1 tick)"]
+
+
+def test_moves_are_labelled_and_walls_are_not_offered():
+    d, e, room = fight()
+    b = ShooterBrain(d)
+    x, y = d.pos
+    d.bullets = [__import__("demo.shooter.world", fromlist=["Bullet"]).Bullet(9, "enemy", float(x), float(y - 2), 0.0, 1.5, 15)]
+    b.refresh()
+    opts = b.move_options()
+    names = [o.split(" (")[0] for o in opts]
+    assert names[-1] == "stay" and all(d.passable((x + dx, y + dy)) for dx, dy in
+                                        ((0, -1) if n == "move north" else (0, 1) if n == "move south" else
+                                         (1, 0) if n == "move east" else (-1, 0) if n == "move west" else (0, 0)
+                                         for n in names))
+    stay = opts[-1]
+    assert "BULLET: -15 health" in stay and "safe" not in stay
+    assert any(o.startswith("move") and "(safe" in o for o in opts)
+
+
+def test_brute_neighbourhood_is_labelled():
+    d, e, room = fight("brute")
+    d.pos = next(c for c in room.cells if c[1] == e.pos[1] and abs(c[0] - e.pos[0]) == 2)
+    b = ShooterBrain(d)
+    e.timer = 0
+    b.refresh()
+    toward = "move east" if e.pos[0] > d.pos[0] else "move west"
+    opt = next(o for o in b.move_options() if o.startswith(toward))
+    assert "next to a brute: -20 health" in opt
+
+
+def test_waypoint_follows_the_route_not_the_bearing():
+    d = quiet()
+    b = ShooterBrain(d)
+    b.stack.apply(b.stack.tier("strategy"), "explore", 0)
+    b.stack.apply(b.stack.tier("target"), b.target_options("explore")[0], 0)
+    b.refresh()
+    way = b.waypoint()
+    assert way is not None and d.clear_line(d.pos, way[0])
+    s = b.move_state()
+    assert "Your target is" in s and "North is up" in s
+
+
+def test_runner_one_forward_pass_per_tick_and_json_records():
+    be = MockBackend()
+    r = Runner(Dungeon(2), Engine(be), group_size=8, plan_budget=1)
+    header = r.header()
+    for _ in range(80):
+        before = be.forward_calls
+        rec = r.tick()
+        assert be.forward_calls - before <= 1
+        model = [x for x in rec["decisions"] if x["method"] != "only_option"]
+        assert rec["batch"]["decisions"] == len(model)
+        assert sum(1 for x in model if x["kind"] == "plan") <= 1
+        assert sum(1 for x in rec["decisions"] if x["tier"] == "move") == 1
+        assert sum(1 for x in rec["decisions"] if x["tier"] == "shoot") == 1
+        for x in model:
+            assert abs(sum(x["probs"]) - 1) < 1e-3 and len(x["orders"]) == 2
+        if r.d.outcome:
+            break
+    assert not r.engine.order_debias  # restored after each tick
+    end = r.end()
+    lines = [json.loads(x) for x in to_jsonl([header, *r.records, end]).splitlines()]
+    assert lines[0]["scenario"] == "shooter" and lines[0]["order_debias"] is True and lines[-1]["type"] == "end"
+    assert lines[0]["map"]["width"] == 33 and end["summary"]["ticks"] == len(r.records)
+
+
+def test_shots_chosen_by_the_head_are_fired():
+    d, e, room = fight()
+    r = Runner(d, Engine(MockBackend()))
+    for _ in range(30):
+        rec = r.tick()
+        if rec["shoot"] is not None:
+            assert any(x["kind"] == "shot" and x["enemy"] == rec["shoot"] for x in rec["events"])
+            break
+    else:
+        pytest.skip("the mock never chose to shoot in 30 ticks")
+
+
+def test_viewer_has_a_trace_slot(tmp_path):
+    text = to_jsonl([{"type": "header", "note": "</script>"}])
+    out = build_replay(text, tmp_path / "replay.html", VIEWER)
+    assert out.read_text(encoding="utf-8").count("application/x-ndjson") == 1

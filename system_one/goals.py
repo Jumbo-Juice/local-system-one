@@ -40,6 +40,9 @@ class Tier:
     # How lower tiers see the chosen option text (default: verbatim). Useful to drop details that
     # go stale, e.g. a distance measured when the option was chosen.
     describe: Callable[[str], str] | None = None
+    # Names of the higher tiers whose goals this tier's prompt shows (default: all). Parallel
+    # control heads (e.g. move and shoot, both every tick) should not see each other's last answer.
+    context_from: tuple[str, ...] | None = None
 
     def __post_init__(self):
         if self.every < 1:
@@ -75,7 +78,8 @@ class GoalStack:
         """Goals of the higher tiers, as shown to this tier's prompt."""
         return "\n".join(
             f"{t.title or t.name}: {t.describe(self.current[t.name]) if t.describe else self.current[t.name]}"
-            for t in self._above(tier) if t.name in self.current
+            for t in self._above(tier)
+            if t.name in self.current and (tier.context_from is None or t.name in tier.context_from)
         )
 
     def due(self, tick: int) -> list[Tier]:
