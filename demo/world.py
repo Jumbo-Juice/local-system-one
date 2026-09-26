@@ -26,6 +26,7 @@ class Agent:
     health: int = 100
     score: int = 0
     deaths: int = 0
+    starved: int = 0  # deaths with energy at 0 (the rest: hazards)
     colour: str = "#000000"
 
 
@@ -109,7 +110,7 @@ class World:
 
     def step(self, moves: dict[int, str]) -> dict:
         """Apply one move per agent, then pickups, hazards, energy and respawns."""
-        events = {"gems": 0, "food": 0, "hits": 0, "deaths": 0}
+        events = {"gems": 0, "food": 0, "hits": 0, "deaths": 0, "starved": 0}
         for a in self.agents:
             dx, dy = STEP.get(moves.get(a.id, "stay"), (0, 0))
             target = (a.pos[0] + dx, a.pos[1] + dy)
@@ -141,6 +142,9 @@ class World:
             if a.health <= 0:  # respawn with full stats; the score is kept
                 a.deaths += 1
                 events["deaths"] += 1
+                if a.energy == 0:
+                    a.starved += 1
+                    events["starved"] += 1
                 a.pos, a.health, a.energy = self._free_cell(), 100, 100
         self.tick += 1
         return events

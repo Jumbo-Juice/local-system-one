@@ -37,6 +37,9 @@ class Tier:
     options: Options  # fixed list, or f(current goals of higher tiers) -> list
     every: int = 1  # re-decide every N ticks
     title: str = ""  # how lower tiers see this goal, e.g. "Strategic goal"
+    # How lower tiers see the chosen option text (default: verbatim). Useful to drop details that
+    # go stale, e.g. a distance measured when the option was chosen.
+    describe: Callable[[str], str] | None = None
 
     def __post_init__(self):
         if self.every < 1:
@@ -71,7 +74,8 @@ class GoalStack:
     def context(self, tier: Tier) -> str:
         """Goals of the higher tiers, as shown to this tier's prompt."""
         return "\n".join(
-            f"{t.title or t.name}: {self.current[t.name]}" for t in self._above(tier) if t.name in self.current
+            f"{t.title or t.name}: {t.describe(self.current[t.name]) if t.describe else self.current[t.name]}"
+            for t in self._above(tier) if t.name in self.current
         )
 
     def due(self, tick: int) -> list[Tier]:
