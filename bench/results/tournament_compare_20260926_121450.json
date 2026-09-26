@@ -1,0 +1,111 @@
+{
+ "host": {
+  "hostname": "Reuben",
+  "os": "Windows-11-10.0.26200-SP0",
+  "cpu": "Intel(R) Core(TM) Ultra 7 256V",
+  "cpu_count": 8,
+  "ram_gb": 15.6,
+  "python": "3.13.9"
+ },
+ "backend": {
+  "kind": "hf",
+  "model": "Qwen/Qwen2.5-1.5B-Instruct",
+  "commit": "989aa7980e4cf806f80c7fef2b1adb7bc71aa306",
+  "parameters": 1543714304,
+  "dtype": "bfloat16",
+  "head_dtype": "float32",
+  "quantisation": "none (weights in bfloat16)",
+  "device": "xpu",
+  "device_name": "Intel(R) Arc(TM) 140V GPU (8GB)",
+  "attn_implementation": "sdpa",
+  "torch": "2.14.0+xpu",
+  "transformers": "5.17.0",
+  "max_batch": 32
+ },
+ "args": {
+  "config": null,
+  "sizes": [
+   40,
+   80
+  ],
+  "groups": [
+   10,
+   26
+  ],
+  "problems": 30
+ },
+ "runs": [
+  {
+   "n": 40,
+   "full": {
+    "accuracy": 0.5,
+    "latency_ms_per_problem": 116.06740333372727,
+    "prompt_tokens_mean": 239.66666666666666,
+    "mean_chosen_prob": 0.6253859851362936,
+    "mean_outside_mass": 0.18027853273228078
+   },
+   "tournaments": [
+    {
+     "group_size": 10,
+     "accuracy": 1.0,
+     "agreement_with_full": 0.5,
+     "latency_ms_per_problem": 212.65685000253143,
+     "latency_ms_range": [
+      207.53299999341834,
+      900.2093000017339
+     ],
+     "rounds_mean": 2,
+     "answer_survived_round1": 1.0
+    },
+    {
+     "group_size": 26,
+     "accuracy": 0.8333333333333334,
+     "agreement_with_full": 0.4,
+     "latency_ms_per_problem": 192.77109999529785,
+     "latency_ms_range": [
+      189.17910000891425,
+      249.96639999153558
+     ],
+     "rounds_mean": 2,
+     "answer_survived_round1": 0.8666666666666667
+    }
+   ]
+  },
+  {
+   "n": 80,
+   "full": {
+    "accuracy": 0.16666666666666666,
+    "latency_ms_per_problem": 148.76946000003954,
+    "prompt_tokens_mean": 414.3,
+    "mean_chosen_prob": 0.4352836147621052,
+    "mean_outside_mass": 0.2318444353510014
+   },
+   "tournaments": [
+    {
+     "group_size": 10,
+     "accuracy": 0.8,
+     "agreement_with_full": 0.16666666666666666,
+     "latency_ms_per_problem": 333.3725000047707,
+     "latency_ms_range": [
+      327.8744999988703,
+      517.915799995535
+     ],
+     "rounds_mean": 2,
+     "answer_survived_round1": 0.9333333333333333
+    },
+    {
+     "group_size": 26,
+     "accuracy": 0.7333333333333333,
+     "agreement_with_full": 0.13333333333333333,
+     "latency_ms_per_problem": 263.44399999652524,
+     "latency_ms_range": [
+      256.8093999871053,
+      308.5579000035068
+     ],
+     "rounds_mean": 2,
+     "answer_survived_round1": 0.7666666666666667
+    }
+   ]
+  }
+ ]
+}
