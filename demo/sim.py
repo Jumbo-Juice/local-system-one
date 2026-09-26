@@ -28,9 +28,15 @@ PANEL_W = 430
 
 def build_controller(args) -> Controller:
     engine = make_engine(load_config(args.config))
-    engine.decide_batch([Decision("warm-up", ("a", "b"))])  # first XPU pass compiles kernels (~3 s)
+    # Warm-up: the first XPU pass compiles kernels (~3 s), and the first long batch allocates the
+    # activation buffers. Doing both here keeps them out of the first ticks of the demo.
+    engine.decide_batch([Decision("warm-up", ("a", "b"))])
+    # Different lengths, so the padded (masked) attention path is compiled as well.
+    engine.decide_batch([Decision("warm-up", tuple("abcdefgh"), state="Gems, food and hazards nearby. " * (10 + 8 * i))
+                         for i in range(min(8, 2 * args.agents))])
     world = World(n_agents=args.agents, n_gems=args.gems, n_food=args.food, seed=args.seed)
-    return Controller(world, engine, use_goals=not args.no_goals, group_size=args.group_size)
+    return Controller(world, engine, use_goals=not args.no_goals, group_size=args.group_size,
+                      plan_budget=args.plan_budget if args.plan_budget >= 0 else None)
 
 
 def agent_view(ctrl: Controller, display: dict) -> list[dict]:
@@ -103,6 +109,16 @@ class App:
         self.stop = threading.Event()
         self.display: dict = {}
         self.rates: list[float] = []
+        # Smooth motion: each agent glides from where it is drawn to its new cell over roughly
+        # one tick (EMA of the gap between snapshots). Rendering only; decisions are unchanged.
+        self.anim: dict[int, dict] = {}
+        self.interval = 0.25
+        self.last_arrival: float | None = None
+        for x in range(w.width):
+            for y in range(w.height):
+                fill = "#555" if (x, y) in w.walls else "#f4f4f4"
+                self.canvas.create_rectangle(x * CELL, y * CELL, (x + 1) * CELL, (y + 1) * CELL,
+                                             fill=fill, outline="#ddd", tags="static")
         self.root.bind("<space>", lambda e: self.running.clear() if self.running.is_set() else self.running.set())
         self.root.bind("<Escape>", lambda e: self.close())
         self.root.protocol("WM_DELETE_WINDOW", self.close)
@@ -128,47 +144,75 @@ class App:
             self.queue.put(snap)  # blocks if the UI is behind: the sim never outruns the view
 
     def poll(self):
+        snap = None
         try:
-            snap = None
             while True:
                 snap = self.queue.get_nowait()
         except queue.Empty:
             pass
+        now = time.perf_counter()
         if snap is not None:
-            self.draw(snap)
+            if self.last_arrival is not None:
+                self.interval = 0.7 * self.interval + 0.3 * (now - self.last_arrival)
+            self.last_arrival = now
+            self.draw(snap, now)
+        self.animate(now)
         if not self.stop.is_set():
-            self.root.after(30, self.poll)
+            self.root.after(15, self.poll)
 
-    def draw(self, s):
-        c, w = self.canvas, self.ctrl.world
-        c.delete("all")
-        for x in range(w.width):
-            for y in range(w.height):
-                fill = "#555" if (x, y) in w.walls else "#f4f4f4"
-                c.create_rectangle(x * CELL, y * CELL, (x + 1) * CELL, (y + 1) * CELL, fill=fill, outline="#ddd")
+    @staticmethod
+    def _centre(cell) -> tuple[float, float]:
+        return cell[0] * CELL + CELL / 2, cell[1] * CELL + CELL / 2
+
+    def _drawn_at(self, agent_id: int, now: float) -> tuple[float, float] | None:
+        a = self.anim.get(agent_id)
+        if a is None:
+            return None
+        t = min(1.0, (now - a["t0"]) / max(1e-3, a["dur"]))
+        return a["x0"] + (a["x1"] - a["x0"]) * t, a["y0"] + (a["y1"] - a["y0"]) * t
+
+    def draw(self, s, now: float):
+        c = self.canvas
+        c.delete("dyn")
         for x, y in s["food"]:
-            c.create_oval(x * CELL + 11, y * CELL + 11, x * CELL + 23, y * CELL + 23, fill="#2e9e44", outline="")
+            c.create_oval(x * CELL + 11, y * CELL + 11, x * CELL + 23, y * CELL + 23, fill="#2e9e44", outline="", tags="dyn")
         for x, y in s["gems"]:
-            cx, cy = x * CELL + CELL // 2, y * CELL + CELL // 2
-            c.create_polygon(cx, cy - 8, cx + 7, cy, cx, cy + 8, cx - 7, cy, fill="#1aa3c9", outline="")
+            cx, cy = self._centre((x, y))
+            c.create_polygon(cx, cy - 8, cx + 7, cy, cx, cy + 8, cx - 7, cy, fill="#1aa3c9", outline="", tags="dyn")
         for x, y in s["hazards"]:
-            c.create_rectangle(x * CELL + 5, y * CELL + 5, (x + 1) * CELL - 5, (y + 1) * CELL - 5, fill="#d62728", outline="")
+            c.create_rectangle(x * CELL + 5, y * CELL + 5, (x + 1) * CELL - 5, (y + 1) * CELL - 5, fill="#d62728",
+                               outline="", tags="dyn")
         for a in s["agents"]:
-            x, y = a["pos"]
-            if a["target_cell"]:
-                tx, ty = a["target_cell"]
-                c.create_line(x * CELL + CELL // 2, y * CELL + CELL // 2, tx * CELL + CELL // 2, ty * CELL + CELL // 2,
-                              fill=a["colour"], dash=(3, 3))
-            c.create_oval(x * CELL + 4, y * CELL + 4, (x + 1) * CELL - 4, (y + 1) * CELL - 4, fill=a["colour"], outline="black")
-            c.create_text(x * CELL + CELL // 2, y * CELL + CELL // 2, text=str(a["id"]), fill="white", font=("Segoe UI", 10, "bold"))
+            end = self._centre(a["pos"])
+            start = self._drawn_at(a["id"], now) or end
+            if abs(start[0] - end[0]) + abs(start[1] - end[1]) > 1.5 * CELL:
+                start = end  # respawn: jump instead of sliding across the map
+            target = self._centre(a["target_cell"]) if a["target_cell"] else None
+            self.anim[a["id"]] = {"x0": start[0], "y0": start[1], "x1": end[0], "y1": end[1],
+                                  "t0": now, "dur": self.interval, "target": target}
+            aid = a["id"]
+            if target:
+                c.create_line(*start, *target, fill=a["colour"], dash=(3, 3), tags=("dyn", f"line{aid}"))
+            c.create_oval(0, 0, 0, 0, fill=a["colour"], outline="black", tags=("dyn", f"agent{aid}"))
+            c.create_text(0, 0, text=str(aid), fill="white", font=("Segoe UI", 10, "bold"), tags=("dyn", f"label{aid}"))
+        self.animate(now)
         self.draw_panel(s)
+
+    def animate(self, now: float):
+        c, r = self.canvas, CELL / 2 - 4
+        for aid, a in self.anim.items():
+            x, y = self._drawn_at(aid, now)
+            c.coords(f"agent{aid}", x - r, y - r, x + r, y + r)
+            c.coords(f"label{aid}", x, y)
+            if a["target"]:
+                c.coords(f"line{aid}", x, y, *a["target"])
 
     def draw_panel(self, s):
         c, w = self.canvas, self.ctrl.world
         x0, y = w.width * CELL + 12, 8
         for a in s["agents"]:
-            c.create_rectangle(x0, y + 2, x0 + 12, y + 14, fill=a["colour"], outline="")
-            c.create_text(x0 + 18, y, anchor="nw", font=("Segoe UI", 9, "bold"),
+            c.create_rectangle(x0, y + 2, x0 + 12, y + 14, fill=a["colour"], outline="", tags="dyn")
+            c.create_text(x0 + 18, y, anchor="nw", tags="dyn", font=("Segoe UI", 9, "bold"),
                           text=f"Agent {a['id']}  gems {a['score']}  energy {a['energy']}  health {a['health']}  deaths {a['deaths']}")
             y += 17
             for tier in ("strategy", "target"):
@@ -179,18 +223,18 @@ class App:
                     txt = f"{tier} (p={a['prob'].get(tier, 0):.2f}): {a['current'][tier]}"
                 else:
                     continue
-                c.create_text(x0, y, anchor="nw", font=("Segoe UI", 8), text=txt[:72])
+                c.create_text(x0, y, anchor="nw", tags="dyn", font=("Segoe UI", 8), text=txt[:72])
                 y += 14
             act = a["last"].get("action")
             if act:
                 for m in MOVES:
                     p = act["probs"].get(m, 0.0)
                     bold = m == act["choice"]
-                    c.create_text(x0, y, anchor="nw", font=("Consolas", 8, "bold" if bold else "normal"), text=f"{m:11}")
-                    c.create_rectangle(x0 + 80, y + 3, x0 + 80 + int(200 * p), y + 11, fill=a["colour"] if bold else "#bbb", outline="")
-                    c.create_text(x0 + 285, y, anchor="nw", font=("Consolas", 8), text=f"{p:.2f}")
+                    c.create_text(x0, y, anchor="nw", tags="dyn", font=("Consolas", 8, "bold" if bold else "normal"), text=f"{m:11}")
+                    c.create_rectangle(x0 + 80, y + 3, x0 + 80 + int(200 * p), y + 11, fill=a["colour"] if bold else "#bbb", outline="", tags="dyn")
+                    c.create_text(x0 + 285, y, anchor="nw", tags="dyn", font=("Consolas", 8), text=f"{p:.2f}")
                     y += 12
-                c.create_text(x0, y, anchor="nw", font=("Consolas", 8), fill="#666",
+                c.create_text(x0, y, anchor="nw", tags="dyn", font=("Consolas", 8), fill="#666",
                               text=f"outside allowed tokens: {act['outside']:.3f}")
                 y += 14
             y += 6
@@ -200,7 +244,7 @@ class App:
         tps = (len(self.rates) - 1) / max(1e-9, self.rates[-1] - self.rates[0]) if len(self.rates) > 1 else 0.0
         per = 1000 * rep.forward_s / rep.decisions if rep.decisions else 0.0
         backend = self.ctrl.engine.backend.info()
-        c.create_text(8, self.footer_y, anchor="nw", font=("Consolas", 9),
+        c.create_text(8, self.footer_y, anchor="nw", tags="dyn", font=("Consolas", 9),
                       text=(f"tick {rep.tick}  |  {rep.decisions} decisions in one batch  |  forward "
                             f"{1000 * rep.forward_s:.0f} ms ({per:.1f} ms/decision)  |  {tps:.1f} ticks/s"
                             + ("" if self.running.is_set() else "  |  PAUSED")
@@ -221,6 +265,8 @@ def main() -> None:
     ap.add_argument("--food", type=int, default=12)
     ap.add_argument("--seed", type=int, default=0)
     ap.add_argument("--group-size", type=int, default=8, help="tournament group size for large choice sets")
+    ap.add_argument("--plan-budget", type=int, default=1,
+                    help="max planning decisions (strategy/target/tournament groups) per agent per tick; -1 = unlimited")
     ap.add_argument("--no-goals", action="store_true", help="flat control: action tier only")
     ap.add_argument("--json", default=None, help="headless: write the summary to this file")
     ap.add_argument("--quiet", action="store_true")

@@ -114,8 +114,24 @@ decisions go through the engine in one batched forward pass**. Each agent has th
 
 The window shows each agent's strategy and target with their probabilities, the tournament
 progress, the action probabilities as bars, the outside-token mass, and per tick the batch size
-and forward-pass latency. Space pauses, Esc quits. `--config config/mock.toml` runs without a
-model (random decisions). `--no-goals` gives flat control (action tier only) for comparison.
+and forward-pass latency. Agents glide between cells over about one tick; this is rendering
+only. Space pauses, Esc quits. `--config config/mock.toml` runs without a model (random
+decisions). `--no-goals` gives flat control (action tier only) for comparison.
+
+`--plan-budget N` (default 1) lets each agent make at most N planning decisions (strategy,
+target, tournament groups) per tick, next to its move. The rest wait for later ticks. This keeps
+tick latency nearly constant. `-1` runs a whole tournament round per tick, which is how the
+comparison below was measured.
+
+Most responsive setup on the Lenovo, one agent with the 3B model:
+
+```bash
+.venv/Scripts/python -m demo.sim --config config/lenovo-3b.toml --agents 1
+```
+
+That runs at ~5 decisions/s: ~160 ms for a move-only tick and ~260 ms when a planning decision
+rides along. Over 2 × 80 ticks the median was 214–222 ms, p90 256–266 ms and max 277–464 ms.
+Without the budget, planning ticks took 550–880 ms.
 
 ## Benchmarks
 
