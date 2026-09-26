@@ -606,12 +606,21 @@ function drawCard(tier, i) {
   let y = r.y + 62;
   text(d.question, r.x + 20, y, K.ink, 17, 500);
   y += 8;
-  if (d.tournament) {
-    const tr = d.tournament, prog = (t.tournaments || {})[tier];
-    const msg = tr.done ? `Tournament final (round ${tr.round}) over ${tr.options} options: the winner below is committed.`
+  let note = null;
+  const prog = (t.tournaments || {})[tier];
+  if (info.fresh && d.tournament) {
+    const tr = d.tournament;
+    note = tr.done ? `Tournament final (round ${tr.round}) over ${tr.options} options: the winner below is committed.`
       : `Tournament over ${tr.options} options · round ${tr.round}` + (prog ? ` · ${prog.resolved}/${prog.contested} groups done` : "") +
         ` · this group: ${d.options.length} options · group winners meet in the next round`;
-    text(fit(msg, r.w - 40, 15, 600)[0], r.x + 20, y + 16, K.amber, 15, 600);
+  } else if (info.blink) {
+    note = prog ? `Tournament over ${prog.options} options in progress: round ${prog.round}, ${prog.resolved}/${prog.contested} groups done. Last answer shown dimmed.`
+      : `A new answer is due on a later tick (at most ${R.header.plan_budget ?? "∞"} planning decision per tick). Last answer shown dimmed.`;
+  }
+  if (note) {
+    ctx.globalAlpha = 1;
+    text(fit(note, r.w - 40, 15, 600)[0], r.x + 20, y + 16, K.amber, 15, 600);
+    ctx.globalAlpha = dim;
     y += 22;
   }
   const rowH = 22, top = y + 8;
@@ -706,9 +715,9 @@ function promptText(d, header) {
   if (d.state) parts.push("State:\n" + d.state);
   if (d.context) parts.push("Context:\n" + d.context);
   parts.push("Question: " + d.question);
-  const text = header.engine.answer === "label";
-  parts.push("Options:\n" + d.options.map((o, k) => (text ? d.labels[k] + ": " : "- ") + o).join("\n"));
-  parts.push(text ? "Reply with the label of one option." : "Reply with one option, copied exactly.");
+  const labelled = header.engine.answer === "label";
+  parts.push("Options:\n" + d.options.map((o, k) => (labelled ? d.labels[k] + ": " : "- ") + o).join("\n"));
+  parts.push(labelled ? "Reply with the label of one option." : "Reply with one option, copied exactly.");
   const note = header.engine.prompt_order === "state_first" ? "" : `\n\n(prompt_order is ${header.engine.prompt_order}: the real order differs)`;
   return parts.join("\n\n") + "\n\nAssistant (prefilled): " + header.engine.prefill + note;
 }
