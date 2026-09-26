@@ -14,7 +14,9 @@ device = "auto"
 dtype = "bfloat16"
 max_batch = 16          # lower this if the device runs out of memory
 head_dtype = "float32"   # "float32" computes only the LM head in fp32 (finer probabilities; costs vocab x hidden x 4 bytes).
+prefix_cache = true     # reuse keys/values of repeated prompt prefixes; full-attention models only
 
 [engine]
 answer = "label"
 answer_template = '{"choice": "<label>"}'
+prompt_order = "state_first"  # question/options first reuse more but cost accuracy (docs/research.md)

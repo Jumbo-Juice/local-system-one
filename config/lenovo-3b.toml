@@ -7,7 +7,9 @@ device = "auto"
 dtype = "bfloat16"
 max_batch = 8          # batch 32 ran out of XPU memory (Observed)
 head_dtype = "model"   # bf16 head: a float32 copy (+1.2 GB) would leave ~0.5 GB for activations (not tested).
+prefix_cache = true     # reuse keys/values of repeated prompt prefixes (~9% faster moves, Observed)
 
 [engine]
 answer = "label"
 answer_template = '{"choice": "<label>"}'
+prompt_order = "state_first"  # question/options first reuse more but cost accuracy (docs/research.md)

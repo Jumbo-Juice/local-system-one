@@ -129,9 +129,15 @@ Most responsive setup on the Lenovo, one agent with the 3B model:
 .venv/Scripts/python -m demo.sim --config config/lenovo-3b.toml --agents 1
 ```
 
-That runs at ~5 decisions/s: ~160 ms for a move-only tick and ~260 ms when a planning decision
-rides along. Over 2 × 80 ticks the median was 214–222 ms, p90 256–266 ms and max 277–464 ms.
+That runs at ~5 ticks/s: ~137 ms for a move-only tick and ~230 ms when a planning decision
+rides along. Over 2 × 80 ticks the median was 194–195 ms, p90 236–238 ms and max 265–266 ms.
 Without the budget, planning ticks took 550–880 ms.
+
+`prefix_cache = true` (on in the Lenovo configs) reuses the keys/values of prompt prefixes that
+repeat across ticks, which saves ~9–10% here. A 3B pass costs ~80 ms even for 8 tokens on this
+GPU, so reuse cannot go much further. Prompt orders that reuse more (`prompt_order =
+"question_first"` or `"options_first"`) were up to 21% faster but hurt accuracy, and the agent
+played badly. Details: `docs/research.md` → Observed → Prefix caching.
 
 ## Benchmarks
 
@@ -262,8 +268,12 @@ tests/                 pytest suite (mock tests always; `model` tests when weigh
   also re-plans (long target lists) takes 2–3× longer than an action-only tick. The first forward
   pass in a new process takes 1.5–4 s on the XPU (kernel compilation). The demo and benchmarks
   warm up first; a one-off `decide` from the command line pays it.
-- Not implemented: shared-prefix KV caching (S4 recommends it for more than 3 questions),
-  Score and yes/no question types, quantised backends, training or calibration of any kind.
+- **Prefix caching gains are small** (~9–10% on demo moves) with the prompt order that keeps
+  accuracy. Orders that put the question or options first reuse more but lost accuracy
+  (3B navigation 94% → 62–81%). The cache needs full-attention models; it turns itself off
+  otherwise.
+- Not implemented: Score and yes/no question types, quantised backends, training or calibration
+  of any kind.
 - The eval sets are small (58 items; 30 problems per tournament cell). Treat the accuracy
   numbers as smoke tests.
 - The demo state text gives relative offsets and names conditions in words, because the model

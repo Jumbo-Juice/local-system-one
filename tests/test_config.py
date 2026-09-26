@@ -14,7 +14,7 @@ CONFIGS = sorted((REPO_ROOT / "config").glob("*.toml"))
 def test_config_parses_and_names_a_known_backend(path: Path):
     cfg = load_config(path)
     assert cfg["backend"]["kind"] in BACKENDS
-    assert set(cfg["engine"]) <= {"answer", "answer_template", "multi_token", "system_prompt"}
+    assert set(cfg["engine"]) <= {"answer", "answer_template", "multi_token", "system_prompt", "prompt_order"}
 
 
 def test_mock_config_builds_a_working_engine():

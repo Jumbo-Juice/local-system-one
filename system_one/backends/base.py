@@ -57,12 +57,13 @@ class Backend(ABC):
         """
 
     def next_token_scores(
-        self, batch: list[list[int]], candidates: list[list[int]]
+        self, batch: list[list[int]], candidates: list[list[int]], prefix_lens: list[int] | None = None
     ) -> list[NextTokenScores]:
         """Log-probs of candidate tokens after each sequence.
 
-        Default: computed on the host from :meth:`next_token_logits`. Backends override
-        this to avoid copying the full vocabulary off the device.
+        ``prefix_lens`` (optional) marks how many leading tokens of each sequence repeat across
+        calls. A backend may reuse cached work for them; results must not change beyond numeric
+        noise. Default: computed on the host from :meth:`next_token_logits`, prefixes ignored.
         """
         logits = self.next_token_logits(batch).astype(np.float64)
         out = []
