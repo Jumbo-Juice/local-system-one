@@ -53,8 +53,8 @@ def build_replay(trace_text: str, out: Path, template: Path = VIEWER) -> Path:
 
 
 def capture(engine, seed: int, rules: Rules | None = None, group_size: int = 8, plan_budget: int | None = 1,
-            verbose: bool = True) -> list[dict]:
-    runner = Runner(Dungeon(seed, rules), engine, group_size=group_size, plan_budget=plan_budget)
+            verbose: bool = True, **brain_options) -> list[dict]:
+    runner = Runner(Dungeon(seed, rules), engine, group_size=group_size, plan_budget=plan_budget, **brain_options)
     records = [runner.header()]
 
     def show(rec: dict) -> None:
@@ -80,12 +80,15 @@ def main() -> None:
     ap.add_argument("--max-ticks", type=int, default=None, help="override the tick limit (default 400)")
     ap.add_argument("--group-size", type=int, default=8)
     ap.add_argument("--plan-budget", type=int, default=1, help="planning decisions per tick; -1 = unlimited")
+    ap.add_argument("--label-style", choices=("closer", "steps"), default="closer",
+                    help="move-outcome wording (see DungeonBrain)")
     ap.add_argument("--rebuild", default=None, help="only rebuild replay.html next to this trace.jsonl")
     ap.add_argument("--quiet", action="store_true")
     args = ap.parse_args()
     if args.rebuild:
         trace = Path(args.rebuild)
-        print("wrote", build_replay(trace.read_text(encoding="utf-8"), trace.with_name("replay.html")))
+        page = trace.with_name("replay.html") if trace.name == "trace.jsonl" else trace.with_suffix(".html")
+        print("wrote", build_replay(trace.read_text(encoding="utf-8"), page))
         return
     cfg = load_config(args.config)
     engine = make_engine(cfg)
@@ -93,7 +96,7 @@ def main() -> None:
         warm_up(engine)
     rules = Rules(max_ticks=args.max_ticks) if args.max_ticks else None
     records = capture(engine, args.seed, rules, args.group_size, args.plan_budget if args.plan_budget >= 0 else None,
-                      verbose=not args.quiet)
+                      verbose=not args.quiet, label_style=args.label_style)
     model = str(engine.backend.info().get("model", engine.backend.info().get("kind"))).split("/")[-1]
     out = Path(args.out) if args.out else OUT / f"dungeon_{model}_seed{args.seed}"
     out.mkdir(parents=True, exist_ok=True)
