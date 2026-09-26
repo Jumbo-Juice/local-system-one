@@ -31,9 +31,12 @@ def build_controller(args) -> Controller:
     # Warm-up: the first XPU pass compiles kernels (~3 s), and the first long batch allocates the
     # activation buffers. Doing both here keeps them out of the first ticks of the demo.
     engine.decide_batch([Decision("warm-up", ("a", "b"))])
-    # Different lengths, so the padded (masked) attention path is compiled as well.
-    engine.decide_batch([Decision("warm-up", tuple("abcdefgh"), state="Gems, food and hazards nearby. " * (10 + 8 * i))
-                         for i in range(min(8, 2 * args.agents))])
+    # Different lengths, so the padded (masked) attention path is compiled as well. The second
+    # call also compiles the prefix-cached path (a prefix is stored on its second sighting).
+    warm = [Decision("warm-up", tuple("abcdefgh"), state="Gems, food and hazards nearby. " * (10 + 8 * i))
+            for i in range(min(8, 2 * args.agents))]
+    engine.decide_batch(warm)
+    engine.decide_batch(warm)
     world = World(n_agents=args.agents, n_gems=args.gems, n_food=args.food, seed=args.seed)
     return Controller(world, engine, use_goals=not args.no_goals, group_size=args.group_size,
                       plan_budget=args.plan_budget if args.plan_budget >= 0 else None)

@@ -8,6 +8,8 @@ LM head to the positions we read, so the full [B, T, V] logit tensor is never bu
 from __future__ import annotations
 
 import platform
+import warnings
+from collections import OrderedDict
 
 import numpy as np
 
@@ -36,6 +38,45 @@ class _Float32Head:
         return Head()
 
 
+class _PrefixCache:
+    """LRU of per-layer (key, value) tensors for prompt prefixes, keyed by their token ids.
+
+    A prefix is stored the second time it is seen, taken from that call's own forward pass (no
+    extra pass). From the third time on, its tokens are not recomputed. Prefixes seen only once
+    (e.g. tournament groups whose option text changes every tick) cost nothing.
+    """
+
+    def __init__(self, size: int):
+        self.size = size
+        self.kv: OrderedDict = OrderedDict()
+        self.seen: OrderedDict = OrderedDict()
+        self.hits = self.misses = self.stores = 0
+
+    def get(self, key):
+        kv = self.kv.get(key)
+        if kv is None:
+            self.misses += 1
+            return None
+        self.kv.move_to_end(key)
+        self.hits += 1
+        return kv
+
+    def seen_before(self, key) -> bool:
+        before = key in self.seen
+        self.seen[key] = True
+        self.seen.move_to_end(key)
+        while len(self.seen) > 8 * self.size:
+            self.seen.popitem(last=False)
+        return before
+
+    def put(self, key, kv) -> None:
+        self.kv[key] = kv
+        self.kv.move_to_end(key)
+        self.stores += 1
+        while len(self.kv) > self.size:
+            self.kv.popitem(last=False)
+
+
 def resolve_device(requested: str) -> str:
     import torch
 
@@ -60,6 +101,10 @@ class HFBackend(Backend):
         revision: str | None = None,
         attn_implementation: str | None = None,
         head_dtype: str = "model",
+        prefix_cache: bool = False,
+        prefix_cache_size: int = 32,
+        min_prefix: int = 32,
+        max_cached_batch_tokens: int = 16384,
     ):
         import torch
         from transformers import AutoModelForCausalLM, AutoTokenizer
@@ -95,6 +140,17 @@ class HFBackend(Backend):
             pad = self.tokenizer.eos_token_id
         self.pad_id = int(pad if pad is not None else 0)
         self._vocab = int(self.model.get_output_embeddings().weight.shape[0])
+
+        # Prefix caching needs plain full attention in every layer (no sliding window, no
+        # linear-attention state), because cached keys/values are placed at padded offsets.
+        cfg = self.model.config.get_text_config()
+        full = all(t == "full_attention" for t in (getattr(cfg, "layer_types", None) or [])) \
+            and not getattr(cfg, "use_sliding_window", False)
+        if prefix_cache and not full:
+            warnings.warn("prefix_cache disabled: this model has non-full-attention layers")
+        self.prefix_cache = _PrefixCache(prefix_cache_size) if prefix_cache and full else None
+        self.min_prefix = min_prefix
+        self.max_cached_batch_tokens = max_cached_batch_tokens
 
     # -- tokenizer ---------------------------------------------------------------
 
@@ -151,6 +207,64 @@ class HFBackend(Backend):
         )
         return out.logits
 
+    def _forward_last_prefixed(self, seqs: list[list[int]], prefix_lens: list[int]):
+        """Next-token logits [B, V], reusing cached keys/values for repeated prompt prefixes.
+
+        Rows with a cached prefix feed only their suffix. The cache is left-padded to a common
+        length, with a mask and mask-derived positions, just like the token padding.
+        """
+        torch = self.torch
+        from transformers import DynamicCache
+
+        pc = self.prefix_cache
+        rows = []  # (tokens to run, cached kv or None, prefix length to store after this pass)
+        for s, p in zip(seqs, prefix_lens):
+            p = min(p, len(s) - 1)
+            key = tuple(s[:p]) if p >= self.min_prefix else None
+            kv = pc.get(key) if key else None
+            if kv is not None:
+                rows.append((s[p:], kv, 0))
+            else:
+                rows.append((s, None, p if key and pc.seen_before(key) else 0))
+        P = max((kv[0][0].shape[2] for _, kv, _ in rows if kv is not None), default=0)
+        S = max(len(t) for t, _, _ in rows)
+        harvest = any(h for _, _, h in rows)
+        if (P == 0 and not harvest) or len(rows) * (P + S) > self.max_cached_batch_tokens:
+            return self._forward_last(seqs, keep=1)[:, -1, :]
+
+        B = len(rows)
+        ids = torch.full((B, S), self.pad_id, dtype=torch.long)
+        mask = torch.zeros((B, P + S), dtype=torch.long)
+        for i, (t, kv, _) in enumerate(rows):
+            ids[i, S - len(t):] = torch.tensor(t, dtype=torch.long)
+            mask[i, P + S - len(t):] = 1
+            if kv is not None:
+                mask[i, P - kv[0][0].shape[2]:P] = 1
+        cache = DynamicCache()
+        if P:
+            ref = next(kv for _, kv, _ in rows if kv is not None)
+            layers = []
+            for li, (k_ref, v_ref) in enumerate(ref):
+                k = k_ref.new_zeros((B, k_ref.shape[1], P, k_ref.shape[3]))
+                v = v_ref.new_zeros((B, v_ref.shape[1], P, v_ref.shape[3]))
+                for i, (_, kv, _) in enumerate(rows):
+                    if kv is not None:
+                        n = kv[li][0].shape[2]
+                        k[i, :, P - n:] = kv[li][0][0]
+                        v[i, :, P - n:] = kv[li][1][0]
+                layers.append((k, v))
+            cache = DynamicCache(ddp_cache_data=layers)
+        mask = mask.to(self.device)
+        pos = (mask.cumsum(-1) - 1).clamp_min(0)[:, P:]
+        out = self.model(input_ids=ids.to(self.device), attention_mask=mask, position_ids=pos,
+                         past_key_values=cache, use_cache=True, logits_to_keep=1)
+        for i, (t, _, h) in enumerate(rows):
+            if h:  # second sighting: keep this row's prefix keys/values from this very pass
+                a = P + S - len(t)
+                pc.put(tuple(t[:h]), [(k[i:i + 1, :, a:a + h].clone(), v[i:i + 1, :, a:a + h].clone())
+                                      for k, v, *_ in out.past_key_values])
+        return out.logits[:, -1, :]
+
     def next_token_logits(self, batch: list[list[int]]) -> np.ndarray:
         parts = []
         with self.torch.inference_mode():
@@ -159,12 +273,15 @@ class HFBackend(Backend):
                 parts.append(logits.float().cpu().numpy())
         return np.concatenate(parts, axis=0)
 
-    def next_token_scores(self, batch, candidates):
+    def next_token_scores(self, batch, candidates, prefix_lens=None):
         torch = self.torch
         out: list[NextTokenScores] = []
         with torch.inference_mode():
             for a, b in self._chunks(len(batch)):
-                logits = self._forward_last(batch[a:b], keep=1)[:, -1, :].float()
+                if self.prefix_cache is not None and prefix_lens is not None:
+                    logits = self._forward_last_prefixed(batch[a:b], prefix_lens[a:b]).float()
+                else:
+                    logits = self._forward_last(batch[a:b], keep=1)[:, -1, :].float()
                 logp = torch.log_softmax(logits, dim=-1)
                 top_lp, top_id = logp.max(dim=-1)
                 cands = candidates[a:b]
@@ -234,4 +351,7 @@ class HFBackend(Backend):
             "torch": torch.__version__,
             "transformers": transformers.__version__,
             "max_batch": self.max_batch,
+            "prefix_cache": None if self.prefix_cache is None else {
+                "size": self.prefix_cache.size, "min_prefix": self.min_prefix, "hits": self.prefix_cache.hits,
+                "misses": self.prefix_cache.misses, "stores": self.prefix_cache.stores},
         }

@@ -43,6 +43,14 @@ def check(engine) -> int:
     same = sum(rb.index == rs.index for rb, rs in zip(batched, seq))
     print(f"batched vs sequential: same choice {same}/{len(ds)}, max |dp| {dp:.4f}; "
           f"choices {[r.choice for r in batched]}")
+    if getattr(be, "prefix_cache", None) is not None:
+        preps = [engine.prepare(d) for d in ds]
+        args = ([p.ids for p in preps], [p.tokens for p in preps])
+        plain = be.next_token_scores(*args)
+        for _ in range(3):  # seen, stored, reused
+            cached = be.next_token_scores(*args, prefix_lens=[p.prefix_len for p in preps])
+        dlp = max(float(np.abs(a.logprobs - b.logprobs).max()) for a, b in zip(plain, cached))
+        print(f"prefix cache: max |d logprob| cached vs uncached {dlp:.4f}; stats {be.info()['prefix_cache']}")
     right = sum(r.choice == t for r, t in zip(batched, targets))
     print(f"model answers correct: {right}/{len(ds)} (informational: this check tests the "
           f"mechanics, not the model's judgement)")

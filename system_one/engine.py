@@ -88,6 +88,7 @@ class _Prepared:
     method: str
     tokens: list[int] = field(default_factory=list)  # single-token candidates
     continuations: list[list[int]] = field(default_factory=list)  # multi-token sequences
+    prefix_len: int = 0  # leading tokens that repeat across calls (for backend prefix caching)
 
 
 class Engine:
@@ -99,9 +100,12 @@ class Engine:
         answer_template: str = DEFAULT_TEMPLATE,
         multi_token: str = "auto",
         system_prompt: str | None = None,
+        prompt_order: str = "state_first",
     ):
         if answer not in ("label", "text"):
             raise ValueError("answer must be 'label' or 'text'")
+        if prompt_order not in ("state_first", "question_first", "options_first"):
+            raise ValueError("prompt_order must be 'state_first', 'question_first' or 'options_first'")
         if multi_token not in ("auto", "never", "always"):
             raise ValueError("multi_token must be 'auto', 'never' or 'always'")
         if answer == "label" and multi_token == "always":
@@ -111,6 +115,7 @@ class Engine:
         self.backend = backend
         self.answer = answer
         self.multi_token = multi_token
+        self.prompt_order = prompt_order
         self.system_prompt = system_prompt or (SYSTEM_LABEL if answer == "label" else SYSTEM_TEXT)
         prefill, self.suffix = answer_template.split(LABEL_SLOT)
         # BPE vocabularies attach a space to the NEXT token (" A"), so a trailing space in the
@@ -119,24 +124,53 @@ class Engine:
         self.lead = prefill[len(self.prefill):]
         self._cache: dict = {}
         self._pair_pool: list[str] | None = None
+        self._static_ids: dict[str, list[int]] = {}
         self.last_stats: dict = {}
 
     # -- prompts -------------------------------------------------------------------
 
-    def render(self, d: Decision, labels: list[str]) -> str:
-        parts = []
-        if d.state:
-            parts.append(f"State:\n{d.state}")
-        if d.context:
-            parts.append(f"Context:\n{d.context}")
-        parts.append(f"Question: {d.instruction}")
+    def _user_parts(self, d: Decision, labels: list[str]) -> tuple[list[str], list[str]]:
+        """(static head, variable rest) of the user message.
+
+        "question_first" puts the question and options, which repeat across calls, before the
+        state. The prompt then starts with a long reusable prefix (for backend prefix caching).
+        """
         if self.answer == "label":
-            parts.append("Options:\n" + "\n".join(f"{l}: {o}" for l, o in zip(labels, d.options)))
-            parts.append("Reply with the label of one option.")
+            options = "Options:\n" + "\n".join(f"{l}: {o}" for l, o in zip(labels, d.options))
+            ask = "Reply with the label of one option."
         else:
-            parts.append("Options:\n" + "\n".join(f"- {o}" for o in d.options))
-            parts.append("Reply with one option, copied exactly.")
-        return self.backend.render_chat(self.system_prompt, "\n\n".join(parts)) + self.prefill
+            options = "Options:\n" + "\n".join(f"- {o}" for o in d.options)
+            ask = "Reply with one option, copied exactly."
+        situation = []
+        if d.state:
+            situation.append(f"State:\n{d.state}")
+        if d.context:
+            situation.append(f"Context:\n{d.context}")
+        question = f"Question: {d.instruction}"
+        if self.prompt_order == "question_first":
+            return [question, options], situation + [ask]
+        if self.prompt_order == "options_first":  # question stays next to the answer
+            return [options], situation + [question, ask]
+        return [], situation + [question, options, ask]
+
+    def render(self, d: Decision, labels: list[str]) -> str:
+        head, rest = self._user_parts(d, labels)
+        return self.backend.render_chat(self.system_prompt, "\n\n".join(head + rest)) + self.prefill
+
+    def _prefix_len(self, d: Decision, labels: list[str], ids: list[int]) -> int:
+        """Number of leading prompt tokens that do not depend on the state or context."""
+        head, _ = self._user_parts(d, labels)
+        key = "\n\n".join(head) + ("\n\n" if head else "")
+        static = self._static_ids.get(key)
+        if static is None:
+            text = self.backend.render_chat(self.system_prompt, key + "\x00").split("\x00")[0]
+            static = self._static_ids[key] = self.backend.encode(text)
+        n = 0
+        for a, b in zip(static, ids):  # common prefix: safe even if the boundary tokenises differently
+            if a != b:
+                break
+            n += 1
+        return min(n, len(ids) - 1)
 
     def labels_for(self, n: int) -> list[str]:
         if n > MAX_OPTIONS:
@@ -227,7 +261,7 @@ class Engine:
         text = self.render(d, labels)
         ids = self.backend.encode(text)
         method, tokens, conts = self._map(d, text, ids, labels)
-        return _Prepared(pos, d, ids, labels, method, tokens, conts)
+        return _Prepared(pos, d, ids, labels, method, tokens, conts, self._prefix_len(d, labels, ids))
 
     # -- decisions -------------------------------------------------------------------
 
@@ -250,7 +284,8 @@ class Engine:
 
         single = [p for p in preps if p.method == "single_token"]
         if single:
-            scores = self.backend.next_token_scores([p.ids for p in single], [p.tokens for p in single])
+            scores = self.backend.next_token_scores([p.ids for p in single], [p.tokens for p in single],
+                                                    prefix_lens=[p.prefix_len for p in single])
             for p, s in zip(single, scores):
                 lp = np.asarray(s.logprobs, dtype=np.float64)
                 results[p.pos] = DecisionResult(

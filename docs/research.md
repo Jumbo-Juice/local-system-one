@@ -73,8 +73,9 @@ facts with speculation. Its claims about Jev internals are treated as unverified
 - **Documented [S4]:** left padding, `position_ids` from the cumulative attention mask, and
   `logits_to_keep=1`. Optional shared-prefix KV caching (`cache_prefix`) is recommended for more than
   3 questions.
-- **Implementation choice:** we use the same padding scheme. Shared-prefix caching is not implemented
-  (see Limitations in the README).
+- **Implementation choice:** we use the same padding scheme. Prefix caching is implemented differently
+  from S4: a persistent LRU of prefixes reused *across* calls, not one shared prefix within a
+  batch (see Observed → Prefix caching).
 
 ## Tiered goals
 
@@ -405,4 +406,45 @@ The demo with the 3B model and one agent, 60–80 headless ticks (forward pass p
   started from the old strategy's options. Now a changed goal cancels tournaments in lower tiers.
 - Unlike the 1.5B, the 3B chose "collect gems" with p≈1.0 in the window run (11 gems by
   tick 114). This was one run; it was not evaluated further.
+
+### Prefix caching (reusing repeated prompt prefixes)
+
+**Implementation choice** (`HFBackend(prefix_cache=True)`): the engine tells the backend how many
+leading tokens of each prompt do not depend on the state or context. The backend keeps an LRU of
+per-layer keys/values for such prefixes. A prefix is stored the second time it is seen, taken from
+that pass's own cache, so there is no extra forward pass. Later calls feed only the suffix. Cached
+prefixes of different lengths are left-padded in one batch, with a mask and mask-derived
+positions. Only full-attention models are supported.
+
+- **Correctness:** cached vs uncached logits agree to 9e-5 in float32 (Qwen2.5-0.5B, mixed batch:
+  two rows sharing a prefix, one with another prefix, one without). In bf16 they agree to ≤0.4 with
+  the same argmax, the same noise level as padding.
+- **Pass cost has a floor.** Qwen2.5-3B, batch 1: 83 ms at 8 tokens, 99 ms at 64, 132 ms at 150,
+  187 ms at 300. That is ~80 ms fixed plus ~0.35 ms per token, so skipping prefix tokens can save
+  at most ~40% of a ~150-token decision on this GPU.
+- **Prompt order decides how much can be reused**, and it changes accuracy (58-item eval, label mode):
+
+| prompt order | reusable prefix | Qwen2.5-1.5B | Qwen2.5-3B | 3B navigation |
+|---|---|---:|---:|---:|
+| state first (default) | system prompt + chat header (~35 tokens) | 66% | 71% | 94% |
+| options first | + the option list | 34% | 71% | 81% |
+| question first | + question and options | 48% | 67% | 62% |
+
+- **Demo, 3B, one agent, 80 ticks per setup:**
+
+| setup | move-only tick | move + plan tick | gems in 80 ticks |
+|---|---:|---:|---:|
+| no cache | 151 ms | 256 ms | 9 |
+| cache, state first | 138 ms | 230 ms | 9 |
+| cache, options first | 131 ms | 206 ms | 2 |
+| cache, question first | 119 ms | 165 ms | 0 |
+
+- The orders that reuse more are faster, but the agent then plays badly (0–2 gems vs 9). This
+  matches the accuracy drop. **We keep the state-first order with the cache on:** ~9–10% faster,
+  with identical prompts. Final check with the demo's warm-up (which now also compiles the cached
+  path): move-only ticks 137 ms, tick median 194–195 ms, p90 236–238 ms, max 265–266 ms, over two
+  80-tick runs.
+- Honest summary: on this iGPU the fixed per-pass cost dominates short decisions. Prefix reuse
+  helps only a little unless the prompt is reordered, and reordering hurt these small models.
+  Larger models may be less order-sensitive; not tested.
 
