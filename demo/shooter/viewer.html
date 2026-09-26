@@ -510,7 +510,7 @@ function drawHud(w) {
   if (a.has_key) keyGlyph(600, y + 16, 15); else { ctx.globalAlpha = 0.35; keyGlyph(600, y + 16, 15); ctx.globalAlpha = 1; }
   spacing(1.5); text(a.has_key ? "KEY CARRIED" : "NO KEY", 620, y + 22, a.has_key ? K.amber : K.muted, 14, 700); spacing(0);
   text(`${w.seen.length}/9 · ${w.cleared.length}`, 952, y + 23, K.ink, 18, 700, MONO, "right");
-  spacing(1.5); text("ROOMS SEEN · CLEARED", 866, y + 22, K.muted, 13, 700, UI, "right"); spacing(0);
+  spacing(1.5); text("SEEN · CLEARED", 870, y + 22, K.muted, 13, 700, UI, "right"); spacing(0);
 }
 
 function bulletEnd(t, id) {
@@ -594,7 +594,10 @@ function drawMap(i, f, t, world, after, p) {
     spacing(1.3);
     const tag = !seen.has(r.id) ? " · UNSEEN" : cleared.has(r.id) ? " · CLEARED" : r.id === sealed ? " · SEALED" : "";
     const col = !seen.has(r.id) ? K.faint : r.id === sealed ? K.red : cleared.has(r.id) ? K.mint : K.muted;
-    text(r.name.toUpperCase() + tag, MX + r.x0 * CS + 2, MY + r.y0 * CS - 8, col, 12, 700);
+    const label = r.name.toUpperCase() + tag, lx = MX + r.x0 * CS + 2, ly = MY + r.y0 * CS - 8;
+    font(12, 700); const lw = ctx.measureText(label).width;
+    ctx.fillStyle = "rgba(5,7,11,0.82)"; rrect(lx - 5, ly - 13, lw + 10, 18, 4); ctx.fill();  // readable over doorways
+    text(label, lx, ly, col, 12, 700);
     spacing(0);
   }
   // Recent path, so loops and oscillation are visible.

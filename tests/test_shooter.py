@@ -383,3 +383,9 @@ def test_viewer_has_a_trace_slot(tmp_path):
     text = to_jsonl([{"type": "header", "note": "</script>"}])
     out = build_replay(text, tmp_path / "replay.html", VIEWER)
     assert out.read_text(encoding="utf-8").count("application/x-ndjson") == 1
+
+
+def test_order_averaging_default_comes_from_the_config():
+    from demo.shooter.capture import order_debias
+    assert order_debias({}) is True and order_debias({"shooter": {"order_debias": False}}) is False
+    assert order_debias({"shooter": {"order_debias": False}}, True) is True  # the flag wins
