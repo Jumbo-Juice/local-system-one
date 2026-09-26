@@ -1,0 +1,1581 @@
+[
+ {
+  "backend": {
+   "kind": "hf",
+   "model": "Qwen/Qwen2.5-1.5B-Instruct",
+   "commit": "989aa7980e4cf806f80c7fef2b1adb7bc71aa306",
+   "parameters": 1543714304,
+   "dtype": "bfloat16",
+   "head_dtype": "model",
+   "quantisation": "none (weights in bfloat16)",
+   "device": "xpu",
+   "device_name": "Intel(R) Arc(TM) 140V GPU (8GB)",
+   "attn_implementation": "sdpa",
+   "torch": "2.14.0+xpu",
+   "transformers": "5.17.0",
+   "max_batch": 32,
+   "prefix_cache": null
+  },
+  "prompt_order": "state_first",
+  "variants": [
+   {
+    "summary": {
+     "answer": "label",
+     "template": "{\"choice\": \"<label>\"}",
+     "prompt_order": "state_first",
+     "accuracy": 0.6551724137931034,
+     "accuracy_by_category": {
+      "general": 0.9285714285714286,
+      "navigation": 0.8125,
+      "goal": 0.3,
+      "target": 0.5,
+      "goal_words": 0.5
+     },
+     "mean_chosen_prob": 0.7694312110812729,
+     "mean_outside_mass": 0.006417582917851309,
+     "first_option_rate": 0.08620689655172414,
+     "multi_token_items": 0,
+     "batch_seconds": 3.9922449000005145,
+     "items": 58,
+     "passes_selection_rule": false
+    },
+    "rows": [
+     {
+      "category": "general",
+      "instruction": "What colour is the sky on a clear day?",
+      "options": [
+       "red",
+       "blue",
+       "yellow"
+      ],
+      "correct": [
+       "blue"
+      ],
+      "choice": "blue",
+      "ok": true,
+      "probs": [
+       6.6027035119301e-05,
+       0.9995540136118943,
+       0.00037995935298625397
+      ],
+      "outside_mass": 0.009023756477244516,
+      "method": "single_token",
+      "top_token": "B",
+      "prompt_tokens": 80
+     },
+     {
+      "category": "general",
+      "instruction": "What is the capital of Japan?",
+      "options": [
+       "Kyoto",
+       "Osaka",
+       "Tokyo",
+       "Seoul"
+      ],
+      "correct": [
+       "Tokyo"
+      ],
+      "choice": "Tokyo",
+      "ok": true,
+      "probs": [
+       2.7535010221169254e-05,
+       1.3006617857862324e-05,
+       0.9999479800719484,
+       1.1478299972664986e-05
+      ],
+      "outside_mass": 4.119519100176383e-05,
+      "method": "single_token",
+      "top_token": "C",
+      "prompt_tokens": 81
+     },
+     {
+      "category": "general",
+      "instruction": "What is the sentiment of the review?",
+      "options": [
+       "negative",
+       "neutral",
+       "positive"
+      ],
+      "correct": [
+       "positive"
+      ],
+      "choice": "positive",
+      "ok": true,
+      "probs": [
+       9.586479541103116e-05,
+       0.0024723856597426634,
+       0.9974317495448463
+      ],
+      "outside_mass": 0.005103713576335656,
+      "method": "single_token",
+      "top_token": "C",
+      "prompt_tokens": 92
+     },
+     {
+      "category": "general",
+      "instruction": "What is the sentiment of the review?",
+      "options": [
+       "positive",
+       "negative",
+       "neutral"
+      ],
+      "correct": [
+       "negative"
+      ],
+      "choice": "negative",
+      "ok": true,
+      "probs": [
+       7.47189236738799e-05,
+       0.9982246854011003,
+       0.0017005956752257528
+      ],
+      "outside_mass": 0.005672046465830749,
+      "method": "single_token",
+      "top_token": "B",
+      "prompt_tokens": 90
+     },
+     {
+      "category": "general",
+      "instruction": "Which team should handle this ticket?",
+      "options": [
+       "billing and payments",
+       "shipping and delivery",
+       "returns and exchanges"
+      ],
+      "correct": [
+       "returns and exchanges"
+      ],
+      "choice": "returns and exchanges",
+      "ok": true,
+      "probs": [
+       0.000291251005130528,
+       0.015901758492869494,
+       0.983806990502
+      ],
+      "outside_mass": 0.00510898422128081,
+      "method": "single_token",
+      "top_token": "C",
+      "prompt_tokens": 98
+     },
+     {
+      "category": "general",
+      "instruction": "Which team should handle this ticket?",
+      "options": [
+       "returns and exchanges",
+       "billing and payments",
+       "shipping and delivery"
+      ],
+      "correct": [
+       "billing and payments"
+      ],
+      "choice": "billing and payments",
+      "ok": true,
+      "probs": [
+       0.019874452664347016,
+       0.9576048420434982,
+       0.022520705292154684
+      ],
+      "outside_mass": 0.08849183424333096,
+      "method": "single_token",
+      "top_token": "B",
+      "prompt_tokens": 96
+     },
+     {
+      "category": "general",
+      "instruction": "Which team should handle this ticket?",
+      "options": [
+       "billing and payments",
+       "returns and exchanges",
+       "shipping and delivery"
+      ],
+      "correct": [
+       "shipping and delivery"
+      ],
+      "choice": "shipping and delivery",
+      "ok": true,
+      "probs": [
+       0.0008030214637831019,
+       0.0013239585681679527,
+       0.9978730199680489
+      ],
+      "outside_mass": 0.037833249538660185,
+      "method": "single_token",
+      "top_token": "C",
+      "prompt_tokens": 97
+     },
+     {
+      "category": "general",
+      "instruction": "Is this message spam?",
+      "options": [
+       "not spam",
+       "spam"
+      ],
+      "correct": [
+       "spam"
+      ],
+      "choice": "spam",
+      "ok": true,
+      "probs": [
+       0.0013250222989039011,
+       0.9986749777010961
+      ],
+      "outside_mass": 0.01322092132813213,
+      "method": "single_token",
+      "top_token": "B",
+      "prompt_tokens": 88
+     },
+     {
+      "category": "general",
+      "instruction": "Which language is this text in?",
+      "options": [
+       "Spanish",
+       "German",
+       "Italian",
+       "French"
+      ],
+      "correct": [
+       "French"
+      ],
+      "choice": "French",
+      "ok": true,
+      "probs": [
+       5.422000719204305e-06,
+       1.892464202562778e-05,
+       2.144442883618357e-05,
+       0.9999542089284191
+      ],
+      "outside_mass": 5.824153890610084e-06,
+      "method": "single_token",
+      "top_token": "D",
+      "prompt_tokens": 91
+     },
+     {
+      "category": "general",
+      "instruction": "Which of these animals is a mammal?",
+      "options": [
+       "shark",
+       "salmon",
+       "dolphin",
+       "octopus"
+      ],
+      "correct": [
+       "dolphin"
+      ],
+      "choice": "dolphin",
+      "ok": true,
+      "probs": [
+       8.479570521890646e-05,
+       9.608612219551445e-05,
+       0.9997343224673668,
+       8.479570521890646e-05
+      ],
+      "outside_mass": 0.00010531131102597957,
+      "method": "single_token",
+      "top_token": "C",
+      "prompt_tokens": 84
+     },
+     {
+      "category": "general",
+      "instruction": "What is 7 + 5?",
+      "options": [
+       "10",
+       "11",
+       "13",
+       "12"
+      ],
+      "correct": [
+       "12"
+      ],
+      "choice": "11",
+      "ok": false,
+      "probs": [
+       0.28656327563500966,
+       0.6874295620791084,
+       0.020758574061939334,
+       0.00524858822394254
+      ],
+      "outside_mass": 0.0006242271960837931,
+      "method": "single_token",
+      "top_token": "B",
+      "prompt_tokens": 90
+     },
+     {
+      "category": "general",
+      "instruction": "What is the opposite of hot?",
+      "options": [
+       "warm",
+       "cold",
+       "wet",
+       "loud"
+      ],
+      "correct": [
+       "cold"
+      ],
+      "choice": "cold",
+      "ok": true,
+      "probs": [
+       0.00037976075662272176,
+       0.9990316060179876,
+       0.0004303253139025247,
+       0.00015830791148746293
+      ],
+      "outside_mass": 0.004341529017760415,
+      "method": "single_token",
+      "top_token": "B",
+      "prompt_tokens": 81
+     },
+     {
+      "category": "general",
+      "instruction": "How urgent is this ticket?",
+      "options": [
+       "low",
+       "medium",
+       "high"
+      ],
+      "correct": [
+       "high"
+      ],
+      "choice": "high",
+      "ok": true,
+      "probs": [
+       0.004438275493330186,
+       0.03716121686979553,
+       0.9584005076368743
+      ],
+      "outside_mass": 0.017283639548709373,
+      "method": "single_token",
+      "top_token": "C",
+      "prompt_tokens": 90
+     },
+     {
+      "category": "general",
+      "instruction": "Which planet is the largest?",
+      "options": [
+       "Earth",
+       "Mars",
+       "Jupiter",
+       "Venus"
+      ],
+      "correct": [
+       "Jupiter"
+      ],
+      "choice": "Jupiter",
+      "ok": true,
+      "probs": [
+       2.1444268549460122e-05,
+       1.892450057309081e-05,
+       0.999946624624527,
+       1.3006606350358924e-05
+      ],
+      "outside_mass": 9.085190846358504e-05,
+      "method": "single_token",
+      "top_token": "C",
+      "prompt_tokens": 80
+     },
+     {
+      "category": "navigation",
+      "instruction": "Which move brings you closer to your target?",
+      "options": [
+       "move north",
+       "move south",
+       "move east",
+       "move west",
+       "stay"
+      ],
+      "correct": [
+       "move east"
+      ],
+      "choice": "move east",
+      "ok": true,
+      "probs": [
+       0.11460846264735484,
+       0.054137204415678354,
+       0.7473410991275105,
+       0.0613454894369885,
+       0.022567744372467946
+      ],
+      "outside_mass": 0.008061075033861886,
+      "method": "single_token",
+      "top_token": "C",
+      "prompt_tokens": 137
+     },
+     {
+      "category": "navigation",
+      "instruction": "Which move brings you closer to your target?",
+      "options": [
+       "move north",
+       "move south",
+       "move east",
+       "move west",
+       "stay"
+      ],
+      "correct": [
+       "move west"
+      ],
+      "choice": "move west",
+      "ok": true,
+      "probs": [
+       0.02773141769410534,
+       0.013099391055647143,
+       0.02773141769410534,
+       0.9183383825004952,
+       0.013099391055647143
+      ],
+      "outside_mass": 0.0006785941056607347,
+      "method": "single_token",
+      "top_token": "D",
+      "prompt_tokens": 137
+     },
+     {
+      "category": "navigation",
+      "instruction": "Which move brings you closer to your target?",
+      "options": [
+       "move north",
+       "move south",
+       "move east",
+       "move west",
+       "stay"
+      ],
+      "correct": [
+       "move north"
+      ],
+      "choice": "move north",
+      "ok": true,
+      "probs": [
+       0.575697809152918,
+       0.12845552904029753,
+       0.21178738831479915,
+       0.047256148238726634,
+       0.0368031252532587
+      ],
+      "outside_mass": 0.008125639610499613,
+      "method": "single_token",
+      "top_token": "A",
+      "prompt_tokens": 137
+     },
+     {
+      "category": "navigation",
+      "instruction": "Which move brings you closer to your target?",
+      "options": [
+       "move north",
+       "move south",
+       "move east",
+       "move west",
+       "stay"
+      ],
+      "correct": [
+       "move south"
+      ],
+      "choice": "move south",
+      "ok": true,
+      "probs": [
+       0.03227786242424314,
+       0.8324569692941676,
+       0.08774032688932114,
+       0.03227786242424314,
+       0.01524697896802497
+      ],
+      "outside_mass": 0.0031726314165024805,
+      "method": "single_token",
+      "top_token": "B",
+      "prompt_tokens": 137
+     },
+     {
+      "category": "navigation",
+      "instruction": "Which move brings you closer to your target?",
+      "options": [
+       "move north",
+       "move south",
+       "move east",
+       "move west",
+       "stay"
+      ],
+      "correct": [
+       "move east"
+      ],
+      "choice": "move east",
+      "ok": true,
+      "probs": [
+       0.11565082898109602,
+       0.048210438146553465,
+       0.7541382043271655,
+       0.06190342792982689,
+       0.02009710061535808
+      ],
+      "outside_mass": 0.009100370818788228,
+      "method": "single_token",
+      "top_token": "C",
+      "prompt_tokens": 137
+     },
+     {
+      "category": "navigation",
+      "instruction": "Which move brings you closer to your target?",
+      "options": [
+       "move north",
+       "move south",
+       "move east",
+       "move west",
+       "stay"
+      ],
+      "correct": [
+       "move north"
+      ],
+      "choice": "move north",
+      "ok": true,
+      "probs": [
+       0.5405342678455914,
+       0.12060949775010107,
+       0.2553303087406103,
+       0.044369754632275514,
+       0.03915617103142164
+      ],
+      "outside_mass": 0.009570224143155892,
+      "method": "single_token",
+      "top_token": "A",
+      "prompt_tokens": 137
+     },
+     {
+      "category": "navigation",
+      "instruction": "Which move brings you closer to your target?",
+      "options": [
+       "move north",
+       "move south",
+       "move east",
+       "move west",
+       "stay"
+      ],
+      "correct": [
+       "move west"
+      ],
+      "choice": "move west",
+      "ok": true,
+      "probs": [
+       0.019483875092235557,
+       0.010428969301415323,
+       0.019483875092235557,
+       0.9387857100831333,
+       0.011817570430980195
+      ],
+      "outside_mass": 0.0005479491480956389,
+      "method": "single_token",
+      "top_token": "D",
+      "prompt_tokens": 137
+     },
+     {
+      "category": "navigation",
+      "instruction": "Which move brings you closer to your target?",
+      "options": [
+       "move north",
+       "move south",
+       "move east",
+       "move west",
+       "stay"
+      ],
+      "correct": [
+       "move south"
+      ],
+      "choice": "move south",
+      "ok": true,
+      "probs": [
+       0.032851949395025906,
+       0.8472630175913565,
+       0.078807729762385,
+       0.028991743584976234,
+       0.012085559666256252
+      ],
+      "outside_mass": 0.0023712291352456782,
+      "method": "single_token",
+      "top_token": "B",
+      "prompt_tokens": 137
+     },
+     {
+      "category": "navigation",
+      "instruction": "Which move brings you closer to your target?",
+      "options": [
+       "move north",
+       "move south",
+       "move east",
+       "move west",
+       "stay"
+      ],
+      "correct": [
+       "move east",
+       "move north"
+      ],
+      "choice": "move east",
+      "ok": true,
+      "probs": [
+       0.12447293137778331,
+       0.024510173435176003,
+       0.8116654467022718,
+       0.027773665112469308,
+       0.011577783372299493
+      ],
+      "outside_mass": 0.01089510506932767,
+      "method": "single_token",
+      "top_token": "C",
+      "prompt_tokens": 137
+     },
+     {
+      "category": "navigation",
+      "instruction": "Which move brings you closer to your target?",
+      "options": [
+       "move north",
+       "move south",
+       "move east",
+       "move west",
+       "stay"
+      ],
+      "correct": [
+       "move north",
+       "move west"
+      ],
+      "choice": "move west",
+      "ok": true,
+      "probs": [
+       0.02794647277716014,
+       0.011649825862312026,
+       0.024662675664008538,
+       0.925460090457379,
+       0.010280935239140277
+      ],
+      "outside_mass": 0.0004920320353438701,
+      "method": "single_token",
+      "top_token": "D",
+      "prompt_tokens": 137
+     },
+     {
+      "category": "navigation",
+      "instruction": "Which move brings you closer to your target?",
+      "options": [
+       "move north",
+       "move south",
+       "move east",
+       "move west",
+       "stay"
+      ],
+      "correct": [
+       "move east",
+       "move south"
+      ],
+      "choice": "move south",
+      "ok": true,
+      "probs": [
+       0.033638950199143015,
+       0.6756563762821581,
+       0.2193535096464042,
+       0.055461252717349405,
+       0.015889911154945365
+      ],
+      "outside_mass": 0.003771209261893227,
+      "method": "single_token",
+      "top_token": "B",
+      "prompt_tokens": 137
+     },
+     {
+      "category": "navigation",
+      "instruction": "Which move brings you closer to your target?",
+      "options": [
+       "move north",
+       "move south",
+       "move east",
+       "move west",
+       "stay"
+      ],
+      "correct": [
+       "move south",
+       "move west"
+      ],
+      "choice": "move south",
+      "ok": true,
+      "probs": [
+       0.028719089055817774,
+       0.4492421381493747,
+       0.100239470230693,
+       0.3964547954273041,
+       0.02534450713681034
+      ],
+      "outside_mass": 0.0008927736042054768,
+      "method": "single_token",
+      "top_token": "B",
+      "prompt_tokens": 137
+     },
+     {
+      "category": "navigation",
+      "instruction": "Which move brings you closer to your target?",
+      "options": [
+       "move north",
+       "move south",
+       "move east",
+       "move west",
+       "stay"
+      ],
+      "correct": [
+       "move north",
+       "move south"
+      ],
+      "choice": "move east",
+      "ok": false,
+      "probs": [
+       0.1829139267948006,
+       0.11094291791490438,
+       0.5634145592151042,
+       0.11094291791490438,
+       0.03178567816028643
+      ],
+      "outside_mass": 0.007268178643987322,
+      "method": "single_token",
+      "top_token": "C",
+      "prompt_tokens": 144
+     },
+     {
+      "category": "navigation",
+      "instruction": "Which move brings you closer to your target?",
+      "options": [
+       "move north",
+       "move south",
+       "move east",
+       "move west",
+       "stay"
+      ],
+      "correct": [
+       "move east",
+       "move west"
+      ],
+      "choice": "move north",
+      "ok": false,
+      "probs": [
+       0.5274152440951652,
+       0.21985938386274406,
+       0.17122666031790168,
+       0.043292879585774886,
+       0.03820583213841419
+      ],
+      "outside_mass": 0.007715890014956761,
+      "method": "single_token",
+      "top_token": "A",
+      "prompt_tokens": 144
+     },
+     {
+      "category": "navigation",
+      "instruction": "Which move brings you closer to your target?",
+      "options": [
+       "move north",
+       "move south",
+       "move east",
+       "move west",
+       "stay"
+      ],
+      "correct": [
+       "move north"
+      ],
+      "choice": "move east",
+      "ok": false,
+      "probs": [
+       0.2538861788768379,
+       0.06419247884763127,
+       0.6090412819873577,
+       0.05664966375226175,
+       0.016230396535911285
+      ],
+      "outside_mass": 0.009538812079453063,
+      "method": "single_token",
+      "top_token": "C",
+      "prompt_tokens": 144
+     },
+     {
+      "category": "navigation",
+      "instruction": "Which move brings you closer to your target?",
+      "options": [
+       "move north",
+       "move south",
+       "move east",
+       "move west",
+       "stay"
+      ],
+      "correct": [
+       "move west"
+      ],
+      "choice": "move west",
+      "ok": true,
+      "probs": [
+       0.03629897562406423,
+       0.3902507888361376,
+       0.11180871631570755,
+       0.44221207767777804,
+       0.019429441546312622
+      ],
+      "outside_mass": 0.0008378231876706721,
+      "method": "single_token",
+      "top_token": "D",
+      "prompt_tokens": 144
+     },
+     {
+      "category": "goal",
+      "instruction": "Which goal should the agent pursue now?",
+      "options": [
+       "collect gems",
+       "find food",
+       "avoid hazards",
+       "explore"
+      ],
+      "correct": [
+       "find food"
+      ],
+      "choice": "find food",
+      "ok": true,
+      "probs": [
+       0.3285857738727255,
+       0.6138790254124369,
+       0.03056323791866214,
+       0.026971962796175395
+      ],
+      "outside_mass": 0.0013010284785143211,
+      "method": "single_token",
+      "top_token": "B",
+      "prompt_tokens": 168
+     },
+     {
+      "category": "goal",
+      "instruction": "Which goal should the agent pursue now?",
+      "options": [
+       "collect gems",
+       "find food",
+       "avoid hazards",
+       "explore"
+      ],
+      "correct": [
+       "collect gems"
+      ],
+      "choice": "find food",
+      "ok": false,
+      "probs": [
+       0.4100797330796736,
+       0.5265528001428257,
+       0.029706074458342183,
+       0.0336613923191584
+      ],
+      "outside_mass": 0.0018843000625609063,
+      "method": "single_token",
+      "top_token": "B",
+      "prompt_tokens": 168
+     },
+     {
+      "category": "goal",
+      "instruction": "Which goal should the agent pursue now?",
+      "options": [
+       "collect gems",
+       "find food",
+       "avoid hazards",
+       "explore"
+      ],
+      "correct": [
+       "avoid hazards"
+      ],
+      "choice": "find food",
+      "ok": false,
+      "probs": [
+       0.22351163522988066,
+       0.6884642637286302,
+       0.044012050520744556,
+       0.044012050520744556
+      ],
+      "outside_mass": 0.001786703494651487,
+      "method": "single_token",
+      "top_token": "B",
+      "prompt_tokens": 168
+     },
+     {
+      "category": "goal",
+      "instruction": "Which goal should the agent pursue now?",
+      "options": [
+       "collect gems",
+       "find food",
+       "avoid hazards",
+       "explore"
+      ],
+      "correct": [
+       "find food"
+      ],
+      "choice": "find food",
+      "ok": true,
+      "probs": [
+       0.2918762631769012,
+       0.6179020908241788,
+       0.05072048925183007,
+       0.03950115674709003
+      ],
+      "outside_mass": 0.001373025380278281,
+      "method": "single_token",
+      "top_token": "B",
+      "prompt_tokens": 169
+     },
+     {
+      "category": "goal",
+      "instruction": "Which goal should the agent pursue now?",
+      "options": [
+       "collect gems",
+       "find food",
+       "avoid hazards",
+       "explore"
+      ],
+      "correct": [
+       "collect gems"
+      ],
+      "choice": "collect gems",
+      "ok": true,
+      "probs": [
+       0.45974908531451036,
+       0.45974908531451036,
+       0.037738503035380316,
+       0.042763326335598935
+      ],
+      "outside_mass": 0.0020960540967673857,
+      "method": "single_token",
+      "top_token": "A",
+      "prompt_tokens": 170
+     },
+     {
+      "category": "goal",
+      "instruction": "Which goal should the agent pursue now?",
+      "options": [
+       "collect gems",
+       "find food",
+       "avoid hazards",
+       "explore"
+      ],
+      "correct": [
+       "explore"
+      ],
+      "choice": "find food",
+      "ok": false,
+      "probs": [
+       0.15034364623237595,
+       0.7635080123912531,
+       0.043074170688185566,
+       0.043074170688185566
+      ],
+      "outside_mass": 0.001461536811346309,
+      "method": "single_token",
+      "top_token": "B",
+      "prompt_tokens": 165
+     },
+     {
+      "category": "goal",
+      "instruction": "Which goal should the agent pursue now?",
+      "options": [
+       "collect gems",
+       "find food",
+       "avoid hazards",
+       "explore"
+      ],
+      "correct": [
+       "avoid hazards"
+      ],
+      "choice": "find food",
+      "ok": false,
+      "probs": [
+       0.24719367810276527,
+       0.6719421233475718,
+       0.042955820239937464,
+       0.03790837830972549
+      ],
+      "outside_mass": 0.0018080789551746523,
+      "method": "single_token",
+      "top_token": "B",
+      "prompt_tokens": 168
+     },
+     {
+      "category": "goal",
+      "instruction": "Which goal should the agent pursue now?",
+      "options": [
+       "collect gems",
+       "find food",
+       "avoid hazards",
+       "explore"
+      ],
+      "correct": [
+       "find food"
+      ],
+      "choice": "collect gems",
+      "ok": false,
+      "probs": [
+       0.4680842303788837,
+       0.4680842303788837,
+       0.029923627279883944,
+       0.033907911962348776
+      ],
+      "outside_mass": 0.0021674689862171137,
+      "method": "single_token",
+      "top_token": "A",
+      "prompt_tokens": 168
+     },
+     {
+      "category": "goal",
+      "instruction": "Which goal should the agent pursue now?",
+      "options": [
+       "collect gems",
+       "find food",
+       "avoid hazards",
+       "explore"
+      ],
+      "correct": [
+       "explore"
+      ],
+      "choice": "find food",
+      "ok": false,
+      "probs": [
+       0.1860424121045182,
+       0.7358119916616707,
+       0.0366339230265297,
+       0.041511673207281316
+      ],
+      "outside_mass": 0.0014537399757279523,
+      "method": "single_token",
+      "top_token": "B",
+      "prompt_tokens": 166
+     },
+     {
+      "category": "goal",
+      "instruction": "Which goal should the agent pursue now?",
+      "options": [
+       "collect gems",
+       "find food",
+       "avoid hazards",
+       "explore"
+      ],
+      "correct": [
+       "collect gems"
+      ],
+      "choice": "find food",
+      "ok": false,
+      "probs": [
+       0.31836651388152676,
+       0.5947869525409518,
+       0.038023453216849426,
+       0.04882308036067193
+      ],
+      "outside_mass": 0.001680026106287258,
+      "method": "single_token",
+      "top_token": "B",
+      "prompt_tokens": 168
+     },
+     {
+      "category": "target",
+      "instruction": "Which gem is closest to you?",
+      "options": [
+       "gem at (1,1), 12 steps away",
+       "gem at (17,1), 6 steps away",
+       "gem at (11,9), 14 steps away",
+       "gem at (1,14), 22 steps away"
+      ],
+      "correct": [
+       "gem at (17,1), 6 steps away"
+      ],
+      "choice": "gem at (17,1), 6 steps away",
+      "ok": true,
+      "probs": [
+       0.00316821838369281,
+       0.9954248219752296,
+       0.0010285699153959537,
+       0.0003783897256816211
+      ],
+      "outside_mass": 8.522001098065779e-05,
+      "method": "single_token",
+      "top_token": "B",
+      "prompt_tokens": 139
+     },
+     {
+      "category": "target",
+      "instruction": "Which gem is closest to you?",
+      "options": [
+       "gem at (2,3), 18 steps away",
+       "gem at (2,8), 8 steps away",
+       "gem at (13,0), 3 steps away",
+       "gem at (18,1), 4 steps away",
+       "gem at (7,10), 15 steps away",
+       "gem at (18,0), 25 steps away"
+      ],
+      "correct": [
+       "gem at (13,0), 3 steps away"
+      ],
+      "choice": "gem at (2,8), 8 steps away",
+      "ok": false,
+      "probs": [
+       0.0036691980587361672,
+       0.8978231294057607,
+       0.09462986515831068,
+       0.0015295493133652212,
+       0.0008187087504621089,
+       0.0015295493133652212
+      ],
+      "outside_mass": 0.00022668244643397895,
+      "method": "single_token",
+      "top_token": "B",
+      "prompt_tokens": 168
+     },
+     {
+      "category": "target",
+      "instruction": "Which gem is closest to you?",
+      "options": [
+       "gem at (9,6), 20 steps away",
+       "gem at (4,8), 29 steps away",
+       "gem at (3,9), 14 steps away",
+       "gem at (9,8), 3 steps away",
+       "gem at (5,1), 9 steps away",
+       "gem at (18,9), 26 steps away",
+       "gem at (6,5), 19 steps away",
+       "gem at (3,8), 6 steps away"
+      ],
+      "correct": [
+       "gem at (9,8), 3 steps away"
+      ],
+      "choice": "gem at (9,8), 3 steps away",
+      "ok": true,
+      "probs": [
+       0.00048190357845744194,
+       0.0009003144123252378,
+       0.004034929261585855,
+       0.9873145915914676,
+       0.00022763502356463734,
+       0.00037530688426756797,
+       0.00518095172641334,
+       0.001484367521918505
+      ],
+      "outside_mass": 0.00023061520598033347,
+      "method": "single_token",
+      "top_token": "D",
+      "prompt_tokens": 195
+     },
+     {
+      "category": "target",
+      "instruction": "Which gem is closest to you?",
+      "options": [
+       "gem at (14,9), 24 steps away",
+       "gem at (14,5), 4 steps away",
+       "gem at (9,3), 20 steps away",
+       "gem at (5,11), 3 steps away",
+       "gem at (7,1), 21 steps away",
+       "gem at (18,4), 8 steps away",
+       "gem at (16,7), 17 steps away",
+       "gem at (10,11), 19 steps away",
+       "gem at (14,4), 15 steps away",
+       "gem at (19,1), 12 steps away"
+      ],
+      "correct": [
+       "gem at (5,11), 3 steps away"
+      ],
+      "choice": "gem at (14,5), 4 steps away",
+      "ok": false,
+      "probs": [
+       0.0009060561135261078,
+       0.9936110928179678,
+       0.0024629158689622446,
+       0.0016927356713019018,
+       0.00029415321255815257,
+       0.0003333192577749079,
+       0.00022908675228325862,
+       0.0002021683493131402,
+       8.882657344525287e-06,
+       0.00025958929896787775
+      ],
+      "outside_mass": 0.000229658998060156,
+      "method": "single_token",
+      "top_token": "B",
+      "prompt_tokens": 233
+     },
+     {
+      "category": "target",
+      "instruction": "Which gem is closest to you?",
+      "options": [
+       "gem at (10,11), 5 steps away",
+       "gem at (11,9), 18 steps away",
+       "gem at (15,9), 15 steps away",
+       "gem at (14,1), 7 steps away",
+       "gem at (2,4), 12 steps away",
+       "gem at (15,11), 6 steps away",
+       "gem at (2,0), 17 steps away",
+       "gem at (9,10), 27 steps away",
+       "gem at (18,10), 3 steps away",
+       "gem at (14,4), 4 steps away",
+       "gem at (12,14), 19 steps away",
+       "gem at (11,0), 25 steps away"
+      ],
+      "correct": [
+       "gem at (18,10), 3 steps away"
+      ],
+      "choice": "gem at (14,1), 7 steps away",
+      "ok": false,
+      "probs": [
+       0.004536228953398044,
+       0.003532818661097576,
+       0.003117701525811668,
+       0.979552830512188,
+       0.0007882783936260635,
+       0.00101216949284165,
+       0.003117701525811668,
+       0.0014726979222230594,
+       0.0008932364423233768,
+       0.00101216949284165,
+       0.0007882783936260635,
+       0.00017588868421133057
+      ],
+      "outside_mass": 0.0006828052137336504,
+      "method": "single_token",
+      "top_token": "D",
+      "prompt_tokens": 266
+     },
+     {
+      "category": "target",
+      "instruction": "Which gem is closest to you?",
+      "options": [
+       "gem at (1,3), 16 steps away",
+       "gem at (9,2), 13 steps away",
+       "gem at (7,6), 7 steps away",
+       "gem at (12,14), 21 steps away",
+       "gem at (15,1), 5 steps away",
+       "gem at (5,7), 17 steps away"
+      ],
+      "correct": [
+       "gem at (15,1), 5 steps away"
+      ],
+      "choice": "gem at (7,6), 7 steps away",
+      "ok": false,
+      "probs": [
+       0.0007878049071458164,
+       0.0031158288504550247,
+       0.9789641032226636,
+       0.0006952353903971277,
+       0.015823484550745726,
+       0.0006135430785926572
+      ],
+      "outside_mass": 0.00020853910296037004,
+      "method": "single_token",
+      "top_token": "C",
+      "prompt_tokens": 168
+     },
+     {
+      "category": "target",
+      "instruction": "Which gem is closest to you?",
+      "options": [
+       "gem at (11,10), 14 steps away",
+       "gem at (12,3), 19 steps away",
+       "gem at (4,1), 10 steps away",
+       "gem at (5,2), 6 steps away",
+       "gem at (7,10), 15 steps away",
+       "gem at (7,0), 28 steps away",
+       "gem at (15,13), 27 steps away",
+       "gem at (18,2), 25 steps away"
+      ],
+      "correct": [
+       "gem at (5,2), 6 steps away"
+      ],
+      "choice": "gem at (5,2), 6 steps away",
+      "ok": true,
+      "probs": [
+       0.0008960789831417139,
+       0.003127622968138249,
+       0.21926327170808332,
+       0.7653040390441882,
+       0.0005434993767995694,
+       0.0006158654780632162,
+       0.009633756963522458,
+       0.0006158654780632162
+      ],
+      "outside_mass": 0.0003845394798537294,
+      "method": "single_token",
+      "top_token": "D",
+      "prompt_tokens": 203
+     },
+     {
+      "category": "target",
+      "instruction": "Which gem is closest to you?",
+      "options": [
+       "gem at (4,11), 10 steps away",
+       "gem at (16,9), 11 steps away",
+       "gem at (1,7), 2 steps away",
+       "gem at (17,6), 6 steps away",
+       "gem at (12,6), 15 steps away",
+       "gem at (12,1), 19 steps away",
+       "gem at (15,10), 13 steps away",
+       "gem at (12,0), 21 steps away",
+       "gem at (6,1), 20 steps away",
+       "gem at (6,7), 12 steps away"
+      ],
+      "correct": [
+       "gem at (1,7), 2 steps away"
+      ],
+      "choice": "gem at (1,7), 2 steps away",
+      "ok": true,
+      "probs": [
+       0.0014510519055443462,
+       0.0016442572220872465,
+       0.965155095209107,
+       0.0018631875276521204,
+       0.0007766921158168696,
+       0.0009972924176498395,
+       0.02269827080327999,
+       0.005064668799428293,
+       0.00028572919777524136,
+       6.375480165867198e-05
+      ],
+      "outside_mass": 0.0005655064372613872,
+      "method": "single_token",
+      "top_token": "C",
+      "prompt_tokens": 233
+     },
+     {
+      "category": "goal_words",
+      "instruction": "Which goal should the agent pursue now?",
+      "options": [
+       "collect gems",
+       "find food",
+       "avoid hazards",
+       "explore"
+      ],
+      "correct": [
+       "find food"
+      ],
+      "choice": "find food",
+      "ok": true,
+      "probs": [
+       0.27744542697583996,
+       0.5873519735169638,
+       0.10206646863144422,
+       0.03313613087575197
+      ],
+      "outside_mass": 0.008876913878199666,
+      "method": "single_token",
+      "top_token": "B",
+      "prompt_tokens": 113
+     },
+     {
+      "category": "goal_words",
+      "instruction": "Which goal should the agent pursue now?",
+      "options": [
+       "collect gems",
+       "find food",
+       "avoid hazards",
+       "explore"
+      ],
+      "correct": [
+       "collect gems"
+      ],
+      "choice": "find food",
+      "ok": false,
+      "probs": [
+       0.2826835708021471,
+       0.528122469862168,
+       0.1335302638563308,
+       0.05566369547935418
+      ],
+      "outside_mass": 0.0036553002793304756,
+      "method": "single_token",
+      "top_token": "B",
+      "prompt_tokens": 113
+     },
+     {
+      "category": "goal_words",
+      "instruction": "Which goal should the agent pursue now?",
+      "options": [
+       "collect gems",
+       "find food",
+       "avoid hazards",
+       "explore"
+      ],
+      "correct": [
+       "avoid hazards"
+      ],
+      "choice": "avoid hazards",
+      "ok": true,
+      "probs": [
+       0.2407983711088628,
+       0.2125038166509873,
+       0.5097701860224374,
+       0.03692762621771243
+      ],
+      "outside_mass": 0.003950057915302008,
+      "method": "single_token",
+      "top_token": "C",
+      "prompt_tokens": 116
+     },
+     {
+      "category": "goal_words",
+      "instruction": "Which goal should the agent pursue now?",
+      "options": [
+       "collect gems",
+       "find food",
+       "avoid hazards",
+       "explore"
+      ],
+      "correct": [
+       "find food"
+      ],
+      "choice": "find food",
+      "ok": true,
+      "probs": [
+       0.20037525123461108,
+       0.6171992249590326,
+       0.1377157619085957,
+       0.04470976189776062
+      ],
+      "outside_mass": 0.01057957266652143,
+      "method": "single_token",
+      "top_token": "B",
+      "prompt_tokens": 113
+     },
+     {
+      "category": "goal_words",
+      "instruction": "Which goal should the agent pursue now?",
+      "options": [
+       "collect gems",
+       "find food",
+       "avoid hazards",
+       "explore"
+      ],
+      "correct": [
+       "collect gems"
+      ],
+      "choice": "find food",
+      "ok": false,
+      "probs": [
+       0.3596771982444672,
+       0.5233272354796286,
+       0.09094063742431475,
+       0.026054928851589502
+      ],
+      "outside_mass": 0.003477113605795834,
+      "method": "single_token",
+      "top_token": "B",
+      "prompt_tokens": 113
+     },
+     {
+      "category": "goal_words",
+      "instruction": "Which goal should the agent pursue now?",
+      "options": [
+       "collect gems",
+       "find food",
+       "avoid hazards",
+       "explore"
+      ],
+      "correct": [
+       "explore"
+      ],
+      "choice": "find food",
+      "ok": false,
+      "probs": [
+       0.024967432297200238,
+       0.729655391978423,
+       0.2090497760868892,
+       0.03632739963748754
+      ],
+      "outside_mass": 0.01661050860869906,
+      "method": "single_token",
+      "top_token": "B",
+      "prompt_tokens": 111
+     },
+     {
+      "category": "goal_words",
+      "instruction": "Which goal should the agent pursue now?",
+      "options": [
+       "collect gems",
+       "find food",
+       "avoid hazards",
+       "explore"
+      ],
+      "correct": [
+       "avoid hazards"
+      ],
+      "choice": "avoid hazards",
+      "ok": true,
+      "probs": [
+       0.06187792819598255,
+       0.07011687861425778,
+       0.854198361161737,
+       0.013806832028022627
+      ],
+      "outside_mass": 0.005078336693123853,
+      "method": "single_token",
+      "top_token": "C",
+      "prompt_tokens": 116
+     },
+     {
+      "category": "goal_words",
+      "instruction": "Which goal should the agent pursue now?",
+      "options": [
+       "collect gems",
+       "find food",
+       "avoid hazards",
+       "explore"
+      ],
+      "correct": [
+       "find food"
+      ],
+      "choice": "find food",
+      "ok": true,
+      "probs": [
+       0.256272909811919,
+       0.6147667885038258,
+       0.09427753484898821,
+       0.034682766835266964
+      ],
+      "outside_mass": 0.008376440541714603,
+      "method": "single_token",
+      "top_token": "B",
+      "prompt_tokens": 113
+     },
+     {
+      "category": "goal_words",
+      "instruction": "Which goal should the agent pursue now?",
+      "options": [
+       "collect gems",
+       "find food",
+       "avoid hazards",
+       "explore"
+      ],
+      "correct": [
+       "explore"
+      ],
+      "choice": "find food",
+      "ok": false,
+      "probs": [
+       0.02621484627740577,
+       0.6760898366693513,
+       0.24871953647077258,
+       0.048975780582470464
+      ],
+      "outside_mass": 0.01777356932947327,
+      "method": "single_token",
+      "top_token": "B",
+      "prompt_tokens": 111
+     },
+     {
+      "category": "goal_words",
+      "instruction": "Which goal should the agent pursue now?",
+      "options": [
+       "collect gems",
+       "find food",
+       "avoid hazards",
+       "explore"
+      ],
+      "correct": [
+       "collect gems"
+      ],
+      "choice": "find food",
+      "ok": false,
+      "probs": [
+       0.33142090606369523,
+       0.5464207299511359,
+       0.09495367936699915,
+       0.027204684618169717
+      ],
+      "outside_mass": 0.004229844988027032,
+      "method": "single_token",
+      "top_token": "B",
+      "prompt_tokens": 113
+     }
+    ]
+   }
+  ]
+ }
+]

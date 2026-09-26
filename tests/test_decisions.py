@@ -158,3 +158,32 @@ def test_hf_text_mode_multi_token(hf_backend):
     expected = np.exp(np.array(seq) - max(seq))
     np.testing.assert_allclose(r.probs, expected / expected.sum(), atol=1e-6)
     assert r.index == int(np.argmax(seq))
+
+
+def test_prefix_len_covers_only_the_static_part():
+    be = MockBackend()
+    d = Decision("Which way?", ("left", "right"), state="S1", context="goal")
+    for order, must_include, must_exclude in (("state_first", "<|user|>", "State:"),
+                                              ("question_first", "B: right", "State:"),
+                                              ("options_first", "B: right", "Question:")):
+        eng = Engine(be, prompt_order=order)
+        prep = eng.prepare(d)
+        prefix = be.decode(prep.ids[:prep.prefix_len])
+        assert must_include in prefix and must_exclude not in prefix, order
+        # the same static part gives the same prefix for a different state
+        other = eng.prepare(Decision("Which way?", ("left", "right"), state="a much longer state S2"))
+        assert other.ids[:other.prefix_len] == prep.ids[:prep.prefix_len]
+
+
+def test_engine_passes_prefix_lens_to_the_backend():
+    seen = {}
+
+    class Recording(MockBackend):
+        def next_token_scores(self, batch, candidates, prefix_lens=None):
+            seen["prefix_lens"] = prefix_lens
+            return super().next_token_scores(batch, candidates, prefix_lens)
+
+    eng = Engine(Recording())
+    preps = [eng.prepare(Decision("q", ("a", "b"), state=s)) for s in ("x", "yy")]
+    eng.decide_batch([p.decision for p in preps])
+    assert seen["prefix_lens"] == [p.prefix_len for p in preps] and all(n > 0 for n in seen["prefix_lens"])
