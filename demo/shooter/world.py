@@ -587,7 +587,8 @@ class Dungeon:
             "agent": {"pos": list(self.pos), "health": self.health, "has_key": self.has_key,
                       "cooldown": self.cooldown, "shots": self.shots, "kills": self.kills},
             "enemies": [{"id": e.id, "kind": e.kind, "pos": list(e.pos), "hp": e.hp, "home": e.home,
-                         "awake": e.awake, "aiming": e.aiming} for e in self.enemies],
+                         "awake": e.awake, "aiming": e.aiming, "resting": e.kind == "brute" and e.timer > 0}
+                        for e in self.enemies],
             "bullets": [{"id": b.id, "owner": b.owner, "pos": [round(b.x, 3), round(b.y, 3)],
                          "vel": [round(b.vx, 4), round(b.vy, 4)]} for b in self.bullets],
             "items": {"potions": [list(c) for c in self.potions], "key": list(self.key) if self.key else None},
