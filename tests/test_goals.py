@@ -102,3 +102,15 @@ def test_same_tick_parent_change_keeps_child_stale():
 def test_invalid_period():
     with pytest.raises(ValueError):
         Tier("x", "q", ("a",), every=0)
+
+
+def test_goal_change_cancels_tournament_below():
+    from system_one.tournament import Tournament
+
+    s = GoalStack(tiers())
+    target = s.tier("target")
+    s.tournaments["target"] = Tournament(tuple(f"g{i}" for i in range(20)), 5, lambda o: None)
+    s.mark_pending(target)
+    s.apply(s.tier("strategy"), "find food", 3)
+    assert "target" not in s.tournaments
+    assert "target" in [t.name for t in s.due(4)]

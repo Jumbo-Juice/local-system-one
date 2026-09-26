@@ -13,8 +13,10 @@ Implementation choices (the sources leave these open):
 - All due decisions of all agents in a tick go into ONE batch. Each uses the goals that
   were current at the start of the tick, so a new goal reaches lower tiers one tick later.
 - With ``group_size`` set, a tier with more options than that is decided by tournament
-  sampling, ONE round per tick, inside the same batch. This keeps per-tick work bounded.
-  The tier keeps its previous goal until the tournament finishes.
+  sampling across ticks, inside the same batch. The tier keeps its previous goal until the
+  tournament finishes. By default a whole round runs per tick.
+- ``plan_budget`` caps planning work (slow tiers and their tournament groups) per agent per
+  tick, so the fast tier's tick latency stays nearly constant.
 """
 
 from __future__ import annotations
@@ -105,6 +107,9 @@ class GoalStack:
         if changed:
             for t in self.tiers[self.tiers.index(tier) + 1:]:
                 self._stale.add(t.name)
+                # A tournament below was built from the old goal's options: drop it.
+                if self.tournaments.pop(t.name, None) is not None:
+                    self._pending.discard(t.name)
         return changed
 
 
@@ -112,24 +117,33 @@ State = Union[str, Callable[[Tier], str]]
 
 
 def step_all(
-    engine, agents: Sequence[tuple[GoalStack, State]], tick: int, group_size: int | None = None
+    engine, agents: Sequence[tuple[GoalStack, State]], tick: int, group_size: int | None = None,
+    plan_budget: int | None = None,
 ) -> list[tuple[int, Tier, DecisionResult, Tournament | None]]:
     """One tick for many agents: all due tier decisions in ONE batched engine call.
 
     ``agents`` is a list of (goal stack, state), where state is a string or a function
     tier -> state text. With ``group_size``, tiers with more options than that run as
-    tournaments, one round per tick. Results are applied bottom-up, so a higher tier that
-    changes in this tick still marks its lower tiers stale.
+    tournaments. Results are applied bottom-up, so a higher tier that changes in this tick
+    still marks its lower tiers stale.
+
+    ``plan_budget`` caps the planning decisions per agent per tick. Planning means slow tiers
+    (``every > 1``) and their tournament groups. Tiers with ``every == 1`` always run.
+    Deferred tiers stay due, and tournaments continue with their remaining groups next tick.
+    ``None`` means unlimited (a whole tournament round per tick).
 
     Returns (agent index, tier, result, tournament or None) for every decision made.
     """
     jobs: list[tuple[int, Tier, Decision, Tournament | None]] = []
     for i, (stack, state) in enumerate(agents):
         state_of = state if callable(state) else (lambda _tier, s=state: s)
-        for tier in stack.due(tick):
+        budget = plan_budget
+        for tier in stack.due(tick):  # top-down, so a strategy is decided before its target
             options = stack.options(tier)
             if not options:
                 continue
+            if tier.every > 1 and budget == 0:
+                continue  # budget used up: stays due; built next tick with fresh context
             if group_size and len(options) > group_size:
                 snapshot, context = state_of(tier), stack.context(tier)
                 stack.tournaments[tier.name] = Tournament(
@@ -137,10 +151,17 @@ def step_all(
                     lambda opts, t=tier, s=snapshot, c=context: Decision(t.instruction, tuple(opts), state=s, context=c),
                 )
                 stack.mark_pending(tier)
-            else:
+            elif tier.every == 1:
                 jobs.append((i, tier, stack.decision(tier, state_of(tier)), None))
+            elif budget is None or budget > 0:
+                jobs.append((i, tier, stack.decision(tier, state_of(tier)), None))
+                budget = None if budget is None else budget - 1
         for name, tour in stack.tournaments.items():
-            jobs.extend((i, stack.tier(name), d, tour) for d in tour.pending())
+            fast = stack.tier(name).every == 1
+            ds = tour.pending(None if fast else budget)
+            if not fast and budget is not None:
+                budget -= len(ds)
+            jobs.extend((i, stack.tier(name), d, tour) for d in ds)
 
     results = engine.decide_batch([d for _, _, d, _ in jobs]) if jobs else []
     out = [(i, tier, r, tour) for (i, tier, _, tour), r in zip(jobs, results)]

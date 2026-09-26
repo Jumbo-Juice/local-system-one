@@ -383,3 +383,26 @@ mock backend with tiered goals. Mean of 3 seeds
   per batch).
 - This comparison ran just before a wording fix in the demo state text ("1 steps" → "1 step").
   The results were not re-run after it.
+
+### Smoother ticks: planning budget and warm-up (Qwen2.5-3B, one agent)
+
+The demo with the 3B model and one agent, 60–80 headless ticks (forward pass per tick):
+
+| setup | move-only ticks | ticks with planning | median | p90 | max |
+|---|---:|---:|---:|---:|---:|
+| whole tournament round per tick, 1-decision warm-up | 177 ms | 266–880 ms (2–4 decisions) | — | — | 2.8 s |
+| budget 1, 1-decision warm-up | 163 ms | 377 ms mean (2 decisions) | 226 | 286 | 2.8 s |
+| budget 1, warm-up with padded long batch | ~160 ms | ~260 ms | 214–222 | 256–266 | 277–464 ms |
+
+- **Implementation choice:** `plan_budget` (per agent per tick) in `step_all`. Tournaments can
+  now be advanced one group at a time (`Tournament.pending(limit)`). A 24-option target takes 4
+  ticks instead of 2, but no tick carries more than one planning decision.
+- A new (batch, length) shape costs ~100–120 ms extra the first time it is seen (e.g. batch 1 at
+  200 tokens: 262 ms, then 156 ms). The multi-second stalls came from the first *padded* batch
+  and the first large activation allocation. A warm-up batch with prompts of different lengths
+  (up to ~400 tokens) removed them.
+- While fixing this we found that a strategy change did not cancel a target tournament that had
+  started from the old strategy's options. Now a changed goal cancels tournaments in lower tiers.
+- Unlike the 1.5B, the 3B chose "collect gems" with p≈1.0 in the window run (11 gems by
+  tick 114). This was one run; it was not evaluated further.
+

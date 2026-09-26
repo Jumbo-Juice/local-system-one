@@ -68,39 +68,60 @@ class Tournament:
             raise ValueError("a tournament needs at least one option")
         self.alive = list(range(len(self.options)))
         self._groups: list[list[int]] | None = None
+        self._results: dict[int, Chosen] = {}  # group index -> result, current round
+        self._asked: list[int] = []  # group indices handed out by the last pending() call
         self.model_decisions = 0
 
     @property
     def done(self) -> bool:
         return len(self.alive) == 1
 
-    def pending(self) -> list[Decision]:
-        """Decisions for the current round (one per group with more than one option)."""
+    def pending(self, limit: int | None = None) -> list[Decision]:
+        """Decisions for the unresolved groups of the current round (groups of 2+ options).
+
+        With ``limit``, at most that many groups are handed out; later calls return the rest.
+        A round finishes once every group has a result.
+        """
         if self.done:
+            self._asked = []
             return []
         if self._groups is None:
             self._groups = split_groups(self.alive, self.group_size)
-        return [self.make_decision([self.options[i] for i in g]) for g in self._groups if len(g) > 1]
+            self._results = {}
+        todo = [k for k, g in enumerate(self._groups) if len(g) > 1 and k not in self._results]
+        self._asked = todo if limit is None else todo[:limit]
+        return [self.make_decision([self.options[i] for i in self._groups[k]]) for k in self._asked]
 
     def submit(self, results: Sequence[Chosen]) -> None:
-        groups = self._groups if self._groups is not None else split_groups(self.alive, self.group_size)
-        contested = [g for g in groups if len(g) > 1]
-        if len(results) != len(contested):
-            raise ValueError(f"expected {len(contested)} results, got {len(results)}")
-        it = iter(results)
+        """Results for the decisions returned by the last pending() call, in the same order."""
+        if len(results) != len(self._asked):
+            raise ValueError(f"expected {len(self._asked)} results, got {len(results)}")
+        for k, r in zip(self._asked, results):
+            self._results[k] = r
+        self.model_decisions += len(results)
+        self._asked = []
+        groups = self._groups
+        if groups is None or not all(len(g) == 1 or k in self._results for k, g in enumerate(groups)):
+            return
         winners, probs = [], []
-        for g in groups:
+        for k, g in enumerate(groups):
             if len(g) == 1:
                 winners.append(g[0])
                 probs.append([])
             else:
-                r = next(it)
+                r = self._results[k]
                 winners.append(g[r.index])
                 probs.append(list(r.probs))
-        self.model_decisions += len(contested)
         self.rounds.append(Round(groups, winners, probs))
         self.alive = winners
         self._groups = None
+        self._results = {}
+
+    def progress(self) -> tuple[int, int, int]:
+        """(current round number, groups resolved in it, contested groups in it)."""
+        groups = self._groups or ([] if self.done else split_groups(self.alive, self.group_size))
+        contested = sum(1 for g in groups if len(g) > 1)
+        return len(self.rounds) + 1, len(self._results), contested
 
     @property
     def winner(self) -> str:
