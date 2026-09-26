@@ -117,3 +117,27 @@ def test_hf_parameter_count_ignores_float32_head_copy(hf_backend):
         assert be.info()["parameters"] == reported  # counted once, at load time
     finally:
         be.model.set_output_embeddings(original)
+
+
+@pytest.mark.model
+def test_hf_prefix_cache_matches_uncached(hf_backend, logit_tolerance):
+    from system_one.backends.hf import _PrefixCache
+
+    be = hf_backend
+    saved = (be.prefix_cache, be.min_prefix)
+    be.prefix_cache, be.min_prefix = _PrefixCache(8), 8
+    try:
+        pre = be.encode(be.render_chat("You decide.", "Question: which way?\n\nOptions:\nA: north\nB: south\n\n"))
+        seqs = [pre + be.encode("State:\nThe target is north.\n\nReply."),
+                pre + be.encode("State:\nThe target is far away to the south.\n\nReply."),
+                be.encode("A prompt with no shared prefix")]
+        lens, cands = [len(pre), len(pre), 0], [[1, 2, 3]] * 3
+        plain = be.next_token_scores(seqs, cands)
+        for _ in range(3):  # seen, stored, reused
+            cached = be.next_token_scores(seqs, cands, prefix_lens=lens)
+        assert be.prefix_cache.hits >= 2 and be.prefix_cache.stores >= 1
+        for a, b in zip(plain, cached):
+            assert np.abs(a.logprobs - b.logprobs).max() < logit_tolerance
+            assert a.top_id == b.top_id
+    finally:
+        be.prefix_cache, be.min_prefix = saved

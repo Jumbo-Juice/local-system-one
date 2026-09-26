@@ -7,8 +7,10 @@ device = "auto"        # auto -> cuda, then xpu, then cpu
 dtype = "bfloat16"     # "float32" makes batched == sequential exact, but is ~7x slower on this iGPU
 max_batch = 32         # decisions per forward pass (larger batches are split)
 head_dtype = "float32"   # LM head in float32: finer probabilities, no exact ties (+0.9 GB). See docs/research.md.
+prefix_cache = true     # reuse keys/values of repeated prompt prefixes (~9% faster moves on the 3B)
 
 [engine]
 answer = "label"                          # single-token labels A, B, C ... (AA, AB ... above 26)
 answer_template = '{"choice": "<label>"}' # prefill + label + suffix
+prompt_order = "state_first"  # question/options first reuse more but cost accuracy (docs/research.md)
 multi_token = "auto"                      # only used when answer = "text"

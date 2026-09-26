@@ -26,12 +26,13 @@ VARIANTS = [
 OUT = Path(__file__).parent / "results"
 
 
-def run(model: str, device: str, dtype: str, max_batch: int = 32) -> dict:
+def run(model: str, device: str, dtype: str, max_batch: int = 32, prompt_order: str = "state_first",
+        variants=VARIANTS) -> dict:
     backend = HFBackend(model, device=device, dtype=dtype, max_batch=max_batch)
     items = eval_items()
-    report = {"backend": backend.info(), "variants": []}
-    for answer, template in VARIANTS:
-        engine = Engine(backend, answer=answer, answer_template=template)
+    report = {"backend": backend.info(), "prompt_order": prompt_order, "variants": []}
+    for answer, template in variants:
+        engine = Engine(backend, answer=answer, answer_template=template, prompt_order=prompt_order)
         engine.decide_batch([items[0].decision])  # warm-up (kernel compilation)
         t = time.perf_counter()
         results = engine.decide_batch([it.decision for it in items])
@@ -48,7 +49,7 @@ def run(model: str, device: str, dtype: str, max_batch: int = 32) -> dict:
                 "method": r.method, "top_token": r.top_token, "prompt_tokens": r.prompt_tokens,
             })
         summary = {
-            "answer": answer, "template": template,
+            "answer": answer, "template": template, "prompt_order": prompt_order,
             "accuracy": sum(r["ok"] for r in rows) / len(rows),
             "accuracy_by_category": {k: sum(v) / len(v) for k, v in per_cat.items()},
             "mean_chosen_prob": sum(max(r["probs"]) for r in rows) / len(rows),
@@ -62,7 +63,7 @@ def run(model: str, device: str, dtype: str, max_batch: int = 32) -> dict:
         )
         report["variants"].append({"summary": summary, "rows": rows})
         cats = " ".join(f"{k}={v:.0%}" for k, v in summary["accuracy_by_category"].items())
-        print(f"{model:32} {answer:5} {template:24} acc={summary['accuracy']:.0%} [{cats}] "
+        print(f"{model:32} {answer:5} {template:24} {prompt_order:15} acc={summary['accuracy']:.0%} [{cats}] "
               f"p={summary['mean_chosen_prob']:.2f} outside={summary['mean_outside_mass']:.3f} "
               f"firstopt={summary['first_option_rate']:.0%} multi={summary['multi_token_items']} "
               f"batch={seconds:.2f}s pass={summary['passes_selection_rule']}", flush=True)
@@ -77,9 +78,12 @@ def main() -> None:
     ap.add_argument("--device", default="auto")
     ap.add_argument("--dtype", default="auto")
     ap.add_argument("--max-batch", type=int, default=32)
+    ap.add_argument("--prompt-order", default="state_first", choices=["state_first", "question_first", "options_first"])
+    ap.add_argument("--variants", type=int, nargs="+", default=None, help="indexes into VARIANTS (default: all)")
     args = ap.parse_args()
     OUT.mkdir(exist_ok=True)
-    reports = [run(m, args.device, args.dtype, args.max_batch) for m in args.models]
+    variants = [VARIANTS[i] for i in args.variants] if args.variants else VARIANTS
+    reports = [run(m, args.device, args.dtype, args.max_batch, args.prompt_order, variants) for m in args.models]
     path = OUT / f"model_eval_{time.strftime('%Y%m%d_%H%M%S')}.json"
     path.write_text(json.dumps(reports, indent=1), encoding="utf-8")
     print("wrote", path)
