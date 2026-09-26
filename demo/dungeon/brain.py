@@ -61,13 +61,18 @@ class DungeonBrain:
     """Goal stack and state text of the one agent."""
 
     def __init__(self, dungeon: Dungeon, strategy_every: int = 12, target_every: int = 6,
-                 label_style: str = "closer"):
+                 label_style: str = "closer", enemy_aware: bool = False):
         """``label_style`` words the move outcomes: "closer" ('closer: 2 steps to the target') or
         "steps" ('target: 2 steps', the first demo's wording). Observed on the dev seed: with
-        "steps" the 3B walked away from its target in one doorway state and looped until it starved."""
+        "steps" the 3B walked away from its target in one doorway state and looped until it starved.
+
+        ``enemy_aware`` (added after the pre-registered evaluation; docs/research.md -> Dungeon):
+        a move into an enemy says the agent stays in place and is hit; a cell next to an enemy says
+        it can hit; safe spots are only cells the agent reaches before any visible enemy, by a path
+        that never passes next to one. Off = the wording the pre-registered evaluation used."""
         if label_style not in ("closer", "steps"):
             raise ValueError("label_style must be 'closer' or 'steps'")
-        self.d, self.label_style = dungeon, label_style
+        self.d, self.label_style, self.enemy_aware = dungeon, label_style, enemy_aware
         self.stack = GoalStack([
             Tier("strategy", "Which goal should the agent pursue now?", lambda goals: self.goal_options(),
                  every=strategy_every, title="Strategic goal"),
@@ -181,13 +186,26 @@ class DungeonBrain:
         return []
 
     def safe_spots(self, n: int = 5) -> list[str]:
-        """Known cells 2-8 steps away that are farthest (walking) from the visible enemies."""
+        """Known cells 2-8 steps away, far (walking) from the visible enemies.
+
+        With ``enemy_aware``: only cells the agent reaches first, by a path that never passes next
+        to an enemy, ranked by how many steps ahead of the nearest enemy the agent arrives.
+        Without it (the pre-registered version) a spot could lie beyond the enemy."""
         if not self._enemies:
             return []
         from_enemy: dict[Cell, int] = {}
         for e, _ in self._enemies:
             for c, s in self.d.distances(e.pos).items():
                 from_enemy[c] = min(from_enemy.get(c, 10 ** 6), s)
+        if self.enemy_aware:
+            danger = {(e.pos[0] + dx, e.pos[1] + dy) for e, _ in self._enemies
+                      for dx, dy in ((0, 0), (1, 0), (-1, 0), (0, 1), (0, -1))}
+            mine = self.d.distances(self.d.pos, within=(self._known - danger) | {self.d.pos})
+            cand = [(from_enemy.get(c, 99) - s, from_enemy.get(c, 99), s, c) for c, s in mine.items()
+                    if 2 <= s <= 8 and from_enemy.get(c, 99) > s]
+            spots = sorted(cand, key=lambda x: (-x[0], -x[1], x[2], x[3]))[:n]
+            return [f"safe spot at ({c[0]},{c[1]}) in {self.place(c)}, {_steps(s)} away; "
+                    f"the enemy is {_steps(h)} from it" for _, h, s, c in sorted(spots, key=lambda x: (x[3][1], x[3][0]))]
         spots = sorted(((from_enemy.get(c, 99), s, c) for c, s in self._dist.items() if 2 <= s <= 8),
                        key=lambda x: (-x[0], x[1], x[2]))[:n]
         return [f"safe spot at ({c[0]},{c[1]}) in {self.place(c)}, {_steps(s)} away, {_steps(h)} from the enemy"
@@ -207,6 +225,11 @@ class DungeonBrain:
             if not d.passable(c):
                 out.append(f"{move} (wall)")
                 continue
+            if enemy is not None and self.enemy_aware:
+                out.append(f"{move} (blocked by a stunned enemy: you stay here; it can hit you again in "
+                           f"{_ticks(enemy.stunned + 1)})" if enemy.stunned else
+                           f"{move} (ENEMY: you stay here and lose {d.rules.enemy_damage} health)")
+                continue
             if enemy is not None:
                 out.append(f"{move} (blocked by a stunned enemy; it recovers in {_ticks(enemy.stunned)})"
                            if enemy.stunned else f"{move} (ENEMY: -{d.rules.enemy_damage} health)")
@@ -224,7 +247,10 @@ class DungeonBrain:
                 elif c in d.potions:
                     notes.append(f"potion: +{d.rules.potion_health} health")
             beside = [st for p, st in nearby if abs(c[0] - p[0]) + abs(c[1] - p[1]) == 1]
-            if beside:
+            if beside and self.enemy_aware:
+                notes.append(f"next to an enemy: it can hit you for {d.rules.enemy_damage} health" if min(beside) == 0 else
+                             f"next to a stunned enemy: it can hit you again in {_ticks(min(beside) + 1)}")
+            elif beside:
                 notes.append("next to an enemy" if min(beside) == 0 else
                              f"next to a stunned enemy that recovers in {_ticks(min(beside))}")
             if target is not None:

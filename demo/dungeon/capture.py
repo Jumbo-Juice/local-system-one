@@ -82,6 +82,8 @@ def main() -> None:
     ap.add_argument("--plan-budget", type=int, default=1, help="planning decisions per tick; -1 = unlimited")
     ap.add_argument("--label-style", choices=("closer", "steps"), default="closer",
                     help="move-outcome wording (see DungeonBrain)")
+    ap.add_argument("--enemy-aware", action=argparse.BooleanOptionalAction, default=False,
+                    help="enemy consequences in move labels and safer flee targets (see DungeonBrain)")
     ap.add_argument("--rebuild", default=None, help="only rebuild replay.html next to this trace.jsonl")
     ap.add_argument("--quiet", action="store_true")
     args = ap.parse_args()
@@ -96,7 +98,8 @@ def main() -> None:
         warm_up(engine)
     rules = Rules(max_ticks=args.max_ticks) if args.max_ticks else None
     records = capture(engine, args.seed, rules, args.group_size, args.plan_budget if args.plan_budget >= 0 else None,
-                      verbose=not args.quiet, label_style=args.label_style)
+                      verbose=not args.quiet, label_style=args.label_style,
+                      enemy_aware=args.enemy_aware)
     model = str(engine.backend.info().get("model", engine.backend.info().get("kind"))).split("/")[-1]
     out = Path(args.out) if args.out else OUT / f"dungeon_{model}_seed{args.seed}"
     out.mkdir(parents=True, exist_ok=True)

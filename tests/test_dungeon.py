@@ -157,7 +157,7 @@ def test_snapshot_and_layout_are_json():
 
 # -- brain, runner, trace ----------------------------------------------------------------
 
-from demo.dungeon.brain import GOALS, DungeonBrain, Runner, drop_distance  # noqa: E402
+from demo.dungeon.brain import GOALS, DungeonBrain, Runner, cell_of, drop_distance  # noqa: E402
 from demo.dungeon.capture import build_replay, to_jsonl  # noqa: E402
 from system_one import Engine  # noqa: E402
 from system_one.backends.mock import MockBackend  # noqa: E402
@@ -193,8 +193,8 @@ def test_texts_spell_out_consequences():
 
 def test_move_options_are_labelled_with_outcomes():
     d = Dungeon(0)
-    b = DungeonBrain(d)
     e = d.enemies[0]
+    b = DungeonBrain(d, enemy_aware=True)
     x, y = d.pos
     free = [(m, c) for m, c in (("move north", (x, y - 1)), ("move south", (x, y + 1)), ("move east", (x + 1, y)),
                                 ("move west", (x - 1, y))) if d.passable(c)]
@@ -202,8 +202,12 @@ def test_move_options_are_labelled_with_outcomes():
     e.pos = cell
     b.refresh()
     opts = b.move_options()
-    assert f"{move} (ENEMY: -30 health)" in opts
+    assert f"{move} (ENEMY: you stay here and lose 30 health)" in opts
     assert any(o.endswith("(wall)") for o in opts) or len(free) == 4
+    assert any("next to an enemy: it can hit you for 30 health" in o for o in opts if o.startswith("stay"))
+    v1 = DungeonBrain(d)  # enemy_aware off: the wording of the pre-registered evaluation
+    v1.refresh()
+    assert f"{move} (ENEMY: -30 health)" in v1.move_options()
     assert len(opts) == 5 and [o.split(" (")[0] for o in opts] == ["move north", "move south", "move east", "move west", "stay"]
 
 
@@ -276,3 +280,19 @@ def test_move_labels_say_closer_or_farther():
     assert any("target: " in o for o in steps.move_options()) and not any("closer" in o for o in steps.move_options())
     with pytest.raises(ValueError):
         DungeonBrain(d, label_style="other")
+
+
+def test_safe_spots_are_reached_before_the_enemy():
+    d = quiet(0, enemies=1)
+    e = d.enemies[0]
+    room = d.rooms[d.start_room]
+    e.home = d.start_room
+    e.pos = next(c for c in room.cells if d.distances(d.pos)[c] == 2)
+    b = DungeonBrain(d, enemy_aware=True)
+    b.refresh()
+    spots = b.safe_spots()
+    assert spots
+    from_enemy = d.distances(e.pos)
+    for text in spots:
+        c = cell_of(text)
+        assert d.distances(d.pos)[c] < from_enemy[c] and "the enemy is" in text

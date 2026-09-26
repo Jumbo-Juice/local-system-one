@@ -14,6 +14,11 @@ Pre-registered before the first evaluation run (committed with this file):
   6+ ticks without getting closer to the same target), forward-pass latency.
 - The replay shown in the docs is seed 0 with 3b-closer, whatever its outcome.
 
+Added after the pre-registered results (post hoc; docs/research.md -> Dungeon):
+    3b-enemy-aware  3b-closer plus enemy_aware wording and safe spots (DungeonBrain). Evaluated on
+                    seeds 0-15: 0-7 to compare with the runs above, 8-15 (never run before) to check
+                    it is not fitted to seeds 0-7; 3b-closer is also run on 8-15 for comparison.
+
 Usage:
     python -m bench.dungeon_eval                       # all setups, seeds 0-7
     python -m bench.dungeon_eval --setups random --seeds 0 1
@@ -37,16 +42,18 @@ from system_one.config import REPO_ROOT
 from .hwinfo import host_info
 
 RESULTS = Path(__file__).parent / "results"
-SETUPS = {
-    "3b-closer": ("config/lenovo-3b.toml", "closer"),
-    "3b-steps": ("config/lenovo-3b.toml", "steps"),
-    "1.5b-closer": ("config/default.toml", "closer"),
-    "random": ("config/mock.toml", "closer"),
+PRE_REGISTERED = {"label_style": "closer", "enemy_aware": False}
+SETUPS = {  # name -> (config, DungeonBrain options)
+    "3b-closer": ("config/lenovo-3b.toml", PRE_REGISTERED),
+    "3b-steps": ("config/lenovo-3b.toml", {**PRE_REGISTERED, "label_style": "steps"}),
+    "1.5b-closer": ("config/default.toml", PRE_REGISTERED),
+    "random": ("config/mock.toml", PRE_REGISTERED),
+    "3b-enemy-aware": ("config/lenovo-3b.toml", {**PRE_REGISTERED, "enemy_aware": True}),
 }
 
 
-def free(engine) -> None:
-    del engine
+def empty_device_cache() -> None:
+    """Call after dropping every reference to the engine (the caller's included)."""
     gc.collect()
     try:
         import torch
@@ -80,33 +87,47 @@ def aggregate(runs: list[dict]) -> dict:
 
 def main() -> None:
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    ap.add_argument("--setups", nargs="+", default=list(SETUPS), choices=list(SETUPS))
+    ap.add_argument("--setups", nargs="+", default=["3b-closer", "3b-steps", "1.5b-closer", "random"], choices=list(SETUPS))
     ap.add_argument("--seeds", type=int, nargs="+", default=list(range(8)))
+    ap.add_argument("--traces", default=None,
+                    help="write traces here and reuse finished runs already in it (resume); default: a new directory")
     args = ap.parse_args()
     stamp = time.strftime("%Y%m%d_%H%M%S")
-    traces = DEMO_OUT / f"eval_{stamp}"
+    traces = Path(args.traces) if args.traces else DEMO_OUT / f"eval_{stamp}"
     traces.mkdir(parents=True, exist_ok=True)
     runs, backends = [], {}
-    by_config: dict[str, list[str]] = {}
-    for name in args.setups:  # load each model once
-        by_config.setdefault(SETUPS[name][0], []).append(name)
-    for config, names in by_config.items():
+
+    def report(name: str, seed: int, summary: dict, wall: float | None, reused: bool) -> None:
+        runs.append({"setup": name, "seed": seed, "wall_s": wall, "reused_trace": reused, "summary": summary})
+        print(json.dumps({"setup": name, "seed": seed, "reused": reused, **{k: summary[k] for k in (
+            "outcome", "cause", "ticks", "key_tick", "escape_tick", "rooms_seen", "gems", "hits", "stuck_ticks",
+            "forward_ms_median")}}), flush=True)
+
+    todo: dict[str, list[tuple[str, int]]] = {}
+    for name in args.setups:
+        for seed in args.seeds:
+            path = traces / f"{name}_seed{seed}.jsonl"
+            lines = path.read_text(encoding="utf-8").splitlines() if path.exists() else []
+            end = json.loads(lines[-1]) if lines else {}
+            if end.get("type") == "end":  # finished earlier: runs are deterministic, reuse it
+                backends[name] = json.loads(lines[0])["backend"]
+                report(name, seed, end["summary"], None, True)
+            else:
+                todo.setdefault(SETUPS[name][0], []).append((name, seed))
+    for config, jobs in todo.items():  # load each model once
         cfg = load_config(REPO_ROOT / config)
         engine = make_engine(cfg)
         if cfg["backend"].get("kind") != "mock":
             warm_up(engine)
-        for name in names:
+        for name, seed in jobs:
             backends[name] = engine.backend.info()
-            for seed in args.seeds:
-                t0 = time.perf_counter()
-                records = capture(engine, seed, verbose=False, label_style=SETUPS[name][1])
-                (traces / f"{name}_seed{seed}.jsonl").write_text(to_jsonl(records), encoding="utf-8")
-                summary = records[-1]["summary"]
-                runs.append({"setup": name, "seed": seed, "wall_s": round(time.perf_counter() - t0, 1), "summary": summary})
-                print(json.dumps({"setup": name, "seed": seed, **{k: summary[k] for k in (
-                    "outcome", "cause", "ticks", "key_tick", "escape_tick", "rooms_seen", "gems", "hits", "stuck_ticks",
-                    "forward_ms_median")}}), flush=True)
-        free(engine)
+            t0 = time.perf_counter()
+            records = capture(engine, seed, verbose=False, **SETUPS[name][1])
+            (traces / f"{name}_seed{seed}.jsonl").write_text(to_jsonl(records), encoding="utf-8")
+            report(name, seed, records[-1]["summary"], round(time.perf_counter() - t0, 1), False)
+        engine = None  # drop the last reference so the weights can be freed before the next model
+        empty_device_cache()
+    runs.sort(key=lambda r: (args.setups.index(r["setup"]), r["seed"]))
     table = {name: aggregate([r for r in runs if r["setup"] == name]) for name in args.setups}
     for name, agg in table.items():
         print(name, json.dumps(agg))
