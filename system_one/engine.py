@@ -66,6 +66,9 @@ class DecisionResult:
     method: str  # "single_token" or "multi_token" (slower fallback)
     top_token: str | None  # unconstrained argmax token at the answer position
     prompt_tokens: int
+    # With order_debias: the two readings averaged into ``probs``, both in option order
+    # ([options as listed, options reversed]). None otherwise.
+    orders: list[list[float]] | None = None
 
     @property
     def choice(self) -> str:
@@ -101,6 +104,7 @@ class Engine:
         multi_token: str = "auto",
         system_prompt: str | None = None,
         prompt_order: str = "state_first",
+        order_debias: bool = False,
     ):
         if answer not in ("label", "text"):
             raise ValueError("answer must be 'label' or 'text'")
@@ -116,6 +120,10 @@ class Engine:
         self.answer = answer
         self.multi_token = multi_token
         self.prompt_order = prompt_order
+        # Implementation choice (docs/research.md -> Shooter demo): read every decision with 2+
+        # options twice in the same batch, options as listed and reversed, and average the two
+        # softmaxes, so an option's position and label do not decide the answer. Doubles the rows.
+        self.order_debias = order_debias
         self.system_prompt = system_prompt or (SYSTEM_LABEL if answer == "label" else SYSTEM_TEXT)
         prefill, self.suffix = answer_template.split(LABEL_SLOT)
         # BPE vocabularies attach a space to the NEXT token (" A"), so a trailing space in the
@@ -276,7 +284,34 @@ class Engine:
         """All single-token decisions share one batched forward pass (chunked by max_batch).
 
         Multi-token fallbacks run in a second batched pass, one sequence per option.
+        With ``order_debias`` each decision also runs with its options reversed (same pass).
         """
+        if not self.order_debias:
+            return self._decide_batch(decisions)
+        rows = list(decisions)
+        mirror: dict[int, int] = {}
+        for i, d in enumerate(decisions):
+            if len(d.options) > 1:
+                mirror[i] = len(rows)
+                rows.append(Decision(d.instruction, d.options[::-1], state=d.state, context=d.context))
+        raw = self._decide_batch(rows)
+        out = []
+        for i, d in enumerate(decisions):
+            r = raw[i]
+            if i not in mirror:
+                out.append(r)
+                continue
+            rev = raw[mirror[i]]
+            back = rev.probs[::-1]
+            avg = [(a + b) / 2 for a, b in zip(r.probs, back)]
+            out.append(DecisionResult(
+                decision=d, index=int(np.argmax(avg)), probs=avg, labels=r.labels,
+                outside_mass=(r.outside_mass + rev.outside_mass) / 2, method=r.method, top_token=r.top_token,
+                prompt_tokens=r.prompt_tokens, orders=[list(r.probs), list(back)],
+            ))
+        return out
+
+    def _decide_batch(self, decisions: list[Decision]) -> list[DecisionResult]:
         t0 = time.perf_counter()
         preps = [self.prepare(d, i) for i, d in enumerate(decisions)]
         t1 = time.perf_counter()
