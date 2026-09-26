@@ -14,7 +14,7 @@ This project is **not** Jev and does not reproduce Jev. It reproduces only the p
 
 | Id | Source | Where read |
 |----|--------|-----------|
-| S1 (primary) | Sean Goedecke, [Two techniques for working with System One models](https://www.seangoedecke.com/two-techniques-for-working-with-system-one-models/) | Obsidian vault `OneDrive/Documents/Obsidian/Juji's/Clippings/` (byte-identical copy in repo root) |
+| S1 (primary) | Sean Goedecke, [Two techniques for working with System One models](https://www.seangoedecke.com/two-techniques-for-working-with-system-one-models/) | the user's local Obsidian vault (web clipping). Not included in this repository: the articles are copyrighted; follow the links |
 | S2 | Sean Goedecke, [Jev means structured output is interesting again](https://www.seangoedecke.com/jev-means-structured-output-is-interesting-again/) | same vault folder |
 | S3 | Sean Goedecke, [System One models like Jev can train their own replacements](https://www.seangoedecke.com/system-one-models-can-train-their-own-replacements/) | same vault folder |
 | S4 | [sgoedecke/system-one](https://github.com/sgoedecke/system-one) (linked from S1): `system_one/inference.py`, `demo/labels.py`, `demo/wikirace/run.py`, `demo/README.md` | GitHub `main`, read 2026-09-26 |
