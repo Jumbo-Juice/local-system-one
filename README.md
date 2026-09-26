@@ -146,6 +146,87 @@ GPU, so reuse cannot go much further. Prompt orders that reuse more (`prompt_ord
 "question_first"` or `"options_first"`) were up to 21% faster but hurt accuracy, and the agent
 played badly. Details: `docs/research.md` → Observed → Prefix caching.
 
+### The dungeon demo: one agent, recorded and replayed
+
+One agent in a seeded dungeon: nine rooms joined by corridors, a key that opens the exit, two
+enemies that chase, and gems, food and potions. The agent knows only the rooms it has seen.
+Its standing order, as the model reads it: *"Find the key, then leave through the exit alive.
+Gems are a bonus. Eat and heal when needed."* The model makes every decision; nothing is
+scripted, and failed runs are shown as they happened.
+
+Capture a run with the real model, then open the replay:
+
+```bash
+.venv/Scripts/python -m demo.dungeon.capture --config config/lenovo-3b.toml --seed 0
+```
+
+This writes `trace.jsonl` and `replay.html` to `demo/output/dungeon_<model>_seed0/`. Open
+`replay.html` in a browser. It needs no server and no network. `--config config/mock.toml` runs
+without a model (random decisions). `--rebuild <trace.jsonl>` rebuilds the page from an existing
+trace.
+
+A recorded run is in [`docs/dungeon_replay_seed0.html`](docs/dungeon_replay_seed0.html) (download
+it and open it locally): the pre-registered showcase, seed 0 with the 3B. It collects 8 gems and
+explores 5 of 9 rooms, never finds the key, and dies to an enemy at tick 143.
+
+The replay page shows:
+
+- The map. Dimmed rooms are rooms the agent has not seen yet (you see the whole map; the agent
+  does not). The dashed line and ring mark its current target; dots show its last 15 cells, so
+  loops are visible.
+- One card per tier: the question, the options with the label the model answered with (`A`,
+  `B`, …), the probabilities, the chosen answer, and the latency of that tick's batched forward
+  pass. Each card also shows the tier's state: new answer, same answer, held since tick N,
+  deciding (tournament in progress, or queued behind the one-planning-decision-per-tick
+  budget), or only option (committed without a model call).
+- A timeline of forward-pass latency per tick, with events (key, hits, gems, food, rooms) and
+  "no progress for 6+ ticks" stretches.
+- Below the stage: play/pause (Space), step (← →), speed (1× is the recorded speed), scrubbing,
+  and *What the model saw*, which shows every prompt of the current tick. Add `#tick-120` to the
+  URL to open that tick. **Record WebM** saves the stage as a video (Chrome or Edge, file opened
+  locally). Convert it with `ffmpeg -i run.webm -c:v libx264 -pix_fmt yuv420p -crf 18 run.mp4`.
+
+| tier | every | options |
+|---|---|---|
+| strategy | 12 ticks, or at once when health, energy, visible enemies, the key or the rooms seen change | the goals possible now, from: explore, get the key, go to the exit, collect gems, eat food, drink a health potion, flee the enemy |
+| target | 6 ticks, or when the target is reached or gone | unexplored rooms behind known doors, the key, the exit, each known gem/food/potion, or safe spots. More than 8 options run as a tournament |
+| action | every tick | 5 moves labelled with outcomes, e.g. `move west (closer: 2 steps to the target)`, `move north (ENEMY: -30 health)` |
+
+**Why record and replay (implementation choice).** The Doom demo in sgoedecke/system-one captures
+decisions to JSONL and renders a video from them [S4]. We do the same, but render in the browser:
+
+- One self-contained HTML file (canvas and plain JavaScript). There are no dependencies, no
+  server and no build step, and the page opens from disk.
+- The replay shows the exact recorded decisions and latencies. It can play at the recorded speed
+  (~5 ticks/s with the 3B on this iGPU) or faster, pause on any decision, and scrub.
+- The video export records the same canvas, so there is no second renderer to keep in sync.
+- Rejected: a live browser mode (it needs a server; the tkinter demo remains for live runs), and
+  rendering MP4 frames in Python (a second renderer, and an image library we do not have).
+
+Closed-loop evaluation (`bench/dungeon_eval.py`; setups, seeds and metrics were fixed before the
+first run):
+
+```bash
+.venv/Scripts/python -m bench.dungeon_eval
+```
+
+Results on the Lenovo (Observed; seeds 0–7; `bench/results/dungeon_eval_20260926_163151.json`):
+
+| setup | escaped | died: enemy | died: starvation | key picked up | rooms seen | stuck ticks | forward ms/tick (median) |
+|---|---:|---:|---:|---:|---:|---:|---:|
+| 3B, `closer/farther` wording (default) | 0 / 8 | 7 | 1 | 2 | 3.6 | 5.8 | 165 |
+| 3B, first demo's wording (`target: N steps`) | 0 / 8 | 3 | 5 | 1 | 2.9 | 63.4 | 153 |
+| 1.5B, `closer/farther` wording | 0 / 8 | 7 | 1 | 1 | 3.0 | 19.4 | 82 |
+| random decisions (mock) | 0 / 8 | 1 | 7 | 0 | 1.5 | 54.4 | 0.4 |
+
+**No agent escaped, and none even saw the exit room.** The `closer/farther` wording removed the
+loops (stuck ticks 63 → 6), and the agent then walked into enemies: in 21 of 29 hits it chose the
+move labelled `ENEMY`. A post-hoc change that spelled out enemy consequences and safer flee
+targets made no difference on seeds 0–7 or on 8 new seeds, so it is off by default
+(`--enemy-aware`). The move tier picks a move toward its target 97–98% of the time, whatever the
+danger labels say. Tournaments never ran: no agent knew more than 8 gems at once. Details:
+`docs/research.md` → Observed → Dungeon demo.
+
 ## Benchmarks
 
 Machine: Lenovo 83HM, Intel Core Ultra 7 256V, Intel Arc 140V iGPU (8 GB shared), 15.6 GB RAM,
@@ -246,7 +327,8 @@ do not change.
 system_one/            engine.py (decisions), goals.py (tiers), tournament.py, config.py
 system_one/backends/   base.py (interface), hf.py (PyTorch + transformers), mock.py (no model)
 demo/                  world.py (grid world), brain.py (tiers + state text), sim.py (window / headless)
-bench/                 bench.py, model_eval.py, tournament_compare.py, demo_compare.py, results/
+demo/dungeon/          world.py (rules), brain.py (tiers, text, runner), capture.py (trace + replay), viewer.html
+bench/                 bench.py, model_eval.py, tournament_compare.py, demo_compare.py, dungeon_eval.py, results/
 config/                default.toml (Lenovo), lenovo-3b.toml, nuc.example.toml, mock.toml
 docs/                  research.md (sources + Observed results), machine.md
 tests/                 pytest suite (mock tests always; `model` tests when weights are cached)
@@ -287,6 +369,8 @@ tests/                 pytest suite (mock tests always; `model` tests when weigh
   deterministic model repeats a mistake every time it returns to the same state, so an agent can
   loop forever. Test agents in closed loop, not only per decision. Hazard avoidance by the
   strategy tier is still weak (11–44% in the probe).
+- **The dungeon is not solved.** 0 of 48 model runs escaped (3B, 1.5B, two wordings, a post-hoc
+  variant). The planning tiers do not steer away from enemies; see Demo results above.
 - The demo state text gives relative offsets and names conditions in words, because the model
   cannot do the arithmetic in one pass. That is part of the demo design, not of the engine.
 

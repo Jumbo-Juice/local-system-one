@@ -490,3 +490,116 @@ Symptom (user report): with the 3B model and one agent, the agent ran out of ene
 Four seeds is a small sample. The labels cost ~25 ms per tick (longer options). One of the
 "aware, plain" runs came within 2 energy of starving; every labelled run kept at least 16.
 
+### Dungeon demo: one agent in closed loop (Qwen2.5-3B)
+
+A single-agent scenario built to be harder than the gem field: nine rooms joined by corridors, a
+key that opens the exit, two enemies that chase, and gems, food and potions (`demo/dungeon/`).
+The agent sees only the rooms it has visited. Every decision is recorded to JSONL and replayed in
+`demo/dungeon/viewer.html` (README → The dungeon demo).
+
+**Implementation choices, fixed before the first model run** (commit `e227283`):
+
+- Rules: 400-tick limit; energy 100, −1 per tick, −5 health per tick at 0; food +40 energy,
+  potions +40 health; enemies chase within 6 steps on two of every three ticks, hit for 30 and are
+  then stunned for 3 ticks; one enemy lives in the key room. 12 gems, 3 food, 2 potions. The
+  exit is in the room farthest from the start.
+- The strategy tier is offered only goals that are possible now (no "get the key" before the key
+  has been seen, no "go to the exit" without the key). An impossible goal would be a trap option,
+  like a move into a wall. The model still ranks every possible goal.
+- A tier with exactly one possible option is committed without a model call
+  (`step_all(skip_single=True)`), and the replay says so. This saves a ~100 ms pass and does not
+  present a forced p = 1.0 as a model judgement.
+- Walking distances in the text are measured over the cells the agent knows.
+
+**Development run (seed 100, excluded from the evaluation).** With the first demo's move wording
+(`move west (target: 2 steps)`), the 3B walked back and forth between two cells for 90 ticks and
+starved. In one doorway state it chose `move east (target: 4 steps)` at p = 0.98. Probing that
+one recorded state:
+
+| variant of the doorway prompt | choice |
+|---|---|
+| as recorded | east 0.98 (away from the target) |
+| without the word "doorway" | west 0.68 |
+| without the neighbour list | east 1.00 |
+| options in reverse order | west 1.00 |
+| outcomes worded `closer` / `farther`, same numbers | west 1.00 |
+| plus "Your last moves: west, east, west, east." | east 1.00 (and broke the next state) |
+
+One state is not evidence, so both wordings went into the evaluation. The `closer/farther`
+wording became the demo default before it ran.
+
+**Pre-registered evaluation** (`bench/dungeon_eval.py` at commit `2d959dd`, seeds 0–7, every run
+reported). Raw data: `bench/results/dungeon_eval_20260926_163151.json`. The first invocation
+finished the two 3B setups, then ran out of XPU memory loading the 1.5B (the 3B was still
+referenced; fixed). A second invocation reused the finished 3B traces (the runs are
+deterministic) and ran the 1.5B and random setups with identical prompts.
+
+| setup (seeds 0–7) | escaped | died: enemy | died: starvation | key picked up | rooms seen | gems | hits | stuck ticks* | forward ms, median / p90 |
+|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|
+| 3B, `closer` wording (demo default) | 0 / 8 | 7 | 1 | 2 | 3.6 | 4.0 | 3.6 | 5.8 | 165 / 276 |
+| 3B, `steps` wording (first demo) | 0 / 8 | 3 | 5 | 1 | 2.9 | 3.0 | 1.5 | 63.4 | 153 / 257 |
+| 1.5B, `closer` wording | 0 / 8 | 7 | 1 | 1 | 3.0 | 3.0 | 3.8 | 19.4 | 82 / 135 |
+| random decisions (mock) | 0 / 8 | 1 | 7 | 0 | 1.5 | 2.0 | 0.5 | 54.4 | 0.4 / 0.8 |
+
+Means over the 8 runs, except counts. \* Ticks in streaks of 6+ ticks without getting closer to
+the same target (as in the survival comparison above). Latency: per-run medians, then the median
+over runs.
+
+- **No run escaped, and no agent even saw the exit room** (the room farthest from the start). Runs
+  ended after 64–117 ticks on average (3B `closer`: 84). The agents never got near the end game.
+- **The wording fixed the loops and exposed the enemies.** On the 3B, `closer/farther` cut stuck
+  ticks from 63.4 to 5.8 and starvation deaths from 5 to 1, but enemy deaths rose from 3 to 7.
+  An agent that moves with purpose meets the enemies more often; the gem field showed the same
+  with hazards (tiered vs flat control, above).
+- **Most hits were chosen.** In the 3B `closer` runs, 21 of 29 hits came from the agent choosing
+  the move labelled `ENEMY: -30 health` (median probability of the chosen move 0.999), usually
+  when every other move was labelled `farther`. 14 of the 29 hits happened while the strategy was
+  "flee the enemy". The 1.5B: 15 of 30 hits walking into the enemy, 12 standing next to one.
+- The 3B's strategy tier spent 32% of ticks on "flee the enemy", 29% on "explore", 27% on
+  "collect gems" and 6% on "get the key".
+- Tournaments never ran in any evaluated run: no agent knew more than 8 gems at once before it
+  died. The viewer's tournament display was checked only on a mock run with `--group-size 3`.
+- Random decisions mostly starved near the start (1.5 rooms seen, 54 stuck ticks).
+- The pre-registered replay (seed 0, 3B `closer`) dies to the enemy at tick 143, after 8 gems and
+  5 rooms, without the key.
+
+**Post-hoc change: enemy consequences in the move labels** (`enemy_aware`, after the results
+above). The traces showed where the hits came from. In the 3B `closer` runs, 21 of 29 hits came from choosing the move labelled
+`ENEMY: -30 health`. That label gives the damage but not that the agent stays where it is, so the
+only move toward the target looked like progress. The change: a move into an
+enemy reads `ENEMY: you stay here and lose 30 health`, a cell next to an enemy reads `next to an
+enemy: it can hit you for 30 health`, and flee targets are only cells the agent reaches before any
+visible enemy, by a path that never passes next to one. The earlier safe spots were ranked only by
+distance from the enemy, and one lay beyond it, so fleeing walked into the enemy (seed 0). To check
+the change is not fitted to seeds 0–7, it also ran on seeds 8–15, which had never been run.
+Decision rule, set after seeing its seeds 0–7 and before the comparison runs on seeds 8–15 had
+finished: make it the default only if it clearly beats the pre-registered wording on seeds 8–15.
+
+| 3B setup | seeds | escaped | died: enemy | died: starvation | key picked up | rooms seen | hits | stuck ticks | forward ms, median / p90 |
+|---|---|---:|---:|---:|---:|---:|---:|---:|---:|
+| pre-registered wording | 0–7 | 0 / 8 | 7 | 1 | 2 | 3.6 | 3.6 | 5.8 | 165 / 276 |
+| `enemy_aware` | 0–7 | 0 / 8 | 7 | 1 | 2 | 3.8 | 3.6 | 2.8 | 172 / 304 |
+| pre-registered wording | 8–15 (new) | 0 / 8 | 5 | 3 | 0 | 3.5 | 3.6 | 4.2 | 170 / 314 |
+| `enemy_aware` | 8–15 (new) | 0 / 8 | 6 | 2 | 0 | 3.5 | 3.4 | 3.2 | 171 / 309 |
+
+Raw data: `bench/results/dungeon_eval_20260926_163345.json` (it reuses the pre-registered 3B
+traces for seeds 0–7).
+
+- **Why the wording did not help: the move tier follows the target.** Across the 3B runs on
+  seeds 0–7, whenever some move led toward the target the model chose one 97% (pre-registered
+  wording) and 98% (`enemy_aware`) of the time. In the decisions where every such move led next to
+  or into an enemy and a safe move existed, it took the risky move every time (13 of 13, and 7 of
+  7). Spelling out the consequence did not change that. Staying alive would need the planning
+  tiers to choose targets away from the enemies, and they did not (for example, "get the key"
+  while the key's guard stood next to it).
+- A guess that the goal "flee the enemy" pulled the model toward options containing the word
+  "enemy" was **not supported**: while fleeing, it chose enemy-mentioning moves in 32–34% of mixed
+  decisions, below their 41–43% share of the open moves.
+- **Not adopted.** Outcomes were the same with and without it on both seed ranges, so the demo
+  default stays the pre-registered wording; `--enemy-aware` remains available. Eight runs per
+  cell is a small sample: a difference of one or two deaths is noise.
+- **Inferred, not tested:** better move labels alone will not fix this. The move tier follows the
+  first half of its question ("which move brings you closer to your current target?") and ignores
+  the second ("do not move into a wall or an enemy") when they conflict. The fix has to come from
+  the target and strategy tiers choosing targets away from the enemies, or from a bigger model.
+  The 3B is the largest model tested here; larger ones are planned for the NUC.

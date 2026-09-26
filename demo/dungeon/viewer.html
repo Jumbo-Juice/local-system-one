@@ -758,6 +758,7 @@ function fillFacts() {
     ["Decisions", `${s.model_decisions ?? "?"} by the model (${s.planning_decisions ?? "?"} planning, ${s.tournament_decisions ?? "?"} in tournaments), ${s.only_option_commits ?? "?"} only-option commits`],
     ["Forward pass per tick", `median ${Math.round(R.fwMedian)} ms, p90 ${Math.round(R.fwP90)} ms, max ${Math.round(R.fwMax)} ms`],
     ["Planning", `budget ${R.header.plan_budget ?? "unlimited"} per tick, tournament groups of ${R.header.group_size}`],
+    ["Move wording", R.header.brain ? `${R.header.brain.label_style}${R.header.brain.enemy_aware ? ", enemy-aware" : ""}` : "not recorded in this trace"],
     ["Captured", R.header.created],
   ];
   $("facts").replaceChildren(...rows.map(([k, v]) => {
