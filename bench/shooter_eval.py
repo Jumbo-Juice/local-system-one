@@ -57,8 +57,8 @@ change in between.
 Usage:
     python -m bench.shooter_eval                          # all setups, seeds 0-9
     python -m bench.shooter_eval --setups random bot-reference --seeds 0 1
-    python -m bench.shooter_eval --traces demo/output/shooter_eval_<time>   # resume
-Traces go to demo/output/shooter_eval_<time>/ (rebuild a page with demo.shooter.capture --rebuild).
+    python -m bench.shooter_eval --traces demo/output/shooter/eval_<time>   # resume
+Traces go to demo/output/shooter/eval_<time>/ (rebuild a page with demo.shooter.capture --rebuild).
 """
 
 from __future__ import annotations
@@ -144,7 +144,7 @@ def main() -> None:
                     help="write traces here and reuse finished runs already in it (resume); default: a new directory")
     args = ap.parse_args()
     stamp = time.strftime("%Y%m%d_%H%M%S")
-    traces = Path(args.traces) if args.traces else DEMO_OUT / f"shooter_eval_{stamp}"
+    traces = Path(args.traces) if args.traces else DEMO_OUT / "shooter" / f"eval_{stamp}"
     traces.mkdir(parents=True, exist_ok=True)
     runs, backends = [], {}
 
