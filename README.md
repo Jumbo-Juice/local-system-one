@@ -202,6 +202,11 @@ tick 48, with order averaging, its pre-registered setting). Also included:
 [`docs/shooter_replay_1.5b_seed1_escaped.html`](docs/shooter_replay_1.5b_seed1_escaped.html), the
 1.5B's first escaped seed, chosen after the results. Download them and open locally.
 
+Best run per model, chosen after the results (escaped, then kills, rooms cleared, minimum health) for
+sharing: [`docs/share/shooter_best_1.5b_seed12.html`](docs/share/shooter_best_1.5b_seed12.html) (escapes at
+tick 261, 14 kills) and [`docs/share/shooter_best_3b_seed5.html`](docs/share/shooter_best_3b_seed5.html)
+(escapes at tick 287, 15 kills). Both are single self-contained files.
+
 [`docs/shooter_quad.html`](docs/shooter_quad.html) plays four runs side by side, two 1.5B and two 3B
 picked at random on each load (Shuffle picks again), with each run's decisions drawn as a colour-coded
 graph: one colour per strategic goal, a marker each time the goal was re-checked or changed. The pool
