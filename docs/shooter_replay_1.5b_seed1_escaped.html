@@ -64,10 +64,24 @@
   .dec td, .dec th { padding: 2px 10px 2px 0; text-align: right; color: var(--muted); font-weight: 400; }
   .dec td:first-child, .dec th:first-child { text-align: left; color: var(--ink); }
   table { border-collapse: collapse; font-variant-numeric: tabular-nums; }
-  .facts { overflow-x: auto; }
-  .facts td, .facts th { text-align: left; padding: 4px 18px 4px 0; border-bottom: 1px solid var(--edge); vertical-align: top; }
-  .facts th { color: var(--muted); font-weight: 500; white-space: nowrap; }
-  ul.notes { margin: 0; padding-left: 20px; color: var(--muted); display: grid; gap: 4px; max-width: 90ch; }
+  /* About this run: outcome banner, facts in titled cards (one fact per row, explanation as a hint
+     under the value), notes grouped under short headings. Same layout in both demo viewers. */
+  .verdict { display: grid; gap: 2px; border-left: 4px solid var(--tone); padding: 4px 0 4px 14px; }
+  .verdict strong { font: 700 26px/1.15 var(--ui); letter-spacing: .02em; color: var(--tone); }
+  .verdict strong span { color: var(--ink); font-weight: 500; font-size: 20px; }
+  .verdict p { margin: 0; color: var(--muted); }
+  .cards { display: grid; gap: 12px; align-items: start; grid-template-columns: repeat(auto-fit, minmax(min(100%, 300px), 1fr)); }
+  .card { background: var(--ground); border: 1px solid var(--edge); border-radius: 8px; padding: 12px 14px; min-width: 0; }
+  h3 { font: 700 13px/1.2 var(--ui); letter-spacing: .12em; text-transform: uppercase; color: var(--muted); margin: 0 0 6px; }
+  .card dl { margin: 0; display: grid; grid-template-columns: max-content minmax(0, 1fr); }
+  .card dt, .card dd { padding: 7px 0; border-top: 1px solid var(--edge); }
+  .card dt:first-of-type, .card dd:first-of-type { border-top: 0; }
+  .card dt { color: var(--muted); padding-right: 16px; }
+  .card dd { margin: 0; color: var(--ink); font-weight: 600; font-variant-numeric: tabular-nums; }
+  .card dd small { display: block; margin-top: 2px; font: 400 13px/1.35 var(--ui); color: var(--muted); }
+  .card ul { margin: 0; padding-left: 18px; color: var(--muted); display: grid; gap: 6px; }
+  .card pre { margin: 6px 0 0; font: 12.5px/1.45 var(--mono); color: var(--ink); white-space: pre-wrap; overflow-wrap: anywhere;
+    background: #05070b; border-radius: 6px; padding: 8px 10px; }
   summary { cursor: pointer; color: var(--muted); }
   code { font-family: var(--mono); font-size: 13px; }
   @media (prefers-reduced-motion: reduce) { * { scroll-behavior: auto !important; } }
@@ -123,22 +137,32 @@
 
   <section aria-labelledby="about-h">
     <h2 id="about-h">About this run</h2>
-    <div class="facts"><table><tbody id="facts"></tbody></table></div>
-    <ul class="notes">
-      <li>Every decision on screen was made by the model while the run was captured. This page only replays the
-        recorded trace; it does not recompute or re-decide anything.</li>
-      <li>Probabilities are the model's next-token softmax over the option labels (averaged over two option orders when
-        order averaging is on). They are not calibrated.</li>
-      <li>Dimmed rooms are rooms the agent has not seen yet. You see the whole map; the agent does not.</li>
-      <li>Red bars across a doorway: the room is sealed until its enemies are dead. A red dashed line: a gunner aiming;
-        it fires at the end of that tick.</li>
-      <li>"Only option" means one choice was possible (for example holding fire while the gun reloads), so it was
-        committed without a model call.</li>
-      <li>Playback at 1× uses the recorded tick times. Ticks shorter than 50 ms (for example with the no-model
-        mock backend) are shown for 50 ms.</li>
-      <li>Record WebM works when this file is opened locally in Chrome or Edge. Convert with
-        <code>ffmpeg -i run.webm -c:v libx264 -pix_fmt yuv420p -crf 18 run.mp4</code>.</li>
-    </ul>
+    <!-- Keep this layout when editing: outcome banner (#verdict), facts as titled cards (#facts, built in
+         fillFacts), notes as titled cards below. One fact per row with a short value; any explanation goes
+         in the row's hint, not in a run-on "a · b (c)" value. Notes are short bullets grouped by topic. -->
+    <div class="verdict" id="verdict"></div>
+    <div class="cards" id="facts"></div>
+    <div class="cards">
+      <div class="card"><h3>Reading the map</h3><ul>
+        <li>Dimmed rooms: not seen by the agent yet. You see the whole map; the agent does not.</li>
+        <li>Red bars across a doorway: the room is sealed until its enemies are dead.</li>
+        <li>Red dashed line: a gunner is aiming. It fires at the end of that tick.</li>
+      </ul></div>
+      <div class="card"><h3>Reading the decisions</h3><ul>
+        <li>Every decision was made by the model while the run was captured. This page only replays the recorded
+          trace; it does not recompute or re-decide anything.</li>
+        <li>Probabilities are the model's next-token softmax over the option labels, averaged over two option orders
+          when order averaging is on. They are not calibrated.</li>
+        <li>"Only option": one choice was possible (for example holding fire while the gun reloads), so it was
+          committed without a model call.</li>
+      </ul></div>
+      <div class="card"><h3>Playback and video</h3><ul>
+        <li>1× plays at the recorded tick times. Ticks shorter than 50 ms (for example with the no-model mock backend)
+          are shown for 50 ms.</li>
+        <li>Record WebM works when this file is opened locally in Chrome or Edge. Convert it with:
+          <pre>ffmpeg -i run.webm -c:v libx264 -pix_fmt yuv420p -crf 18 run.mp4</pre></li>
+      </ul></div>
+    </div>
     <details><summary>Prompt template</summary><pre id="template"></pre></details>
   </section>
 </main>
@@ -1027,26 +1051,60 @@ function inspect(i) {
   }
 }
 
+function fillVerdict() {
+  const e = R.end, b = R.header.backend || {};
+  const [word, tone, detail] = !e ? ["Unfinished", "amber", "the trace has no end record"]
+    : e.outcome === "escaped" ? ["Escaped", "mint", `at tick ${e.tick}`]
+    : e.outcome === "died" ? ["Died", "red", `${e.cause ? "· killed by a " + e.cause + " " : ""}at tick ${e.tick}`]
+    : e.outcome === "timeout" ? ["Out of time", "amber", `stopped at tick ${e.tick}`]
+    : [e.outcome, "amber", `at tick ${e.tick}`];
+  const box = $("verdict"), strong = document.createElement("strong"), span = document.createElement("span"), p = document.createElement("p");
+  box.style.setProperty("--tone", `var(--${tone})`);
+  span.textContent = " " + detail; strong.append(word, span);
+  p.textContent = `${b.model || b.kind} on ${b.device || "?"}, ${b.dtype || "?"} · seed ${R.map.seed}`;
+  box.replaceChildren(strong, p);
+}
+
+// Facts as titled cards of [label, value, hint?] rows. Keep values short; explanations go in the hint.
 function fillFacts() {
-  const b = R.header.backend || {}, s = (R.end && R.end.summary) || {};
-  const acc = s.shots ? ` (${Math.round(100 * s.shots_on_target / s.shots)}% on target)` : "";
-  const rows = [
-    ["Model", `${b.model || b.kind} on ${b.device || "?"} (${b.dtype || "?"})`],
-    ["Outcome", R.end ? `${R.end.outcome}${R.end.cause ? " (killed by a " + R.end.cause + ")" : ""} at tick ${R.end.tick}` : "trace has no end record"],
-    ["Seed / map", `seed ${R.map.seed}: start in the ${R.map.rooms[R.map.start_room].name}, key in the ${R.map.rooms[R.map.key_room].name}, exit in the ${R.map.rooms[R.map.exit_room].name}`],
-    ["Key", s.key_tick != null ? `picked up at tick ${s.key_tick}` : "never picked up"],
-    ["Fighting", `${s.kills ?? "?"} kills · ${s.shots ?? "?"} shots${acc} · held fire in ${s.held_fire ?? "?"} of ${s.shoot_decisions ?? "?"} shoot decisions`],
-    ["Damage taken", `${s.hits ?? "?"} hits (${s.hits_gunner ?? "?"} bullets, ${s.hits_brute ?? "?"} brute) · ${s.avoidable_risky_moves ?? "?"} moves into danger when a safe move existed · ${s.potions_drunk ?? "?"} potions`],
-    ["Rooms", `${s.rooms_seen ?? "?"} of 9 seen, ${s.rooms_cleared ?? "?"} cleared`],
-    ["Stuck ticks", `${s.stuck_ticks ?? "?"} (ticks in streaks of 6+ without getting closer to the same target)`],
-    ["Decisions", `${s.model_decisions ?? "?"} by the model (${s.planning_decisions ?? "?"} planning), ${s.only_option_commits ?? "?"} only-option commits`],
-    ["Forward pass per tick", `median ${Math.round(R.fwMedian)} ms, p90 ${Math.round(R.fwP90)} ms, max ${Math.round(R.fwMax)} ms`],
-    ["Planning", `budget ${R.header.plan_budget ?? "unlimited"} per tick · order averaging ${R.header.order_debias ? "on (each decision read in 2 option orders)" : "off"}`],
-    ["Captured", R.header.created],
+  fillVerdict();
+  const s = (R.end && R.end.summary) || {}, m = R.map, v = (x) => x ?? "?";
+  const room = (k) => { const n = m.rooms[m[k]].name; return n[0].toUpperCase() + n.slice(1); };
+  const groups = [
+    ["Map", [["Seed", m.seed], ["Start", room("start_room")], ["Key room", room("key_room")], ["Exit", room("exit_room")]]],
+    ["Progress", [
+      ["Key", s.key_tick != null ? `picked up at tick ${s.key_tick}` : "never picked up"],
+      ["Rooms seen", `${v(s.rooms_seen)} of ${m.rooms.length}`],
+      ["Rooms cleared", v(s.rooms_cleared)],
+      ["Stuck ticks", v(s.stuck_ticks), "ticks in streaks of 6+ without getting closer to the same target"],
+    ]],
+    ["Combat", [
+      ["Kills", v(s.kills)],
+      ["Shots", v(s.shots), s.shots ? `${Math.round(100 * s.shots_on_target / s.shots)}% on target` : null],
+      ["Held fire", `${v(s.held_fire)} of ${v(s.shoot_decisions)}`, "shoot decisions"],
+      ["Hits taken", v(s.hits), `${v(s.hits_gunner)} from bullets, ${v(s.hits_brute)} from brutes`],
+      ["Risky moves", v(s.avoidable_risky_moves), "moves into danger when a safe move existed"],
+      ["Potions drunk", v(s.potions_drunk)],
+    ]],
+    ["Model", [
+      ["Model decisions", v(s.model_decisions), `${v(s.planning_decisions)} of them planning`],
+      ["Only-option commits", v(s.only_option_commits), "no model call needed"],
+      ["Forward pass", `${Math.round(R.fwMedian)} ms median`, `per tick; p90 ${Math.round(R.fwP90)} ms, max ${Math.round(R.fwMax)} ms`],
+      ["Planning budget", `${R.header.plan_budget ?? "unlimited"} per tick`],
+      ["Order averaging", R.header.order_debias ? "on" : "off", R.header.order_debias ? "each decision read in 2 option orders" : null],
+      ["Captured", String(R.header.created || "?").replace("T", " ")],
+    ]],
   ];
-  $("facts").replaceChildren(...rows.map(([k, v]) => {
-    const tr = document.createElement("tr"), th = document.createElement("th"), td = document.createElement("td");
-    th.textContent = k; td.textContent = v; tr.append(th, td); return tr;
+  $("facts").replaceChildren(...groups.map(([title, rows]) => {
+    const card = document.createElement("div"), h = document.createElement("h3"), dl = document.createElement("dl");
+    card.className = "card"; h.textContent = title;
+    for (const [k, val, hint] of rows) {
+      const dt = document.createElement("dt"), dd = document.createElement("dd");
+      dt.textContent = k; dd.textContent = String(val);
+      if (hint) { const sm = document.createElement("small"); sm.textContent = hint; dd.append(sm); }
+      dl.append(dt, dd);
+    }
+    card.append(h, dl); return card;
   }));
 }
 
