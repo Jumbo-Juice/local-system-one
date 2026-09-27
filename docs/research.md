@@ -722,7 +722,8 @@ Four dev runs are not evidence of a win rate; the evaluation below is.
 
 **Pre-registered evaluation** (`bench/shooter_eval.py` at commit `7951472`, seeds 0–9, every run
 reported). Raw data: `bench/results/shooter_eval_20260927_002315.json`; traces in
-`demo/output/shooter_eval_main/` (not committed; the runs are deterministic).
+`demo/output/` were pruned to the best run per setup (not committed; the runs are deterministic, so
+`python -m bench.shooter_eval` with the same seeds regenerates them).
 
 | setup (seeds 0–9) | escaped | died: gunner | died: brute | out of time | key picked up | rooms seen | rooms cleared | kills | hits taken | shots on target | held fire* | forward ms, median / p90 |
 |---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
