@@ -1,0 +1,580 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Shooter Four Runs</title>
+<style>
+  /* Same dark stage look as viewer.html. Built by `python -m demo.shooter.quad`, which fills #runs. */
+  :root {
+    color-scheme: dark;
+    --ground: #0b1017;
+    --panel: #151e2b;
+    --edge: #2c3a4f;
+    --ink: #eef3f8;
+    --muted: #b0bfcf;
+    --faint: #8193a8;
+    --mint: #7cf5c4;
+    --ui: Bahnschrift, "DIN Alternate", "Barlow Semi Condensed", "Roboto Condensed", "Arial Narrow", system-ui, sans-serif;
+    --mono: "Cascadia Mono", "Cascadia Code", Consolas, "SF Mono", Menlo, monospace;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; background: var(--ground); color: var(--ink); }
+  body { font: 14px/1.4 var(--ui); padding: 10px 16px 16px; }
+  .wrap { display: grid; gap: 8px; height: calc(100vh - 26px); min-height: 560px; grid-template-rows: auto auto 1fr; }
+  .bar { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 14px; }
+  h1 { font: 700 18px/1 var(--ui); letter-spacing: .16em; margin: 0 8px 0 0; white-space: nowrap; }
+  button, select { font: 600 14px/1 var(--ui); letter-spacing: .04em; color: var(--ink); background: var(--panel);
+    border: 1px solid var(--edge); border-radius: 7px; padding: 8px 12px; cursor: pointer; }
+  button:hover, select:hover { border-color: var(--mint); }
+  button:focus-visible, select:focus-visible, input:focus-visible { outline: 2px solid var(--mint); outline-offset: 2px; }
+  #play { min-width: 76px; }
+  .scrub { flex: 1 1 220px; display: flex; align-items: center; gap: 10px; min-width: 0; }
+  input[type="range"] { flex: 1; min-width: 0; accent-color: var(--mint); }
+  .readout { font: 13px/1 var(--mono); color: var(--muted); font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .legend { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 16px; color: var(--muted); font-size: 13px; }
+  .legend span { display: inline-flex; align-items: center; gap: 6px; white-space: nowrap; }
+  .sw { width: 22px; height: 12px; border-radius: 3px; display: inline-block; }
+  .sep { width: 1px; height: 18px; background: var(--edge); }
+  .legend svg { display: block; }
+  .grid { display: grid; gap: 8px; grid-template-columns: 1fr 1fr; grid-template-rows: 1fr 1fr; min-height: 0; }
+  canvas { display: block; width: 100%; height: 100%; min-height: 0; object-fit: contain; }
+  @media (max-width: 900px) {
+    .wrap { height: auto; }
+    .grid { grid-template-columns: 1fr; grid-template-rows: none; }
+    canvas { height: auto; aspect-ratio: 1300 / 680; }
+  }
+</style>
+</head>
+<body>
+<main class="wrap">
+  <div class="bar" aria-label="Playback">
+    <h1>SYSTEM ONE · SHOOTER · 4 RUNS</h1>
+    <button id="play" title="Play or pause (Space)">Play</button>
+    <button id="back" title="Previous tick (Left arrow)">◀</button>
+    <button id="fwd" title="Next tick (Right arrow)">▶</button>
+    <select id="speed" aria-label="Speed">
+      <option value="1">1 tick/s</option>
+      <option value="2">2 ticks/s</option>
+      <option value="4" selected>4 ticks/s</option>
+      <option value="8">8 ticks/s</option>
+      <option value="16">16 ticks/s</option>
+    </select>
+    <div class="scrub">
+      <input id="scrub" type="range" min="0" max="1000" step="0.01" value="0" aria-label="Tick">
+      <span class="readout" id="readout">tick 0</span>
+    </div>
+    <button id="shuffle" title="Pick four other runs (S)">Shuffle</button>
+  </div>
+  <div class="legend" id="legend" aria-label="Legend"></div>
+  <div class="grid" id="grid"></div>
+</main>
+
+<script id="runs" type="application/json"></script>
+<script>
+"use strict";
+const W = 1300, H = 680, HEAD = 48, CS = 22, MX = 12, MY = 56;
+const G = { x: 762, y: 162, w: 524 };                       // decision graph, right of the map
+const ROWS = {                                             // graph rows, y relative to G.y
+  marks: [0, 18], goal: [20, 84], target: [90, 106], tmarks: [108, 116],
+  conf: [136, 246], health: [272, 372], events: [392, 410], stuck: [414, 419], axis: 438,
+};
+const GH = 446;
+// One colour per strategic goal. Map objects share their goal's colour: the key is gold, the exit green, potions pink.
+const GOAL = [
+  { name: "EXPLORE", col: "#4da3ff" },
+  { name: "FIGHT", col: "#ff4d5e" },
+  { name: "GET THE KEY", col: "#ffc93c" },
+  { name: "GO TO EXIT", col: "#3ee089" },
+  { name: "DRINK POTION", col: "#ff7ad9" },
+];
+const NONE = "#5d6b80";
+const K = {
+  ground: "#0b1017", void: "#05070b", panel: "#151e2b", edge: "#2c3a4f", ink: "#eef3f8", muted: "#b0bfcf", faint: "#8193a8",
+  wall: "#141b26", wallTop: "#27344a", wallFace: "#0c1118", floor: "#34445c", floorLine: "#3f5170", corridor: "#2c3a4f",
+  jamb: "#d6ae6e", gunner: "#ff5a5a", brute: "#b387ff", ebullet: "#fff1a8", shot: "#dffcff", track: "#0a0f16", hit: "#ff3b3b",
+};
+const OUTCOME = { escaped: ["ESCAPED", "#3ee089"], died: ["DIED", "#ff4d5e"], timeout: ["OUT OF TIME", "#ffc93c"] };
+const UI = getComputedStyle(document.documentElement).getPropertyValue("--ui").trim();
+const MONO = getComputedStyle(document.documentElement).getPropertyValue("--mono").trim();
+const PULSE = 1.6;   // ticks a re-evaluation cue stays visible
+const $ = (id) => document.getElementById(id);
+const goalCol = (s) => (GOAL[s] || { col: NONE }).col;
+
+const POOL = JSON.parse($("runs").textContent || "[]");
+let tiles = [], N = 1, clock = 0, playing = false, speed = 4, lastFrame = null;
+
+// ---------------------------------------------------------------- helpers
+
+const lerp = (a, b, t) => a + (b - a) * t;
+const ease = (t) => t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2;
+const alpha = (hex, a) => hex + Math.round(Math.max(0, Math.min(1, a)) * 255).toString(16).padStart(2, "0");
+function rrect(g, x, y, w, h, r) {
+  g.beginPath(); g.moveTo(x + r, y); g.arcTo(x + w, y, x + w, y + h, r); g.arcTo(x + w, y + h, x, y + h, r);
+  g.arcTo(x, y + h, x, y, r); g.arcTo(x, y, x + w, y, r); g.closePath();
+}
+function text(g, s, x, y, col, size, weight = 400, align = "left", family = UI, track = 0) {
+  g.font = `${weight} ${size}px ${family}`; g.fillStyle = col; g.textAlign = align;
+  if ("letterSpacing" in g) g.letterSpacing = track + "px";
+  g.fillText(s, x, y);
+  if ("letterSpacing" in g) g.letterSpacing = "0px";
+}
+function tag(g, s, x, y, col) {  // a small label on a dark backing, readable over any colour
+  g.font = `700 11px ${UI}`; if ("letterSpacing" in g) g.letterSpacing = "1.2px";
+  const w = g.measureText(s).width;
+  if ("letterSpacing" in g) g.letterSpacing = "0px";
+  g.fillStyle = "rgba(5,7,11,0.78)"; rrect(g, x, y - 11, w + 10, 15, 3); g.fill();
+  text(g, s, x + 5, y, col, 11, 700, "left", UI, 1.2);
+}
+const cx = (x) => MX + x * CS + CS / 2, cy = (y) => MY + y * CS + CS / 2;
+
+// Decode one slimmed world: see world() in quad.py.
+function decode(w, kinds) {
+  const en = [], bl = [], po = [];
+  for (let k = 0; k < w[5].length; k += 4) en.push({ x: w[5][k], y: w[5][k + 1], hp: w[5][k + 2], awake: w[5][k + 3] & 1, aiming: w[5][k + 3] & 2, resting: w[5][k + 3] & 4, brute: kinds[k / 4] });
+  for (let k = 0; k < w[6].length; k += 5) bl.push({ x: w[6][k], y: w[6][k + 1], vx: w[6][k + 2], vy: w[6][k + 3], mine: w[6][k + 4] });
+  for (let k = 0; k < w[7].length; k += 2) po.push([w[7][k], w[7][k + 1]]);
+  return { ax: w[0], ay: w[1], hp: w[2], key: w[3], kills: w[4], en, bl, po, keyAt: w[8], seen: new Set(w[9]), cleared: new Set(w[10]), sealed: w[11] };
+}
+
+// ---------------------------------------------------------------- per-run preparation
+
+function prepare(run) {
+  const n = run.ticks.length;
+  run.n = n;
+  run.worlds = run.ticks.map((t) => decode(t.w, run.kinds));
+  run.worlds.push(decode(run.final, run.kinds));
+  // Strategy and target changes, computed once.
+  run.ticks.forEach((t, k) => {
+    const prev = k ? run.ticks[k - 1] : null;
+    t.sChanged = prev ? t.s !== prev.s : false;
+    t.tChanged = prev ? (t.tk !== prev.tk || String(t.tg) !== String(prev.tg)) : false;
+  });
+  const open = new Map();
+  for (const r of run.map.rooms) for (let y = r.y0; y < r.y0 + r.h; y++) for (let x = r.x0; x < r.x0 + r.w; x++) open.set(x + "," + y, "room");
+  for (const c of run.map.corridors) {
+    for (const [x, y] of c.cells) open.set(x + "," + y, "corridor");
+    for (const door of c.doors) for (const [x, y] of door) open.set(x + "," + y, "door");
+  }
+  run.roomDoors = new Map();
+  for (const c of run.map.corridors) c.rooms.forEach((rid, k) => {
+    if (!run.roomDoors.has(rid)) run.roomDoors.set(rid, []);
+    run.roomDoors.get(rid).push(...c.doors[k]);
+  });
+  run.base = drawBase(run.map, open);
+  return run;
+}
+
+function drawBase(map, kind) {
+  const off = document.createElement("canvas");
+  off.width = map.width * CS; off.height = map.height * CS;
+  const g = off.getContext("2d"), isOpen = (x, y) => kind.has(x + "," + y);
+  g.fillStyle = K.void; g.fillRect(0, 0, off.width, off.height);
+  for (let y = 0; y < map.height; y++) for (let x = 0; x < map.width; x++) {
+    const px = x * CS, py = y * CS, k = kind.get(x + "," + y);
+    if (!k) {
+      let near = false;
+      for (let dy = -1; dy <= 1 && !near; dy++) for (let dx = -1; dx <= 1; dx++) if (isOpen(x + dx, y + dy)) { near = true; break; }
+      if (!near) continue;
+      g.fillStyle = K.wall; g.fillRect(px, py, CS, CS);
+      g.fillStyle = K.wallTop; g.fillRect(px, py, CS, 3);
+      if (isOpen(x, y + 1)) { g.fillStyle = K.wallFace; g.fillRect(px, py + CS - 6, CS, 6); }
+      continue;
+    }
+    g.fillStyle = k === "corridor" ? K.corridor : K.floor; g.fillRect(px, py, CS, CS);
+    g.strokeStyle = K.floorLine; g.lineWidth = 1; g.strokeRect(px + 0.5, py + 0.5, CS - 1, CS - 1);
+  }
+  g.fillStyle = K.jamb;
+  for (const c of map.corridors) for (const door of c.doors) {
+    const xs = door.map((d) => d[0]), ys = door.map((d) => d[1]);
+    if (new Set(xs).size === 1) { const x = xs[0] * CS, y0 = Math.min(...ys) * CS, y1 = (Math.max(...ys) + 1) * CS; g.fillRect(x, y0 - 3, CS, 3); g.fillRect(x, y1, CS, 3); }
+    else { const y = ys[0] * CS, x0 = Math.min(...xs) * CS, x1 = (Math.max(...xs) + 1) * CS; g.fillRect(x0 - 3, y, 3, CS); g.fillRect(x1, y, 3, CS); }
+  }
+  return off;
+}
+
+// The whole-run decision graph, drawn once per run for the shared tick scale N.
+function drawGraph(run) {
+  const off = document.createElement("canvas"); off.width = G.w; off.height = GH;
+  const g = off.getContext("2d"), bw = G.w / N, X = (k) => k * bw, T = run.ticks;
+  const band = (r, colOf) => { for (let k = 0; k < run.n; k++) { g.fillStyle = colOf(T[k]); g.fillRect(X(k), r[0], bw + 0.6, r[1] - r[0]); } };
+  // track backgrounds
+  for (const r of [ROWS.goal, ROWS.target, ROWS.conf, ROWS.health]) { g.fillStyle = K.track; g.fillRect(0, r[0], G.w, r[1] - r[0]); }
+  band(ROWS.goal, (t) => goalCol(t.s));
+  band(ROWS.target, (t) => alpha(goalCol(t.tk), 0.85));
+  // goal boundaries: a dark seam so a change reads as an edge
+  for (let k = 1; k < run.n; k++) if (T[k].sChanged) { g.fillStyle = K.void; g.fillRect(X(k) - 1, ROWS.goal[0], 2, ROWS.goal[1] - ROWS.goal[0]); }
+  // re-evaluation marks above the goal band
+  for (let k = 0; k < run.n; k++) {
+    const t = T[k], x = X(k) + bw / 2;
+    if (!t.sd) continue;
+    if (t.sChanged) {      // goal changed: a triangle in the new goal's colour
+      g.fillStyle = goalCol(t.s); g.beginPath(); g.moveTo(x - 6, 1); g.lineTo(x + 6, 1); g.lineTo(x, 16); g.closePath(); g.fill();
+      g.strokeStyle = K.void; g.lineWidth = 1; g.stroke();
+    } else if (t.sd === 1) { // asked the model, kept the goal: a white tick
+      g.fillStyle = K.ink; g.fillRect(x - 1, 7, 2, 11);
+    } else {                // forced (a single possible goal, no model call): a small hollow dot
+      g.strokeStyle = K.faint; g.lineWidth = 1.5; g.beginPath(); g.arc(x, 12, 3, 0, 7); g.stroke();
+    }
+  }
+  for (let k = 0; k < run.n; k++) {  // target re-picks below the target band
+    const t = T[k];
+    if (t.td !== 1) continue;
+    g.fillStyle = t.tChanged ? K.ink : alpha(K.ink, 0.35); g.fillRect(X(k) + bw / 2 - 0.75, ROWS.tmarks[0], 1.5, ROWS.tmarks[1] - ROWS.tmarks[0]);
+  }
+  // move confidence: bars from the bottom in the goal colour; short bars = the model was unsure
+  const ch = ROWS.conf[1] - ROWS.conf[0];
+  for (let k = 0; k < run.n; k++) {
+    const p = T[k].mp, h = ch * p;
+    g.fillStyle = alpha(goalCol(T[k].s), p < 0.6 ? 0.95 : 0.5);
+    g.fillRect(X(k), ROWS.conf[1] - h, bw + 0.6, h);
+  }
+  g.setLineDash([3, 4]); g.strokeStyle = alpha(K.ink, 0.35); g.lineWidth = 1;
+  g.beginPath(); g.moveTo(0, ROWS.conf[1] - ch / 2); g.lineTo(G.w, ROWS.conf[1] - ch / 2); g.stroke(); g.setLineDash([]);
+  // health: filled area, hits as red drops
+  const hh = ROWS.health[1] - ROWS.health[0], hy = (hp) => ROWS.health[1] - hh * hp / run.rules.health;
+  g.beginPath(); g.moveTo(0, ROWS.health[1]);
+  for (let k = 0; k <= run.n; k++) g.lineTo(X(k), hy(run.worlds[k].hp));
+  g.lineTo(X(run.n), ROWS.health[1]); g.closePath(); g.fillStyle = alpha(K.ink, 0.16); g.fill();
+  g.beginPath(); for (let k = 0; k <= run.n; k++) g[k ? "lineTo" : "moveTo"](X(k), hy(run.worlds[k].hp));
+  g.strokeStyle = K.ink; g.lineWidth = 1.8; g.stroke();
+  // events row: kills (white), hits (red), key (gold), potion (pink)
+  const ey = (ROWS.events[0] + ROWS.events[1]) / 2;
+  for (let k = 0; k < run.n; k++) for (const ev of T[k].ev) {
+    const x = X(k) + bw / 2;
+    if (ev[0] === "hit") { g.fillStyle = K.hit; g.fillRect(x - 1, ROWS.health[0], 2, hh); g.beginPath(); g.arc(x, ey, 4, 0, 7); g.fill(); }
+    else if (ev[0] === "kill") { g.fillStyle = K.ink; g.beginPath(); g.arc(x, ey, 2.6, 0, 7); g.fill(); }
+    else if (ev[0] === "key") { g.fillStyle = GOAL[2].col; g.beginPath(); g.moveTo(x, ey - 7); g.lineTo(x + 6, ey); g.lineTo(x, ey + 7); g.lineTo(x - 6, ey); g.closePath(); g.fill(); }
+    else if (ev[0] === "potion") { g.fillStyle = GOAL[4].col; g.beginPath(); g.arc(x, ey, 4.5, 0, 7); g.fill(); }
+  }
+  for (let k = 0; k < run.n; k++) if (T[k].st >= 6) { g.fillStyle = K.hit; g.fillRect(X(k), ROWS.stuck[0], bw + 0.6, ROWS.stuck[1] - ROWS.stuck[0]); }
+  // end of run
+  const [, oc] = OUTCOME[run.end.outcome] || ["", K.faint];
+  g.fillStyle = oc; g.fillRect(Math.min(G.w - 3, X(run.n)), ROWS.goal[0], 3, ROWS.events[1] - ROWS.goal[0]);
+  // minimal overlaid legends
+  tag(g, "GOAL", 4, ROWS.goal[0] + 15, K.ink);
+  tag(g, "TARGET", 4, ROWS.target[1] - 2, K.ink);
+  tag(g, "MOVE CONFIDENCE", 4, ROWS.conf[0] + 15, K.ink);
+  tag(g, "HEALTH", 4, ROWS.health[0] + 15, K.ink);
+  text(g, "tick 0", 0, ROWS.axis, K.faint, 12, 400, "left", MONO);
+  text(g, `tick ${N}`, G.w, ROWS.axis, K.faint, 12, 400, "right", MONO);
+  return off;
+}
+
+// ---------------------------------------------------------------- per-frame drawing
+
+function lastDecision(run, i, key) {  // index of the latest tick <= i where ticks[k][key] is set
+  for (let k = i; k >= 0 && k > i - 3; k--) if (run.ticks[k][key]) return k;
+  return -1;
+}
+
+function drawTile(tile) {
+  const g = tile.ctx, run = tile.run, now = performance.now() / 1000;
+  const done = clock >= run.n, i = done ? run.n - 1 : Math.floor(clock), f = done ? 1 : clock - i;
+  const t = run.ticks[i], w0 = run.worlds[i], w1 = run.worlds[i + 1], e = ease(f);
+  const w = f < 0.85 ? w0 : w1, gc = goalCol(t.s);
+  // strategy re-evaluation within the last PULSE ticks
+  const sk = lastDecision(run, i, "sd"), sAge = sk >= 0 ? clock - (sk + 0.1) : 99;
+  const sT = sk >= 0 ? run.ticks[sk] : null, pulse = !done && sAge >= 0 && sAge < PULSE ? 1 - sAge / PULSE : 0;
+  const changePulse = pulse && sT.sChanged ? pulse : 0;
+
+  g.setTransform(1, 0, 0, 1, 0, 0);
+  g.fillStyle = K.ground; g.fillRect(0, 0, W, H);
+
+  // ---- header
+  const chip = run.model === "3B" ? ["3B", K.void, K.ink] : ["1.5B", K.ink, "#33445c"];
+  g.fillStyle = chip[2]; rrect(g, 12, 10, 64, 28, 6); g.fill();
+  text(g, chip[0], 44, 32, chip[1], 20, 800, "center");
+  text(g, `${run.name} · seed ${run.seed}`, 88, 31, K.muted, 16, 500);
+  const hx = 762;
+  text(g, "HP", hx, 31, K.faint, 13, 700, "left", UI, 1.5);
+  rrect(g, hx + 26, 18, 190, 14, 7); g.fillStyle = K.track; g.fill();
+  const hpNow = lerp(w0.hp, w1.hp, f > 0.85 ? 1 : 0), hurt = done ? 0 : hitAge(run, i, f);
+  if (hpNow > 0) { rrect(g, hx + 26, 18, Math.max(14, 190 * hpNow / run.rules.health), 14, 7); g.fillStyle = hurt > 0 ? K.hit : K.ink; g.fill(); }
+  keyGlyph(g, hx + 250, 25, 11, w.key ? GOAL[2].col : alpha(K.faint, 0.45));
+  text(g, `${w.kills}`, hx + 330, 32, K.ink, 20, 700, "right", MONO);
+  text(g, "KILLS", hx + 336, 31, K.faint, 13, 700, "left", UI, 1.5);
+  text(g, `T${String(Math.min(i + (f > 0.85 ? 1 : 0), run.n)).padStart(3, "0")}`, W - 14, 32, K.muted, 18, 700, "right", MONO);
+
+  // ---- map
+  g.drawImage(run.base, MX, MY);
+  const map = run.map;
+  if (w.sealed != null) for (const [x, y] of run.roomDoors.get(w.sealed) || []) {
+    g.fillStyle = "rgba(255,59,59,0.28)"; g.fillRect(MX + x * CS, MY + y * CS, CS, CS);
+    g.strokeStyle = K.hit; g.lineWidth = 2.5;
+    for (let k = 1; k <= 3; k++) { g.beginPath(); g.moveTo(MX + x * CS + k * CS / 4, MY + y * CS + 2); g.lineTo(MX + x * CS + k * CS / 4, MY + (y + 1) * CS - 2); g.stroke(); }
+  }
+  // path so far, coloured by the goal held at each tick
+  g.lineCap = "round"; g.lineJoin = "round";
+  for (let k = 1; k <= i; k++) {
+    const a = run.worlds[k - 1], b = run.worlds[k];
+    if (a.ax === b.ax && a.ay === b.ay) continue;
+    g.strokeStyle = alpha(goalCol(run.ticks[k - 1].s), k > i - 12 ? 0.8 : 0.32); g.lineWidth = k > i - 12 ? 4 : 3;
+    g.beginPath(); g.moveTo(cx(a.ax), cy(a.ay)); g.lineTo(cx(b.ax), cy(b.ay)); g.stroke();
+  }
+  g.lineCap = "butt";
+  // items
+  for (const [x, y] of w.po) potionGlyph(g, cx(x), cy(y));
+  if (w.keyAt) keyGlyph(g, cx(w.keyAt[0]), cy(w.keyAt[1]), 11, GOAL[2].col);
+  exitGlyph(g, cx(map.exit[0]), cy(map.exit[1]), w.key);
+  // agent position (interpolated)
+  const ax = lerp(cx(w0.ax), cx(w1.ax), e), ay = lerp(cy(w0.ay), cy(w1.ay), e);
+  // enemies
+  const killed = new Set();
+  for (const ev of t.ev) if (ev[0] === "kill") killed.add(ev[1] + "," + ev[2]);
+  w0.en.forEach((en, k) => {
+    if (en.hp <= 0) return;
+    const nx = w1.en[k] || en, ex = lerp(cx(en.x), cx(nx.x), e), ey = lerp(cy(en.y), cy(nx.y), e);
+    if (nx.hp <= 0 && f > 0.35) { burst(g, cx(en.x), cy(en.y), (f - 0.35) / 0.65, K.ink); return; }
+    if (!en.brute && en.aiming) {
+      g.setLineDash([4, 4]); g.strokeStyle = alpha(K.gunner, 0.8); g.lineWidth = 2;
+      g.beginPath(); g.moveTo(ex, ey); g.lineTo(ax, ay); g.stroke(); g.setLineDash([]);
+    }
+    enemyGlyph(g, ex, ey, en, now);
+  });
+  // bullets
+  for (const b of w0.bl) {
+    const px = cx(b.x + b.vx * f), py = cy(b.y + b.vy * f);
+    if (px < MX || py < MY || px > MX + map.width * CS || py > MY + map.height * CS) continue;
+    if (b.mine) { g.strokeStyle = K.shot; g.lineWidth = 3; g.beginPath(); g.moveTo(px - b.vx * 7, py - b.vy * 7); g.lineTo(px, py); g.stroke(); }
+    else { g.save(); g.shadowColor = K.ebullet; g.shadowBlur = 10; g.fillStyle = K.ebullet; g.beginPath(); g.arc(px, py, 5, 0, 7); g.fill(); g.restore(); }
+  }
+  for (const ev of t.ev) if (ev[0] === "shot" && f < 0.6) {   // this tick's shot: a fading tracer
+    g.strokeStyle = alpha(K.shot, 1 - f / 0.6); g.lineWidth = 2.5;
+    g.beginPath(); g.moveTo(cx(ev[1]), cy(ev[2])); g.lineTo(cx(ev[3]), cy(ev[4])); g.stroke();
+  }
+  // fog over rooms the agent has not seen
+  for (const r of map.rooms) if (!w.seen.has(r.id)) {
+    g.fillStyle = "rgba(5,7,11,0.66)"; g.fillRect(MX + (r.x0 - 1) * CS, MY + (r.y0 - 1) * CS, (r.w + 2) * CS, (r.h + 2) * CS);
+  }
+  for (const c of map.corridors) if (!w.seen.has(c.rooms[0]) && !w.seen.has(c.rooms[1])) {
+    g.fillStyle = "rgba(5,7,11,0.66)";
+    for (const [x, y] of c.cells.concat(...c.doors)) g.fillRect(MX + x * CS, MY + y * CS, CS, CS);
+  }
+  // target: crosshair in the colour of the goal the target serves
+  if (t.tg && !done) {
+    const tc = goalCol(t.tk), tx = cx(t.tg[0]), ty = cy(t.tg[1]);
+    g.setLineDash([6, 6]); g.strokeStyle = alpha(tc, 0.75); g.lineWidth = 2;
+    g.beginPath(); g.moveTo(ax, ay); g.lineTo(tx, ty); g.stroke(); g.setLineDash([]);
+    const tk = lastDecision(run, i, "td"), tAge = tk >= 0 ? clock - (tk + 0.1) : 99;
+    const lock = tk >= 0 && run.ticks[tk].td === 1 && tAge >= 0 && tAge < 1 ? 1 - tAge : 0;   // a new pick closes in
+    const pr = 10 + 3 * Math.sin(now * 5) + 26 * lock;
+    g.strokeStyle = tc; g.lineWidth = 2.5 + 2 * lock; g.beginPath(); g.arc(tx, ty, pr, 0, 7); g.stroke();
+    for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) { g.beginPath(); g.moveTo(tx + dx * (pr - 4), ty + dy * (pr - 4)); g.lineTo(tx + dx * (pr + 5), ty + dy * (pr + 5)); g.stroke(); }
+  }
+  // re-evaluation ring from the agent: white = goal re-checked and kept, goal colour = goal changed, dashed = forced
+  if (pulse) {
+    const r0 = 12 + 70 * (1 - pulse), col = sT.sChanged ? goalCol(sT.s) : sT.sd === 2 ? K.faint : K.ink;
+    if (sT.sd === 2 && !sT.sChanged) g.setLineDash([5, 5]);
+    g.strokeStyle = alpha(col, pulse); g.lineWidth = sT.sChanged ? 6 : 3;
+    g.beginPath(); g.arc(ax, ay, r0, 0, 7); g.stroke();
+    if (sT.sChanged) { g.lineWidth = 3; g.beginPath(); g.arc(ax, ay, r0 * 0.6, 0, 7); g.stroke(); }
+    g.setLineDash([]);
+  }
+  agentGlyph(g, ax, ay, gc, hurt);
+  if (hurt > 0) { g.fillStyle = `rgba(255,59,59,${0.22 * hurt})`; g.fillRect(MX, MY, map.width * CS, map.height * CS); }
+  if (done) outcomeOverlay(g, run);
+
+  // ---- current goal block
+  const bx = G.x, by = HEAD + 8, bwid = G.w, bh = 92;
+  const bc = done ? (OUTCOME[run.end.outcome] || ["", K.faint])[1] : gc;
+  g.fillStyle = alpha(bc, 0.16 + 0.3 * changePulse); rrect(g, bx, by, bwid, bh, 8); g.fill();
+  g.fillStyle = bc; rrect(g, bx, by, 10, bh, 4); g.fill();
+  const [ow, oc] = OUTCOME[run.end.outcome] || [String(run.end.outcome).toUpperCase(), K.faint];
+  text(g, done ? ow : (GOAL[t.s] || { name: "NO GOAL YET" }).name, bx + 24, by + 44, done ? oc : gc, 34, 800, "left", UI, 2);
+  // what the target serves, as a thinner bar underneath
+  if (!done) {
+    g.fillStyle = alpha(goalCol(t.tk), 0.9); rrect(g, bx + 24, by + 60, 150, 10, 5); g.fill();
+    text(g, "TARGET", bx + 184, by + 70, K.muted, 12, 700, "left", UI, 1.4);
+    if (t.tk !== t.s && t.tk >= 0) text(g, "≠ GOAL", bx + 244, by + 70, K.ink, 12, 800, "left", UI, 1.4);
+  }
+  // re-evaluation icon: a spinning arrow while the goal is being re-checked, old → new chips on a change
+  if (pulse) {
+    const ix = bx + bwid - 34, iy = by + 34, a0 = now * 7;
+    g.strokeStyle = alpha(sT.sChanged ? gc : K.ink, 0.4 + 0.6 * pulse); g.lineWidth = 4;
+    g.beginPath(); g.arc(ix, iy, 15, a0, a0 + 4.6); g.stroke();
+    const ex = ix + Math.cos(a0 + 4.6) * 15, ey = iy + Math.sin(a0 + 4.6) * 15, ta = a0 + 4.6 + Math.PI / 2;
+    g.fillStyle = g.strokeStyle; g.beginPath();
+    g.moveTo(ex + Math.cos(ta) * 7, ey + Math.sin(ta) * 7); g.lineTo(ex + Math.cos(ta + 2.3) * 7, ey + Math.sin(ta + 2.3) * 7); g.lineTo(ex + Math.cos(ta - 2.3) * 7, ey + Math.sin(ta - 2.3) * 7); g.fill();
+    if (sT.sChanged && sk > 0) {
+      const old = goalCol(run.ticks[sk - 1].s);
+      g.fillStyle = old; rrect(g, ix - 50, by + 62, 22, 14, 3); g.fill();
+      text(g, "→", ix - 14, by + 75, K.ink, 16, 800, "center");
+      g.fillStyle = gc; rrect(g, ix, by + 62, 22, 14, 3); g.fill();
+    }
+  }
+
+  // ---- decision graph
+  g.drawImage(tile.graph, G.x, G.y);
+  const px = G.x + G.w * Math.min(clock, run.n) / N;
+  g.fillStyle = "rgba(11,16,23,0.72)"; g.fillRect(px, G.y, G.x + G.w - px, ROWS.stuck[1] + 2);   // dim the future
+  g.fillStyle = K.ink; g.fillRect(px - 1, G.y - 2, 2, ROWS.stuck[1] + 6);
+  if (!done) {  // live dots on the playhead
+    g.fillStyle = gc; g.beginPath(); g.arc(px, G.y + ROWS.conf[1] - (ROWS.conf[1] - ROWS.conf[0]) * t.mp, 4.5, 0, 7); g.fill();
+    g.fillStyle = K.ink; g.beginPath(); g.arc(px, G.y + ROWS.health[1] - (ROWS.health[1] - ROWS.health[0]) * hpNow / run.rules.health, 4.5, 0, 7); g.fill();
+  }
+
+  // ---- frame in the goal colour; it flares when the goal changes
+  g.save();
+  if (changePulse) { g.shadowColor = gc; g.shadowBlur = 30 * changePulse; }
+  g.strokeStyle = done ? (OUTCOME[run.end.outcome] || ["", K.faint])[1] : alpha(gc, 0.55 + 0.45 * changePulse);
+  g.lineWidth = 4 + 6 * changePulse; rrect(g, 2, 2, W - 4, H - 4, 10); g.stroke();
+  g.restore();
+}
+
+function hitAge(run, i, f) {
+  let best = 0;
+  for (let k = Math.max(0, i - 2); k <= i; k++) {
+    const age = i + f - (k + 0.85);
+    if (age >= 0 && age < 1.2 && run.ticks[k].ev.some((e) => e[0] === "hit")) best = Math.max(best, 1 - age / 1.2);
+  }
+  return best;
+}
+
+function outcomeOverlay(g, run) {
+  const [word, col] = OUTCOME[run.end.outcome] || [String(run.end.outcome).toUpperCase(), K.faint];
+  const mw = run.map.width * CS, bx = MX + mw / 2 - 250, by = MY + run.map.height * CS / 2 - 70;
+  g.fillStyle = "rgba(5,7,11,0.88)"; rrect(g, bx, by, 500, 140, 12); g.fill();
+  g.strokeStyle = col; g.lineWidth = 3; g.stroke();
+  text(g, word, bx + 250, by + 66, col, 50, 800, "center", UI, 4);
+  const s = run.end;
+  text(g, `tick ${s.tick} · ${s.kills ?? "?"} kills · ${s.hits ?? "?"} hits taken${s.cause ? " · " + s.cause : ""}`, bx + 250, by + 106, K.ink, 19, 500, "center");
+}
+
+// ---------------------------------------------------------------- glyphs
+
+function keyGlyph(g, x, y, s, col) {
+  g.strokeStyle = col; g.lineWidth = 3; g.lineCap = "round";
+  g.beginPath(); g.arc(x - s * 0.45, y, s * 0.38, 0, 7); g.stroke();
+  g.beginPath(); g.moveTo(x - s * 0.08, y); g.lineTo(x + s * 0.9, y); g.moveTo(x + s * 0.55, y); g.lineTo(x + s * 0.55, y + s * 0.4);
+  g.moveTo(x + s * 0.85, y); g.lineTo(x + s * 0.85, y + s * 0.35); g.stroke(); g.lineCap = "butt";
+}
+function potionGlyph(g, x, y) {
+  g.fillStyle = GOAL[4].col;
+  g.beginPath(); g.arc(x, y + 3, 6.5, 0, 7); g.fill(); g.fillRect(x - 2.5, y - 8, 5, 7);
+}
+function exitGlyph(g, x, y, lit) {
+  const col = GOAL[3].col, s = 10;
+  g.save(); if (lit) { g.shadowColor = col; g.shadowBlur = 20; }
+  for (let k = 0; k < 4; k++) { g.fillStyle = alpha(col, lit ? 0.5 + 0.16 * k : 0.25 + 0.1 * k); g.fillRect(x - s + k * s * 0.25, y - s + k * s * 0.5, s * 2 - k * s * 0.25, s * 0.42); }
+  g.restore();
+}
+function enemyGlyph(g, x, y, en, t) {
+  const col = en.brute ? K.brute : K.gunner, dim = !en.awake || en.resting;
+  g.save(); g.globalAlpha = dim ? 0.55 : 1;
+  if (en.aiming) { g.shadowColor = K.gunner; g.shadowBlur = 16; }
+  g.fillStyle = col; g.beginPath();
+  if (en.brute) {
+    for (let k = 0; k < 12; k++) { const a = k / 12 * Math.PI * 2 + (dim ? 0 : t * 2), r = k % 2 ? 6.5 : 9.5; g.lineTo(x + Math.cos(a) * r, y + Math.sin(a) * r); }
+    g.closePath();
+  } else g.arc(x, y, 8, 0, 7);
+  g.fill(); g.restore();
+  g.lineWidth = 2; g.strokeStyle = K.void; g.stroke();
+}
+function agentGlyph(g, x, y, col, hurt) {
+  g.save(); g.shadowColor = hurt > 0 ? K.hit : col; g.shadowBlur = 18 + 16 * hurt;
+  g.beginPath(); g.arc(x, y, 9, 0, 7); g.fillStyle = hurt > 0.3 ? K.hit : K.ink; g.fill(); g.restore();
+  g.lineWidth = 4; g.strokeStyle = col; g.beginPath(); g.arc(x, y, 11, 0, 7); g.stroke();
+}
+function burst(g, x, y, k, col) {
+  if (k < 0 || k > 1) return;
+  g.strokeStyle = alpha(col, 1 - k); g.lineWidth = 2.5; g.beginPath(); g.arc(x, y, 5 + 16 * k, 0, 7); g.stroke();
+}
+
+// ---------------------------------------------------------------- choosing runs
+
+function pick(size, k) {
+  const pool = POOL.filter((r) => r.model === size).map((r) => r.name);
+  for (let j = pool.length - 1; j > 0; j--) { const m = Math.floor(Math.random() * (j + 1)); [pool[j], pool[m]] = [pool[m], pool[j]]; }
+  return pool.slice(0, k);
+}
+
+function choose(names) {
+  const byName = new Map(POOL.map((r) => [r.name, r]));
+  const runs = names.map((n) => byName.get(n)).filter(Boolean).map((r) => r.n ? r : prepare(r));
+  N = Math.max(...runs.map((r) => r.n));
+  const grid = $("grid");
+  grid.replaceChildren();
+  tiles = runs.map((run) => {
+    const c = document.createElement("canvas");
+    c.width = W; c.height = H;
+    c.setAttribute("role", "img");
+    c.setAttribute("aria-label", `${run.model} run ${run.name}, seed ${run.seed}: map replay and decision graph`);
+    grid.append(c);
+    return { run, canvas: c, ctx: c.getContext("2d"), graph: drawGraph(run) };
+  });
+  clock = 0; playing = false; updateButtons();
+  $("scrub").max = String(N);
+  history.replaceState(null, "", "#runs=" + names.map(encodeURIComponent).join(","));
+}
+
+function shuffle() { choose([...pick("1.5B", 2), ...pick("3B", 2)]); }
+
+function fromHash() {
+  const m = /^#runs=([^&]+)(?:&t=([\d.]+))?$/.exec(location.hash);
+  if (!m) return false;
+  const names = m[1].split(",").map(decodeURIComponent);
+  const known = new Set(POOL.map((r) => r.name));
+  if (names.length !== 4 || !names.every((n) => known.has(n))) return false;
+  choose(names);
+  if (m[2]) clock = Math.min(N, parseFloat(m[2]));
+  return true;
+}
+
+// ---------------------------------------------------------------- legend (HTML, drawn once)
+
+function legend() {
+  const box = $("legend"), parts = [];
+  for (const gl of GOAL) parts.push(`<span><i class="sw" style="background:${gl.col}"></i>${gl.name.toLowerCase()}</span>`);
+  parts.push('<i class="sep"></i>');
+  parts.push(`<span><svg width="14" height="14" viewBox="0 0 14 14"><path d="M1 1h12L7 13z" fill="${GOAL[3].col}"/></svg>goal changed</span>`);
+  parts.push(`<span><svg width="6" height="14" viewBox="0 0 6 14"><rect x="2" y="2" width="2" height="11" fill="${K.ink}"/></svg>goal re-checked, kept</span>`);
+  parts.push(`<span><svg width="10" height="14" viewBox="0 0 10 14"><circle cx="5" cy="7" r="3" fill="none" stroke="${K.faint}" stroke-width="1.5"/></svg>forced (one option)</span>`);
+  parts.push('<i class="sep"></i>');
+  parts.push(`<span><svg width="10" height="10"><circle cx="5" cy="5" r="3" fill="${K.ink}"/></svg>kill</span>`);
+  parts.push(`<span><svg width="10" height="10"><circle cx="5" cy="5" r="4" fill="${K.hit}"/></svg>hit</span>`);
+  parts.push(`<span><svg width="10" height="10"><circle cx="5" cy="5" r="4" fill="${K.gunner}"/></svg>gunner</span>`);
+  parts.push(`<span><svg width="10" height="10"><circle cx="5" cy="5" r="4" fill="${K.brute}"/></svg>brute</span>`);
+  box.innerHTML = parts.join("");
+}
+
+// ---------------------------------------------------------------- loop and controls
+
+function updateButtons() { $("play").textContent = playing ? "Pause" : "Play"; $("play").setAttribute("aria-pressed", String(playing)); }
+
+function frame(ts) {
+  if (lastFrame != null && playing) {
+    clock += Math.min(0.25, (ts - lastFrame) / 1000) * speed;
+    if (clock >= N) { clock = N; playing = false; updateButtons(); }
+  }
+  lastFrame = ts;
+  for (const tile of tiles) drawTile(tile);
+  $("scrub").value = String(clock);
+  $("readout").textContent = `tick ${Math.floor(clock)} / ${N}`;
+  requestAnimationFrame(frame);
+}
+
+function step(d) { playing = false; updateButtons(); clock = Math.max(0, Math.min(N, Math.floor(clock + 1e-6) + d + 0.9)); if (clock > N) clock = N; }
+
+$("play").onclick = () => { if (clock >= N) clock = 0; playing = !playing; updateButtons(); };
+$("back").onclick = () => step(-1);
+$("fwd").onclick = () => step(1);
+$("speed").onchange = (e) => { speed = parseFloat(e.target.value); };
+$("scrub").oninput = (e) => { clock = parseFloat(e.target.value); };
+$("shuffle").onclick = shuffle;
+document.addEventListener("keydown", (e) => {
+  if (e.target.closest("input, select, textarea")) return;
+  if (e.code === "Space") { e.preventDefault(); $("play").click(); }
+  else if (e.code === "ArrowLeft") step(-1);
+  else if (e.code === "ArrowRight") step(1);
+  else if (e.code === "Home") clock = 0;
+  else if (e.code === "KeyS") shuffle();
+});
+
+legend();
+if (POOL.length) { if (!fromHash()) shuffle(); }
+else $("grid").textContent = "No runs embedded. Build this page with: python -m demo.shooter.quad";
+requestAnimationFrame(frame);
+</script>
+</body>
+</html>
