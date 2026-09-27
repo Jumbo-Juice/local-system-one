@@ -73,6 +73,8 @@ machine are in [Benchmarks](#benchmarks) below.
 
 ## Setup
 
+All commands without the explanations: [RUN-GUIDE.md](RUN-GUIDE.md).
+
 ```bash
 py -3.13 -m venv .venv
 ```
@@ -450,7 +452,7 @@ system_one/backends/   base.py (interface), hf.py (PyTorch + transformers), mock
 demo/                  world.py (grid world), brain.py (tiers + state text), sim.py (window / headless)
 demo/dungeon/          world.py (rules), brain.py (tiers, text, runner), capture.py (trace + replay), viewer.html
 demo/shooter/          world.py (rules), bots.py (non-model reference bots), brain.py (tiers, heads, runner),
-                        capture.py (trace + replay), viewer.html
+                        capture.py (trace + replay), viewer.html, quad.py + quad.html (four-run page)
 bench/                 bench.py, model_eval.py, tournament_compare.py, demo_compare.py, dungeon_eval.py,
                         shooter_calibration.py, shooter_eval.py, results/
 config/                default.toml (1.5B, default), lenovo-3b.toml (3B alternative),
