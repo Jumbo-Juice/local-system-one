@@ -188,7 +188,7 @@ Two variants, one per model:
 ```
 
 The first runs Qwen2.5-1.5B, the second Qwen2.5-3B. Each writes `trace.jsonl` and `replay.html`
-to `demo/output/shooter_<model>_seed0/`; open `replay.html` in a browser (no server, no network).
+to `demo/output/shooter/<model>_seed0/`; open `replay.html` in a browser (no server, no network).
 `--config config/mock.toml` runs without a model, `--rebuild <trace.jsonl>` rebuilds the page.
 
 Recorded runs, the pre-registered showcase (seed 0, whatever the outcome): [`docs/shooter_replay_1.5b_seed0.html`](docs/shooter_replay_1.5b_seed0.html)
@@ -272,7 +272,7 @@ Capture a run with the real model, then open the replay:
 .venv/Scripts/python -m demo.dungeon.capture --config config/lenovo-3b.toml --seed 0
 ```
 
-This writes `trace.jsonl` and `replay.html` to `demo/output/dungeon_<model>_seed0/`. Open
+This writes `trace.jsonl` and `replay.html` to `demo/output/dungeon/<model>_seed0/`. Open
 `replay.html` in a browser. It needs no server and no network. `--config config/mock.toml` runs
 without a model (random decisions). `--rebuild <trace.jsonl>` rebuilds the page from an existing
 trace.

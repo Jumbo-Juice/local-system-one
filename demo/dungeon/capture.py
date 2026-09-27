@@ -2,7 +2,7 @@
 
     python -m demo.dungeon.capture --config config/lenovo-3b.toml --seed 0
     python -m demo.dungeon.capture --config config/mock.toml --seed 0     # no model: random choices
-    python -m demo.dungeon.capture --rebuild demo/output/<run>/trace.jsonl  # new viewer, same trace
+    python -m demo.dungeon.capture --rebuild demo/output/dungeon/<run>/trace.jsonl  # new viewer, same trace
 
 Writes <out>/trace.jsonl (a header line, one line per tick, an end line) and <out>/replay.html:
 demo/dungeon/viewer.html with the trace embedded, so it opens from disk with no server. The
@@ -76,7 +76,7 @@ def main() -> None:
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--config", default=None)
     ap.add_argument("--seed", type=int, default=0)
-    ap.add_argument("--out", default=None, help="output directory (default: demo/output/dungeon_<model>_seed<N>)")
+    ap.add_argument("--out", default=None, help="output directory (default: demo/output/dungeon/<model>_seed<N>)")
     ap.add_argument("--max-ticks", type=int, default=None, help="override the tick limit (default 400)")
     ap.add_argument("--group-size", type=int, default=8)
     ap.add_argument("--plan-budget", type=int, default=1, help="planning decisions per tick; -1 = unlimited")
@@ -101,7 +101,7 @@ def main() -> None:
                       verbose=not args.quiet, label_style=args.label_style,
                       enemy_aware=args.enemy_aware)
     model = str(engine.backend.info().get("model", engine.backend.info().get("kind"))).split("/")[-1]
-    out = Path(args.out) if args.out else OUT / f"dungeon_{model}_seed{args.seed}"
+    out = Path(args.out) if args.out else OUT / "dungeon" / f"{model}_seed{args.seed}"
     out.mkdir(parents=True, exist_ok=True)
     text = to_jsonl(records)
     (out / "trace.jsonl").write_text(text, encoding="utf-8")

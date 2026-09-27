@@ -22,7 +22,7 @@ Added after the pre-registered results (post hoc; docs/research.md -> Dungeon):
 Usage:
     python -m bench.dungeon_eval                       # all setups, seeds 0-7
     python -m bench.dungeon_eval --setups random --seeds 0 1
-Traces go to demo/output/eval_<time>/ (rebuild a replay page with demo.dungeon.capture --rebuild).
+Traces go to demo/output/dungeon/eval_<time>/ (rebuild a replay page with demo.dungeon.capture --rebuild).
 """
 
 from __future__ import annotations
@@ -93,7 +93,7 @@ def main() -> None:
                     help="write traces here and reuse finished runs already in it (resume); default: a new directory")
     args = ap.parse_args()
     stamp = time.strftime("%Y%m%d_%H%M%S")
-    traces = Path(args.traces) if args.traces else DEMO_OUT / f"eval_{stamp}"
+    traces = Path(args.traces) if args.traces else DEMO_OUT / "dungeon" / f"eval_{stamp}"
     traces.mkdir(parents=True, exist_ok=True)
     runs, backends = [], {}
 
