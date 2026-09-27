@@ -49,17 +49,36 @@ print(r.choice, r.probs, r.outside_mass)          # one forward pass
 results = engine.decide_batch([...])               # many decisions, one forward pass
 ```
 
-## Run it on the Lenovo
+## System requirements
 
-Tested on Windows 11, Intel Core Ultra 7 256V, Arc 140V iGPU, 16 GB RAM, Python 3.13.
+- Python 3.11+ (the config loader uses `tomllib`).
+- No GPU is required. CPU works (`device = "cpu"` in the config); a GPU just makes it faster.
+- Model size is the main hardware constraint. Pick a model that fits your GPU/shared memory (or
+  RAM, for CPU), then start from the matching config. Weight size (bfloat16) is the floor — the
+  KV-cache and activations add more on top, growing with `max_batch` and prompt length.
+
+| Available GPU / shared memory | Recommended model | Config to start from |
+|---|---|---|
+| CPU only | Qwen2.5-0.5B-Instruct (1.0 GB weights) | `config/default.toml`, set `device = "cpu"`, lower `max_batch` |
+| ~4–6 GB | Qwen2.5-0.5B or 1.5B-Instruct | `config/default.toml` (lower `max_batch` if it runs out of memory) |
+| ~8 GB (e.g. a laptop iGPU) | Qwen2.5-1.5B-Instruct (3.1 GB weights) — the default | `config/default.toml` |
+| ~8 GB, trading speed for accuracy | Qwen2.5-3B-Instruct (6.2 GB weights; Qwen Research licence, non-commercial) | `config/lenovo-3b.toml` (lower `max_batch` if it runs out of memory) |
+| ≥16 GB (discrete GPU) | Qwen2.5-7B-Instruct (~15 GB weights) or larger | `config/nuc.example.toml` → copy to `config/nuc.toml` |
+
+Any decoder-only Hugging Face chat model works — `system_one check` verifies at runtime that its
+option labels tokenise to single tokens after the prefill and fails with a clear error if not.
+This table only covers the models actually tried; see [`docs/research.md`](docs/research.md) →
+Observed → Model selection for how the default was chosen. Concrete numbers for one specific
+machine are in [Benchmarks](#benchmarks) below.
+
+## Setup
 
 ```bash
 py -3.13 -m venv .venv
 ```
 
-```bash
-.venv/Scripts/python -m pip install torch --index-url https://download.pytorch.org/whl/xpu
-```
+Install the PyTorch build for your hardware first (see `requirements.txt` for the Intel XPU /
+NVIDIA CUDA / CPU-only index URLs), then the rest of the dependencies:
 
 ```bash
 .venv/Scripts/python -m pip install -r requirements.txt
@@ -130,7 +149,8 @@ target, tournament groups) per tick, next to its move. The rest wait for later t
 tick latency nearly constant. `-1` runs a whole tournament round per tick, which is how the
 comparison below was measured.
 
-Most responsive setup on the Lenovo, one agent with the 3B model:
+The most responsive setup measured (see [Benchmarks](#benchmarks) for the hardware), one agent
+with the 3B model:
 
 ```bash
 .venv/Scripts/python -m demo.sim --config config/lenovo-3b.toml --agents 1
@@ -140,11 +160,11 @@ That runs at ~5 ticks/s: ~137 ms for a move-only tick and ~230 ms when a plannin
 rides along. Over 2 × 80 ticks the median was 194–195 ms, p90 236–238 ms and max 265–266 ms.
 Without the budget, planning ticks took 550–880 ms.
 
-`prefix_cache = true` (on in the Lenovo configs) reuses the keys/values of prompt prefixes that
-repeat across ticks, which saves ~9–10% here. A 3B pass costs ~80 ms even for 8 tokens on this
-GPU, so reuse cannot go much further. Prompt orders that reuse more (`prompt_order =
-"question_first"` or `"options_first"`) were up to 21% faster but hurt accuracy, and the agent
-played badly. Details: `docs/research.md` → Observed → Prefix caching.
+`prefix_cache = true` (on by default in the bundled configs) reuses the keys/values of prompt
+prefixes that repeat across ticks, which saves ~9–10% here. A 3B pass costs ~80 ms even for 8
+tokens on the reference GPU (see Benchmarks), so reuse cannot go much further. Prompt orders that
+reuse more (`prompt_order = "question_first"` or `"options_first"`) were up to 21% faster but hurt
+accuracy, and the agent played badly. Details: `docs/research.md` → Observed → Prefix caching.
 
 ### The shooter demo: the dungeon redone, one agent, recorded and replayed
 
@@ -290,7 +310,8 @@ decisions to JSONL and renders a video from them [S4]. We do the same, but rende
 - One self-contained HTML file (canvas and plain JavaScript). There are no dependencies, no
   server and no build step, and the page opens from disk.
 - The replay shows the exact recorded decisions and latencies. It can play at the recorded speed
-  (~5 ticks/s with the 3B on this iGPU) or faster, pause on any decision, and scrub.
+  (~5 ticks/s with the 3B on the reference iGPU; see Benchmarks) or faster, pause on any
+  decision, and scrub.
 - The video export records the same canvas, so there is no second renderer to keep in sync.
 - Rejected: a live browser mode (it needs a server; the tkinter demo remains for live runs), and
   rendering MP4 frames in Python (a second renderer, and an image library we do not have).
@@ -302,7 +323,8 @@ first run):
 .venv/Scripts/python -m bench.dungeon_eval
 ```
 
-Results on the Lenovo (Observed; seeds 0–7; `bench/results/dungeon_eval_20260926_163151.json`):
+Results on the reference machine (Observed; see [Benchmarks](#benchmarks) for the hardware;
+seeds 0–7; `bench/results/dungeon_eval_20260926_163151.json`):
 
 | setup | escaped | died: enemy | died: starvation | key picked up | rooms seen | stuck ticks | forward ms/tick (median) |
 |---|---:|---:|---:|---:|---:|---:|---:|
@@ -392,15 +414,16 @@ Reproduce:
 .venv/Scripts/python -m bench.demo_compare
 ```
 
-## Switch model and runtime (NUC 12)
+## Switch model or runtime
 
 Only the config changes. There are no code changes.
 
-1. Install the PyTorch build for the NUC's hardware (see `requirements.txt`: the `xpu` index for
+1. Install the PyTorch build for your hardware (see `requirements.txt`: the `xpu` index for
    Intel Arc/Iris, a CUDA index such as `cu128` for NVIDIA (check pytorch.org for the current
    one), `cpu` otherwise), then `pip install -r requirements.txt`.
-2. Copy `config/nuc.example.toml` to `config/nuc.toml`. Set `model` (any decoder-only Hugging Face
-   chat model), `device` (`auto`, `cuda`, `xpu` or `cpu`), `dtype` and `max_batch`.
+2. Copy `config/nuc.example.toml` (a larger-hardware example) to `config/nuc.toml`. Set `model`
+   (any decoder-only Hugging Face chat model — see [System requirements](#system-requirements)),
+   `device` (`auto`, `cuda`, `xpu` or `cpu`), `dtype` and `max_batch`.
 3. Select it per command with `--config config/nuc.toml`, or for the whole shell with the
    environment variable `SYSTEM_ONE_CONFIG=config/nuc.toml`.
 4. Verify it: `python -m system_one --config config/nuc.toml check`. This checks full-vocabulary
@@ -424,7 +447,8 @@ demo/shooter/          world.py (rules), bots.py (non-model reference bots), bra
                         capture.py (trace + replay), viewer.html
 bench/                 bench.py, model_eval.py, tournament_compare.py, demo_compare.py, dungeon_eval.py,
                         shooter_calibration.py, shooter_eval.py, results/
-config/                default.toml (Lenovo), lenovo-3b.toml, nuc.example.toml, mock.toml
+config/                default.toml (1.5B, default), lenovo-3b.toml (3B alternative),
+                        nuc.example.toml (larger-hardware example, 7B), mock.toml (no model)
 docs/                  research.md (sources + Observed results), machine.md
 tests/                 pytest suite (mock tests always; `model` tests when weights are cached)
 ```
@@ -434,8 +458,8 @@ tests/                 pytest suite (mock tests always; `model` tests when weigh
 - **Not calibrated.** Probabilities are softmax values renormalised over the allowed tokens.
   On a 58-item check, Qwen3-1.7B averaged 0.99 confidence at 57% accuracy, and the chosen 1.5B
   0.77 at 66%. Do not branch on them as if they were calibrated.
-- **Small models make poor goal decisions.** No model that fits this machine met our accuracy
-  rule. All fail rule-based goal selection (30–40%). The 1.5B strongly prefers "find food" and
+- **Small models make poor goal decisions.** No model tried (see System requirements) met our
+  accuracy rule. All fail rule-based goal selection (30–40%). The 1.5B strongly prefers "find food" and
   is also sensitive to option order. S1 describes this limitation: one forward pass cannot
   derive goals. Tiered goals structure the problem; they do not make the model smarter.
 - **Accuracy falls fast with many options in one decision** (1.5B: 47% at 40 options, 17% at 80).
@@ -445,9 +469,9 @@ tests/                 pytest suite (mock tests always; `model` tests when weigh
 - **Probability resolution**: with a bf16 LM head, close options can tie exactly (logits are
   rounded to ~0.125 steps). The default config computes the head in float32 (`head_dtype`,
   +0.9 GB); the benchmark tables above were measured with the bf16 head.
-- **Batching gains are small on this iGPU** (≤1.8×). Long prompts in large batches were slower
-  than sequential. bf16 batching changes probabilities by up to ~0.07 versus sequential and can
-  flip near-ties. float32 is exact but ~7× slower on this GPU.
+- **Batching gains are small on the reference iGPU** (≤1.8×; see Benchmarks). Long prompts in
+  large batches were slower than sequential. bf16 batching changes probabilities by up to ~0.07
+  versus sequential and can flip near-ties. float32 is exact but ~7× slower there.
 - **Latency is not constant**: it grows with total prompt tokens in the batch. A demo tick that
   also re-plans (long target lists) takes 2–3× longer than an action-only tick. The first forward
   pass in a new process takes 1.5–4 s on the XPU (kernel compilation). The demo and benchmarks
