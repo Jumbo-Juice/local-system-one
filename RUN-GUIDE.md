@@ -199,4 +199,5 @@ Flags: `--agents N`, `--seed N`, `--gems N`, `--food N`, `--plan-budget N`, `--n
 | captured runs | `demo/output/<demo>/<run>/` (git-ignored) |
 | kept runs overview | `demo/output/README.md` |
 | committed replay pages | `docs/shooter_replay_*.html`, `docs/dungeon_replay_seed0.html`, `docs/shooter_quad.html` |
+| shareable best runs | `docs/share/shooter_best_*.html` (copies of a kept run's `replay.html`; outside the quad pool) |
 | benchmark results | `bench/results/` |
