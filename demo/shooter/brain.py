@@ -30,7 +30,7 @@ from collections import Counter
 from system_one.goals import ONLY_OPTION, GoalStack, Tier, step_all
 
 from ..brain import _steps, base_move
-from .bots import fighting, frontier, threat_cells
+from .bots import brute_reach, fight_cells, fighting, frontier, threat_cells
 from .world import DIRS, MOVES, STEP, Cell, Dungeon
 
 STANDING_ORDER = ("Find the key, then leave through the exit alive. Rooms lock you in until their enemies are dead: "
@@ -167,11 +167,10 @@ class ShooterBrain:
         return (lines, near) if lines and near >= 3 else None
 
     def firing_spots(self, n: int = 5) -> list[tuple[Cell, int, int, float]]:
-        """Up to ``n`` firing spots in the fight's room, the quickest to reach first:
-        (cell, steps, enemies in line, nearest enemy distance)."""
-        room = self.d.rooms[self._foes[0].home]
+        """Up to ``n`` firing spots in the fight's room, its doorways or the corridors out of it, the
+        quickest to reach first: (cell, steps, enemies in line, nearest enemy distance)."""
         cand = []
-        for c in room.cells:
+        for c in sorted(fight_cells(self.d, self._foes[0].home)):
             spot = self._firing_spot(c) if c in self._dist else None
             if spot:
                 cand.append((self._dist[c], -spot[1], c, spot))
@@ -203,8 +202,9 @@ class ShooterBrain:
         return []
 
     def _brute_next_to(self, c: Cell) -> bool:
-        return any(e.kind == "brute" and e.awake and e.timer == 0 and abs(c[0] - e.pos[0]) + abs(c[1] - e.pos[1]) == 1
-                   for e in self.d.living())
+        """A brute the agent has seen would hit it on ``c`` this tick (a sleeping one too, if ``c``
+        is inside its room: stepping in wakes it)."""
+        return any(c in brute_reach(self.d, e) for e in self.d.living() if e.home in self.d.seen)
 
     def move_options(self) -> list[str]:
         """Each move labelled with its outcome. The model still chooses.
@@ -247,7 +247,7 @@ class ShooterBrain:
                 else:
                     notes.append("no safe route to the target")
             elif target is not None and c == target:
-                notes.append("reach the target")
+                notes.append("on the target" if move == "stay" else "reach the target")
             if not risky:
                 notes.insert(0, "safe")
             out.append(f"{move} ({'; '.join(notes)})")
@@ -317,7 +317,12 @@ class ShooterBrain:
             state = ("AIMING at you: fires this tick" if e.aiming else
                      "resting" if e.kind == "brute" and e.timer else "awake" if e.awake else "asleep")
             parts.append(f"{self._enemy_name(e)} {_offset(e.pos[0] - x, y - e.pos[1])} ({e.hp} health, {state})")
-        where = " in this room" if self._foes else " in sight"
+        where = " in sight"
+        if self._foes:
+            home = self._foes[0].home
+            here = d.room_at(d.pos)
+            where = " in this room" if (here is not None and here.id == home) or d.sealed == home else \
+                f" in the {d.rooms[home].name}"
         return f"Enemies{where}: " + "; ".join(parts) + "."
 
     def _bullets_line(self) -> str:
@@ -548,9 +553,16 @@ def summarise(records: list[dict], d: Dungeon) -> dict:
     shots = sum(1 for _, e in events if e["kind"] == "shot")
     hits_scored = sum(1 for _, e in events if e["kind"] in ("enemy_hit",))
     hits = [e for _, e in events if e["kind"] == "hit"]
+    # hits on a tick whose chosen move was labelled safe: each one is a label that was wrong
+    safe_hits = 0
+    for r in records:
+        mv = next((x for x in r["decisions"] if x["tier"] == "move"), None)
+        if mv and not _risky(mv["options"][mv["choice"]]):
+            safe_hits += sum(1 for e in r["events"] if e["kind"] == "hit")
     return {
         "outcome": d.outcome, "cause": d.cause, "ticks": len(records),
         "hits": len(hits), "hits_gunner": sum(e["by"] == "gunner" for e in hits), "hits_brute": sum(e["by"] == "brute" for e in hits),
+        "hits_after_safe_move": safe_hits,
         "shots": shots, "shots_on_target": hits_scored, "kills": d.kills,
         "shoot_decisions": len(shoots), "held_fire": sum(1 for x in shoots if x["options"][x["choice"]] == HOLD),
         "move_decisions": len(moves), "avoidable_risky_moves": len(avoidable),
