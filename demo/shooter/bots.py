@@ -22,17 +22,49 @@ def shot_options(d: Dungeon) -> list[int]:
 
 
 def fighting(d: Dungeon) -> list:
-    """Awake enemies in the room the agent is in (or sealed in), or that can see it."""
+    """Awake enemies of the room the agent is in (or sealed in). Otherwise, in a corridor, the awake
+    enemies of the room it leads to (the one with the nearest such enemy): brutes that guard a
+    doorway from inside their room block the way without the agent ever being inside it (found
+    after the evaluation: 1.5B, seed 3, 389 stuck ticks in the corridor, never offered a fight).
+    By position, not line of sight: with line of sight the bot flip-flopped between two cells."""
     room = d.inside(d.pos) or d.room_at(d.pos)
-    return [e for e in d.living() if e.awake and ((room is not None and e.home == room.id) or d.sealed == e.home)]
+    here = [e for e in d.living() if e.awake and ((room is not None and e.home == room.id) or d.sealed == e.home)]
+    if here:
+        return here
+    near = [e for e in d.living() if e.awake and e.home in d.seen and d.pos in fight_cells(d, e.home)]
+    if not near:
+        return []
+    home = min(near, key=lambda e: (math.dist(d.pos, e.pos), e.id)).home
+    return [e for e in near if e.home == home]
+
+
+def fight_cells(d: Dungeon, rid: int) -> set[Cell]:
+    """Where the agent may stand to fight room ``rid``'s enemies: the room, its doorways, and the
+    corridors out of it (so that a doorway guarded from inside can be shot through)."""
+    out = set(d.rooms[rid].cells)
+    for cor in d.corridors:
+        if rid in cor.rooms:
+            out.update(cor.cells, *cor.doors)
+    return out
+
+
+def brute_reach(d: Dungeon, e) -> set[Cell]:
+    """Cells where brute ``e`` hits the agent at the end of this tick: next to it, unless it is
+    resting. A sleeping brute counts only inside its room, because stepping in wakes the room before
+    enemies act (found after the evaluation: all 4 hits taken after a move labelled safe)."""
+    if e.kind != "brute" or e.timer > 0:
+        return set()
+    near = {(e.pos[0] + dx, e.pos[1] + dy) for dx, dy in DIRS.values()}
+    return near if e.awake else {c for c in near if c in d.rooms[e.home]}
 
 
 def threat_cells(d: Dungeon) -> set[Cell]:
-    """Cells an enemy can hurt next tick: bullet paths, and cells next to an active brute."""
+    """Cells an enemy can hurt next tick: bullet paths, and cells a brute can hit (see brute_reach)."""
     out = set(d.danger())
     for e in d.living():
-        if e.kind == "brute" and e.awake and e.timer == 0:
-            out |= {(e.pos[0] + dx, e.pos[1] + dy) for dx, dy in DIRS.values()} | {e.pos}
+        reach = brute_reach(d, e)
+        if reach:
+            out |= reach | {e.pos}
     return out
 
 
@@ -74,9 +106,8 @@ def reference(d: Dungeon, see_threats: bool = True) -> tuple[str, int | None]:
     foes = fighting(d)
     goal: Cell | None = None
     if foes:
-        room = d.rooms[foes[0].home]
         spots = []
-        for c in room.cells:
+        for c in fight_cells(d, foes[0].home):
             if c in threat or c not in dist or d.enemy_at(c):
                 continue
             near = min(math.dist(c, e.pos) for e in foes)
