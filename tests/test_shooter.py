@@ -331,6 +331,70 @@ def test_brute_neighbourhood_is_labelled():
     assert "next to a brute: -20 health" in opt
 
 
+def doorway(d):
+    """(room, its middle doorway cell m, the step d into the room) of the first corridor."""
+    cor = d.corridors[0]
+    room, m = d.rooms[cor.rooms[1]], cor.doors[1][1]
+    step = next((dx, dy) for dx, dy in ((1, 0), (-1, 0), (0, 1), (0, -1)) if (m[0] + dx, m[1] + dy) in room)
+    return room, m, step
+
+
+def test_sleeping_brute_counts_when_the_move_enters_its_room():
+    """Stepping in wakes the room before enemies act, so the brute hits at once (the four hits taken
+    after a move labelled safe in the evaluation)."""
+    d = quiet()
+    room, m, (dx, dy) = doorway(d)
+    e, _ = place_enemy(d, kind="brute", room=room.id, awake=False)
+    e.pos = (m[0] + 2 * dx, m[1] + 2 * dy)  # two cells in from the doorway
+    d.pos = m
+    d.seen.add(room.id)
+    d._known = None
+    b = ShooterBrain(d)
+    move = next(n for n, (sx, sy) in (("move east", (1, 0)), ("move west", (-1, 0)), ("move south", (0, 1)),
+                                       ("move north", (0, -1))) if (sx, sy) == (dx, dy))
+    opt = next(o for o in b.move_options() if o.startswith(move))
+    assert "next to a brute: -20 health" in opt and "safe" not in opt
+    ev = d.step(move)
+    assert any(x["kind"] == "hit" and x["by"] == "brute" for x in ev)  # the label was right
+    d2 = quiet()
+    room2, m2, _ = doorway(d2)
+    e2, _ = place_enemy(d2, kind="brute", room=room2.id, awake=False)
+    e2.pos = (m2[0] + 2 * dx, m2[1] + 2 * dy)
+    assert m2 not in bots.threat_cells(d2)  # from the doorway a sleeping brute cannot reach
+
+
+def test_stay_on_the_target_in_a_bullet_path_reads_on_the_target():
+    d, e, room = fight()
+    b = ShooterBrain(d)
+    x, y = d.pos
+    d.bullets = [Bullet(9, "enemy", float(x), float(y - 2), 0.0, 1.5, 15)]
+    b.refresh()
+    b.stack.apply(b.stack.tier("strategy"), "fight the enemies here", 0)
+    b.stack.apply(b.stack.tier("target"), f"firing spot at ({x},{y}), where you stand: clear shot at 1 of 1 enemy", 0)
+    stay = b.move_options()[-1]
+    assert stay == "stay (BULLET: -15 health; on the target)"
+
+
+def test_brutes_guarding_a_doorway_can_be_fought_from_outside():
+    """Found after the evaluation (1.5B, seed 3): awake brutes just inside a doorway, the agent in
+    the corridor, and no fight on offer for 389 ticks."""
+    d = quiet()
+    room, m, (dx, dy) = doorway(d)
+    e, _ = place_enemy(d, kind="brute", room=room.id, awake=True)
+    e.pos = (m[0] + 2 * dx, m[1] + 2 * dy)
+    d.pos = (m[0] - dx, m[1] - dy)  # just outside the doorway, three cells from the brute
+    assert d.inside(d.pos) is None or d.inside(d.pos).id != room.id
+    assert bots.fighting(d) == []  # a room the agent has not seen
+    d.seen.add(room.id)
+    d._known = None
+    assert bots.fighting(d) == [e] and d.pos in bots.fight_cells(d, room.id)
+    b = ShooterBrain(d)
+    assert "fight the enemies here" in b.goal_options()
+    spots = b.target_options("fight the enemies here")
+    assert any("where you stand" in s for s in spots)
+    assert f"Enemies in the {room.name}: brute #{e.id}" in b.move_state()
+
+
 def test_waypoint_follows_the_route_not_the_bearing():
     d = quiet()
     b = ShooterBrain(d)

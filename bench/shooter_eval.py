@@ -33,6 +33,27 @@ Replication result (bench/results/shooter_eval_20260927_005732.json): escaped 1.
 3b-listed 7/10. By the rule the 3B demo now reads options in the listed order
 ([shooter] order_debias = false in config/lenovo-3b.toml); the setups above are unchanged.
 
+Post-hoc fixes, found in the traces of both runs above, and a check fixed before running it.
+The fixes change what the model reads, so the demo is no longer the version evaluated above:
+  1. A risky stay on the target read "reach the target"; it now reads "on the target".
+  2. A sleeping brute did not count as a threat, but stepping into its room wakes it before
+     enemies act: all 4 hits taken after a move labelled safe were such steps. It now counts
+     (labels, "closer" routes, firing spots) when the move enters its room (bots.brute_reach).
+  3. Awake enemies of a room counted only while the agent was inside it or its doorway. Brutes
+     that guarded a doorway from inside left the agent in the corridor with no fight on offer
+     (1.5b seed 3: 389 stuck ticks). In a corridor out of a seen room with awake enemies, the
+     agent now fights them, from firing spots in the room, its doorways or its corridors.
+  The same functions drive the bots. While making the fixes they were run on dev seeds 1000-1059
+  (where fix 3 first made the reference bot flip-flop, then fight rooms it had not seen; both
+  corrected) and on seeds 0-29: reference bot 60/60 and 30/30 before and after the fixes.
+Check: seeds 30-39 (never run with any model or bot; seeds 20-29 were used by the bots above),
+setups 1.5b and 3b-listed (the two demos as configured) plus bot-reference and bot-nododge; every
+run reported as above, plus hits_after_safe_move (a wrong "safe" label; expected 0 from brutes).
+The fixes stay whatever the result, because they correct what the text tells the model; the
+escapes are reported next to the 14/20 each demo had on seeds 0-19 before the fixes, with no
+change in between.
+    python -m bench.shooter_eval --setups 1.5b 3b-listed bot-reference bot-nododge --seeds 30 31 32 33 34 35 36 37 38 39
+
 Usage:
     python -m bench.shooter_eval                          # all setups, seeds 0-9
     python -m bench.shooter_eval --setups random bot-reference --seeds 0 1
@@ -106,6 +127,8 @@ def aggregate(runs: list[dict]) -> dict:
             "shots_on_target_share": round(sum(x["shots_on_target"] for x in s) / shots, 3) if shots else None,
             "held_fire_share": round(sum(x["held_fire"] for x in s) / max(1, sum(x["shoot_decisions"] for x in s)), 3),
             "avoidable_risky_moves_mean": mean("avoidable_risky_moves"),
+            "hits_after_safe_move": (sum(x["hits_after_safe_move"] for x in s)
+                                     if all("hits_after_safe_move" in x for x in s) else None),
             "stuck_ticks_mean": mean("stuck_ticks"), "stuck_ticks_max": max(x["stuck_ticks"] for x in s),
             "forward_ms_median": round(statistics.median(x["forward_ms_median"] for x in s), 1),
             "forward_ms_p90_median": round(statistics.median(x["forward_ms_p90"] for x in s), 1),
