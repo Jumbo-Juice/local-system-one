@@ -200,6 +200,12 @@ tick 48, with order averaging, its pre-registered setting). Also included:
 [`docs/shooter_replay_1.5b_seed1_escaped.html`](docs/shooter_replay_1.5b_seed1_escaped.html), the
 1.5B's first escaped seed, chosen after the results. Download them and open locally.
 
+[`docs/shooter_quad.html`](docs/shooter_quad.html) plays four runs side by side, two 1.5B and two 3B
+picked at random on each load (Shuffle picks again), with each run's decisions drawn as a colour-coded
+graph: one colour per strategic goal, a marker each time the goal was re-checked or changed. The pool
+is the kept runs in `demo/output/shooter/` (the best run per version, so not a random sample of all
+runs) plus the four replays above; `python -m demo.shooter.quad` rebuilds it.
+
 Each tick is one batched forward pass with up to three decisions (strategy or target, move, shoot):
 
 | tier | every | options |
