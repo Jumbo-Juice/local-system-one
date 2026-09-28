@@ -26,6 +26,15 @@ reference bot ran dry in every variant, even with 36 bullets at the start ("ampl
 dry on one seed, where no box lay in the four rooms before the three-enemy key room). Round 2 adds
 more generous variants, written before running it, under the same rule; if none meets it, the
 variant with the fewest dry reference runs, then the rule's criterion, then more bullets.
+Round 2 (bench/results/shooter_calibration_ammo_20260928_123142.json, rounds 1 and 2 rerun
+together): all four new variants met the rule (reference 60/60, never dry); the bot that ignores
+ammo escaped 30/60 with "ample_b5", 34 with "ample_b6", 37 with "plenty", 46 with "plenty_b5".
+Kept: "ample_b5", now the default Rules (36 bullets at the start, 5 boxes of 10, reload 3 ticks).
+The reference bot then needed up to 389 of the 400 ticks, so the tick limit of the ammo game became
+600 (world.py) and both rounds were rerun with it
+(bench/results/shooter_calibration_ammo_20260928_125304.json): no round-1 variant met the rule, and
+the bot that ignores ammo escaped 31/60 with "ample_b5", 36 with "ample_b6", 42 with "plenty" and
+47 with "plenty_b5", so "ample_b5" stays.
 
     python -m bench.shooter_calibration                 # the combat grid on the dev seeds (no ammo)
     python -m bench.shooter_calibration --ammo          # the ammo grid on the dev seeds
@@ -46,12 +55,12 @@ from demo.shooter.world import Dungeon, Rules
 
 RESULTS = Path(__file__).parent / "results"
 VARIANTS = {  # name -> Rules overrides against the first draft (enemy bullets 20, brutes 25); no ammo
-    "draft": dict(ammo=False, enemy_shot_damage=20, brute_damage=25),
-    "dmg15": dict(ammo=False),  # the frozen combat rules
-    "period6": dict(ammo=False, enemy_shot_damage=20, brute_damage=25, gunner_period=6),
-    "dmg15_p6": dict(ammo=False, gunner_period=6),
-    "potions5": dict(ammo=False, enemy_shot_damage=20, brute_damage=25, potions=5),
-    "hp2": dict(ammo=False, enemy_shot_damage=20, brute_damage=25, gunner_hp=2, brute_hp=3),
+    "draft": dict(ammo=False, max_ticks=400, enemy_shot_damage=20, brute_damage=25),
+    "dmg15": dict(ammo=False, max_ticks=400),  # the frozen combat rules
+    "period6": dict(ammo=False, max_ticks=400, enemy_shot_damage=20, brute_damage=25, gunner_period=6),
+    "dmg15_p6": dict(ammo=False, max_ticks=400, gunner_period=6),
+    "potions5": dict(ammo=False, max_ticks=400, enemy_shot_damage=20, brute_damage=25, potions=5),
+    "hp2": dict(ammo=False, max_ticks=400, enemy_shot_damage=20, brute_damage=25, gunner_hp=2, brute_hp=3),
 }
 AMMO_VARIANTS = {  # name -> ammo settings on the frozen combat rules (magazine 6 unless stated)
     "ample": dict(reserve=30, ammo_boxes=4, ammo_box=10, max_reserve=30, reload_ticks=3),  # 36 at the start
