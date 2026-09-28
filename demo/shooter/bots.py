@@ -4,7 +4,11 @@
   what the agent's prompts describe: known cells, visible enemies, flying bullets. Its win rate is
   the ceiling that shows the level can be beaten. It was used to tune ``Rules`` before any model run.
 - ``random_policy``: a uniformly random move and a random choice among the shots on offer
-  (holding fire included): the floor.
+  (holding fire included, and reloading when it is possible): the floor.
+
+With ammo (``Rules.ammo``) a policy returns ``(move, shot, reload)``. The reference bot reloads
+when no enemy is in sight and fetches known ammo boxes that fit its reserve; with
+``manage_ammo=False`` it reloads only an empty gun and never walks to a box on purpose.
 """
 
 from __future__ import annotations
@@ -17,8 +21,8 @@ from .world import DIRS, MOVES, STEP, Cell, Dungeon
 
 
 def shot_options(d: Dungeon) -> list[int]:
-    """Enemies the agent can shoot now: visible, with a clear line, and the gun ready."""
-    return [e.id for e in d.visible_enemies()] if d.cooldown == 0 else []
+    """Enemies the agent can shoot now: visible, with a clear line, and the gun ready (and loaded)."""
+    return [e.id for e in d.visible_enemies()] if d.cooldown == 0 and d.can_fire() else []
 
 
 def fighting(d: Dungeon) -> list:
@@ -96,16 +100,24 @@ def _path_step(d: Dungeon, goal: Cell, avoid: set[Cell], known: set[Cell]) -> st
     return "stay"
 
 
-def reference(d: Dungeon, see_threats: bool = True) -> tuple[str, int | None]:
-    """``see_threats=False`` ignores bullets and brutes when choosing where to stand and how to walk."""
+def reference(d: Dungeon, see_threats: bool = True, manage_ammo: bool = True):
+    """``see_threats=False`` ignores bullets and brutes when choosing where to stand and how to walk.
+    Returns ``(move, shot)``, or ``(move, shot, reload)`` with ammo."""
+    R = d.rules
     known = d.known_cells()
     shots = shot_options(d)
     shoot = shots[0] if shots else None
+    reload = False
+    if R.ammo and d.can_reload() and (d.loaded == 0 or (manage_ammo and not d.visible_enemies())):
+        shoot, reload = None, True
     threat = threat_cells(d) if see_threats else set()
     dist = d.distances(d.pos, within=known)
     foes = fighting(d)
+    boxes = [c for c in d.ammo if c in dist] if R.ammo and manage_ammo else []
     goal: Cell | None = None
-    if foes:
+    if foes and boxes and d.ammo_total() == 0:  # dry in a fight: a box within reach first
+        goal = min(boxes, key=lambda c: dist[c])
+    elif foes:
         spots = []
         for c in fight_cells(d, foes[0].home):
             if c in threat or c not in dist or d.enemy_at(c):
@@ -121,6 +133,8 @@ def reference(d: Dungeon, see_threats: bool = True) -> tuple[str, int | None]:
         potions = [c for c in d.potions if c in dist]
         if potions and d.health <= 60:
             goal = min(potions, key=lambda c: dist[c])
+        elif boxes and d.box_gain() == R.ammo_box:  # the whole box fits in the reserve
+            goal = min(boxes, key=lambda c: dist[c])
         elif d.has_key and d.exit in dist:
             goal = d.exit
         elif d.key is not None and d.key in dist:
@@ -141,13 +155,16 @@ def reference(d: Dungeon, see_threats: bool = True) -> tuple[str, int | None]:
                 if d.passable(c) and c not in threat and not d.enemy_at(c):
                     move = m
                     break
-    return move, shoot
+    return (move, shoot, reload) if R.ammo else (move, shoot)
 
 
 def random_policy(rng: random.Random):
-    def policy(d: Dungeon) -> tuple[str, int | None]:
+    def policy(d: Dungeon):
         shots = shot_options(d)
-        return rng.choice(MOVES), rng.choice(shots + [None])
+        if not d.rules.ammo:
+            return rng.choice(MOVES), rng.choice(shots + [None])
+        pick = rng.choice(shots + [None] + (["reload"] if d.can_reload() else []))
+        return rng.choice(MOVES), (None if pick == "reload" else pick), pick == "reload"
     return policy
 
 
