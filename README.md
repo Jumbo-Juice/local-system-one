@@ -256,6 +256,25 @@ Results on the reference machine (Observed; seeds 0–9; `bench/results/shooter_
 
 Details, development probes and the rule calibration: `docs/research.md` → Observed → Shooter demo.
 
+**Pre-registered check on seeds 30–39** (the fixes of commit `21f6358`, run at that commit on an
+RTX 3060 Ti with CUDA, so on different hardware than the runs above;
+`bench/results/shooter_eval_20260928_123222.json`): 1.5B 5/10 escaped, 3B listed order 5/10,
+reference bot 10/10, never-dodging bot 3/10. No hit came after a move labelled safe (the fixed
+defect). Both models timed out on seed 37: the 1.5B because a sleeping brute next to the key left
+every move labelled "no safe route to the target", the 3B by staying put on an explore target
+with the key in hand. Not fixed yet.
+
+**Ammo (new, on by default; not yet evaluated with the models).** The gun holds 6 bullets; a
+reload takes 3 ticks and the gun cannot fire meanwhile; the agent starts with 36 bullets (30 in
+reserve, the cap) and 5 ammo boxes of 10 lie in rooms. The shoot head offers `reload` while the
+magazine is not full (an empty gun reloads without a model call), the strategy tier offers
+`pick up ammo`, and the state texts count bullets against the hits the known enemies still take.
+Runs are longer, so the tick limit is 600. The rules were chosen with bots only, on dev seeds
+1000–1059, by a rule written before the runs (`bench/shooter_calibration.py --ammo`): the
+reference bot escapes 60/60 and never runs dry; a bot that ignores ammo (reloads only an empty
+gun, never walks to a box) escapes 31/60. Everything evaluated above ran without ammo:
+`--classic` (capture) and `--game classic` (`bench/shooter_eval.py`) reproduce it exactly.
+
 ### The first dungeon demo (replaced by the shooter): one agent, recorded and replayed
 
 Kept with its results: the shooter above is its redo.
