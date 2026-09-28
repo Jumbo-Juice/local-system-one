@@ -53,6 +53,9 @@ The fixes stay whatever the result, because they correct what the text tells the
 escapes are reported next to the 14/20 each demo had on seeds 0-19 before the fixes, with no
 change in between.
     python -m bench.shooter_eval --setups 1.5b 3b-listed bot-reference bot-nododge --seeds 30 31 32 33 34 35 36 37 38 39
+Check result (run at 21f6358 on an RTX 3060 Ti, CUDA; bench/results/shooter_eval_20260928_123222.json):
+escaped 1.5b 5/10, 3b-listed 5/10, bot-reference 10/10, bot-nododge 3/10; hits_after_safe_move 0 for
+both models. Both models timed out on seed 37 (stuck 371 and 364 ticks).
 
 Everything above ran without ammo, before it existed; rerun it with --game classic.
 
