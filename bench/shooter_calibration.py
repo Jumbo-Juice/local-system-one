@@ -21,6 +21,11 @@ reload time. Bots:
 Decision rule, fixed before the first ammo run: among the variants in which the reference bot
 escapes all 60 dev seeds and never runs out of bullets, keep the one in which the bot that ignores
 ammo escapes closest to half of the seeds (30); on a tie, the one with more bullets at the start.
+Round 1 (bench/results/shooter_calibration_ammo_20260928_122708.json): no variant met the rule. The
+reference bot ran dry in every variant, even with 36 bullets at the start ("ample": 60/60 escaped,
+dry on one seed, where no box lay in the four rooms before the three-enemy key room). Round 2 adds
+more generous variants, written before running it, under the same rule; if none meets it, the
+variant with the fewest dry reference runs, then the rule's criterion, then more bullets.
 
     python -m bench.shooter_calibration                 # the combat grid on the dev seeds (no ammo)
     python -m bench.shooter_calibration --ammo          # the ammo grid on the dev seeds
@@ -55,6 +60,11 @@ AMMO_VARIANTS = {  # name -> ammo settings on the frozen combat rules (magazine 
     "scarce": dict(reserve=12, ammo_boxes=5, ammo_box=10, max_reserve=30, reload_ticks=3),  # 18
     "tight_r2": dict(reserve=18, ammo_boxes=4, ammo_box=10, max_reserve=30, reload_ticks=2),  # 24, faster reload
     "tight_m8": dict(magazine=8, reserve=16, ammo_boxes=4, ammo_box=10, max_reserve=30, reload_ticks=3),  # 24
+    # round 2
+    "ample_b5": dict(reserve=30, ammo_boxes=5, ammo_box=10, max_reserve=30, reload_ticks=3),  # 36, one more box
+    "ample_b6": dict(reserve=30, ammo_boxes=6, ammo_box=10, max_reserve=30, reload_ticks=3),  # 36, two more boxes
+    "plenty": dict(reserve=36, ammo_boxes=4, ammo_box=10, max_reserve=36, reload_ticks=3),  # 42
+    "plenty_b5": dict(reserve=36, ammo_boxes=5, ammo_box=10, max_reserve=36, reload_ticks=3),  # 42, one more box
 }
 
 
