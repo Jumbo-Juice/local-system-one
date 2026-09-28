@@ -55,7 +55,7 @@ Cell = tuple[int, int]
 
 @dataclass(frozen=True)
 class Rules:
-    max_ticks: int = 400
+    max_ticks: int = 600  # 400 without ammo (CLASSIC); see the ammo notes below
     health: int = 100
     door_width: int = 3
     extra_links: int = 1
@@ -82,17 +82,21 @@ class Rules:
     # supplies
     potions: int = 3
     potion_health: int = 40
-    # ammo (ammo=False: unlimited bullets and no reloads, the game evaluated on seeds 0-39)
+    # ammo (ammo=False: unlimited bullets and no reloads, the game evaluated on seeds 0-39). Chosen
+    # with bots only, on dev seeds 1000-1059 (bench/shooter_calibration.py --ammo: "ample_b5").
+    # Ammo makes runs longer (reloads, detours to boxes): the reference bot's median escape went from
+    # 161 to 237 ticks and its slowest from 238 to 389, so the tick limit scales with the median
+    # (x1.47) from 400 to 600.
     ammo: bool = True
     magazine: int = 6  # bullets the gun holds
     reload_ticks: int = 3  # ticks until a reload is done; the gun cannot fire meanwhile
-    reserve: int = 18  # bullets carried besides the full magazine at the start
+    reserve: int = 30  # bullets carried besides the full magazine at the start (36 in all)
     max_reserve: int = 30
-    ammo_boxes: int = 4  # at most one per room, never in the start room
+    ammo_boxes: int = 5  # at most one per room, never in the start room
     ammo_box: int = 10  # bullets in a box
 
 
-CLASSIC = Rules(ammo=False)  # the game as evaluated on seeds 0-39 (unlimited bullets)
+CLASSIC = Rules(ammo=False, max_ticks=400)  # the game as evaluated on seeds 0-39 (unlimited bullets)
 
 
 @dataclass(frozen=True)

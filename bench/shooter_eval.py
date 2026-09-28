@@ -54,8 +54,11 @@ escapes are reported next to the 14/20 each demo had on seeds 0-19 before the fi
 change in between.
     python -m bench.shooter_eval --setups 1.5b 3b-listed bot-reference bot-nododge --seeds 30 31 32 33 34 35 36 37 38 39
 
+Everything above ran without ammo, before it existed; rerun it with --game classic.
+
 Usage:
-    python -m bench.shooter_eval                          # all setups, seeds 0-9
+    python -m bench.shooter_eval                          # all setups, seeds 0-9, with ammo
+    python -m bench.shooter_eval --game classic           # the same without ammo (as evaluated above)
     python -m bench.shooter_eval --setups random bot-reference --seeds 0 1
     python -m bench.shooter_eval --traces demo/output/shooter_eval_<time>   # resume
 Traces go to demo/output/shooter_eval_<time>/ (rebuild a page with demo.shooter.capture --rebuild).
@@ -65,6 +68,7 @@ from __future__ import annotations
 
 import argparse
 import json
+from dataclasses import asdict
 import statistics
 import time
 from pathlib import Path
@@ -72,7 +76,7 @@ from pathlib import Path
 from demo.dungeon.capture import OUT as DEMO_OUT
 from demo.shooter import bots
 from demo.shooter.capture import capture, to_jsonl, warm_up
-from demo.shooter.world import Dungeon
+from demo.shooter.world import CLASSIC, Dungeon, Rules
 from system_one import load_config, make_engine
 from system_one.config import REPO_ROOT
 
@@ -88,23 +92,30 @@ SETUPS = {  # name -> (config or None for a bot, Runner options or bot name)
     "random": ("config/mock.toml", {"order_debias": True}),
     "bot-reference": (None, "reference"),
     "bot-nododge": (None, "nododge"),
+    "bot-noammo": (None, "noammo"),  # ammo: reloads only an empty gun, never walks to a box
 }
+GAMES = {"ammo": Rules(), "classic": CLASSIC}
 
 
-def bot_run(seed: int, which: str) -> dict:
+def bot_run(seed: int, which: str, rules: Rules | None = None) -> dict:
     """A bot run, summarised with the same keys the model runs report where they apply."""
-    d = Dungeon(seed)
-    hits = 0
+    d = Dungeon(seed, rules)
+    hits = dry = boxes = 0
     key_tick = escape_tick = None
     while d.outcome is None:
-        move, shoot = bots.reference(d, see_threats=(which == "reference"))
-        ev = d.step(move, shoot)
+        ev = d.step(*bots.reference(d, see_threats=(which != "nododge"), manage_ammo=(which != "noammo")))
         hits += sum(e["kind"] == "hit" for e in ev)
+        boxes += sum(e["kind"] == "ammo" for e in ev)
+        dry += d.rules.ammo and d.ammo_total() == 0
         key_tick = key_tick if key_tick is not None or not d.has_key else d.tick - 1
         escape_tick = d.tick - 1 if d.outcome == "escaped" else escape_tick
-    return {"outcome": d.outcome, "cause": d.cause, "ticks": d.tick, "key_tick": key_tick, "escape_tick": escape_tick,
-            "rooms_seen": len(d.seen), "rooms_cleared": len(d.cleared), "kills": d.kills, "shots": d.shots,
-            "hits": hits}
+    out = {"outcome": d.outcome, "cause": d.cause, "ticks": d.tick, "key_tick": key_tick, "escape_tick": escape_tick,
+           "rooms_seen": len(d.seen), "rooms_cleared": len(d.cleared), "kills": d.kills, "shots": d.shots,
+           "hits": hits}
+    if d.rules.ammo:
+        out.update(reloads=d.reloads, ammo_boxes_picked=boxes, ammo_picked=d.ammo_picked, ticks_out_of_ammo=dry,
+                   ammo_left=d.ammo_total())
+    return out
 
 
 def aggregate(runs: list[dict]) -> dict:
@@ -121,6 +132,21 @@ def aggregate(runs: list[dict]) -> dict:
         "ticks_mean": mean("ticks"), "rooms_seen_mean": mean("rooms_seen"), "rooms_cleared_mean": mean("rooms_cleared"),
         "kills_mean": mean("kills"), "shots_mean": mean("shots"), "hits_mean": mean("hits"),
     }
+    if all("ticks_out_of_ammo" in x for x in s):
+        out.update({
+            "ran_out_of_ammo": sum(x["ticks_out_of_ammo"] > 0 for x in s),
+            "not_escaped_after_running_out": sum(x["ticks_out_of_ammo"] > 0 and x["outcome"] != "escaped" for x in s),
+            "reloads_mean": mean("reloads"), "ammo_boxes_picked_mean": mean("ammo_boxes_picked"),
+            "ammo_left_mean": mean("ammo_left"),
+        })
+        if all("reloads_chosen" in x for x in s):
+            chosen, offered = sum(x["reloads_chosen"] for x in s), sum(x["reload_offered"] for x in s)
+            out.update({
+                "reloads_chosen_mean": mean("reloads_chosen"),
+                "reload_chosen_share": round(chosen / offered, 3) if offered else None,
+                "reloads_chosen_in_fight": sum(x["reloads_chosen_in_fight"] for x in s),
+                "ammo_goal_ticks_mean": mean("ammo_goal_ticks"),
+            })
     if all("forward_ms_median" in x for x in s):
         shots = sum(x["shots"] for x in s)
         out.update({
@@ -140,18 +166,20 @@ def main() -> None:
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--setups", nargs="+", default=list(SETUPS), choices=list(SETUPS))
     ap.add_argument("--seeds", type=int, nargs="+", default=list(range(10)))
+    ap.add_argument("--game", choices=list(GAMES), default="ammo",
+                    help="ammo (default) or classic: without ammo, the game evaluated on seeds 0-39")
     ap.add_argument("--traces", default=None,
                     help="write traces here and reuse finished runs already in it (resume); default: a new directory")
     args = ap.parse_args()
     stamp = time.strftime("%Y%m%d_%H%M%S")
-    traces = Path(args.traces) if args.traces else DEMO_OUT / f"shooter_eval_{stamp}"
+    traces = Path(args.traces) if args.traces else DEMO_OUT / f"shooter_eval_{args.game}_{stamp}"
     traces.mkdir(parents=True, exist_ok=True)
     runs, backends = [], {}
 
     def report(name: str, seed: int, summary: dict, wall: float | None, reused: bool) -> None:
         runs.append({"setup": name, "seed": seed, "wall_s": wall, "reused_trace": reused, "summary": summary})
         keys = ("outcome", "cause", "ticks", "key_tick", "escape_tick", "rooms_seen", "rooms_cleared", "kills", "hits",
-                "stuck_ticks", "forward_ms_median")
+                "stuck_ticks", "forward_ms_median", "reloads", "ammo_boxes_picked", "ticks_out_of_ammo")
         print(json.dumps({"setup": name, "seed": seed, "reused": reused, **{k: summary.get(k) for k in keys}}), flush=True)
 
     todo: dict[str, list[tuple[str, int]]] = {}
@@ -159,7 +187,7 @@ def main() -> None:
         config, opts = SETUPS[name]
         for seed in args.seeds:
             if config is None:
-                report(name, seed, bot_run(seed, opts), None, False)
+                report(name, seed, bot_run(seed, opts, GAMES[args.game]), None, False)
                 continue
             path = traces / f"{name}_seed{seed}.jsonl"
             lines = path.read_text(encoding="utf-8").splitlines() if path.exists() else []
@@ -177,7 +205,7 @@ def main() -> None:
         for name, seed in jobs:
             backends[name] = engine.backend.info()
             t0 = time.perf_counter()
-            records = capture(engine, seed, verbose=False, **SETUPS[name][1])
+            records = capture(engine, seed, GAMES[args.game], verbose=False, **SETUPS[name][1])
             (traces / f"{name}_seed{seed}.jsonl").write_text(to_jsonl(records), encoding="utf-8")
             report(name, seed, records[-1]["summary"], round(time.perf_counter() - t0, 1), False)
         engine = None  # drop the last reference so the weights can be freed before the next model
@@ -187,8 +215,9 @@ def main() -> None:
     for name, agg in table.items():
         print(name, json.dumps(agg))
     RESULTS.mkdir(exist_ok=True)
-    path = RESULTS / f"shooter_eval_{stamp}.json"
+    path = RESULTS / f"shooter_eval_{args.game}_{stamp}.json"
     path.write_text(json.dumps({"host": host_info(), "backends": backends, "args": vars(args),
+                                "rules": asdict(GAMES[args.game]),
                                 "setups": {k: [v[0], v[1]] for k, v in SETUPS.items()},
                                 "traces": str(traces), "aggregate": table, "runs": runs}, indent=1), encoding="utf-8")
     print("wrote", path)
