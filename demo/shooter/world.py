@@ -21,8 +21,16 @@ decision can be a short list of text options. Rules (implementation choices; the
   agent can step out of the way. Brutes walk at the agent and hit it when adjacent, then back off
   for ``brute_rest`` ticks.
 - Health potions heal when stepped on. There is no hunger.
+- Ammo (``Rules.ammo``; added after the evaluations on seeds 0-39, which ran without it): the gun
+  holds ``magazine`` bullets and a shot uses one. A reload moves bullets from the reserve into the
+  magazine after ``reload_ticks`` ticks, during which the gun cannot fire; it starts only when asked
+  for. Ammo boxes lie in rooms and add ``ammo_box`` bullets to the reserve, up to ``max_reserve``;
+  a box stays where it lies while the reserve is full. Out of bullets in a sealed room, the agent
+  cannot win that fight. Boxes are placed with their own random generator, so a seed gives the same
+  map, enemies and potions with or without ammo.
 - The agent knows only the rooms it has seen (room-level fog of war, as in the first dungeon).
-- Order within a tick: the agent moves, then fires; bullets fly; enemies act; doorways seal or open.
+- Order within a tick: the agent moves and picks up what lies on its cell, then fires or starts a
+  reload; bullets fly; enemies act; doorways seal or open; the gun's cooldown and reload count down.
 
 North is up: "move north" decreases y. Positions of bullets are fractional cell coordinates; a
 bullet is in the cell its position rounds to.
@@ -74,6 +82,17 @@ class Rules:
     # supplies
     potions: int = 3
     potion_health: int = 40
+    # ammo (ammo=False: unlimited bullets and no reloads, the game evaluated on seeds 0-39)
+    ammo: bool = True
+    magazine: int = 6  # bullets the gun holds
+    reload_ticks: int = 3  # ticks until a reload is done; the gun cannot fire meanwhile
+    reserve: int = 18  # bullets carried besides the full magazine at the start
+    max_reserve: int = 30
+    ammo_boxes: int = 4  # at most one per room, never in the start room
+    ammo_box: int = 10  # bullets in a box
+
+
+CLASSIC = Rules(ammo=False)  # the game as evaluated on seeds 0-39 (unlimited bullets)
 
 
 @dataclass(frozen=True)
@@ -147,6 +166,12 @@ class Dungeon:
         self.health = self.rules.health
         self.has_key = False
         self.cooldown = 0  # ticks until the gun can fire again
+        # ammo (None without Rules.ammo)
+        ammo = self.rules.ammo
+        self.loaded: int | None = self.rules.magazine if ammo else None  # bullets in the magazine
+        self.reserve: int | None = self.rules.reserve if ammo else None
+        self.reloading = 0  # ticks until the reload in progress is done
+        self.reloads = self.ammo_picked = 0
         self.bullets: list[Bullet] = []
         self._bullet_ids = 0
         self.sealed: int | None = None  # the room whose doorways are closed, if any
@@ -259,6 +284,15 @@ class Dungeon:
                 self.enemies.append(Enemy(len(self.enemies), kind, free_cell(rid, margin=1), rid, hp, timer=timer))
         others = [r for r in range(n) if r != self.start_room]
         self.potions = [free_cell(rng.choice(others)) for _ in range(R.potions)]
+        self.ammo: list[Cell] = []  # ammo boxes still lying in the dungeon
+        if R.ammo and R.ammo_boxes:
+            # Their own generator, so the rest of the dungeon (and every later draw of self.rng)
+            # is the same as without ammo.
+            arng = random.Random(f"shooter-ammo-{self.seed}")
+            for rid in sorted(arng.sample(others, min(R.ammo_boxes, len(others)))):
+                c = arng.choice([c for c in self.rooms[rid].cells if c not in taken])
+                taken.add(c)
+                self.ammo.append(c)
 
     # -- geometry -------------------------------------------------------------------
 
@@ -356,9 +390,9 @@ class Dungeon:
 
     # -- dynamics -------------------------------------------------------------------
 
-    def step(self, move: str, shoot: int | None = None) -> list[dict]:
-        """Apply the agent's move and shot (an enemy id, or None to hold fire), then bullets,
-        enemies and doorways. Returns the events of the tick."""
+    def step(self, move: str, shoot: int | None = None, reload: bool = False) -> list[dict]:
+        """Apply the agent's move and its shot (an enemy id, or None to hold fire) or reload,
+        then bullets, enemies and doorways. Returns the events of the tick."""
         if self.outcome is not None:
             raise RuntimeError(f"the run is over ({self.outcome})")
         ev: list[dict] = []
@@ -372,14 +406,21 @@ class Dungeon:
             else:
                 self.pos = to
                 self._pickups(ev)
+        if self.rules.ammo:
+            self._take_ammo(ev)  # also when staying: a box left under a full reserve
         self._look(ev)
         if self.outcome is None:
-            self._fire(shoot, ev)
+            if shoot is None and reload:
+                self._reload(ev)
+            else:
+                self._fire(shoot, ev)
             self._fly(ev)
             if self.outcome is None:
                 self._enemies_act(ev)
             self._doors(ev)
             self.cooldown = max(0, self.cooldown - 1)
+            if self.reloading:
+                self._reload_tick(ev)
         self.tick += 1
         if self.outcome is None and self.tick >= self.rules.max_ticks:
             self.outcome = "timeout"
@@ -398,15 +439,61 @@ class Dungeon:
         if shoot is None:
             return
         target = next((e for e in self.enemies if e.id == shoot and e.alive), None)
-        if target is None or self.cooldown > 0:
+        if target is None or self.cooldown > 0 or not self.can_fire():
             ev.append({"kind": "dry_fire", "enemy": shoot})
             return
         b = self._new_bullet("agent", self.pos, target.pos, self.rules.shot_speed, self.rules.shot_damage)
         self.cooldown = self.rules.cooldown
         self.shots += 1
+        if self.rules.ammo:
+            self.loaded -= 1
         ev.append({"kind": "shot", "bullet": b.id, "enemy": target.id, "from": list(self.pos), "at": list(target.pos)})
         if not target.awake:
             self._wake(target.home)
+
+    # -- ammo --------------------------------------------------------------------------
+
+    def can_fire(self) -> bool:
+        """The magazine holds a bullet and no reload is in progress (always True without ammo).
+        The cooldown between shots is separate."""
+        return not self.rules.ammo or (self.loaded > 0 and not self.reloading)
+
+    def can_reload(self) -> bool:
+        R = self.rules
+        return R.ammo and not self.reloading and self.loaded < R.magazine and self.reserve > 0
+
+    def ammo_total(self) -> int | None:
+        return self.loaded + self.reserve if self.rules.ammo else None
+
+    def box_gain(self) -> int:
+        """Bullets an ammo box would add now (0 while the reserve is full)."""
+        return max(0, min(self.rules.ammo_box, self.rules.max_reserve - self.reserve))
+
+    def _reload(self, ev: list[dict]) -> None:
+        if not self.can_reload():
+            ev.append({"kind": "reload_refused"})
+            return
+        self.reloading = self.rules.reload_ticks
+        self.reloads += 1
+        ev.append({"kind": "reload", "loaded": self.loaded, "reserve": self.reserve, "ticks": self.reloading})
+
+    def _reload_tick(self, ev: list[dict]) -> None:
+        self.reloading -= 1
+        if self.reloading == 0:
+            n = min(self.rules.magazine - self.loaded, self.reserve)
+            self.loaded += n
+            self.reserve -= n
+            ev.append({"kind": "reloaded", "loaded": self.loaded, "reserve": self.reserve})
+
+    def _take_ammo(self, ev: list[dict]) -> None:
+        if self.pos not in self.ammo:
+            return
+        gain = self.box_gain()
+        if gain:
+            self.ammo.remove(self.pos)
+            self.reserve += gain
+            self.ammo_picked += gain
+            ev.append({"kind": "ammo", "cell": list(self.pos), "gain": gain})
 
     def _fly(self, ev: list[dict]) -> None:
         """Move every bullet one tick, in substeps; stop it at the first wall or target."""
@@ -582,8 +669,8 @@ class Dungeon:
         }
 
     def snapshot(self) -> dict:
-        """Dynamic state for one trace record."""
-        return {
+        """Dynamic state for one trace record. Ammo keys only with Rules.ammo."""
+        snap = {
             "agent": {"pos": list(self.pos), "health": self.health, "has_key": self.has_key,
                       "cooldown": self.cooldown, "shots": self.shots, "kills": self.kills},
             "enemies": [{"id": e.id, "kind": e.kind, "pos": list(e.pos), "hp": e.hp, "home": e.home,
@@ -594,3 +681,8 @@ class Dungeon:
             "items": {"potions": [list(c) for c in self.potions], "key": list(self.key) if self.key else None},
             "seen": sorted(self.seen), "sealed": self.sealed, "cleared": sorted(self.cleared),
         }
+        if self.rules.ammo:
+            snap["agent"].update(loaded=self.loaded, reserve=self.reserve, reloading=self.reloading,
+                                 reloads=self.reloads)
+            snap["items"]["ammo"] = [list(c) for c in self.ammo]
+        return snap
