@@ -12,6 +12,18 @@ Sources, and which claims are documented, observed, inferred or our own choices:
 [`docs/research.md`](docs/research.md). Machine inspection and runtime choice:
 [`docs/machine.md`](docs/machine.md).
 
+## Where things are
+
+| I want to… | Go to |
+|---|---|
+| run a demo | [`docs/shooter.md`](docs/shooter.md), [`docs/dungeon.md`](docs/dungeon.md), [`docs/grid.md`](docs/grid.md) |
+| watch recorded runs | `python -m viewer`: the [Master Viewer](viewer/README.md) |
+| find a run | [`runs/`](runs/README.md): one folder per game, one `.jsonl` per run |
+| copy a command | [`RUN-GUIDE.md`](RUN-GUIDE.md): every command in one place |
+| see the evidence | [`docs/research.md`](docs/research.md) (sources and Observed results), `bench/results/<benchmark>/` (raw data) |
+| learn from past runs | [`docs/lessons-learned.md`](docs/lessons-learned.md) |
+| read or change the engine | `system_one/` (see How it works below) |
+
 ## How it works
 
 1. A decision is `(state, instruction, options)`. The engine renders one chat prompt that lists
@@ -110,293 +122,56 @@ snapshot_download('Qwen/Qwen2.5-0.5B-Instruct')"`, or point them at another cach
 .venv/Scripts/python -m pytest -m "not model"
 ```
 
-### The 2D demo
+## Demos
 
-```bash
-.venv/Scripts/python -m demo.sim
-```
+Each demo turns a small game into decisions for the engine. The model makes every decision, and
+failed runs are shown as they happened. Headline results (Observed, on the Lenovo's Arc 140V
+unless noted; full tables in each write-up):
 
-```bash
-.venv/Scripts/python -m demo.sim --config config/mock.toml
-```
-
-```bash
-.venv/Scripts/python -m demo.sim --headless --ticks 100
-```
-
-Four agents collect gems, eat food and avoid roaming hazards. Every tick, **all agents' due
-decisions go through the engine in one batched forward pass**. Each agent has three tiers:
-
-| tier | every | options |
-|---|---|---|
-| strategy | 12 ticks | collect gems / find food / avoid hazards / explore |
-| target | 6 ticks, or when the target is reached or gone | every gem (24) or food item (12) on the map, safe spots, or regions. Sets larger than 8 use a **tournament**, one round per tick |
-| action | every tick | move north / south / east / west / stay, each labelled with its outcome, e.g. `move west (target: 2 steps)`, `move north (wall)` |
-
-The agent is **aware of its condition**. The strategy state spells out consequences ("about 20
-ticks until starving"). A change in condition (an energy band, low health, an adjacent hazard)
-makes the strategy re-decide on the next tick. Lower tiers see the target without its stale
-distance. In a 4-seed × 250-tick comparison with the 3B, this took starvation from 2 of 4 runs to
-0 of 4, halved "stuck" time and raised gems by 22%. `docs/research.md` → Observed → Agent
-awareness has the diagnosis.
-
-The window shows each agent's strategy and target with their probabilities, the tournament
-progress, the action probabilities as bars, the outside-token mass, and per tick the batch size
-and forward-pass latency. Agents glide between cells over about one tick; this is rendering
-only. Space pauses, Esc quits. `--config config/mock.toml` runs without a model (random
-decisions). `--no-goals` gives flat control (action tier only) for comparison.
-
-`--plan-budget N` (default 1) lets each agent make at most N planning decisions (strategy,
-target, tournament groups) per tick, next to its move. The rest wait for later ticks. This keeps
-tick latency nearly constant. `-1` runs a whole tournament round per tick, which is how the
-comparison below was measured.
-
-The most responsive setup measured (see [Benchmarks](#benchmarks) for the hardware), one agent
-with the 3B model:
-
-```bash
-.venv/Scripts/python -m demo.sim --config config/lenovo-3b.toml --agents 1
-```
-
-That runs at ~5 ticks/s: ~137 ms for a move-only tick and ~230 ms when a planning decision
-rides along. Over 2 × 80 ticks the median was 194–195 ms, p90 236–238 ms and max 265–266 ms.
-Without the budget, planning ticks took 550–880 ms.
-
-`prefix_cache = true` (on by default in the bundled configs) reuses the keys/values of prompt
-prefixes that repeat across ticks, which saves ~9–10% here. A 3B pass costs ~80 ms even for 8
-tokens on the reference GPU (see Benchmarks), so reuse cannot go much further. Prompt orders that
-reuse more (`prompt_order = "question_first"` or `"options_first"`) were up to 21% faster but hurt
-accuracy, and the agent played badly. Details: `docs/research.md` → Observed → Prefix caching.
-
-### The shooter demo: the dungeon redone, one agent, recorded and replayed
-
-The dungeon below was never escaped. This is its redo as a room-clearing shooter in the spirit of
-*Enter the Gungeon*: the agent shoots, rooms lock it in until their enemies are dead, and
-doorways are three cells wide, so no enemy can trap it in one. One agent per run, in a seeded
-dungeon of nine rooms with a key, an exit, gunners that aim for a tick and then fire slow
-bullets, and brutes that walk up and hit. Its standing order, as the model reads it: *"Find the
-key, then leave through the exit alive. Rooms lock you in until their enemies are dead: shoot
-them and keep out of their bullets."* The model makes every decision, and failed runs are shown
-as they happened.
-
-Two variants, one per model:
+| demo | what the agent does | headline result | write-up |
+|---|---|---|---|
+| **Shooter** | one agent clears locked rooms of gunners and brutes, takes the key, leaves by the exit | classic game, seeds 0–9: the 1.5B (order averaging) and the 3B (listed order) each escape **7 of 10**; with ammo, the 1.5B's fire head escapes **6 of 10** vs 0 of 10 without it | [`docs/shooter.md`](docs/shooter.md) |
+| **Dungeon** (replaced by the shooter) | one agent looks for the key and the exit among chasing enemies, gems and food | no run escaped (**0 of 48** model runs); the agent walks into enemies it is warned about | [`docs/dungeon.md`](docs/dungeon.md) |
+| **2D grid** (live window) | four agents collect gems, eat food and avoid hazards, all in one batch per tick | tiered goals: 2.3× the gems and 5.4× the food of flat control, which was no better than random | [`docs/grid.md`](docs/grid.md) |
 
 ```bash
 .venv/Scripts/python -m demo.shooter.capture --config config/default.toml --seed 0
 ```
 
-```bash
-.venv/Scripts/python -m demo.shooter.capture --config config/lenovo-3b.toml --seed 0
-```
+Every captured run (single captures and eval runs alike) lands in the game's pool, `runs/shooter/`
+or `runs/dungeon/`, as one `<time>_<label>.jsonl`. Each future game demo gets its own pool
+(`runs/<game>/`) and its own viewer (`viewer/games/<game>.js`).
 
-The first runs Qwen2.5-1.5B, the second Qwen2.5-3B. Each writes `trace.jsonl` and `replay.html`
-to `demo/output/shooter/<model>_seed0/`; open `replay.html` in a browser (no server, no network).
-`--config config/mock.toml` runs without a model, `--rebuild <trace.jsonl>` rebuilds the page.
-
-Recorded runs, the pre-registered showcase (seed 0, whatever the outcome): [`docs/shooter_replay_1.5b_seed0.html`](docs/shooter_replay_1.5b_seed0.html)
-(the 1.5B picks up the key and dies to a gunner at tick 98) and
-[`docs/shooter_replay_3b_seed0.html`](docs/shooter_replay_3b_seed0.html) (the 3B dies to a gunner at
-tick 48, with order averaging, its pre-registered setting). Also included:
-[`docs/shooter_replay_3b_listed_seed0.html`](docs/shooter_replay_3b_listed_seed0.html), seed 0 with the
-3B's current setting (it escapes at tick 163), and
-[`docs/shooter_replay_1.5b_seed1_escaped.html`](docs/shooter_replay_1.5b_seed1_escaped.html), the
-1.5B's first escaped seed, chosen after the results. Download them and open locally.
-
-Best run per model, chosen after the results (escaped, then kills, rooms cleared, minimum health) for
-sharing: [`docs/share/shooter_best_1.5b_seed12.html`](docs/share/shooter_best_1.5b_seed12.html) (escapes at
-tick 261, 14 kills) and [`docs/share/shooter_best_3b_seed5.html`](docs/share/shooter_best_3b_seed5.html)
-(escapes at tick 287, 15 kills). Both are single self-contained files.
-
-[`docs/shooter_quad.html`](docs/shooter_quad.html) plays four runs side by side, two 1.5B and two 3B
-picked at random on each load (Shuffle picks again), with each run's decisions drawn as a colour-coded
-graph: one colour per strategic goal, a marker each time the goal was re-checked or changed. The committed
-page's pool was the best run per version (so not a random sample of all runs; those runs were
-pruned from `demo/output/` since) plus the four replays above. `python -m demo.shooter.quad` rebuilds
-it from whatever is in `demo/output/shooter/` now, plus those replays.
-
-Each tick is one batched forward pass with up to three decisions (strategy or target, move, shoot):
-
-| tier | every | options |
-|---|---|---|
-| strategy | 12 ticks, or at once when the situation changes | the goals possible now: explore, fight the enemies here, get the key, go to the exit, drink a health potion |
-| target | 6 ticks, or when reached, gone or unsafe | unexplored rooms, the key, the exit, potions, or up to 5 firing spots (a clear line to an enemy, away from enemies, out of every bullet's path) |
-| move (control head) | every tick | open moves and stay, labelled with outcomes: `move west (safe; closer: 4 steps to the target)`, `stay (BULLET: -15 health)` |
-| shoot (control head) | every tick | `shoot gunner #4, 3 cells east (AIMING at you; 3 hits to kill; clear line)` or `hold fire`; committed without a model call while the gun reloads |
-
-**Order averaging (implementation choice, per model).** Small models often pick an option for its
-position. On a development seed the 1.5B's decision to fire followed the option order in 34 of 34
-recorded states (hold fire listed last: never fired; listed first: always fired). With order
-averaging (`Engine(order_debias=True)`), every decision is read twice in the same batch, with the
-options as listed and reversed, and the two readings are averaged; it doubles the rows per pass,
-and the replay shows both readings as ticks on each probability bar. It is on for the 1.5B and,
-after the evaluation below, off for the 3B (`[shooter] order_debias` in each config; `--order-debias`
-overrides).
-
-The replay page is the dungeon viewer with more contrast (lighter floors, darker walls, bright
-enemies and bullets): the map with fog, sealed doorways (red bars), aim telegraphs (red dashed
-lines), bullets in flight and enemy health pips; one card per tier and head; the latency
-timeline with hits and kills; a prompt inspector; `#tick-N` deep links; WebM recording.
-
-Closed-loop evaluation (`bench/shooter_eval.py`; seeds, setups, metrics and showcase fixed and
-committed before the first run on those seeds):
+## Watching runs: the Master Viewer
 
 ```bash
-.venv/Scripts/python -m bench.shooter_eval
+.venv/Scripts/python -m viewer
 ```
 
-Results on the reference machine (Observed; seeds 0–9; `bench/results/shooter_eval_20260927_002315.json`):
+One page for every demo's runs; it replays recorded decisions and never runs the model. The start
+page offers three ways to watch:
 
-| setup | escaped | died | out of time | key picked up | rooms cleared | kills | hits taken | forward ms/tick (median / p90) |
-|---|---:|---:|---:|---:|---:|---:|---:|---:|
-| **1.5B, order averaging (the 1.5B demo)** | **7 / 10** | 2 | 1 | 9 | 4.6 | 8.5 | 3.0 | 245 / 410 |
-| 3B, order averaging (pre-registered default) | 2 / 10 | 8 | 0 | 10 | 4.8 | 9.1 | 6.7 | 338 / 803 |
-| 1.5B, listed order only | 0 / 10 | 8 | 2 | 5 | 0.7 | 0.7 | 6.1 | 176 / 317 |
-| **3B, listed order (the 3B demo since the replication)** | **7 / 10** | 2 | 1 | 9 | 6.5 | 11.4 | 5.4 | 195 / 387 |
-| random decisions (mock) | 0 / 10 | 0 | 10 | 0 | 0 | 0 | 0 | 0.8 / 1.9 |
-| reference bot (hand-written, not a model): the ceiling | 10 / 10 | 0 | 0 | 10 | 6.1 | 11.2 | 0.4 | – |
-| the same bot, never dodging | 5 / 10 | 5 | 0 | 9 | 4.7 | 9.1 | 8.1 | – |
+- **Load a trace**: pick or drop any `.jsonl`.
+- **Random run**: one run from the pool, in the full view (map, decision cards, latency timeline,
+  the prompts of each tick, and "About this run").
+- **Auto-demo**: two panes play the pool from newest to oldest. When a pane's run ends, it takes
+  the next older run; after the oldest, both start over at the newest.
 
-- **Beatable.** The rules were tuned against the bots before any model ran (reference bot 60/60 on
-  dev seeds), and the 1.5B escaped 7 of 10 evaluation seeds. The first dungeon: 0 of 32.
-- **Order averaging is what makes the 1.5B play**: without it, it held fire in 98% of its shoot
-  decisions and never escaped.
-- **The 3B did worse with averaging than without** (2 vs 7 of 10, p = 0.07). A post-hoc
-  replication on new seeds 10–19, with its decision rule committed before the run, gave 6 vs 7:
-  by that rule the 3B demo now uses the listed order. Over all 20 seeds: 3B listed 14/20,
-  3B averaged 8/20 (p = 0.11), 1.5B averaged 14/20. Both demos escape about 7 runs in 10.
-- **Nearly every hit was a chosen risk**: 29 of 30 (1.5B) and 66 of 67 (3B) hits came from a
-  move labelled `BULLET` or `next to a brute` while a safe move was offered. The 3B often steps
-  toward the gunner it is fighting.
+A filter (All / Shooter / Dungeon) limits random and auto-demo to one game.
 
-Details, development probes and the rule calibration: `docs/research.md` → Observed → Shooter demo.
+- `python -m viewer <run>.jsonl` opens one run.
+- `python -m viewer --bundle <run>.jsonl` writes one self-contained `.html` with that run, to
+  share.
 
-**Pre-registered check on seeds 30–39** (the fixes of commit `21f6358`, run at that commit on an
-RTX 3060 Ti with CUDA, so on different hardware than the runs above;
-`bench/results/shooter_eval_20260928_123222.json`): 1.5B 5/10 escaped, 3B listed order 5/10,
-reference bot 10/10, never-dodging bot 3/10. No hit came after a move labelled safe (the fixed
-defect). Both models timed out on seed 37: the 1.5B because a sleeping brute next to the key left
-every move labelled "no safe route to the target", the 3B by staying put on an explore target
-with the key in hand. Not fixed yet.
-
-**Ammo (new, on by default; so far evaluated with the 1.5B only, below).** The gun holds 6 bullets; a
-reload takes 3 ticks and the gun cannot fire meanwhile; the agent starts with 36 bullets (30 in
-reserve, the cap) and 5 ammo boxes of 10 lie in rooms. The shoot head offers `reload` while the
-magazine is not full (an empty gun reloads without a model call), the strategy tier offers
-`pick up ammo`, and the state texts count bullets against the hits the known enemies still take.
-Runs are longer, so the tick limit is 600. The rules were chosen with bots only, on dev seeds
-1000–1059, by a rule written before the runs (`bench/shooter_calibration.py --ammo`): the
-reference bot escapes 60/60 and never runs dry; a bot that ignores ammo (reloads only an empty
-gun, never walks to a box) escapes 31/60. Everything evaluated above ran without ammo:
-`--classic` (capture) and `--game classic` (`bench/shooter_eval.py`) reproduce it exactly.
-
-**Fire head for the 1.5B (post hoc, checked on new seeds).** In the game with ammo the 1.5B held
-fire in all 53 shoot decisions of seed 0: each enemy in sight was its own option, and `hold fire`
-won every time. With `fire_head` the shoot head offers a single `shoot (N enemies in sight, clear
-line)` option, and an aim head in the same batch picks the enemy (no model call with one enemy in
-sight). It is on for the 1.5B (`[shooter] fire_head`), off for the 3B, and always off in the
-classic game. Pre-registered check (Observed; seeds 40–49, game with ammo;
-`bench/results/shooter_eval_ammo_20260929_134450.json`):
-
-| setup (seeds 40–49, with ammo) | escaped | died | out of time | kills | held fire | hits taken | forward ms, median / p90 |
-|---|---:|---:|---:|---:|---:|---:|---:|
-| **1.5B with the fire head (the 1.5B demo)** | **6 / 10** | 3 | 1 | 8.8 | 0% | 4.1 | 324 / 812 |
-| 1.5B, one shoot option per enemy | 0 / 10 | 7 | 3 | 0.6 | 98% | 5.4 | 476 / 931 |
-| reference bot (not a model) | 10 / 10 | 0 | 0 | 11.8 | – | 0.2 | – |
-
-6 vs 0 of 10 (two-sided Fisher p = 0.011), so by the rule fixed before the run the fire head stays
-on. The 3B with ammo is not evaluated yet.
-
-### The first dungeon demo (replaced by the shooter): one agent, recorded and replayed
-
-Kept with its results: the shooter above is its redo.
-
-One agent in a seeded dungeon: nine rooms joined by corridors, a key that opens the exit, two
-enemies that chase, and gems, food and potions. The agent knows only the rooms it has seen.
-Its standing order, as the model reads it: *"Find the key, then leave through the exit alive.
-Gems are a bonus. Eat and heal when needed."* The model makes every decision; nothing is
-scripted, and failed runs are shown as they happened.
-
-Capture a run with the real model, then open the replay:
-
-```bash
-.venv/Scripts/python -m demo.dungeon.capture --config config/lenovo-3b.toml --seed 0
-```
-
-This writes `trace.jsonl` and `replay.html` to `demo/output/dungeon/<model>_seed0/`. Open
-`replay.html` in a browser. It needs no server and no network. `--config config/mock.toml` runs
-without a model (random decisions). `--rebuild <trace.jsonl>` rebuilds the page from an existing
-trace.
-
-A recorded run is in [`docs/dungeon_replay_seed0.html`](docs/dungeon_replay_seed0.html) (download
-it and open it locally): the pre-registered showcase, seed 0 with the 3B. It collects 8 gems and
-explores 5 of 9 rooms, never finds the key, and dies to an enemy at tick 143.
-
-The replay page shows:
-
-- The map. Dimmed rooms are rooms the agent has not seen yet (you see the whole map; the agent
-  does not). The dashed line and ring mark its current target; dots show its last 15 cells, so
-  loops are visible.
-- One card per tier: the question, the options with the label the model answered with (`A`,
-  `B`, …), the probabilities, the chosen answer, and the latency of that tick's batched forward
-  pass. Each card also shows the tier's state: new answer, same answer, held since tick N,
-  deciding (tournament in progress, or queued behind the one-planning-decision-per-tick
-  budget), or only option (committed without a model call).
-- A timeline of forward-pass latency per tick, with events (key, hits, gems, food, rooms) and
-  "no progress for 6+ ticks" stretches.
-- Below the stage: play/pause (Space), step (← →), speed (1× is the recorded speed), scrubbing,
-  and *What the model saw*, which shows every prompt of the current tick. Add `#tick-120` to the
-  URL to open that tick. **Record WebM** saves the stage as a video (Chrome or Edge, file opened
-  locally). Convert it with `ffmpeg -i run.webm -c:v libx264 -pix_fmt yuv420p -crf 18 run.mp4`.
-
-| tier | every | options |
-|---|---|---|
-| strategy | 12 ticks, or at once when health, energy, visible enemies, the key or the rooms seen change | the goals possible now, from: explore, get the key, go to the exit, collect gems, eat food, drink a health potion, flee the enemy |
-| target | 6 ticks, or when the target is reached or gone | unexplored rooms behind known doors, the key, the exit, each known gem/food/potion, or safe spots. More than 8 options run as a tournament |
-| action | every tick | 5 moves labelled with outcomes, e.g. `move west (closer: 2 steps to the target)`, `move north (ENEMY: -30 health)` |
-
-**Why record and replay (implementation choice).** The Doom demo in sgoedecke/system-one captures
-decisions to JSONL and renders a video from them [S4]. We do the same, but render in the browser:
-
-- One self-contained HTML file (canvas and plain JavaScript). There are no dependencies, no
-  server and no build step, and the page opens from disk.
-- The replay shows the exact recorded decisions and latencies. It can play at the recorded speed
-  (~5 ticks/s with the 3B on the reference iGPU; see Benchmarks) or faster, pause on any
-  decision, and scrub.
-- The video export records the same canvas, so there is no second renderer to keep in sync.
-- Rejected: a live browser mode (it needs a server; the tkinter demo remains for live runs), and
-  rendering MP4 frames in Python (a second renderer, and an image library we do not have).
-
-Closed-loop evaluation (`bench/dungeon_eval.py`; setups, seeds and metrics were fixed before the
-first run):
-
-```bash
-.venv/Scripts/python -m bench.dungeon_eval
-```
-
-Results on the reference machine (Observed; see [Benchmarks](#benchmarks) for the hardware;
-seeds 0–7; `bench/results/dungeon_eval_20260926_163151.json`):
-
-| setup | escaped | died: enemy | died: starvation | key picked up | rooms seen | stuck ticks | forward ms/tick (median) |
-|---|---:|---:|---:|---:|---:|---:|---:|
-| 3B, `closer/farther` wording (default) | 0 / 8 | 7 | 1 | 2 | 3.6 | 5.8 | 165 |
-| 3B, first demo's wording (`target: N steps`) | 0 / 8 | 3 | 5 | 1 | 2.9 | 63.4 | 153 |
-| 1.5B, `closer/farther` wording | 0 / 8 | 7 | 1 | 1 | 3.0 | 19.4 | 82 |
-| random decisions (mock) | 0 / 8 | 1 | 7 | 0 | 1.5 | 54.4 | 0.4 |
-
-**No agent escaped, and none even saw the exit room.** The `closer/farther` wording removed the
-loops (stuck ticks 63 → 6), and the agent then walked into enemies: in 21 of 29 hits it chose the
-move labelled `ENEMY`. A post-hoc change that spelled out enemy consequences and safer flee
-targets made no difference on seeds 0–7 or on 8 new seeds, so it is off by default
-(`--enemy-aware`). The move tier picks a move toward its target 97–98% of the time, whatever the
-danger labels say. Tournaments never ran: no agent knew more than 8 gems at once. Details:
-`docs/research.md` → Observed → Dungeon demo.
+The committed showcase runs are listed in [`runs/README.md`](runs/README.md). How the viewer is
+built, and how to add a viewer for a new demo: [`viewer/README.md`](viewer/README.md).
 
 ## Benchmarks
 
 Machine: Lenovo 83HM, Intel Core Ultra 7 256V, Intel Arc 140V iGPU (8 GB shared), 15.6 GB RAM,
 Windows 11. Runtime: PyTorch 2.14.0+xpu, transformers 5.17.0. Model: Qwen2.5-1.5B-Instruct,
 bfloat16, no quantisation. Median of 5 runs after warm-up. Raw data:
-`bench/results/bench_Qwen2.5-1.5B-Instruct_bfloat16_20260926_050240.{json,md}`.
+`bench/results/bench/bench_Qwen2.5-1.5B-Instruct_bfloat16_20260926_050240.{json,md}`.
 
 | prompt tokens | batch | sequential ms/decision | batched ms/decision | speed-up | batched decisions/s |
 |---:|---:|---:|---:|---:|---:|
@@ -422,22 +197,7 @@ data-centre GPU: at most 1.8× here, and nothing for long prompts. The single-to
 advantage over generation is 3.6× at batch 1 but only 1.4× at batch 8. Details and caveats:
 [`docs/research.md`](docs/research.md) → Observed.
 
-### Demo results
-
-![demo window with Qwen2.5-1.5B on the Arc 140V](docs/demo.png)
-
-With the real model on the Lenovo, the demo runs at ~3 ticks/s: 300–450 ms per tick for 6–9
-decisions in one batch. Tiered goals vs flat control, 100 ticks, 4 agents, mean of 3 seeds
-(`bench/results/demo_compare_20260926_051317.json`):
-
-| setup | gems | food eaten | hazard hits | forward ms/tick (median) |
-|---|---:|---:|---:|---:|
-| model, tiered goals | 36.0 | 59.3 | 10.7 | 312 |
-| model, flat (action tier only) | 15.7 | 11.0 | 5.7 | 198 |
-| random decisions (mock), tiered goals | 17.7 | 10.7 | 8.3 | 3 |
-
-Flat control was no better than random. Tiered goals gave 2.3× the gems and 5.4× the food, but
-also more hazard hits. Tournament vs one full decision (1.5B; 30 problems each; one correct option):
+Tournament vs one full decision (1.5B; 30 problems each; one correct option):
 
 | options | one full decision | tournament, groups ≤10 |
 |---:|---:|---:|
@@ -458,10 +218,6 @@ Reproduce:
 
 ```bash
 .venv/Scripts/python -m bench.tournament_compare
-```
-
-```bash
-.venv/Scripts/python -m bench.demo_compare
 ```
 
 ## Switch model or runtime
@@ -489,17 +245,23 @@ do not change.
 ## Layout
 
 ```
-system_one/            engine.py (decisions), goals.py (tiers), tournament.py, config.py
-system_one/backends/   base.py (interface), hf.py (PyTorch + transformers), mock.py (no model)
-demo/                  world.py (grid world), brain.py (tiers + state text), sim.py (window / headless)
-demo/dungeon/          world.py (rules), brain.py (tiers, text, runner), capture.py (trace + replay), viewer.html
-demo/shooter/          world.py (rules), bots.py (non-model reference bots), brain.py (tiers, heads, runner),
-                        capture.py (trace + replay), viewer.html, quad.py + quad.html (four-run page)
-bench/                 bench.py, model_eval.py, tournament_compare.py, demo_compare.py, dungeon_eval.py,
-                        shooter_calibration.py, shooter_eval.py, results/
+system_one/            the engine: engine.py (decisions), goals.py (tiers), tournament.py, config.py
+system_one/backends/   base.py (interface), hf.py (PyTorch + transformers), llamacpp.py (local
+                        llama-server, GGUF; untested), mock.py (no model)
+demo/                  the game demos; runs.py (where captured runs go), common.py (shared helpers)
+demo/grid/             the live 2D window: world.py, brain.py, sim.py (python -m demo.grid)
+demo/dungeon/          world.py (rules), brain.py (tiers, text, runner), capture.py (a run into runs/dungeon/)
+demo/shooter/          world.py (rules), bots.py (non-model reference bots), brain.py (tiers, heads,
+                        runner), capture.py (a run into runs/shooter/)
+viewer/                the Master Viewer (python -m viewer): index.html, shell.js, core.js, paint.js,
+                        server.py; games/ holds one renderer per game demo
+runs/                  captured runs, one flat pool per game (shooter/, dungeon/); only *.pinned.jsonl
+                        is committed
+bench/                 evaluations and benchmarks, one script each; results/<script>/ holds their output
 config/                default.toml (1.5B, default), lenovo-3b.toml (3B alternative),
                         nuc.example.toml (larger-hardware example, 7B), mock.toml (no model)
-docs/                  research.md (sources + Observed results), machine.md
+docs/                  shooter.md, dungeon.md, grid.md (the demos), research.md (sources + Observed
+                        results), lessons-learned.md, machine.md, deep-research-report.md (JEV background)
 tests/                 pytest suite (mock tests always; `model` tests when weights are cached)
 ```
 

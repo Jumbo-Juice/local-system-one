@@ -12,10 +12,10 @@ import time
 from collections import Counter
 from pathlib import Path
 
-from demo.brain import GOALS
+from demo.grid.brain import GOALS
 from system_one import Decision, load_config, make_engine
 
-OUT = Path(__file__).parent / "results"
+OUT = Path(__file__).parent / "results" / "strategy_probe"
 ENERGIES = (95, 70, 50, 36, 34, 25, 15, 5, 0)
 LOW = 35
 
@@ -80,7 +80,7 @@ def main() -> None:
         print(f"{name:28} acc={overall:.0%} food-cases={acc['find food']:.0%} gems-cases={acc['collect gems']:.0%} "
               f"hazard-cases={acc['avoid hazards']:.0%} | P(find food) by energy, hazard far: {curve} | "
               f"choices {dict(Counter(r['choice'] for r in rows))}", flush=True)
-    OUT.mkdir(exist_ok=True)
+    OUT.mkdir(parents=True, exist_ok=True)
     model = str(report["backend"].get("model", "")).split("/")[-1]
     path = OUT / f"strategy_probe_{model}_{time.strftime('%Y%m%d_%H%M%S')}.json"
     path.write_text(json.dumps(report, indent=1), encoding="utf-8")

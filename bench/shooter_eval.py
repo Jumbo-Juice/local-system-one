@@ -20,7 +20,7 @@ Pre-registered before the first evaluation run (committed with this file):
   averaging does; they are not the demo.
 - The replays shown in the docs are seed 0 with 1.5b and with 3b, whatever their outcome.
 
-Pre-registered results (bench/results/shooter_eval_20260927_002315.json): escaped 1.5b 7/10,
+Pre-registered results (bench/results/shooter_eval/shooter_eval_20260927_002315.json): escaped 1.5b 7/10,
 3b 2/10, 1.5b-listed 0/10, 3b-listed 7/10, random 0/10, bot-reference 10/10, bot-nododge 5/10.
 
 Added after those results (post hoc), fixed before running: a replication on seeds 10-19 (never
@@ -29,7 +29,7 @@ difference (two-sided Fisher p = 0.07). Decision rule: switch the 3B demo to the
 only if 3b-listed also escapes more often than 3b on seeds 10-19; otherwise keep order
 averaging for both models. Nothing else changes.
     python -m bench.shooter_eval --setups 1.5b 3b 3b-listed --seeds 10 11 12 13 14 15 16 17 18 19
-Replication result (bench/results/shooter_eval_20260927_005732.json): escaped 1.5b 7/10, 3b 6/10,
+Replication result (bench/results/shooter_eval/shooter_eval_20260927_005732.json): escaped 1.5b 7/10, 3b 6/10,
 3b-listed 7/10. By the rule the 3B demo now reads options in the listed order
 ([shooter] order_debias = false in config/lenovo-3b.toml); the setups above are unchanged.
 
@@ -53,7 +53,7 @@ The fixes stay whatever the result, because they correct what the text tells the
 escapes are reported next to the 14/20 each demo had on seeds 0-19 before the fixes, with no
 change in between.
     python -m bench.shooter_eval --setups 1.5b 3b-listed bot-reference bot-nododge --seeds 30 31 32 33 34 35 36 37 38 39
-Check result (run at 21f6358 on an RTX 3060 Ti, CUDA; bench/results/shooter_eval_20260928_123222.json):
+Check result (run at 21f6358 on an RTX 3060 Ti, CUDA; bench/results/shooter_eval/shooter_eval_20260928_123222.json):
 escaped 1.5b 5/10, 3b-listed 5/10, bot-reference 10/10, bot-nododge 3/10; hits_after_safe_move 0 for
 both models. Both models timed out on seed 37 (stuck 371 and 364 ticks).
 
@@ -74,7 +74,7 @@ Decision rule: keep the fire head on for the 1.5B if 1.5b escapes at least as ma
 as 1.5b-onehead; otherwise switch it off in config/default.toml. Held fire, shots and kills are
 reported as secondary results. Nothing else changes before the report.
     python -m bench.shooter_eval --setups 1.5b 1.5b-onehead bot-reference --seeds 40 41 42 43 44 45 46 47 48 49
-Check result (run at fb3f106 on the Lenovo, Arc 140V; bench/results/shooter_eval_ammo_20260929_134450.json):
+Check result (run at fb3f106 on the Lenovo, Arc 140V; bench/results/shooter_eval/shooter_eval_ammo_20260929_134450.json):
 escaped 1.5b 6/10, 1.5b-onehead 0/10 (two-sided Fisher p = 0.011), bot-reference 10/10. Held fire
 0% vs 98% of shoot decisions; kills 8.8 vs 0.6 per run. By the rule the fire head stays on.
 

@@ -21,18 +21,18 @@ reload time. Bots:
 Decision rule, fixed before the first ammo run: among the variants in which the reference bot
 escapes all 60 dev seeds and never runs out of bullets, keep the one in which the bot that ignores
 ammo escapes closest to half of the seeds (30); on a tie, the one with more bullets at the start.
-Round 1 (bench/results/shooter_calibration_ammo_20260928_122708.json): no variant met the rule. The
+Round 1 (bench/results/shooter_calibration/shooter_calibration_ammo_20260928_122708.json): no variant met the rule. The
 reference bot ran dry in every variant, even with 36 bullets at the start ("ample": 60/60 escaped,
 dry on one seed, where no box lay in the four rooms before the three-enemy key room). Round 2 adds
 more generous variants, written before running it, under the same rule; if none meets it, the
 variant with the fewest dry reference runs, then the rule's criterion, then more bullets.
-Round 2 (bench/results/shooter_calibration_ammo_20260928_123142.json, rounds 1 and 2 rerun
+Round 2 (bench/results/shooter_calibration/shooter_calibration_ammo_20260928_123142.json, rounds 1 and 2 rerun
 together): all four new variants met the rule (reference 60/60, never dry); the bot that ignores
 ammo escaped 30/60 with "ample_b5", 34 with "ample_b6", 37 with "plenty", 46 with "plenty_b5".
 Kept: "ample_b5", now the default Rules (36 bullets at the start, 5 boxes of 10, reload 3 ticks).
 The reference bot then needed up to 389 of the 400 ticks, so the tick limit of the ammo game became
 600 (world.py) and both rounds were rerun with it
-(bench/results/shooter_calibration_ammo_20260928_125304.json): no round-1 variant met the rule, and
+(bench/results/shooter_calibration/shooter_calibration_ammo_20260928_125304.json): no round-1 variant met the rule, and
 the bot that ignores ammo escaped 31/60 with "ample_b5", 36 with "ample_b6", 42 with "plenty" and
 47 with "plenty_b5", so "ample_b5" stays.
 
@@ -53,7 +53,7 @@ from pathlib import Path
 from demo.shooter import bots
 from demo.shooter.world import Dungeon, Rules
 
-RESULTS = Path(__file__).parent / "results"
+RESULTS = Path(__file__).parent / "results" / "shooter_calibration"
 VARIANTS = {  # name -> Rules overrides against the first draft (enemy bullets 20, brutes 25); no ammo
     "draft": dict(ammo=False, max_ticks=400, enemy_shot_damage=20, brute_damage=25),
     "dmg15": dict(ammo=False, max_ticks=400),  # the frozen combat rules
@@ -146,7 +146,7 @@ def main() -> None:
         print(name.ljust(9), " | ".join(
             f"{p} {r['escaped']}/{r['runs']} (hits {r['hits_mean']}" + (f", dry {r['ran_dry']}" if "ran_dry" in r else "") + ")"
             for p, r in table[name].items()), flush=True)
-    RESULTS.mkdir(exist_ok=True)
+    RESULTS.mkdir(parents=True, exist_ok=True)
     path = RESULTS / f"shooter_calibration_{'ammo_' if args.ammo else ''}{time.strftime('%Y%m%d_%H%M%S')}.json"
     path.write_text(json.dumps({"seeds": seeds, "variants": {k: grid.get(k, {}) for k in variants}, "table": table},
                                indent=1), encoding="utf-8")

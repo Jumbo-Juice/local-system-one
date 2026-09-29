@@ -1,7 +1,7 @@
 """Accuracy of candidate models and answer templates on bench/eval_set.py.
 
 Usage: python -m bench.model_eval --models Qwen/Qwen2.5-0.5B-Instruct Qwen/Qwen2.5-1.5B-Instruct
-Writes raw per-item results to bench/results/model_eval_<timestamp>.json.
+Writes raw per-item results to bench/results/model_eval/model_eval_<timestamp>.json.
 """
 
 from __future__ import annotations
@@ -23,7 +23,7 @@ VARIANTS = [
     ("label", "Answer: <label>"),
     ("text", '{"choice": "<label>"}'),
 ]
-OUT = Path(__file__).parent / "results"
+OUT = Path(__file__).parent / "results" / "model_eval"
 
 
 def run(model: str, device: str, dtype: str, max_batch: int = 32, prompt_order: str = "state_first",
@@ -81,7 +81,7 @@ def main() -> None:
     ap.add_argument("--prompt-order", default="state_first", choices=["state_first", "question_first", "options_first"])
     ap.add_argument("--variants", type=int, nargs="+", default=None, help="indexes into VARIANTS (default: all)")
     args = ap.parse_args()
-    OUT.mkdir(exist_ok=True)
+    OUT.mkdir(parents=True, exist_ok=True)
     variants = [VARIANTS[i] for i in args.variants] if args.variants else VARIANTS
     reports = [run(m, args.device, args.dtype, args.max_batch, args.prompt_order, variants) for m in args.models]
     path = OUT / f"model_eval_{time.strftime('%Y%m%d_%H%M%S')}.json"
