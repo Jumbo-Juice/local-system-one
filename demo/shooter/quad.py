@@ -106,8 +106,9 @@ def slim(path: Path) -> dict | None:
     size = model_size(header)
     if header.get("scenario") != "shooter" or not ticks or size is None:
         return None
-    if list(header.get("goals", [])) != GOALS:
-        raise ValueError(f"{path}: goal list differs from {GOALS}")
+    if list(header.get("goals", [])) != GOALS:  # e.g. the game with ammo ("pick up ammo"): no colour for it yet
+        print(f"skipped {path}: the page supports the classic game's goals only {GOALS}")
+        return None
     m = header["map"]
     rows = []
     for t in ticks:

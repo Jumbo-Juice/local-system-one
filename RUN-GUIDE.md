@@ -96,8 +96,11 @@ editing `demo/shooter/quad.html`:
 Build from chosen traces instead, to another file (needs at least two runs per model):
 
 ```bash
-.venv/Scripts/python -m demo.shooter.quad --out demo/output/my_quad.html demo/output/shooter/eval_1.5b_seed12/trace.jsonl docs/shooter_replay_1.5b_seed0.html demo/output/shooter/eval_3b_seed5/trace.jsonl docs/shooter_replay_3b_seed0.html
+.venv/Scripts/python -m demo.shooter.quad --out demo/output/my_quad.html docs/shooter_replay_1.5b_seed0.html docs/shooter_replay_1.5b_seed1_escaped.html docs/shooter_replay_3b_seed0.html docs/shooter_replay_3b_listed_seed0.html
 ```
+
+The page supports the classic game only (no ammo); runs of the game with ammo are skipped with a
+note.
 
 Open it (no server needed). In the page: Space play/pause, ←/→ one tick, S shuffle.
 `#runs=a,b,c,d&t=120` in the URL pins four runs and a tick.
@@ -219,7 +222,7 @@ Flags: `--agents N`, `--seed N`, `--gems N`, `--food N`, `--plan-budget N`, `--n
 | what | where |
 |---|---|
 | captured runs | `demo/output/<demo>/<run>/` (git-ignored) |
-| kept runs overview | `demo/output/README.md` |
+| lessons from the pruned test and eval runs, and what is kept | `demo/output/LESSONS-LEARNED.md` |
 | committed replay pages | `docs/shooter_replay_*.html`, `docs/dungeon_replay_seed0.html`, `docs/shooter_quad.html` |
 | shareable best runs | `docs/share/shooter_best_*.html` (copies of a kept run's `replay.html`; outside the quad pool) |
 | benchmark results | `bench/results/` |

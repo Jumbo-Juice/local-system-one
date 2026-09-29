@@ -209,9 +209,10 @@ tick 261, 14 kills) and [`docs/share/shooter_best_3b_seed5.html`](docs/share/sho
 
 [`docs/shooter_quad.html`](docs/shooter_quad.html) plays four runs side by side, two 1.5B and two 3B
 picked at random on each load (Shuffle picks again), with each run's decisions drawn as a colour-coded
-graph: one colour per strategic goal, a marker each time the goal was re-checked or changed. The pool
-is the kept runs in `demo/output/shooter/` (the best run per version, so not a random sample of all
-runs) plus the four replays above; `python -m demo.shooter.quad` rebuilds it.
+graph: one colour per strategic goal, a marker each time the goal was re-checked or changed. The committed
+page's pool was the best run per version (so not a random sample of all runs; those runs were
+pruned from `demo/output/` since) plus the four replays above. `python -m demo.shooter.quad` rebuilds
+it from whatever is in `demo/output/shooter/` now, plus those replays.
 
 Each tick is one batched forward pass with up to three decisions (strategy or target, move, shoot):
 
