@@ -46,6 +46,7 @@ HOLD = "hold fire"
 RELOAD = "reload"
 SHOOT_QUESTION = "Which shot do you take this tick?"
 GUN_QUESTION = "What do you do with your gun this tick?"  # with ammo: shoot, reload or hold fire
+AIM_QUESTION = "Which enemy do you shoot?"
 _CELL = re.compile(r"\((\d+),(\d+)\)")
 _ENEMY = re.compile(r"#(\d+)")
 
@@ -92,8 +93,14 @@ def _hits(n: int) -> str:
 class ShooterBrain:
     """Goal stack and state texts of the one agent."""
 
-    def __init__(self, dungeon: Dungeon, strategy_every: int = 12, target_every: int = 6):
+    def __init__(self, dungeon: Dungeon, strategy_every: int = 12, target_every: int = 6, fire_head: bool = False):
+        """``fire_head``: the shoot head offers ONE "shoot" option instead of one per enemy, and an
+        aim head in the same batch picks the enemy. Observed (1.5B, seed 0 with ammo): with one
+        option per enemy it held fire in 53 of 53 decisions; asked again with the enemies merged
+        into one option, 0 of 53 (and 0 of 136 recorded states of dev seeds 1000-1001)."""
         self.d = dungeon
+        self.fire_head = fire_head
+        aim = [Tier("aim", AIM_QUESTION, lambda goals: self.aim_options(), every=1, context_from=("strategy",))]
         self.stack = GoalStack([
             Tier("strategy", "Which goal should the agent pursue now?", lambda goals: self.goal_options(),
                  every=strategy_every, title="Strategic goal"),
@@ -104,7 +111,7 @@ class ShooterBrain:
                  lambda goals: self.move_options(), every=1, context_from=("strategy", "target")),
             Tier("shoot", GUN_QUESTION if dungeon.rules.ammo else SHOOT_QUESTION, lambda goals: self.shoot_options(),
                  every=1, context_from=("strategy",)),
-        ])
+        ] + (aim if fire_head else []))
         self._situation: tuple | None = None
         self.refresh()
 
@@ -329,14 +336,25 @@ class ShooterBrain:
         reload = [self._reload_option()] if d.can_reload() else []
         if not self._visible:
             return reload + [f"{HOLD} (no enemy in sight)"]
+        if self.fire_head:
+            n = len(self._visible)
+            return [f"shoot ({n} {'enemy' if n == 1 else 'enemies'} in sight, clear line)"] + reload + [HOLD]
+        return self._shots() + reload + [HOLD]
+
+    def _shots(self) -> list[str]:
+        d, (x, y) = self.d, self.d.pos
         out = []
-        x, y = d.pos
         for e in self._visible:
             hp = e.hp // d.rules.shot_damage + (e.hp % d.rules.shot_damage > 0)
             what = "aiming at you" if e.aiming else "awake" if e.awake else "asleep"
             out.append(f"shoot {self._enemy_name(e)}, {_offset(e.pos[0] - x, y - e.pos[1])} ({what}; "
                        f"{_hits(hp)} to kill; clear line)")
-        return out + reload + [HOLD]
+        return out
+
+    def aim_options(self) -> list[str]:
+        """With the fire head: the enemies the shoot head's "shoot" would fire at (none when it
+        offers no shot). One enemy in sight is committed without a model call."""
+        return self._shots() if any(o.startswith("shoot (") for o in self.shoot_options()) else []
 
     # -- world -> text -----------------------------------------------------------------
 
@@ -493,7 +511,8 @@ class ShooterBrain:
                          self._enemies_line(), self.status()])
 
     def state_for(self, tier: Tier) -> str:
-        return {"move": self.move_state, "shoot": self.shoot_state}.get(tier.name, self.strategy_state)()
+        return {"move": self.move_state, "shoot": self.shoot_state, "aim": self.shoot_state}.get(
+            tier.name, self.strategy_state)()
 
 
 class Runner:
@@ -523,6 +542,7 @@ class Runner:
             "tiers": [{"name": t.name, "question": t.instruction, "every": t.every, "title": t.title,
                        "kind": "control" if t.every == 1 else "plan"} for t in self.brain.stack.tiers],
             "group_size": self.group_size, "plan_budget": self.plan_budget, "order_debias": self.order_debias,
+            "fire_head": self.brain.fire_head,
             "backend": eng.backend.info(),
             "brain": {"strategy_every": self.brain.stack.tier("strategy").every,
                       "target_every": self.brain.stack.tier("target").every},
@@ -549,6 +569,9 @@ class Runner:
         stats = dict(self.engine.last_stats) if model else {}
         move = base_move(stack.current.get("move", "stay"))
         shoot = enemy_of(stack.current.get("shoot"))
+        if self.brain.fire_head and (stack.current.get("shoot") or "").startswith("shoot ("):
+            aimed = [r for _, tier, r, _ in updates if tier.name == "aim"]  # decided in this tick's batch
+            shoot = enemy_of(aimed[-1].choice) if aimed else None
         reload = is_reload(stack.current.get("shoot"))
         target = self.brain.target_cell()
         dist_before = self._dist_to(target_before)
