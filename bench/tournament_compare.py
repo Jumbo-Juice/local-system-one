@@ -44,7 +44,7 @@ WORDS = {
                  "cucumber radish turnip leek garlic beetroot courgette pumpkin asparagus",
 }
 WORDS = {k: v.split() for k, v in WORDS.items()}
-OUT = Path(__file__).parent / "results"
+OUT = Path(__file__).parent / "results" / "tournament_compare"
 
 
 def problems(n: int, count: int, seed: int) -> list[tuple[str, list[str], str]]:
@@ -113,7 +113,7 @@ def main() -> None:
                   f"survived-r1={tr['answer_survived_round1']:.0%} {tr['latency_ms_per_problem']:.0f} ms/problem "
                   f"rounds={tr['rounds_mean']:.1f}", flush=True)
         report["runs"].append(row)
-    OUT.mkdir(exist_ok=True)
+    OUT.mkdir(parents=True, exist_ok=True)
     path = OUT / f"tournament_compare_{time.strftime('%Y%m%d_%H%M%S')}.json"
     path.write_text(json.dumps(report, indent=1), encoding="utf-8")
     print("wrote", path)

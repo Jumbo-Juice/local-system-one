@@ -15,11 +15,11 @@ import random
 import time
 from pathlib import Path
 
-from demo.brain import annotate_moves
-from demo.world import MOVES, STEP, World
+from demo.grid.brain import annotate_moves
+from demo.grid.world import MOVES, STEP, World
 from system_one import Decision, load_config, make_engine
 
-OUT = Path(__file__).parent / "results"
+OUT = Path(__file__).parent / "results" / "action_probe"
 INSTR = "Which move brings you closer to your current target? Do not move into a wall or a hazard."
 
 
@@ -41,7 +41,7 @@ def cases(n: int, seed: int = 0):
 
 
 def state_text(w: World, target) -> str:
-    from demo.brain import Brain
+    from demo.grid.brain import Brain
 
     b = Brain(w, w.agents[0])
     b.stack.apply(b.stack.tier("target"), f"food at ({target[0]},{target[1]})", 0)
@@ -84,7 +84,7 @@ def main() -> None:
                          "before": before, "after": after, "p": r.prob})
         report["variants"][name] = {"approach_rate": good / len(rows), "rows": rows}
         print(f"{name:42} moves that approach the target: {good}/{len(rows)} = {good / len(rows):.0%}", flush=True)
-    OUT.mkdir(exist_ok=True)
+    OUT.mkdir(parents=True, exist_ok=True)
     model = str(report["backend"].get("model", "")).split("/")[-1]
     path = OUT / f"action_probe_{model}_{time.strftime('%Y%m%d_%H%M%S')}.json"
     path.write_text(json.dumps(report, indent=1), encoding="utf-8")

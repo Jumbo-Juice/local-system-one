@@ -12,13 +12,13 @@ import time
 from collections import Counter
 from pathlib import Path
 
-from demo.brain import Controller
-from demo.world import World
+from demo.grid.brain import Controller
+from demo.grid.world import World
 from system_one import Decision, load_config, make_engine
 
 from .hwinfo import host_info
 
-OUT = Path(__file__).parent / "results"
+OUT = Path(__file__).parent / "results" / "survival_compare"
 
 
 SETUPS = {
@@ -84,7 +84,7 @@ def main() -> None:
         keys = ("deaths", "starved", "stuck_ticks", "gems", "food_eaten", "min_energy", "ticks_at_zero_energy",
                 "forward_ms_median")
         print(f"MEAN {setup}: " + " ".join(f"{k}={statistics.mean(r[k] for r in rs):.1f}" for k in keys))
-    OUT.mkdir(exist_ok=True)
+    OUT.mkdir(parents=True, exist_ok=True)
     path = OUT / f"survival_compare_{time.strftime('%Y%m%d_%H%M%S')}.json"
     path.write_text(json.dumps({"host": host_info(), "backend": engine.backend.info(), "args": vars(args),
                                 "runs": runs}, indent=1), encoding="utf-8")
