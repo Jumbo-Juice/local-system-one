@@ -74,6 +74,9 @@ Decision rule: keep the fire head on for the 1.5B if 1.5b escapes at least as ma
 as 1.5b-onehead; otherwise switch it off in config/default.toml. Held fire, shots and kills are
 reported as secondary results. Nothing else changes before the report.
     python -m bench.shooter_eval --setups 1.5b 1.5b-onehead bot-reference --seeds 40 41 42 43 44 45 46 47 48 49
+Check result (run at fb3f106 on the Lenovo, Arc 140V; bench/results/shooter_eval_ammo_20260929_134450.json):
+escaped 1.5b 6/10, 1.5b-onehead 0/10 (two-sided Fisher p = 0.011), bot-reference 10/10. Held fire
+0% vs 98% of shoot decisions; kills 8.8 vs 0.6 per run. By the rule the fire head stays on.
 
 Usage:
     python -m bench.shooter_eval                          # all setups, seeds 0-9, with ammo
