@@ -31,6 +31,8 @@ One decision by hand:
 .venv/Scripts/python -m system_one decide --question "Which colour is the sky on a clear day?" --options red blue yellow
 ```
 
+Optional: `--state "<text>"` and `--context "<text>"` add a state and context to the prompt.
+
 ## Tests
 
 All tests (the `model` tests skip if Qwen2.5-0.5B-Instruct is not cached):
@@ -103,7 +105,7 @@ ammo, as evaluated on seeds 0-39 (the run's name starts `classic_`):
 ```
 
 Useful flags: `--out <file>` (write the trace there instead of the pool), `--max-ticks N`,
-`--plan-budget N` (-1 = unlimited), `--order-debias` / `--no-order-debias`, `--fire-head` /
+`--plan-budget N` (-1 = unlimited), `--group-size N` (tournament group size, default 8), `--order-debias` / `--no-order-debias`, `--fire-head` /
 `--no-fire-head` (one "shoot" option plus an aim head that picks the enemy; default from
 `[shooter] fire_head`: on for the 1.5B, off for the 3B, always off with `--classic`), `--quiet`.
 
@@ -140,7 +142,8 @@ its trace names; pass the same `--game`):
 A long evaluation run from a Claude session stops if the desktop app restarts; run it from your own
 terminal to be safe.
 
-Rule calibration with bots only (no model):
+Rule calibration with bots only (no model; default: dev seeds 1000-1059, pick others with
+`--seeds`):
 
 ```bash
 .venv/Scripts/python -m bench.shooter_calibration
@@ -161,13 +164,20 @@ Capture one run (writes `runs/dungeon/<time>_<model>_seed<N>.jsonl`):
 ```
 
 Extra flags: `--label-style closer|steps`, `--enemy-aware` (both show up in the run's name), plus
-the shooter's `--out`, `--max-ticks`, `--plan-budget`, `--quiet`.
+the shooter's `--out`, `--max-ticks`, `--plan-budget`, `--group-size`, `--quiet`.
 
-Evaluation (setups `3b-closer`, `3b-steps`, `1.5b-closer`, `random`, `3b-enemy-aware`; traces go to
-the dungeon pool as `<eval id>_eval_<setup>_seed<N>.jsonl`, results to `bench/results/dungeon_eval/`):
+Evaluation (setups `3b-closer`, `3b-steps`, `1.5b-closer`, `random`, `3b-enemy-aware`; the first
+four and seeds 0-7 by default; traces go to the dungeon pool as `<eval id>_eval_<setup>_seed<N>.jsonl`,
+results to `bench/results/dungeon_eval/`):
 
 ```bash
 .venv/Scripts/python -m bench.dungeon_eval
+```
+
+Only some setups and seeds:
+
+```bash
+.venv/Scripts/python -m bench.dungeon_eval --setups 3b-closer 3b-enemy-aware --seeds 0 1 2
 ```
 
 Resume an interrupted evaluation:
@@ -200,27 +210,55 @@ Most responsive setup (3B, one agent, ~5 ticks/s on the reference machine):
 .venv/Scripts/python -m demo.grid --config config/lenovo-3b.toml --agents 1
 ```
 
-Flags: `--agents N`, `--seed N`, `--gems N`, `--food N`, `--plan-budget N`, `--no-goals`,
-`--json <file>` (headless summary).
+Flags: `--agents N`, `--seed N`, `--gems N`, `--food N`, `--plan-budget N`, `--group-size N`,
+`--no-goals`, `--json <file>` (headless summary), `--quiet`, `--close-after S` (close the window
+after S seconds).
 
 ## Benchmarks
 
-Each writes to `bench/results/<script>/`:
+Each writes to `bench/results/<script>/`. All but `model_eval` (which takes `--models`) take
+`--config`.
+
+Decision latency, batched vs sequential vs text generation:
 
 ```bash
 .venv/Scripts/python -m bench.bench --gen-baseline
 ```
 
+Accuracy of models and answer templates on `bench/eval_set.py`:
+
 ```bash
 .venv/Scripts/python -m bench.model_eval --models Qwen/Qwen2.5-1.5B-Instruct
 ```
+
+Tournament sampling vs one full decision on large choice sets:
 
 ```bash
 .venv/Scripts/python -m bench.tournament_compare
 ```
 
+Grid demo, tiered goals vs flat control (`--ticks`, `--seeds`):
+
 ```bash
 .venv/Scripts/python -m bench.demo_compare
+```
+
+Grid demo survival, old vs "aware" strategy prompts (`--ticks`, `--seeds`, `--plan-budget`):
+
+```bash
+.venv/Scripts/python -m bench.survival_compare --config config/lenovo-3b.toml
+```
+
+Does the strategy tier react to low energy:
+
+```bash
+.venv/Scripts/python -m bench.strategy_probe --config config/lenovo-3b.toml
+```
+
+Do move decisions approach the target (`--n` decisions, default 60):
+
+```bash
+.venv/Scripts/python -m bench.action_probe --config config/lenovo-3b.toml
 ```
 
 ## Where things land
