@@ -1,1 +1,1 @@
-"""Single-agent dungeon demo: capture a run with the real model, replay it in viewer.html."""
+"""Single-agent dungeon demo: capture a run into runs/dungeon/; watch it with python -m viewer."""
