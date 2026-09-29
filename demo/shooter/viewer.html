@@ -191,7 +191,7 @@ const CARDS = {
   shoot: { x: 992, y: 739, w: 888, h: 199 },
 };
 const TL = { x: 992, y: 976, w: 888, h: 76 };
-const TIER_LABEL = { strategy: "Strategy", target: "Target", move: "Move", shoot: "Shoot" };
+const TIER_LABEL = { strategy: "Strategy", target: "Target", move: "Move", shoot: "Shoot", aim: "Aim" };
 const MIN_TICK_S = 0.05;
 const ROW = 20;
 
@@ -817,6 +817,13 @@ function drawCard(tier, i) {
   });
   if (rows.length < d.options.length) text(`+${d.options.length - rows.length} more options below the stage`, r.x + 52, top + rows.length * ROW + 13, K.faint, 13);
   const src = R.ticks[info.at] || t;
+  const aim = tier === "shoot" ? src.decisions.find((x) => x.tier === "aim") : null;
+  if (aim && d.options[d.choice].startsWith("shoot (")) {  // fire head: the aim head picked the enemy
+    const how = aim.method === "only_option" ? "the only enemy in sight, no model call"
+      : `aim head · p ${aim.probs[aim.choice].toFixed(2)} over ${aim.options.length} enemies`;
+    const line = `AIM ▸ ${aim.options[aim.choice]} · ${how}`;
+    text(fit(line, r.w - 40, 14, 600)[0], r.x + 20, r.y + r.h - 32, K.cyan, fit(line, r.w - 40, 14, 600)[1], 600);
+  }
   let foot;
   if (d.method === "only_option") foot = `committed without a model call at tick ${src.tick}`;
   else {
