@@ -11,15 +11,15 @@ import statistics
 import time
 from pathlib import Path
 
-from demo.brain import Controller
-from demo.sim import run_headless
-from demo.world import World
+from demo.grid.brain import Controller
+from demo.grid.sim import run_headless
+from demo.grid.world import World
 from system_one import Decision, Engine, load_config, make_engine
 from system_one.backends.mock import MockBackend
 
 from .hwinfo import host_info
 
-OUT = Path(__file__).parent / "results"
+OUT = Path(__file__).parent / "results" / "demo_compare"
 KEYS = ("gems", "food_eaten", "hazard_hits", "deaths", "forward_ms_median", "forward_ms_p90",
         "decisions_per_tick_mean", "tournament_decisions")
 
@@ -47,7 +47,7 @@ def main() -> None:
         rs = [r for r in runs if r["setup"] == label]
         summary[label] = {k: statistics.mean(r[k] for r in rs) for k in KEYS}
         print(f"MEAN {label:28} " + " ".join(f"{k}={v:.1f}" for k, v in summary[label].items()))
-    OUT.mkdir(exist_ok=True)
+    OUT.mkdir(parents=True, exist_ok=True)
     path = OUT / f"demo_compare_{time.strftime('%Y%m%d_%H%M%S')}.json"
     path.write_text(json.dumps({"host": host_info(), "backend": engine.backend.info(), "args": vars(args),
                                 "runs": runs, "summary": summary}, indent=1), encoding="utf-8")

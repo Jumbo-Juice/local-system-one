@@ -19,7 +19,7 @@ This project is **not** Jev and does not reproduce Jev. It reproduces only the p
 | S3 | Sean Goedecke, [System One models like Jev can train their own replacements](https://www.seangoedecke.com/system-one-models-can-train-their-own-replacements/) | same vault folder |
 | S4 | [sgoedecke/system-one](https://github.com/sgoedecke/system-one) (linked from S1): `system_one/inference.py`, `demo/labels.py`, `demo/wikirace/run.py`, `demo/README.md` | GitHub `main`, read 2026-09-26 |
 | S5 | TypeSafe, [Introducing System One models and Jev](https://typesafe.ai/blog/introducing-system-one-models-and-jev) (linked from S1 and S2) | web, read 2026-09-26 |
-| R (secondary) | `deep-research-report.md` in the repo root | local file |
+| R (secondary) | [`deep-research-report.md`](deep-research-report.md) in `docs/` | local file |
 
 R was supposed to be pasted into the prompt. It was not, so the copy in the repo was used. R mixes
 facts with speculation. Its claims about Jev internals are treated as unverified (see "Unknown").
@@ -262,7 +262,7 @@ sample is small.
 
 Qwen2.5-1.5B-Instruct, bf16, Arc 140V, torch 2.14 XPU, transformers 5.17. Median of 5 runs after
 warm-up, on an otherwise idle machine. Raw data and the full table:
-`bench/results/bench_Qwen2.5-1.5B-Instruct_bfloat16_20260926_050240.{json,md}`. An earlier run
+`bench/results/bench/bench_Qwen2.5-1.5B-Instruct_bfloat16_20260926_050240.{json,md}`. An earlier run
 overlapped a model download and was 10–15% slower; its files are kept but not used here.
 
 | prompt tokens | batch | sequential ms/decision | batched ms/decision | batched speed-up |
@@ -317,7 +317,7 @@ Task: "Which of these is a <category>?", with exactly one category member hidden
 words from nine other categories (`bench/tournament_compare.py`). 30 problems per size,
 Qwen2.5-1.5B bf16. A full decision uses letters up to 26 options and two-letter labels above.
 Tournament groups are contiguous and near-equal in size; one batched pass per round. Raw data:
-`bench/results/tournament_compare_*.json`.
+`bench/results/tournament_compare/tournament_compare_*.json`.
 
 | options | full decision | tournament, groups ≤10 | tournament, groups ≤26 | full ms | tournament(10) ms |
 |---:|---:|---:|---:|---:|---:|
@@ -366,7 +366,7 @@ score (4/6 on the Lenovo). It is not a pass/fail criterion.
 `bench/demo_compare.py`: 100 ticks, 4 agents, seeds 0–2, Qwen2.5-1.5B bf16. "Flat" is the
 action tier only: its prompt lists the nearest gem, food and hazard as offsets. "Random" is the
 mock backend with tiered goals. Mean of 3 seeds
-(`bench/results/demo_compare_20260926_051317.json`):
+(`bench/results/demo_compare/demo_compare_20260926_051317.json`):
 
 | setup | gems | food eaten | hazard hits | deaths | decisions/tick | forward ms/tick (median, p90) |
 |---|---:|---:|---:|---:|---:|---:|
@@ -495,7 +495,8 @@ Four seeds is a small sample. The labels cost ~25 ms per tick (longer options). 
 A single-agent scenario built to be harder than the gem field: nine rooms joined by corridors, a
 key that opens the exit, two enemies that chase, and gems, food and potions (`demo/dungeon/`).
 The agent sees only the rooms it has visited. Every decision is recorded to JSONL and replayed in
-`demo/dungeon/viewer.html` (README → The dungeon demo).
+the Master Viewer (`python -m viewer`; the dungeon's renderer is `viewer/games/dungeon.js`; see
+[`dungeon.md`](dungeon.md)).
 
 **Implementation choices, fixed before the first model run** (commit `e227283`):
 
@@ -529,7 +530,7 @@ One state is not evidence, so both wordings went into the evaluation. The `close
 wording became the demo default before it ran.
 
 **Pre-registered evaluation** (`bench/dungeon_eval.py` at commit `2d959dd`, seeds 0–7, every run
-reported). Raw data: `bench/results/dungeon_eval_20260926_163151.json`. The first invocation
+reported). Raw data: `bench/results/dungeon_eval/dungeon_eval_20260926_163151.json`. The first invocation
 finished the two 3B setups, then ran out of XPU memory loading the 1.5B (the 3B was still
 referenced; fixed). A second invocation reused the finished 3B traces (the runs are
 deterministic) and ran the 1.5B and random setups with identical prompts.
@@ -582,7 +583,7 @@ finished: make it the default only if it clearly beats the pre-registered wordin
 | pre-registered wording | 8–15 (new) | 0 / 8 | 5 | 3 | 0 | 3.5 | 3.6 | 4.2 | 170 / 314 |
 | `enemy_aware` | 8–15 (new) | 0 / 8 | 6 | 2 | 0 | 3.5 | 3.4 | 3.2 | 171 / 309 |
 
-Raw data: `bench/results/dungeon_eval_20260926_163345.json` (it reuses the pre-registered 3B
+Raw data: `bench/results/dungeon_eval/dungeon_eval_20260926_163345.json` (it reuses the pre-registered 3B
 traces for seeds 0–7).
 
 - **Why the wording did not help: the move tier follows the target.** Across the 3B runs on
@@ -629,7 +630,7 @@ stay as they were (`demo/dungeon/`).
   enemies).
 
 **Beatable before any model ran (Observed; `bench/shooter_calibration.py`,
-`bench/results/shooter_calibration_20260926_233244.json`).** A hand-written reference bot (BFS
+`bench/results/shooter_calibration/shooter_calibration_20260926_233244.json`).** A hand-written reference bot (BFS
 plus "shoot the nearest visible enemy", seeing only what the prompts describe) set the ceiling.
 Rule variants were compared on dev seeds 1000–1059 with four bots; none is the model.
 
@@ -721,8 +722,8 @@ below came from a failure in a recorded run, checked by re-asking the recorded p
 Four dev runs are not evidence of a win rate; the evaluation below is.
 
 **Pre-registered evaluation** (`bench/shooter_eval.py` at commit `7951472`, seeds 0–9, every run
-reported). Raw data: `bench/results/shooter_eval_20260927_002315.json`; traces in
-`demo/output/` were pruned to the best run per setup (not committed; the runs are deterministic, so
+reported). Raw data: `bench/results/shooter_eval/shooter_eval_20260927_002315.json`; the traces
+were pruned to the best run per setup and never committed (the runs are deterministic, so
 `python -m bench.shooter_eval` with the same seeds regenerates them).
 
 | setup (seeds 0–9) | escaped | died: gunner | died: brute | out of time | key picked up | rooms seen | rooms cleared | kills | hits taken | shots on target | held fire* | forward ms, median / p90 |
@@ -780,7 +781,7 @@ over runs. Median escape tick: 1.5B 151, 3B 234 (2 runs), 3B listed 163, referen
 **Post-hoc replication on seeds 10–19** (never run before; decision rule written into
 `bench/shooter_eval.py` and committed as `88d739d` before the run: switch the 3B demo to the listed
 order only if it also escapes more often than averaging there). Raw data:
-`bench/results/shooter_eval_20260927_005732.json`.
+`bench/results/shooter_eval/shooter_eval_20260927_005732.json`.
 
 | setup | seeds 10–19: escaped | died: gunner | out of time | hits taken | forward ms, median / p90 | seeds 0–19: escaped |
 |---|---:|---:|---:|---:|---:|---:|
@@ -797,9 +798,10 @@ order only if it also escapes more often than averaging there). Raw data:
   sets, more hits (6.7 and 6.0 vs 5.4 and 4.2).
 - Both models now escape about 7 in 10 runs (14 of 20 each). The reference bot's ceiling on
   seeds 0–9 was 10 of 10.
-- Replays in `docs/`: the pre-registered seed-0 runs of both models (both died), the 3B's current
-  setting on seed 0 (`shooter_replay_3b_listed_seed0.html`, escaped at tick 163), and the 1.5B's
-  first escaped seed (`shooter_replay_1.5b_seed1_escaped.html`, chosen after the results).
+- Pinned runs in `runs/shooter/` (listed in `runs/README.md`; watch them with `python -m viewer`):
+  the pre-registered seed-0 runs of both models (both died), the 3B's current setting on seed 0
+  (`*_classic_qwen2.5-3b-listed_seed0.pinned.jsonl`, escaped at tick 163), and the 1.5B's first
+  escaped seed (`*_classic_qwen2.5-1.5b_seed1.pinned.jsonl`, chosen after the results).
 
 **Post-hoc fixes found in the traces of both runs above** (commit `21f6358`; the check on new seeds
 was written into `bench/shooter_eval.py` in the same commit, before it ran). The fixes change what
@@ -823,7 +825,7 @@ The same functions drive the reference bot: 60/60 on dev seeds and 30/30 on seed
 and after the fixes, with fewer hits (16 → 5 and 12 → 3). The bot that never dodges fell from 17
 to 9 of 30, because it now also fights through doorways.
 
-Check (seeds 30–39, never run before; `bench/results/shooter_eval_20260928_123222.json`, run on a
+Check (seeds 30–39, never run before; `bench/results/shooter_eval/shooter_eval_20260928_123222.json`, run on a
 different machine, an RTX 3060 Ti with CUDA): 1.5B 5/10 escaped, 3B listed order 5/10, reference bot
 10/10, bot that never dodges 3/10. No hit came after a move labelled safe. Both models timed out
 on seed 37; the 1.5B because a sleeping brute next to the key left every move reading "no safe
@@ -866,7 +868,7 @@ held fire 0 of 62 on seed 0), always off in the classic game.
 **Pre-registered check** (written into `bench/shooter_eval.py` and committed as `fb3f106` before
 the run; seeds 40–49 with ammo, never run before; rule: keep the fire head on for the 1.5B if it
 escapes at least as many seeds as the old head). Raw data:
-`bench/results/shooter_eval_ammo_20260929_134450.json` (Lenovo, Arc 140V).
+`bench/results/shooter_eval/shooter_eval_ammo_20260929_134450.json` (Lenovo, Arc 140V).
 
 | setup (seeds 40–49, with ammo) | escaped | died: gunner | died: brute | out of time | key picked up | rooms cleared | kills | shots on target | held fire | reload chosen when offered | hits taken | stuck ticks | forward ms, median / p90 |
 |---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
