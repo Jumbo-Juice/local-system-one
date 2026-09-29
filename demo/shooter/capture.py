@@ -20,7 +20,7 @@ from pathlib import Path
 from system_one import load_config, make_engine
 
 from ..common import warm_up
-from ..runs import model_tag, to_jsonl, write_run
+from ..runs import model_tag, stamp, to_jsonl, write_run
 from .brain import Runner
 from .world import CLASSIC, Dungeon, Rules
 
@@ -86,6 +86,7 @@ def main() -> None:
     rules = CLASSIC if args.classic else Rules()
     if args.max_ticks:
         rules = replace(rules, max_ticks=args.max_ticks)
+    started = stamp()  # the run's name carries its start time
     records = capture(engine, args.seed, rules, args.group_size, args.plan_budget if args.plan_budget >= 0 else None,
                       verbose=not args.quiet, order_debias=order_debias(cfg, args.order_debias),
                       fire_head=fire_head(cfg, args.fire_head, args.classic))
@@ -95,7 +96,7 @@ def main() -> None:
         path.parent.mkdir(parents=True, exist_ok=True)
         path.write_text(to_jsonl(records), encoding="utf-8")
     else:
-        path = write_run("shooter", label, records)
+        path = write_run("shooter", label, records, when=started)
     print(json.dumps(records[-1]["summary"], indent=1))
     shown = os.path.relpath(path)
     print("wrote", shown, f"({path.stat().st_size / 1e6:.2f} MB)")
