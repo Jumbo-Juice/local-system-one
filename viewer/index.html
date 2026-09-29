@@ -1,0 +1,243 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>System One Runs</title>
+<!-- The Master Viewer: one page for every demo's runs. Start it with `python -m viewer`.
+     This file is the shell (modes, pool, playback, page layout). Each game demo draws itself from
+     its own file in games/ (see README.md in this folder). -->
+<style>
+  :root {
+    color-scheme: dark;
+    --ground: #0b1017;
+    --panel: #151e2b;
+    --edge: #2c3a4f;
+    --ink: #eef3f8;
+    --muted: #b0bfcf;
+    --faint: #8193a8;
+    --cyan: #6fd8f5;
+    --mint: #7cf5c4;
+    --amber: #ffc94d;
+    --red: #ff5a5a;
+    --void: #05070b;
+    --ui: Bahnschrift, "DIN Alternate", "Barlow Semi Condensed", "Roboto Condensed", "Arial Narrow", system-ui, sans-serif;
+    --mono: "Cascadia Mono", "Cascadia Code", Consolas, "SF Mono", Menlo, monospace;
+  }
+  * { box-sizing: border-box; }
+  [hidden] { display: none !important; }
+  html, body { margin: 0; background: var(--ground); color: var(--ink); }
+  body { font: 15px/1.5 var(--ui); padding-inline: 16px; padding-block: 12px 48px; }
+  .wrap { max-width: 1400px; margin: 0 auto; display: grid; grid-template-columns: minmax(0, 1fr); gap: 14px; }
+  .wrap.wide { max-width: 2200px; }
+
+  /* top bar */
+  .bar { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 14px; min-height: 44px; }
+  .brand { font: 700 17px/1 var(--ui); letter-spacing: .16em; text-transform: uppercase; color: var(--ink); text-decoration: none; }
+  .brand span { color: var(--cyan); }
+  .bar nav { display: flex; flex-wrap: wrap; gap: 6px; }
+  .where { color: var(--muted); font-size: 14px; min-width: 0; overflow-wrap: anywhere; }
+  .where b { color: var(--ink); font-weight: 600; }
+
+  button, select, .file { font: 600 14px/1 var(--ui); letter-spacing: .04em; color: var(--ink);
+    background: var(--panel); border: 1px solid var(--edge); border-radius: 7px; padding: 9px 12px; cursor: pointer; }
+  button:hover, select:hover, .file:hover { border-color: var(--cyan); }
+  button:disabled { opacity: .45; cursor: not-allowed; border-color: var(--edge); }
+  button:focus-visible, select:focus-visible, input:focus-visible, .file:focus-within, summary:focus-visible, a:focus-visible, .choice:focus-within {
+    outline: 2px solid var(--mint); outline-offset: 2px; }
+  button[aria-pressed="true"] { color: var(--ground); background: var(--mint); border-color: var(--mint); }
+  .file input { position: absolute; width: 1px; height: 1px; opacity: 0; }
+  .file { position: relative; display: inline-flex; align-items: center; }
+  label.sr { font: 12px/1 var(--ui); color: var(--muted); letter-spacing: .08em; text-transform: uppercase; }
+
+  /* start screen */
+  .start { display: grid; gap: 18px; padding-top: 4vh; max-width: 1100px; margin: 0 auto; width: 100%; }
+  h1 { font: 700 34px/1.1 var(--ui); letter-spacing: .04em; margin: 0; }
+  .lede { color: var(--muted); margin: 0; max-width: 70ch; }
+  .filter { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+  .choices { display: grid; gap: 14px; grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr)); }
+  .choice { position: relative; display: grid; gap: 8px; align-content: start; text-align: left; padding: 20px;
+    background: var(--panel); border: 1px solid var(--edge); border-radius: 12px; cursor: pointer; color: var(--ink); font: inherit; letter-spacing: 0; }
+  .choice:hover { border-color: var(--cyan); }
+  .choice strong { font: 700 20px/1.2 var(--ui); color: var(--cyan); letter-spacing: .04em; }
+  .choice span { color: var(--muted); }
+  .choice input { position: absolute; width: 1px; height: 1px; opacity: 0; }
+  .note { color: var(--muted); margin: 0; max-width: 80ch; }
+  .warn { color: var(--amber); }
+  pre.cmd { margin: 0; font: 13px/1.45 var(--mono); color: var(--ink); background: var(--void); border-radius: 6px; padding: 8px 10px;
+    white-space: pre-wrap; overflow-wrap: anywhere; }
+
+  /* single run */
+  .stage-box { position: relative; }
+  canvas#stage { display: block; width: 100%; height: auto; aspect-ratio: 16 / 9; max-width: 100%;
+    border: 1px solid var(--edge); border-radius: 10px; background: var(--void); }
+  .problem { position: absolute; inset: 0; display: grid; place-items: center; text-align: center;
+    border: 2px dashed var(--cyan); border-radius: 10px; background: rgba(5, 7, 11, .9); padding: 16px; }
+  .problem p { margin: 0; max-width: 52ch; color: var(--muted); }
+  .problem strong { display: block; color: var(--ink); font-size: 20px; margin-bottom: 6px; }
+  .controls { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; }
+  .controls .group { display: flex; align-items: center; gap: 6px; }
+  #play { min-width: 84px; }
+  #rec.on { color: var(--ground); background: var(--red); border-color: var(--red); }
+  .scrub { flex: 1 1 260px; display: flex; align-items: center; gap: 10px; min-width: 0; }
+  input[type="range"] { flex: 1; min-width: 0; accent-color: var(--mint); }
+  .readout { font: 13px/1 var(--mono); color: var(--muted); font-variant-numeric: tabular-nums; white-space: nowrap; }
+  h2 { font: 700 15px/1.2 var(--ui); letter-spacing: .14em; text-transform: uppercase; color: var(--cyan); margin: 0; }
+  section.panel { display: grid; gap: 10px; background: var(--panel); border: 1px solid var(--edge); border-radius: 10px; padding: 16px; min-width: 0; }
+  .decs { display: grid; gap: 12px; grid-template-columns: repeat(auto-fit, minmax(min(100%, 380px), 1fr)); }
+  .dec { display: grid; gap: 6px; align-content: start; background: var(--ground); border: 1px solid var(--edge); border-radius: 8px; padding: 12px; min-width: 0; }
+  .dec .tier { font-weight: 700; letter-spacing: .12em; color: var(--cyan); text-transform: uppercase; }
+  .dec .meta { color: var(--muted); font-size: 13px; }
+  .dec pre, details pre { margin: 0; font: 12.5px/1.45 var(--mono); color: var(--ink); white-space: pre-wrap; overflow-wrap: anywhere;
+    background: var(--void); border-radius: 6px; padding: 10px; max-height: 360px; overflow: auto; }
+  .dec .answer { font: 13px/1.4 var(--mono); color: var(--mint); margin: 0; overflow-wrap: anywhere; }
+  .dec table { font: 12.5px/1.4 var(--mono); }
+  .dec td, .dec th { padding: 2px 10px 2px 0; text-align: right; color: var(--muted); font-weight: 400; }
+  .dec td:first-child, .dec th:first-child { text-align: left; color: var(--ink); }
+  table { border-collapse: collapse; font-variant-numeric: tabular-nums; }
+  /* About this run: outcome banner, facts in titled cards (one fact per row, explanation as a hint
+     under the value), notes grouped under short headings. Every game uses this layout. */
+  .verdict { display: grid; gap: 2px; border-left: 4px solid var(--tone); padding: 4px 0 4px 14px; }
+  .verdict strong { font: 700 26px/1.15 var(--ui); letter-spacing: .02em; color: var(--tone); }
+  .verdict strong span { color: var(--ink); font-weight: 500; font-size: 20px; }
+  .verdict p { margin: 0; color: var(--muted); }
+  .cards { display: grid; gap: 12px; align-items: start; grid-template-columns: repeat(auto-fit, minmax(min(100%, 300px), 1fr)); }
+  .card { background: var(--ground); border: 1px solid var(--edge); border-radius: 8px; padding: 12px 14px; min-width: 0; }
+  h3 { font: 700 13px/1.2 var(--ui); letter-spacing: .12em; text-transform: uppercase; color: var(--muted); margin: 0 0 6px; }
+  .card dl { margin: 0; display: grid; grid-template-columns: max-content minmax(0, 1fr); }
+  .card dt, .card dd { padding: 7px 0; border-top: 1px solid var(--edge); }
+  .card dt:first-of-type, .card dd:first-of-type { border-top: 0; }
+  .card dt { color: var(--muted); padding-right: 16px; }
+  .card dd { margin: 0; color: var(--ink); font-weight: 600; font-variant-numeric: tabular-nums; }
+  .card dd small { display: block; margin-top: 2px; font: 400 13px/1.35 var(--ui); color: var(--muted); }
+  .card ul { margin: 0; padding-left: 18px; color: var(--muted); display: grid; gap: 6px; }
+  .card pre { margin: 6px 0 0; font: 12.5px/1.45 var(--mono); color: var(--ink); white-space: pre-wrap; overflow-wrap: anywhere;
+    background: var(--void); border-radius: 6px; padding: 8px 10px; }
+  summary { cursor: pointer; color: var(--muted); }
+  code { font-family: var(--mono); font-size: 13px; }
+
+  /* auto-demo: two panes */
+  .panes { display: grid; gap: 14px; align-items: start; grid-template-columns: repeat(auto-fit, minmax(min(100%, 520px), 1fr)); }
+  .pane { display: grid; gap: 6px; min-width: 0; background: var(--panel); border: 1px solid var(--edge); border-radius: 10px; padding: 10px; }
+  .pane-title { display: flex; align-items: baseline; gap: 8px; min-width: 0; font-size: 14px; color: var(--muted);
+    background: none; border: 0; padding: 0; text-align: left; letter-spacing: 0; font-weight: 400; cursor: pointer; }
+  .pane-title:hover { border: 0; color: var(--ink); }
+  .pane-title .game { font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: var(--cyan); flex: none; }
+  .pane-title .label { color: var(--ink); font-weight: 600; flex: 0 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .pane-title .when { flex: none; white-space: nowrap; }
+  .pane canvas { display: block; width: 100%; height: auto; max-height: calc(100vh - 250px); object-fit: contain;
+    border-radius: 8px; background: var(--void); cursor: pointer; }
+  .strip { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px; font-size: 13px; }
+  .chip { display: flex; gap: 6px; align-items: baseline; min-width: 0; background: var(--ground);
+    border: 1px solid var(--edge); border-radius: 13px; padding: 3px 10px; white-space: nowrap; }
+  .chip b { color: var(--cyan); font-weight: 700; letter-spacing: .1em; text-transform: uppercase; font-size: 11px; flex: none; }
+  .chip span { flex: 1; color: var(--ink); overflow: hidden; text-overflow: ellipsis; min-width: 0; }
+  .chip i { color: var(--mint); font-style: normal; font-family: var(--mono); font-size: 12px; flex: none; }
+  .queue { color: var(--muted); font-size: 14px; }
+  @media (prefers-reduced-motion: reduce) { * { scroll-behavior: auto !important; } }
+</style>
+</head>
+<body>
+<div class="wrap" id="wrap">
+  <header class="bar">
+    <a class="brand" href="#" id="home">System One <span>· Runs</span></a>
+    <nav id="nav"></nav>
+    <span class="where" id="where"></span>
+  </header>
+
+  <!-- Start: pick how to watch -->
+  <main class="start" id="start" hidden>
+    <h1>Watch a run</h1>
+    <p class="lede">Every run the demos capture is a <code>trace.jsonl</code> in <code>runs/&lt;game&gt;/</code>. This page replays
+      the recorded decisions; it does not run the model.</p>
+    <div class="filter" id="filter" role="group" aria-label="Which runs"></div>
+    <div class="choices">
+      <label class="choice" id="choose-file"><strong>Load a trace</strong>
+        <span>Pick a <code>.jsonl</code> file, or drop one anywhere on this page.</span>
+        <input id="file" type="file" accept=".jsonl,.json,.ndjson,application/json"></label>
+      <button class="choice" id="choose-random"><strong>Random run</strong>
+        <span>One run picked at random from the pool, in the full view.</span></button>
+      <button class="choice" id="choose-auto"><strong>Auto-demo</strong>
+        <span>Two panes play the pool from newest to oldest; each takes the next older run when its run ends, then back to the newest.</span></button>
+    </div>
+    <p class="note" id="pool-note"></p>
+  </main>
+
+  <!-- One run, full view -->
+  <main id="single" hidden>
+    <div class="wrap">
+      <div class="stage-box">
+        <canvas id="stage" width="1920" height="1080" role="img"
+                aria-label="Replay of one agent's run: the map and the model's decision cards"></canvas>
+        <div class="problem" id="problem" hidden><div><strong>Could not show this run</strong><p></p></div></div>
+      </div>
+      <div class="controls" aria-label="Playback">
+        <div class="group">
+          <button id="restart" title="Back to the start (Home)">Restart</button>
+          <button id="back" title="Previous tick (Left arrow)">◀ Tick</button>
+          <button id="play" title="Play or pause (Space)">Play</button>
+          <button id="fwd" title="Next tick (Right arrow)">Tick ▶</button>
+        </div>
+        <div class="group">
+          <label class="sr" for="speed">Speed</label>
+          <select id="speed">
+            <option value="0.25">0.25×</option><option value="0.5">0.5×</option><option value="1" selected>1× recorded</option>
+            <option value="2">2×</option><option value="4">4×</option><option value="8">8×</option><option value="16">16×</option>
+          </select>
+        </div>
+        <div class="scrub">
+          <input id="scrub" type="range" min="0" max="10000" value="0" aria-label="Position in the run">
+          <span class="readout" id="readout">tick 0 / 0</span>
+        </div>
+        <div class="group">
+          <button id="rec" title="Plays from the start and saves the stage as a WebM video">Record WebM</button>
+        </div>
+      </div>
+
+      <section class="panel" aria-labelledby="inspect-h">
+        <h2 id="inspect-h">What the model saw at tick <span id="inspect-tick">0</span></h2>
+        <p class="note" id="inspect-note"></p>
+        <div class="decs" id="decs"></div>
+      </section>
+
+      <section class="panel" aria-labelledby="about-h">
+        <h2 id="about-h">About this run</h2>
+        <div class="verdict" id="verdict"></div>
+        <div class="cards" id="facts"></div>
+        <div class="cards" id="notes"></div>
+        <details><summary>Prompt template</summary><pre id="template"></pre></details>
+      </section>
+    </div>
+  </main>
+
+  <!-- Auto-demo: two panes walking the pool -->
+  <main id="auto" hidden>
+    <div class="wrap wide">
+      <div class="controls" aria-label="Auto-demo">
+        <div class="group">
+          <button id="auto-play" title="Pause or play both panes (Space)">Pause</button>
+          <label class="sr" for="auto-speed">Speed</label>
+          <select id="auto-speed">
+            <option value="0.5">0.5×</option><option value="1" selected>1× recorded</option>
+            <option value="2">2×</option><option value="4">4×</option><option value="8">8×</option>
+          </select>
+        </div>
+        <div class="filter" id="auto-filter" role="group" aria-label="Which runs"></div>
+        <span class="queue" id="queue"></span>
+      </div>
+      <div class="panes" id="panes"></div>
+      <p class="note" id="auto-note"></p>
+    </div>
+  </main>
+</div>
+
+<!-- A bundled page (python -m viewer --bundle) carries its run here; the served page leaves it empty. -->
+<script id="trace" type="application/x-ndjson"></script>
+<script src="paint.js"></script>
+<script src="core.js"></script>
+<!-- One viewer per game demo. A new demo adds its file here (see README.md in this folder). -->
+<script src="games/shooter.js"></script>
+<script src="games/dungeon.js"></script>
+<script src="shell.js"></script>
+</body>
+</html>
