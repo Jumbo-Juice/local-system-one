@@ -77,6 +77,22 @@ class _PrefixCache:
             self.kv.popitem(last=False)
 
 
+def render_chat_template(tok, system: str, user: str) -> str:
+    """Prompt text for one system + user message with a Hugging Face tokenizer's chat template."""
+    if not tok.chat_template:
+        return f"{system}\n\nUser:\n{user}\n\nAssistant:\n"
+    messages = [{"role": "system", "content": system}, {"role": "user", "content": user}]
+    try:
+        return tok.apply_chat_template(
+            messages, tokenize=False, add_generation_prompt=True, enable_thinking=False
+        )
+    except Exception:  # some templates reject a system role
+        merged = [{"role": "user", "content": f"{system}\n\n{user}"}]
+        return tok.apply_chat_template(
+            merged, tokenize=False, add_generation_prompt=True, enable_thinking=False
+        )
+
+
 def resolve_device(requested: str) -> str:
     import torch
 
@@ -165,19 +181,7 @@ class HFBackend(Backend):
         return self.tokenizer.decode(list(ids), clean_up_tokenization_spaces=False)
 
     def render_chat(self, system: str, user: str) -> str:
-        tok = self.tokenizer
-        if not tok.chat_template:
-            return f"{system}\n\nUser:\n{user}\n\nAssistant:\n"
-        messages = [{"role": "system", "content": system}, {"role": "user", "content": user}]
-        try:
-            return tok.apply_chat_template(
-                messages, tokenize=False, add_generation_prompt=True, enable_thinking=False
-            )
-        except Exception:  # some templates reject a system role
-            merged = [{"role": "user", "content": f"{system}\n\n{user}"}]
-            return tok.apply_chat_template(
-                merged, tokenize=False, add_generation_prompt=True, enable_thinking=False
-            )
+        return render_chat_template(self.tokenizer, system, user)
 
     # -- forward passes ----------------------------------------------------------
 
