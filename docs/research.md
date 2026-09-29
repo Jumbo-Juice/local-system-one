@@ -765,11 +765,13 @@ over runs. Median escape tick: 1.5B 151, 3B 234 (2 runs), 3B listed 163, referen
   north, it chose `move north (BULLET: -15 health)` at p = 0.97 over `stay (safe; on the target)`
   (seed 0, tick 24). Inferred, not tested: while "fight the enemies here" is the goal, the 3B moves
   toward the enemy it reads about, as the first dungeon's move tier moved toward its target.
-- The two hits after a move labelled safe were not investigated.
-- **Labelling defect found after the run (not fixed, so the demo stays the evaluated version):**
-  when the agent stands on its target and a bullet will cross its cell, the stay option reads
-  `stay (BULLET: -15 health; reach the target)` instead of "on the target".
-- One 1.5B run (seed 3) never left the start area: 389 stuck ticks on one explore target.
+- The two hits after a move labelled safe were not investigated here (later: a labelling defect,
+  fixed; see "Post-hoc fixes" below).
+- **Labelling defect found after the run (not fixed at the time, so the demo stayed the evaluated
+  version; fixed later, below):** when the agent stands on its target and a bullet will cross its
+  cell, the stay option reads `stay (BULLET: -15 health; reach the target)` instead of "on the target".
+- One 1.5B run (seed 3) never left the start area: 389 stuck ticks on one explore target (cause
+  found later, below).
 - Random decisions never left the start room: the mock backend's choice is a fixed function of
   the prompt, so it repeats in a static state.
 - The pre-registered replays (seed 0) both die to a gunner: the 1.5B at tick 98 after the key, the
@@ -798,3 +800,87 @@ order only if it also escapes more often than averaging there). Raw data:
 - Replays in `docs/`: the pre-registered seed-0 runs of both models (both died), the 3B's current
   setting on seed 0 (`shooter_replay_3b_listed_seed0.html`, escaped at tick 163), and the 1.5B's
   first escaped seed (`shooter_replay_1.5b_seed1_escaped.html`, chosen after the results).
+
+**Post-hoc fixes found in the traces of both runs above** (commit `21f6358`; the check on new seeds
+was written into `bench/shooter_eval.py` in the same commit, before it ran). The fixes change what
+the model reads, so the demo is no longer the version evaluated above.
+
+1. *The stay label.* A risky stay on the target read "reach the target"; it now reads "on the
+   target". In the traces of both evaluations the defective option appeared in 150 move states and
+   was chosen 33 times.
+2. *Sleeping brutes.* All 4 hits taken after a move labelled `safe` (3 from the main run, 1 from
+   the replication) were the same case: the move entered a room next to a sleeping brute, which
+   entering wakes before enemies act, so the brute hit in the same tick. The labels only counted
+   awake brutes. Now a sleeping brute counts when the move enters its room.
+3. *No fight from the corridor.* In the stuck 1.5B run (seed 3), two awake brutes stood just inside
+   a doorway while the agent was in the corridor. Fights were offered only inside the room, so the
+   only goal was "explore" and every move read "no safe route to the target". A seen room's awake
+   enemies can now be fought from its doorways and the corridors out of it. The first version of
+   this fix (by line of sight) made the reference bot flip-flop between two cells on a dev seed,
+   and the next one had it fight rooms it had not seen; both were corrected before the commit.
+
+The same functions drive the reference bot: 60/60 on dev seeds and 30/30 on seeds 0–29 before
+and after the fixes, with fewer hits (16 → 5 and 12 → 3). The bot that never dodges fell from 17
+to 9 of 30, because it now also fights through doorways.
+
+Check (seeds 30–39, never run before; `bench/results/shooter_eval_20260928_123222.json`, run on a
+different machine, an RTX 3060 Ti with CUDA): 1.5B 5/10 escaped, 3B listed order 5/10, reference bot
+10/10, bot that never dodges 3/10. No hit came after a move labelled safe. Both models timed out
+on seed 37; the 1.5B because a sleeping brute next to the key left every move reading "no safe
+route to the target", a side effect of fix 2 (not fixed yet).
+
+### Ammo and the fire head
+
+**Ammo** (on by default since `0fdaf31`; rules in the README, chosen with bots only by a rule
+written before the runs, `bench/shooter_calibration.py --ammo`). `--classic` and `--game classic`
+reproduce the game without ammo that everything above measured.
+
+**The 1.5B held fire (Observed).** One run per model on seed 0 with ammo (1.5B with order
+averaging, 3B in listed order): both died to a gunner, the 3B after 8 kills, the 1.5B with no shot
+fired. It held fire in 53 of 53 shoot decisions. The two order readings of tick 9: with the options
+as listed (`hold fire` last) p(hold) = 0.92; reversed (`hold fire` first) 0.19, with 0.81 spread
+over the three enemies (0.15, 0.18, 0.48). Averaged, hold fire won with 0.56. Adding the three
+shoot options up (0.44) would not have changed the choice, so the problem is not only votes split
+across enemies.
+
+**Re-asking recorded states (dev probe; seed 0 with ammo, 53 states, and dev seeds 1000–1001
+without ammo, 136 states; order averaging on).** Held fire in the recorded runs: 53 of 53 and 55 of
+136.
+
+| shoot question and options | held fire |
+|---|---:|
+| as recorded: one `shoot <enemy>` option per enemy, `hold fire` last | 108 / 189 |
+| "Do you shoot this tick?": `shoot at an enemy (N in sight, clear line)`, `hold fire` | 161 / 189 |
+| "Which shot do you take this tick?": `shoot (N enemies in sight, clear line)`, `hold fire` | 0 / 189 |
+| with ammo, "What do you do with your gun this tick?", same merged option | 0 / 53 |
+
+A yes/no question made it worse; the merged option under the game's own question made it fire.
+
+**Change (implementation choice, `fb3f106`).** With `fire_head` the shoot head offers one `shoot
+(N enemies in sight, clear line)` option next to `reload` and `hold fire`, and an aim head in the
+same batch (`Which enemy do you shoot?`, context: the strategy only) picks the enemy; with one enemy
+in sight the aim is committed without a model call. The aim head sees neither the shoot head's
+answer nor the move head's. On for the 1.5B (`[shooter] fire_head = true`), off for the 3B (which
+held fire 0 of 62 on seed 0), always off in the classic game.
+
+**Pre-registered check** (written into `bench/shooter_eval.py` and committed as `fb3f106` before
+the run; seeds 40–49 with ammo, never run before; rule: keep the fire head on for the 1.5B if it
+escapes at least as many seeds as the old head). Raw data:
+`bench/results/shooter_eval_ammo_20260929_134450.json` (Lenovo, Arc 140V).
+
+| setup (seeds 40–49, with ammo) | escaped | died: gunner | died: brute | out of time | key picked up | rooms cleared | kills | shots on target | held fire | reload chosen when offered | hits taken | stuck ticks | forward ms, median / p90 |
+|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
+| **1.5B, fire head (the 1.5B demo)** | **6** | 3 | 0 | 1 | 7 | 4.6 | 8.8 | 92% | 0% | 23% | 4.1 | 2.1 | 324 / 812 |
+| 1.5B, one shoot option per enemy | 0 | 6 | 1 | 3 | 4 | 0.6 | 0.6 | 93% | 98% | 94% | 5.4 | 123.2 | 476 / 931 |
+| reference bot (not a model) | 10 | 0 | 0 | 0 | 10 | 6.4 | 11.8 | – | – | – | 0.2 | – | – |
+
+- 6 vs 0 of 10 (two-sided Fisher p = 0.011): by the rule the fire head stays on.
+- Without it the 1.5B still barely fought: it held fire in 98% of shoot decisions and, when
+  `reload` was on offer, chose it 94% of the time. Two of its runs never left the start area
+  (593 and 591 stuck ticks).
+- With it: one run ran out of bullets for 40 ticks and still escaped (seed 47). Hits after a move
+  labelled safe: 0 in both setups.
+- Forward-pass latency was lower with the fire head (324 vs 476 ms median), although it adds a
+  decision; why was not investigated.
+- The 3B with ammo has not been evaluated; seed 0 of the ammo game is development data for this
+  change.
