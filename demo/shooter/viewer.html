@@ -147,14 +147,16 @@
         <li>Dimmed rooms: not seen by the agent yet. You see the whole map; the agent does not.</li>
         <li>Red bars across a doorway: the room is sealed until its enemies are dead.</li>
         <li>Red dashed line: a gunner is aiming. It fires at the end of that tick.</li>
+        <li id="ammo-note" hidden>Green crates with bullet tips: ammo boxes. Stepping on one adds up to 10 bullets to
+          the reserve; a box stays where it lies while the reserve is full.</li>
       </ul></div>
       <div class="card"><h3>Reading the decisions</h3><ul>
         <li>Every decision was made by the model while the run was captured. This page only replays the recorded
           trace; it does not recompute or re-decide anything.</li>
         <li>Probabilities are the model's next-token softmax over the option labels, averaged over two option orders
           when order averaging is on. They are not calibrated.</li>
-        <li>"Only option": one choice was possible (for example holding fire while the gun reloads), so it was
-          committed without a model call.</li>
+        <li>"Only option": one choice was possible (for example holding fire while the gun reloads, or reloading an
+          empty gun), so it was committed without a model call.</li>
       </ul></div>
       <div class="card"><h3>Playback and video</h3><ul>
         <li>1× plays at the recorded tick times. Ticks shorter than 50 ms (for example with the no-model mock backend)
@@ -178,6 +180,7 @@ const K = {
   // map: floors clearly lighter than walls, walls clearly lighter than the void
   wall: "#141b26", wallTop: "#27344a", wallFace: "#0c1118", floor: "#34445c", floorLine: "#3f5170",
   corridor: "#2c3a4f", jamb: "#d6ae6e", shot: "#effff8",
+  ammo: "#b6f05a", brass: "#ffd28a", crate: "#34401f",
 };
 const UI = getComputedStyle(document.documentElement).getPropertyValue("--ui").trim();
 const MONO = getComputedStyle(document.documentElement).getPropertyValue("--mono").trim();
@@ -263,6 +266,7 @@ function load(text) {
   $("template").textContent = "System prompt:\n" + R.header.engine.system_prompt +
     "\n\nExample of a full prompt as the model saw it (move head, state shown as <state>):\n\n" + R.header.example_prompt;
   fillFacts();
+  $("ammo-note").hidden = !R.rules.ammo;
   updateButtons();
   seekHash();
 }
@@ -379,6 +383,12 @@ function potionGlyph(x, y, s) {
   ctx.fillRect(x - 3, y - s * 0.95, 6, s * 0.8);
   ctx.fillStyle = "#e0bb8a"; ctx.fillRect(x - 4, y - s * 1.1, 8, 4);
   ctx.fillStyle = "#ffe0ec"; ctx.beginPath(); ctx.arc(x - 3, y + 1, 2.2, 0, 7); ctx.fill();
+}
+function ammoGlyph(x, y) {  // a crate with three bullet tips
+  ctx.fillStyle = K.crate; rrect(x - 9, y - 3, 18, 11, 2); ctx.fill();
+  ctx.strokeStyle = K.ammo; ctx.lineWidth = 2; ctx.stroke();
+  ctx.fillStyle = K.brass;
+  for (const dx of [-5, 0, 5]) { ctx.beginPath(); ctx.moveTo(dx - 2, y - 3); ctx.lineTo(dx - 2, y - 8); ctx.arc(dx, y - 8, 2, Math.PI, 0); ctx.lineTo(dx + 2, y - 3); ctx.fill(); }
 }
 function keyGlyph(x, y, s) {
   ctx.strokeStyle = K.amber; ctx.lineWidth = 3.5; ctx.lineCap = "round";
@@ -520,6 +530,7 @@ function drawOrder() {
 }
 
 function drawHud(w) {
+  if (w.agent.loaded !== undefined) return drawAmmoHud(w);
   const a = w.agent, y = 204, rules = R.rules;
   spacing(1.5); text("HEALTH", 40, y + 22, K.muted, 14, 700); spacing(0);
   const bx = 112; rrect(bx, y + 10, 150, 14, 7); ctx.fillStyle = K.track; ctx.fill();
@@ -535,6 +546,34 @@ function drawHud(w) {
   spacing(1.5); text(a.has_key ? "KEY CARRIED" : "NO KEY", 620, y + 22, a.has_key ? K.amber : K.muted, 14, 700); spacing(0);
   text(`${w.seen.length}/9 · ${w.cleared.length}`, 952, y + 23, K.ink, 18, 700, MONO, "right");
   spacing(1.5); text("SEEN · CLEARED", 870, y + 22, K.muted, 13, 700, UI, "right"); spacing(0);
+}
+
+// With ammo: health, the magazine as bullet pips with the reserve, kills, key, rooms.
+function drawAmmoHud(w) {
+  const a = w.agent, y = 204, rules = R.rules;
+  spacing(1.5); text("HEALTH", 40, y + 22, K.muted, 14, 700); spacing(0);
+  const bx = 112, bw = 118; rrect(bx, y + 10, bw, 14, 7); ctx.fillStyle = K.track; ctx.fill();
+  const hc = a.health > 60 ? K.mint : a.health > 30 ? K.amber : K.red;
+  if (a.health > 0) { rrect(bx, y + 10, Math.max(14, bw * a.health / rules.health), 14, 7); ctx.fillStyle = hc; ctx.fill(); }
+  text(String(a.health), bx + bw + 8, y + 23, K.ink, 18, 700, MONO);
+  spacing(1.5); text("AMMO", 300, y + 22, K.muted, 14, 700); spacing(0);
+  const out = a.loaded + a.reserve === 0;
+  for (let k = 0; k < rules.magazine; k++) {
+    const px = 352 + k * 11, full = k < a.loaded;
+    ctx.fillStyle = full ? K.brass : K.track;
+    ctx.beginPath(); ctx.moveTo(px, y + 27); ctx.lineTo(px, y + 13); ctx.arc(px + 3.5, y + 13, 3.5, Math.PI, 0); ctx.lineTo(px + 7, y + 27); ctx.closePath(); ctx.fill();
+  }
+  const rx = 352 + rules.magazine * 11 + 4;
+  text(`+${a.reserve}`, rx, y + 23, a.reserve ? K.ink : K.red, 18, 700, MONO);
+  const state = out ? ["OUT", K.red] : a.reloading ? [`RELOAD ${a.reloading}`, K.amber] : a.loaded === 0 ? ["EMPTY", K.red]
+    : a.cooldown ? [`NEXT ${a.cooldown}`, K.muted] : ["READY", K.ammo];
+  text(state[0], rx + 46, y + 22, state[1], 14, 700);
+  text(`${a.kills}`, 612, y + 23, K.ink, 18, 700, MONO, "right");
+  spacing(1.5); text("KILLS", 620, y + 22, K.muted, 14, 700); spacing(0);
+  if (a.has_key) keyGlyph(705, y + 16, 15); else { ctx.globalAlpha = 0.35; keyGlyph(705, y + 16, 15); ctx.globalAlpha = 1; }
+  spacing(1.5); text(a.has_key ? "KEY" : "NO KEY", 725, y + 22, a.has_key ? K.amber : K.muted, 14, 700); spacing(0);
+  text(`${w.seen.length}/9 · ${w.cleared.length}`, 952, y + 23, K.ink, 18, 700, MONO, "right");
+  spacing(1.5); text("ROOMS", 872, y + 22, K.muted, 13, 700, UI, "right"); spacing(0);
 }
 
 function bulletEnd(t, id) {
@@ -560,6 +599,7 @@ function drawMap(i, f, t, world, after, p) {
   // Items (drawn under the fog: the viewer sees them, the agent may not).
   const it = world.items;
   for (const [x, y] of it.potions) potionGlyph(cx(x), cy(y), 10);
+  for (const [x, y] of it.ammo || []) ammoGlyph(cx(x), cy(y) + 2);
   if (it.key) keyGlyph(cx(it.key[0]), cy(it.key[1]), 12);
   const escaped = R.end && R.end.outcome === "escaped" && i === R.n - 1 && f > 0.85;
   exitGlyph(cx(map.exit[0]), cy(map.exit[1]), 12, !world.agent.has_key, world.agent.has_key || escaped);
@@ -672,7 +712,8 @@ function recentAge(i, f, kind, span) {
 
 function popup(ev, age, pos) {
   const labels = { potion: [`+${ev.gain} HEALTH`, K.pink], key: ["KEY!", K.amber], hit: [`−${ev.damage} HEALTH`, K.red],
-    exit_locked: ["LOCKED: NO KEY", K.amber], bump: ["BUMP", K.faint], blocked: ["BLOCKED", K.faint] };
+    exit_locked: ["LOCKED: NO KEY", K.amber], bump: ["BUMP", K.faint], blocked: ["BLOCKED", K.faint],
+    ammo: [`+${ev.gain} AMMO`, K.ammo], reload: ["RELOADING", K.amber] };
   let where = pos, label, col;
   const room = (id) => R.map.rooms[id], mid = (r) => [r.x0 + (r.w - 1) / 2, r.y0 + (r.h - 1) / 2];
   if (ev.kind === "room_seen") { where = mid(room(ev.room)); label = room(ev.room).name.toUpperCase() + " DISCOVERED"; col = K.cyan; }
@@ -790,7 +831,7 @@ function drawCard(tier, i) {
 
 // ---------------------------------------------------------------- timeline
 
-const EVENT_COL = { key: K.amber, hit: K.red, died: K.red, escaped: K.mint, potion: K.pink, enemy_killed: K.ink, room_cleared: K.mint, room_seen: K.cyan };
+const EVENT_COL = { key: K.amber, hit: K.red, died: K.red, escaped: K.mint, potion: K.pink, enemy_killed: K.ink, room_cleared: K.mint, room_seen: K.cyan, ammo: K.ammo };
 
 function drawTimelineBase(run) {
   const off = document.createElement("canvas"); off.width = TL.w; off.height = TL.h;
@@ -807,6 +848,8 @@ function drawTimelineBase(run) {
     const h = ph * Math.min(ms, cap) / cap;
     g.fillStyle = plan ? K.cyan : K.slate; g.fillRect(x, bot - h, Math.max(1, bw - (bw > 3 ? 1 : 0)), h);
     if (t.stuck_streak >= 6) { g.fillStyle = K.red; g.fillRect(x, bot + 2, Math.max(1, bw), 4); }
+    const ag = t.world.agent;
+    if (ag.loaded !== undefined && ag.loaded + ag.reserve === 0) { g.fillStyle = K.amber; g.fillRect(x, bot + 7, Math.max(1, bw), 3); }
     for (const ev of t.events) {
       const col = EVENT_COL[ev.kind];
       if (!col) continue;
@@ -829,12 +872,14 @@ function drawTimeline(p) {
   const x = TL.x + TL.w * (p / R.n);
   ctx.fillStyle = K.ink; ctx.fillRect(x - 1, TL.y, 2, TL.h);
   const legend = [["plan + control", K.cyan], ["control only", K.slate], ["hit", K.red], ["kill", K.ink], ["no progress 6+", K.red]];
-  let lx = TL.x + 200;
+  if (R.rules.ammo) { legend.splice(4, 0, ["ammo box", K.ammo]); legend.push(["out of ammo", K.amber]); }
+  let lx = TL.x;
+  const ly = TL.y + TL.h + 18;  // under the timeline, clear of the latency figures above it
   for (const [s, c] of legend) {
     ctx.fillStyle = c;
-    if (s === "hit" || s === "kill") { ctx.beginPath(); ctx.arc(lx + 5, TL.y - 13, 4, 0, 7); ctx.fill(); }
-    else ctx.fillRect(lx, TL.y - 18, 10, 10);
-    text(s, lx + 15, TL.y - 8, K.muted, 12, 500); font(12, 500); lx += 28 + ctx.measureText(s).width;
+    if (s === "hit" || s === "kill" || s === "ammo box") { ctx.beginPath(); ctx.arc(lx + 5, ly - 5, 4, 0, 7); ctx.fill(); }
+    else ctx.fillRect(lx, ly - 10, 10, 10);
+    text(s, lx + 15, ly, K.muted, 12, 500); font(12, 500); lx += 28 + ctx.measureText(s).width;
   }
 }
 
@@ -939,6 +984,13 @@ function fillFacts() {
       ...(s.hits_after_safe_move != null ? [["Hits after a safe move", v(s.hits_after_safe_move), "a move labelled safe that was not"]] : []),
       ["Potions drunk", v(s.potions_drunk)],
     ]],
+    ...(s.reloads === undefined ? [] : [["Ammo", [
+      ["Reloads", v(s.reloads), `${v(s.reloads_chosen)} chosen by the model (${v(s.reloads_chosen_in_fight)} with an enemy in sight); the rest refilled an empty gun`],
+      ["Ammo boxes", v(s.ammo_boxes_picked), `${v(s.ammo_picked)} bullets picked up`],
+      ["Out of ammo", s.ticks_out_of_ammo ? `${s.ticks_out_of_ammo} ticks` : "never", s.first_out_of_ammo_tick != null ? `first at tick ${s.first_out_of_ammo_tick}` : null],
+      ["Bullets left", v(s.ammo_left), `fewest during the run: ${v(s.min_ammo)}`],
+      ["\"Pick up ammo\" goal", `${v(s.ammo_goal_ticks)} ticks`],
+    ]]]),
     ["Model", [
       ["Model decisions", v(s.model_decisions), `${v(s.planning_decisions)} of them planning`],
       ["Only-option commits", v(s.only_option_commits), "no model call needed"],
