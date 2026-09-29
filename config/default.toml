@@ -17,3 +17,4 @@ multi_token = "auto"                      # only used when answer = "text"
 
 [shooter]
 order_debias = true  # demo.shooter: without it the 1.5B's shots followed the option order (0 of 10 escaped) (docs/research.md)
+fire_head = true  # demo.shooter: one 'shoot' option + an aim head; with one option per enemy the 1.5B held fire (docs/research.md)
