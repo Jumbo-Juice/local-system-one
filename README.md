@@ -277,7 +277,7 @@ defect). Both models timed out on seed 37: the 1.5B because a sleeping brute nex
 every move labelled "no safe route to the target", the 3B by staying put on an explore target
 with the key in hand. Not fixed yet.
 
-**Ammo (new, on by default; not yet evaluated with the models).** The gun holds 6 bullets; a
+**Ammo (new, on by default; so far evaluated with the 1.5B only, below).** The gun holds 6 bullets; a
 reload takes 3 ticks and the gun cannot fire meanwhile; the agent starts with 36 bullets (30 in
 reserve, the cap) and 5 ammo boxes of 10 lie in rooms. The shoot head offers `reload` while the
 magazine is not full (an empty gun reloads without a model call), the strategy tier offers
@@ -287,6 +287,23 @@ Runs are longer, so the tick limit is 600. The rules were chosen with bots only,
 reference bot escapes 60/60 and never runs dry; a bot that ignores ammo (reloads only an empty
 gun, never walks to a box) escapes 31/60. Everything evaluated above ran without ammo:
 `--classic` (capture) and `--game classic` (`bench/shooter_eval.py`) reproduce it exactly.
+
+**Fire head for the 1.5B (post hoc, checked on new seeds).** In the game with ammo the 1.5B held
+fire in all 53 shoot decisions of seed 0: each enemy in sight was its own option, and `hold fire`
+won every time. With `fire_head` the shoot head offers a single `shoot (N enemies in sight, clear
+line)` option, and an aim head in the same batch picks the enemy (no model call with one enemy in
+sight). It is on for the 1.5B (`[shooter] fire_head`), off for the 3B, and always off in the
+classic game. Pre-registered check (Observed; seeds 40–49, game with ammo;
+`bench/results/shooter_eval_ammo_20260929_134450.json`):
+
+| setup (seeds 40–49, with ammo) | escaped | died | out of time | kills | held fire | hits taken | forward ms, median / p90 |
+|---|---:|---:|---:|---:|---:|---:|---:|
+| **1.5B with the fire head (the 1.5B demo)** | **6 / 10** | 3 | 1 | 8.8 | 0% | 4.1 | 324 / 812 |
+| 1.5B, one shoot option per enemy | 0 / 10 | 7 | 3 | 0.6 | 98% | 5.4 | 476 / 931 |
+| reference bot (not a model) | 10 / 10 | 0 | 0 | 11.8 | – | 0.2 | – |
+
+6 vs 0 of 10 (two-sided Fisher p = 0.011), so by the rule fixed before the run the fire head stays
+on. The 3B with ammo is not evaluated yet.
 
 ### The first dungeon demo (replaced by the shooter): one agent, recorded and replayed
 
