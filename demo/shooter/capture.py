@@ -34,6 +34,15 @@ def order_debias(cfg: dict, flag: bool | None = None) -> bool:
     return flag if flag is not None else bool(cfg.get("shooter", {}).get("order_debias", True))
 
 
+def fire_head(cfg: dict, flag: bool | None = None, classic: bool = False) -> bool:
+    """One "shoot" option plus an aim head, instead of one shoot option per enemy: the command-line
+    flag, else off for the classic game (evaluated with one option per enemy), else ``[shooter]
+    fire_head`` in the config, else off. On for the 1.5B, which otherwise held fire (docs/research.md)."""
+    if flag is not None:
+        return flag
+    return False if classic else bool(cfg.get("shooter", {}).get("fire_head", False))
+
+
 def capture(engine, seed: int, rules: Rules | None = None, group_size: int = 8, plan_budget: int | None = 1,
             verbose: bool = True, **brain_options) -> list[dict]:
     runner = Runner(Dungeon(seed, rules), engine, group_size=group_size, plan_budget=plan_budget, **brain_options)
@@ -67,6 +76,9 @@ def main() -> None:
     ap.add_argument("--order-debias", action=argparse.BooleanOptionalAction, default=None,
                     help="read each decision in two option orders and average (default: [shooter] order_debias "
                          "in the config, else on)")
+    ap.add_argument("--fire-head", action=argparse.BooleanOptionalAction, default=None,
+                    help="one 'shoot' option and an aim head that picks the enemy (default: [shooter] fire_head in "
+                         "the config; always off with --classic)")
     ap.add_argument("--rebuild", default=None, help="only rebuild replay.html next to this trace.jsonl")
     ap.add_argument("--quiet", action="store_true")
     args = ap.parse_args()
@@ -83,7 +95,8 @@ def main() -> None:
     if args.max_ticks:
         rules = replace(rules, max_ticks=args.max_ticks)
     records = capture(engine, args.seed, rules, args.group_size, args.plan_budget if args.plan_budget >= 0 else None,
-                      verbose=not args.quiet, order_debias=order_debias(cfg, args.order_debias))
+                      verbose=not args.quiet, order_debias=order_debias(cfg, args.order_debias),
+                      fire_head=fire_head(cfg, args.fire_head, args.classic))
     model = str(engine.backend.info().get("model", engine.backend.info().get("kind"))).split("/")[-1]
     out = Path(args.out) if args.out else OUT / "shooter" / f"{'classic_' if args.classic else ''}{model}_seed{args.seed}"
     out.mkdir(parents=True, exist_ok=True)

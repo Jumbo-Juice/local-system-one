@@ -445,6 +445,63 @@ def test_shots_chosen_by_the_head_are_fired():
         pytest.skip("the mock never chose to shoot in 30 ticks")
 
 
+def two_gunners():
+    """fight() with a second awake gunner in the room, also in the agent's line of fire."""
+    d, e, room = fight()
+    c = next(c for c in sorted(room.cells) if c not in (e.pos, d.pos) and d.clear_line(d.pos, c)
+             and ((c[0] - d.pos[0]) ** 2 + (c[1] - d.pos[1]) ** 2) >= 4)
+    d.enemies.append(Enemy(1, "gunner", c, room.id, d.rules.gunner_hp, awake=True, timer=99))
+    d.cooldown = 0
+    return d, room
+
+
+def test_fire_head_offers_one_shoot_option_and_an_aim_head():
+    d, room = two_gunners()
+    one = ShooterBrain(d)
+    assert [o for o in one.shoot_options() if o.startswith("shoot")][0].startswith("shoot gunner #")
+    assert "aim" not in [t.name for t in one.stack.tiers]
+    b = ShooterBrain(d, fire_head=True)
+    opts = b.shoot_options()
+    assert opts[0] == "shoot (2 enemies in sight, clear line)" and opts[-1] == HOLD and enemy_of(opts[0]) is None
+    aims = b.aim_options()
+    assert len(aims) == 2 and all(a.startswith("shoot gunner #") for a in aims)
+    assert {enemy_of(a) for a in aims} == {0, 1}
+    d.cooldown = 1
+    b.refresh()
+    assert b.aim_options() == []  # no shot on offer, nothing to aim
+
+
+def test_fire_head_fires_at_the_enemy_the_aim_head_chose():
+    d, room = two_gunners()
+    r = Runner(d, Engine(MockBackend()), fire_head=True)
+    assert r.header()["fire_head"] is True
+    fired = held = 0
+    for _ in range(40):
+        rec = r.tick()
+        shoot = next((x for x in rec["decisions"] if x["tier"] == "shoot"), None)
+        aim = next((x for x in rec["decisions"] if x["tier"] == "aim"), None)
+        chose_fire = shoot is not None and shoot["options"][shoot["choice"]].startswith("shoot (")
+        if chose_fire:
+            assert aim is not None and rec["shoot"] == enemy_of(aim["options"][aim["choice"]])
+            assert any(x["kind"] == "shot" and x["enemy"] == rec["shoot"] for x in rec["events"])
+            fired += 1
+        else:
+            assert rec["shoot"] is None
+            held += 1
+        if d.outcome is not None or not d.living(room.id):
+            break
+    if not fired:
+        pytest.skip("the mock never chose to shoot")
+
+
+def test_fire_head_default_comes_from_the_config_and_is_off_in_classic():
+    from demo.shooter.capture import fire_head
+    on = {"shooter": {"fire_head": True}}
+    assert fire_head({}) is False and fire_head(on) is True
+    assert fire_head(on, classic=True) is False  # the classic game was evaluated without it
+    assert fire_head(on, True, classic=True) is True and fire_head(on, False) is False  # the flag wins
+
+
 def test_viewer_has_a_trace_slot(tmp_path):
     text = to_jsonl([{"type": "header", "note": "</script>"}])
     out = build_replay(text, tmp_path / "replay.html", VIEWER)

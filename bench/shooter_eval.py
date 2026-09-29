@@ -59,6 +59,22 @@ both models. Both models timed out on seed 37 (stuck 371 and 364 ticks).
 
 Everything above ran without ammo, before it existed; rerun it with --game classic.
 
+Fire head for the 1.5B (post hoc; the check below is fixed before running it). With ammo, the 1.5B
+held fire in 53 of 53 shoot decisions on seed 0 (order averaging on): each enemy was its own
+option, and "hold fire" won every time. Re-asked with the enemies merged into one "shoot (N enemies
+in sight, clear line)" option, it held fire in 0 of 53 (and 0 of 136 recorded shoot states of dev
+seeds 1000-1001, game without ammo); a yes/no wording ("Do you shoot this tick?") held in 161 of
+189. So with fire_head the shoot head offers that one option, and an aim head in the same batch
+picks the enemy (no model call with one enemy in sight). On for the 1.5B ([shooter] fire_head in
+config/default.toml), off for the 3B, always off with --game classic. Seed 0 of the ammo game is
+development data for this change.
+Check: game with ammo, seeds 40-49 (never run with any model or bot), setups 1.5b (fire head),
+1.5b-onehead (one shoot option per enemy, as before) and bot-reference; every run reported.
+Decision rule: keep the fire head on for the 1.5B if 1.5b escapes at least as many of the 10 seeds
+as 1.5b-onehead; otherwise switch it off in config/default.toml. Held fire, shots and kills are
+reported as secondary results. Nothing else changes before the report.
+    python -m bench.shooter_eval --setups 1.5b 1.5b-onehead bot-reference --seeds 40 41 42 43 44 45 46 47 48 49
+
 Usage:
     python -m bench.shooter_eval                          # all setups, seeds 0-9, with ammo
     python -m bench.shooter_eval --game classic           # the same without ammo (as evaluated above)
@@ -88,9 +104,10 @@ from .hwinfo import host_info
 
 RESULTS = Path(__file__).parent / "results"
 SETUPS = {  # name -> (config or None for a bot, Runner options or bot name)
-    "1.5b": ("config/default.toml", {"order_debias": True}),
+    "1.5b": ("config/default.toml", {"order_debias": True, "fire_head": True}),
     "3b": ("config/lenovo-3b.toml", {"order_debias": True}),
-    "1.5b-listed": ("config/default.toml", {"order_debias": False}),
+    "1.5b-listed": ("config/default.toml", {"order_debias": False, "fire_head": True}),
+    "1.5b-onehead": ("config/default.toml", {"order_debias": True, "fire_head": False}),  # one shoot option per enemy
     "3b-listed": ("config/lenovo-3b.toml", {"order_debias": False}),
     "random": ("config/mock.toml", {"order_debias": True}),
     "bot-reference": (None, "reference"),
@@ -208,7 +225,10 @@ def main() -> None:
         for name, seed in jobs:
             backends[name] = engine.backend.info()
             t0 = time.perf_counter()
-            records = capture(engine, seed, GAMES[args.game], verbose=False, **SETUPS[name][1])
+            opts = dict(SETUPS[name][1])
+            if args.game == "classic":
+                opts["fire_head"] = False  # the classic game was evaluated with one shoot option per enemy
+            records = capture(engine, seed, GAMES[args.game], verbose=False, **opts)
             (traces / f"{name}_seed{seed}.jsonl").write_text(to_jsonl(records), encoding="utf-8")
             report(name, seed, records[-1]["summary"], round(time.perf_counter() - t0, 1), False)
         engine = None  # drop the last reference so the weights can be freed before the next model

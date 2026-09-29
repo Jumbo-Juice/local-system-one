@@ -79,7 +79,9 @@ Rebuild a replay page after editing `demo/shooter/viewer.html` (same trace, new 
 ```
 
 Useful flags: `--out <dir>`, `--max-ticks N`, `--plan-budget N` (-1 = unlimited),
-`--order-debias` / `--no-order-debias`, `--quiet`.
+`--order-debias` / `--no-order-debias`, `--fire-head` / `--no-fire-head` (one "shoot" option plus
+an aim head that picks the enemy; default from `[shooter] fire_head`: on for the 1.5B, off for the
+3B, always off with `--classic`), `--quiet`.
 
 ### Four-run comparison page
 
@@ -106,8 +108,9 @@ start docs/shooter_quad.html
 
 ### Shooter evaluation
 
-Full closed-loop evaluation (setups `1.5b`, `3b`, `1.5b-listed`, `3b-listed`, `random`,
-`bot-reference`, `bot-nododge`; seeds 0-9 by default; with ammo):
+Full closed-loop evaluation (setups `1.5b`, `3b`, `1.5b-listed`, `3b-listed`, `1.5b-onehead`
+(the 1.5B without the fire head), `random`, `bot-reference`, `bot-nododge`, `bot-noammo`; seeds 0-9
+by default; with ammo):
 
 ```bash
 .venv/Scripts/python -m bench.shooter_eval
