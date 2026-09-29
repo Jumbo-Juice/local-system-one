@@ -82,8 +82,8 @@ Usage:
     python -m bench.shooter_eval                          # all setups, seeds 0-9, with ammo
     python -m bench.shooter_eval --game classic           # the same without ammo (as evaluated above)
     python -m bench.shooter_eval --setups random bot-reference --seeds 0 1
-    python -m bench.shooter_eval --traces demo/output/shooter/eval_<game>_<time>   # resume
-Traces go to demo/output/shooter/eval_<game>_<time>/ (rebuild a page with demo.shooter.capture --rebuild).
+    python -m bench.shooter_eval --resume 20260929-134450   # resume that eval (its id is in the trace names)
+Traces go to the shooter pool: runs/shooter/<eval id>_eval-<game>_<setup>_seed<N>.jsonl (python -m viewer).
 """
 
 from __future__ import annotations
@@ -95,9 +95,10 @@ import statistics
 import time
 from pathlib import Path
 
-from demo.dungeon.capture import OUT as DEMO_OUT
+from demo import runs as pool
+from demo.common import warm_up
 from demo.shooter import bots
-from demo.shooter.capture import capture, to_jsonl, warm_up
+from demo.shooter.capture import capture
 from demo.shooter.world import CLASSIC, Dungeon, Rules
 from system_one import load_config, make_engine
 from system_one.config import REPO_ROOT
@@ -105,7 +106,7 @@ from system_one.config import REPO_ROOT
 from .dungeon_eval import empty_device_cache
 from .hwinfo import host_info
 
-RESULTS = Path(__file__).parent / "results"
+RESULTS = Path(__file__).parent / "results" / "shooter_eval"
 SETUPS = {  # name -> (config or None for a bot, Runner options or bot name)
     "1.5b": ("config/default.toml", {"order_debias": True, "fire_head": True}),
     "3b": ("config/lenovo-3b.toml", {"order_debias": True}),
@@ -191,12 +192,14 @@ def main() -> None:
     ap.add_argument("--seeds", type=int, nargs="+", default=list(range(10)))
     ap.add_argument("--game", choices=list(GAMES), default="ammo",
                     help="ammo (default) or classic: without ammo, the game evaluated on seeds 0-39")
-    ap.add_argument("--traces", default=None,
-                    help="write traces here and reuse finished runs already in it (resume); default: a new directory")
+    ap.add_argument("--resume", default=None, metavar="EVAL_ID",
+                    help="reuse the finished runs of this eval (the time at the start of its trace names)")
     args = ap.parse_args()
     stamp = time.strftime("%Y%m%d_%H%M%S")
-    traces = Path(args.traces) if args.traces else DEMO_OUT / "shooter" / f"eval_{args.game}_{stamp}"
-    traces.mkdir(parents=True, exist_ok=True)
+    eval_id = args.resume or pool.stamp()
+    trace = lambda name, seed: pool.trace_path("shooter", f"eval-{args.game}_{name}_seed{seed}", eval_id)  # noqa: E731
+    if args.resume and not any(pool.pool("shooter").glob(f"{eval_id}_eval-{args.game}_*.jsonl")):
+        ap.error(f"no traces of eval {eval_id} ({args.game} game) in {pool.pool('shooter')}")
     runs, backends = [], {}
 
     def report(name: str, seed: int, summary: dict, wall: float | None, reused: bool) -> None:
@@ -212,11 +215,10 @@ def main() -> None:
             if config is None:
                 report(name, seed, bot_run(seed, opts, GAMES[args.game]), None, False)
                 continue
-            path = traces / f"{name}_seed{seed}.jsonl"
-            lines = path.read_text(encoding="utf-8").splitlines() if path.exists() else []
-            end = json.loads(lines[-1]) if lines else {}
-            if end.get("type") == "end":  # finished earlier: runs are deterministic, reuse it
-                backends[name] = json.loads(lines[0])["backend"]
+            path = trace(name, seed)
+            end = pool.finished(path)
+            if end:  # finished earlier: runs are deterministic, reuse it
+                backends[name] = json.loads(path.open(encoding="utf-8").readline())["backend"]
                 report(name, seed, end["summary"], None, True)
             else:
                 todo.setdefault(config, []).append((name, seed))
@@ -232,7 +234,7 @@ def main() -> None:
             if args.game == "classic":
                 opts["fire_head"] = False  # the classic game was evaluated with one shoot option per enemy
             records = capture(engine, seed, GAMES[args.game], verbose=False, **opts)
-            (traces / f"{name}_seed{seed}.jsonl").write_text(to_jsonl(records), encoding="utf-8")
+            trace(name, seed).write_text(pool.to_jsonl(records), encoding="utf-8")
             report(name, seed, records[-1]["summary"], round(time.perf_counter() - t0, 1), False)
         engine = None  # drop the last reference so the weights can be freed before the next model
         empty_device_cache()
@@ -240,12 +242,13 @@ def main() -> None:
     table = {name: aggregate([r for r in runs if r["setup"] == name]) for name in args.setups}
     for name, agg in table.items():
         print(name, json.dumps(agg))
-    RESULTS.mkdir(exist_ok=True)
+    RESULTS.mkdir(parents=True, exist_ok=True)
     path = RESULTS / f"shooter_eval_{args.game}_{stamp}.json"
     path.write_text(json.dumps({"host": host_info(), "backends": backends, "args": vars(args),
                                 "rules": asdict(GAMES[args.game]),
                                 "setups": {k: [v[0], v[1]] for k, v in SETUPS.items()},
-                                "traces": str(traces), "aggregate": table, "runs": runs}, indent=1), encoding="utf-8")
+                                "eval_id": eval_id, "traces": f"runs/shooter/{eval_id}_eval-{args.game}_*.jsonl",
+                                "aggregate": table, "runs": runs}, indent=1), encoding="utf-8")
     print("wrote", path)
 
 

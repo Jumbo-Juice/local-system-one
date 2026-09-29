@@ -22,7 +22,8 @@ Added after the pre-registered results (post hoc; docs/research.md -> Dungeon):
 Usage:
     python -m bench.dungeon_eval                       # all setups, seeds 0-7
     python -m bench.dungeon_eval --setups random --seeds 0 1
-Traces go to demo/output/dungeon/eval_<time>/ (rebuild a replay page with demo.dungeon.capture --rebuild).
+    python -m bench.dungeon_eval --resume 20260926-163151   # resume that eval (its id is in the trace names)
+Traces go to the dungeon pool: runs/dungeon/<eval id>_eval_<setup>_seed<N>.jsonl (python -m viewer).
 """
 
 from __future__ import annotations
@@ -34,14 +35,15 @@ import statistics
 import time
 from pathlib import Path
 
-from demo.dungeon.capture import OUT as DEMO_OUT
-from demo.dungeon.capture import capture, to_jsonl, warm_up
+from demo import runs as pool
+from demo.common import warm_up
+from demo.dungeon.capture import capture
 from system_one import load_config, make_engine
 from system_one.config import REPO_ROOT
 
 from .hwinfo import host_info
 
-RESULTS = Path(__file__).parent / "results"
+RESULTS = Path(__file__).parent / "results" / "dungeon_eval"
 PRE_REGISTERED = {"label_style": "closer", "enemy_aware": False}
 SETUPS = {  # name -> (config, DungeonBrain options)
     "3b-closer": ("config/lenovo-3b.toml", PRE_REGISTERED),
@@ -89,12 +91,14 @@ def main() -> None:
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--setups", nargs="+", default=["3b-closer", "3b-steps", "1.5b-closer", "random"], choices=list(SETUPS))
     ap.add_argument("--seeds", type=int, nargs="+", default=list(range(8)))
-    ap.add_argument("--traces", default=None,
-                    help="write traces here and reuse finished runs already in it (resume); default: a new directory")
+    ap.add_argument("--resume", default=None, metavar="EVAL_ID",
+                    help="reuse the finished runs of this eval (the time at the start of its trace names)")
     args = ap.parse_args()
     stamp = time.strftime("%Y%m%d_%H%M%S")
-    traces = Path(args.traces) if args.traces else DEMO_OUT / "dungeon" / f"eval_{stamp}"
-    traces.mkdir(parents=True, exist_ok=True)
+    eval_id = args.resume or pool.stamp()
+    trace = lambda name, seed: pool.trace_path("dungeon", f"eval_{name}_seed{seed}", eval_id)  # noqa: E731
+    if args.resume and not any(pool.pool("dungeon").glob(f"{eval_id}_eval_*.jsonl")):
+        ap.error(f"no traces of eval {eval_id} in {pool.pool('dungeon')}")
     runs, backends = [], {}
 
     def report(name: str, seed: int, summary: dict, wall: float | None, reused: bool) -> None:
@@ -106,11 +110,10 @@ def main() -> None:
     todo: dict[str, list[tuple[str, int]]] = {}
     for name in args.setups:
         for seed in args.seeds:
-            path = traces / f"{name}_seed{seed}.jsonl"
-            lines = path.read_text(encoding="utf-8").splitlines() if path.exists() else []
-            end = json.loads(lines[-1]) if lines else {}
-            if end.get("type") == "end":  # finished earlier: runs are deterministic, reuse it
-                backends[name] = json.loads(lines[0])["backend"]
+            path = trace(name, seed)
+            end = pool.finished(path)
+            if end:  # finished earlier: runs are deterministic, reuse it
+                backends[name] = json.loads(path.open(encoding="utf-8").readline())["backend"]
                 report(name, seed, end["summary"], None, True)
             else:
                 todo.setdefault(SETUPS[name][0], []).append((name, seed))
@@ -123,7 +126,7 @@ def main() -> None:
             backends[name] = engine.backend.info()
             t0 = time.perf_counter()
             records = capture(engine, seed, verbose=False, **SETUPS[name][1])
-            (traces / f"{name}_seed{seed}.jsonl").write_text(to_jsonl(records), encoding="utf-8")
+            trace(name, seed).write_text(pool.to_jsonl(records), encoding="utf-8")
             report(name, seed, records[-1]["summary"], round(time.perf_counter() - t0, 1), False)
         engine = None  # drop the last reference so the weights can be freed before the next model
         empty_device_cache()
@@ -131,10 +134,11 @@ def main() -> None:
     table = {name: aggregate([r for r in runs if r["setup"] == name]) for name in args.setups}
     for name, agg in table.items():
         print(name, json.dumps(agg))
-    RESULTS.mkdir(exist_ok=True)
+    RESULTS.mkdir(parents=True, exist_ok=True)
     path = RESULTS / f"dungeon_eval_{stamp}.json"
     path.write_text(json.dumps({"host": host_info(), "backends": backends, "args": vars(args), "setups": SETUPS,
-                                "traces": str(traces), "aggregate": table, "runs": runs}, indent=1), encoding="utf-8")
+                                "eval_id": eval_id, "traces": f"runs/dungeon/{eval_id}_eval_*.jsonl",
+                                "aggregate": table, "runs": runs}, indent=1), encoding="utf-8")
     print("wrote", path)
 
 

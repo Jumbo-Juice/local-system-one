@@ -158,7 +158,7 @@ def test_snapshot_and_layout_are_json():
 # -- brain, runner, trace ----------------------------------------------------------------
 
 from demo.dungeon.brain import GOALS, DungeonBrain, Runner, cell_of, drop_distance  # noqa: E402
-from demo.dungeon.capture import build_replay, to_jsonl  # noqa: E402
+from demo.runs import to_jsonl  # noqa: E402
 from system_one import Engine  # noqa: E402
 from system_one.backends.mock import MockBackend  # noqa: E402
 
@@ -250,20 +250,6 @@ def test_only_option_goals_skip_the_model():
     rec = r.tick()
     target = [x for x in rec["decisions"] if x["tier"] == "target"]
     assert target and target[0]["method"] == "only_option" and target[0]["options"][0].startswith("the key at")
-
-
-def test_replay_embeds_the_trace_safely(tmp_path):
-    template = tmp_path / "viewer.html"
-    template.write_text('<p>x</p><script id="trace" type="application/x-ndjson"></script><script>1</script>',
-                        encoding="utf-8")
-    text = to_jsonl([{"type": "header", "note": "</script><b>"}])
-    out = build_replay(text, tmp_path / "replay.html", template)
-    html = out.read_text(encoding="utf-8")
-    assert "</script><b>" not in html and html.count("</script>") == 2
-    inner = html.split('type="application/x-ndjson">')[1].split("</script>")[0]
-    assert json.loads(inner)["note"] == "</script><b>"
-    build_replay(text, out, out)  # rebuilding an already-built replay replaces the old trace
-    assert out.read_text(encoding="utf-8").count("application/x-ndjson") == 1
 
 
 def test_move_labels_say_closer_or_farther():

@@ -250,7 +250,7 @@ def test_context_from_limits_what_a_tier_sees():
 # -- brain, runner, trace ---------------------------------------------------------------------
 
 from demo.shooter.brain import GOALS, HOLD, Runner, ShooterBrain, cell_of, enemy_of  # noqa: E402
-from demo.shooter.capture import VIEWER, build_replay, to_jsonl  # noqa: E402
+from demo.runs import to_jsonl  # noqa: E402
 
 
 def fight(kind="gunner"):
@@ -500,12 +500,6 @@ def test_fire_head_default_comes_from_the_config_and_is_off_in_classic():
     assert fire_head({}) is False and fire_head(on) is True
     assert fire_head(on, classic=True) is False  # the classic game was evaluated without it
     assert fire_head(on, True, classic=True) is True and fire_head(on, False) is False  # the flag wins
-
-
-def test_viewer_has_a_trace_slot(tmp_path):
-    text = to_jsonl([{"type": "header", "note": "</script>"}])
-    out = build_replay(text, tmp_path / "replay.html", VIEWER)
-    assert out.read_text(encoding="utf-8").count("application/x-ndjson") == 1
 
 
 def test_order_averaging_default_comes_from_the_config():
