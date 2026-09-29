@@ -12,6 +12,12 @@ Tiers (tiered goals, system_one/goals.py), all due decisions in ONE batched forw
             committed without a model call when holding fire is the only option (gun reloading
             or no enemy in sight).
 
+With ammo (Rules.ammo) the shoot head also offers "reload" while the magazine is not full and the
+reserve is not empty (an empty magazine reloads without a model call, the only sensible choice),
+the strategy tier offers "pick up ammo" when an ammo box is within reach and the reserve has room,
+and the state texts count the bullets against the hits the known enemies still take. Without
+ammo every text is exactly as it was evaluated on seeds 0-39.
+
 The two control heads run side by side in the same batch, like the Doom demo's control heads
 in sgoedecke/system-one [S4]; neither sees the other's answer. The model makes every choice.
 The code only computes what the text says: walking distances over the cells the agent knows,
@@ -35,8 +41,11 @@ from .world import DIRS, MOVES, STEP, Cell, Dungeon
 
 STANDING_ORDER = ("Find the key, then leave through the exit alive. Rooms lock you in until their enemies are dead: "
                   "shoot them and keep out of their bullets.")
-GOALS = ("explore", "fight the enemies here", "get the key", "go to the exit", "drink a health potion")
+GOALS = ("explore", "fight the enemies here", "get the key", "go to the exit", "drink a health potion", "pick up ammo")
 HOLD = "hold fire"
+RELOAD = "reload"
+SHOOT_QUESTION = "Which shot do you take this tick?"
+GUN_QUESTION = "What do you do with your gun this tick?"  # with ammo: shoot, reload or hold fire
 _CELL = re.compile(r"\((\d+),(\d+)\)")
 _ENEMY = re.compile(r"#(\d+)")
 
@@ -57,6 +66,18 @@ def enemy_of(text: str | None) -> int | None:
     """'shoot gunner #3 ...' -> 3; 'hold fire' -> None."""
     m = _ENEMY.search(text or "")
     return int(m.group(1)) if m and text and text.startswith("shoot") else None
+
+
+def is_reload(text: str | None) -> bool:
+    return bool(text) and text.startswith(RELOAD)
+
+
+def _ticks(n: int) -> str:
+    return f"{n} tick" if n == 1 else f"{n} ticks"
+
+
+def _bullets(n: int) -> str:
+    return f"{n} bullet" if n == 1 else f"{n} bullets"
 
 
 def drop_distance(option: str) -> str:
@@ -81,8 +102,8 @@ class ShooterBrain:
                  every=target_every, title="Current target", describe=drop_distance),
             Tier("move", "Which move is best? Get closer to your target, but never step into a bullet's path.",
                  lambda goals: self.move_options(), every=1, context_from=("strategy", "target")),
-            Tier("shoot", "Which shot do you take this tick?", lambda goals: self.shoot_options(), every=1,
-                 context_from=("strategy",)),
+            Tier("shoot", GUN_QUESTION if dungeon.rules.ammo else SHOOT_QUESTION, lambda goals: self.shoot_options(),
+                 every=1, context_from=("strategy",)),
         ])
         self._situation: tuple | None = None
         self.refresh()
@@ -113,7 +134,8 @@ class ShooterBrain:
     def _situation_now(self) -> tuple:
         d = self.d
         hits = min(3, math.ceil(d.health / d.rules.enemy_shot_damage))
-        return hits, bool(self._foes), d.sealed, d.has_key, len(d.seen), d.key is not None and d.key in self._dist
+        out = hits, bool(self._foes), d.sealed, d.has_key, len(d.seen), d.key is not None and d.key in self._dist
+        return out + (self.ammo_word(),) if d.rules.ammo else out
 
     def _target_done(self, target: str) -> bool:
         d, cell = self.d, cell_of(target)
@@ -127,6 +149,8 @@ class ShooterBrain:
             return cell not in d.potions
         if target.startswith("the key"):
             return d.key != cell
+        if target.startswith("ammo box"):
+            return cell not in d.ammo
         if target.startswith("unexplored room"):
             return d.area.get(cell) in d.seen
         return False
@@ -148,6 +172,7 @@ class ShooterBrain:
             "get the key": d.key is not None and d.key in self._dist,
             "go to the exit": d.has_key and d.exit in self._dist,
             "drink a health potion": bool(self._reachable(d.potions)) and d.health < d.rules.health,
+            "pick up ammo": d.rules.ammo and bool(self._reachable(d.ammo)) and d.box_gain() > 0,
         }
         return [g for g in GOALS if ok[g]]
 
@@ -199,6 +224,9 @@ class ShooterBrain:
         if strategy == "drink a health potion":
             return [f"health potion at ({x},{y}) in {self.place((x, y))}, {_steps(dist[(x, y)])} away"
                     for x, y in self._reachable(d.potions)]
+        if strategy == "pick up ammo" and d.rules.ammo:
+            return [f"ammo box at ({x},{y}) in {self.place((x, y))}, {_steps(dist[(x, y)])} away"
+                    for x, y in self._reachable(d.ammo)]
         return []
 
     def _brute_next_to(self, c: Cell) -> bool:
@@ -234,6 +262,9 @@ class ShooterBrain:
                     notes.append("pick up the key")
                 elif c in d.potions:
                     notes.append(f"potion: +{d.rules.potion_health} health")
+            if d.rules.ammo and c in d.ammo:
+                gain = d.box_gain()
+                notes.append(f"ammo box: +{gain} bullets" if gain else "ammo box: your reserve is full")
             risky = c in self._danger or self._brute_next_to(c)
             if target is not None and not risky:
                 if c == target:
@@ -279,12 +310,25 @@ class ShooterBrain:
     def _enemy_name(self, e) -> str:
         return f"{e.kind} #{e.id}"
 
+    def _reload_option(self) -> str:
+        d, R = self.d, self.d.rules
+        now = "magazine empty" if d.loaded == 0 else f"{d.loaded} of {R.magazine} bullets loaded"
+        return f"{RELOAD} ({now}; {d.reserve} in reserve; takes {_ticks(R.reload_ticks)}, no shooting meanwhile)"
+
     def shoot_options(self) -> list[str]:
         d = self.d
-        if d.cooldown > 0:
+        if d.rules.ammo:
+            if d.reloading:
+                return [f"{HOLD} (reloading: ready in {_ticks(d.reloading)})"]
+            if d.loaded == 0:  # reloading is the only sensible choice; out of bullets, nothing is
+                return [self._reload_option()] if d.reserve > 0 else [f"{HOLD} (out of bullets)"]
+            if d.cooldown > 0:
+                return [f"{HOLD} (next shot ready in {_ticks(d.cooldown)})"]
+        elif d.cooldown > 0:
             return [f"{HOLD} (the gun is reloading: ready in {d.cooldown} {'tick' if d.cooldown == 1 else 'ticks'})"]
+        reload = [self._reload_option()] if d.can_reload() else []
         if not self._visible:
-            return [f"{HOLD} (no enemy in sight)"]
+            return reload + [f"{HOLD} (no enemy in sight)"]
         out = []
         x, y = d.pos
         for e in self._visible:
@@ -292,7 +336,7 @@ class ShooterBrain:
             what = "aiming at you" if e.aiming else "awake" if e.awake else "asleep"
             out.append(f"shoot {self._enemy_name(e)}, {_offset(e.pos[0] - x, y - e.pos[1])} ({what}; "
                        f"{_hits(hp)} to kill; clear line)")
-        return out + [HOLD]
+        return out + reload + [HOLD]
 
     # -- world -> text -----------------------------------------------------------------
 
@@ -301,6 +345,39 @@ class ShooterBrain:
         hits = math.ceil(h / d.rules.enemy_shot_damage)
         word = "CRITICAL" if hits <= 2 else "hurt" if h < 60 else "fine"
         return f"Health: {word} ({h}/{d.rules.health}): {hits} more bullet {'hit' if hits == 1 else 'hits'} would kill you."
+
+    def known_foes(self) -> list:
+        """Living enemies of the rooms the agent has seen."""
+        return [e for e in self.d.living() if e.home in self.d.seen]
+
+    def hits_needed(self) -> int:
+        R = self.d.rules
+        return sum(e.hp // R.shot_damage + (e.hp % R.shot_damage > 0) for e in self.known_foes())
+
+    def ammo_word(self) -> str:
+        d = self.d
+        total = d.ammo_total()
+        return "OUT" if total == 0 else "LOW" if total < max(d.rules.magazine, self.hits_needed()) else "fine"
+
+    def ammo_status(self) -> str:
+        d, R = self.d, self.d.rules
+        n, need = len(self.known_foes()), self.hits_needed()
+        foes = (f"the {n} living {'enemy' if n == 1 else 'enemies'} you know of {'takes' if n == 1 else 'take'} "
+                f"{_hits(need)}" if n else "no living enemy you know of")
+        word = self.ammo_word()
+        if word == "OUT":
+            return f"Ammo: OUT: no bullets left; {foes}."
+        return (f"Ammo: {word} ({_bullets(d.ammo_total())}: {d.loaded} loaded, {d.reserve} in reserve, at most "
+                f"{R.max_reserve} in reserve); {foes}.")
+
+    def _boxes_line(self) -> str:
+        d = self.d
+        p = self._nearest(d.ammo)
+        if not p:
+            return "Ammo boxes: none within reach."
+        full = "; your reserve is full" if d.box_gain() == 0 else ""
+        return (f"Ammo boxes: {p[0]} known, nearest {_steps(p[1])} away; each gives up to "
+                f"+{d.rules.ammo_box} bullets{full}.")
 
     def _nearest(self, cells) -> tuple[int, int] | None:
         steps = [self._dist[c] for c in cells if c in self._dist]
@@ -342,6 +419,8 @@ class ShooterBrain:
         lines = [f"Standing order: {STANDING_ORDER}",
                  f"You are in {self.place(d.pos)}. Rooms explored: {len(d.seen)} of {len(d.rooms)}; "
                  f"rooms cleared: {len(d.cleared)}.", self.status()]
+        if d.rules.ammo:
+            lines.append(self.ammo_status())
         if d.sealed is not None:
             lines.append(f"The doorways of the {d.rooms[d.sealed].name} are sealed until its "
                          f"{len(d.living(d.sealed))} {'enemy is' if len(d.living(d.sealed)) == 1 else 'enemies are'} dead.")
@@ -364,6 +443,8 @@ class ShooterBrain:
         p = self._nearest(d.potions)
         lines.append(f"Health potions: {p[0]} known, nearest {_steps(p[1])} away; each gives "
                      f"+{d.rules.potion_health} health." if p else "Health potions: none within reach.")
+        if d.rules.ammo:
+            lines.append(self._boxes_line())
         lines.append(self._enemies_line())
         fr = frontier(d, self._dist)
         if fr:
@@ -397,7 +478,15 @@ class ShooterBrain:
                          self.status()])
 
     def shoot_state(self) -> str:
-        d = self.d
+        d, R = self.d, self.d.rules
+        if R.ammo:
+            now = (f"reloading, ready in {_ticks(d.reloading)}" if d.reloading else "empty" if d.loaded == 0
+                   else "ready" if d.cooldown == 0 else f"next shot in {_ticks(d.cooldown)}")
+            return " ".join([
+                f"You are in {self.place(d.pos)}. Your gun ({now}): {d.loaded} of {R.magazine} bullets loaded, "
+                f"{d.reserve} in reserve. It fires one bullet every {R.cooldown} ticks, {R.shot_speed:g} cells per tick, "
+                f"flying to where the enemy stands now. A reload takes {_ticks(R.reload_ticks)}, and the gun cannot "
+                "fire meanwhile.", self.ammo_status(), self._enemies_line(), self.status()])
         gun = "ready" if d.cooldown == 0 else f"reloading ({d.cooldown} {'tick' if d.cooldown == 1 else 'ticks'})"
         return " ".join([f"You are in {self.place(d.pos)}. Your gun is {gun}: one bullet every {d.rules.cooldown} ticks, "
                          f"{d.rules.shot_speed:g} cells per tick, flying to where the enemy stands now.",
@@ -460,12 +549,14 @@ class Runner:
         stats = dict(self.engine.last_stats) if model else {}
         move = base_move(stack.current.get("move", "stay"))
         shoot = enemy_of(stack.current.get("shoot"))
+        reload = is_reload(stack.current.get("shoot"))
         target = self.brain.target_cell()
         dist_before = self._dist_to(target_before)
-        events = d.step(move, shoot)
+        events = d.step(move, shoot, reload)
         self._track_progress(target_before, dist_before, target)
         rec = {
             "type": "tick", "tick": tick, "t": round(start - self._t0, 4), "move": move, "shoot": shoot, "world": world,
+            **({"reload": reload} if d.rules.ammo else {}),
             "target": list(target) if target else None, "events": events, "stuck_streak": self._streak,
             "batch": {"decisions": len(model), "forward_ms": round(1000 * stats.get("forward_s", 0.0), 1),
                       "prompt_tokens": stats.get("prompt_tokens", 0),
@@ -559,6 +650,24 @@ def summarise(records: list[dict], d: Dungeon) -> dict:
         mv = next((x for x in r["decisions"] if x["tier"] == "move"), None)
         if mv and not _risky(mv["options"][mv["choice"]]):
             safe_hits += sum(1 for e in r["events"] if e["kind"] == "hit")
+    ammo = {}
+    if d.rules.ammo:
+        chosen = [x for x in shoots if is_reload(x["options"][x["choice"]])]
+        offered = [x for x in shoots if any(is_reload(o) for o in x["options"])]
+        dry = [r for r in records if r["world"]["agent"]["loaded"] + r["world"]["agent"]["reserve"] == 0]
+        ammo = {
+            "reloads": d.reloads,
+            "reloads_chosen": len(chosen),  # by the model; the rest were an empty magazine (only option)
+            "reloads_chosen_in_fight": sum(1 for x in chosen if any(o.startswith("shoot") for o in x["options"])),
+            "reload_offered": len(offered),
+            "ammo_boxes_picked": sum(1 for _, e in events if e["kind"] == "ammo"),
+            "ammo_picked": d.ammo_picked,
+            "ticks_out_of_ammo": len(dry), "first_out_of_ammo_tick": dry[0]["tick"] if dry else None,
+            "ammo_left": d.ammo_total(),
+            "min_ammo": min([r["world"]["agent"]["loaded"] + r["world"]["agent"]["reserve"] for r in records]
+                            + [d.ammo_total()]),
+            "ammo_goal_ticks": sum(1 for r in records if r["goals"]["strategy"]["choice"] == "pick up ammo"),
+        }
     return {
         "outcome": d.outcome, "cause": d.cause, "ticks": len(records),
         "hits": len(hits), "hits_gunner": sum(e["by"] == "gunner" for e in hits), "hits_brute": sum(e["by"] == "brute" for e in hits),
@@ -582,4 +691,5 @@ def summarise(records: list[dict], d: Dungeon) -> dict:
         "forward_ms_p90": round(statistics.quantiles(fw, n=10)[-1], 1) if len(fw) >= 10 else max(fw, default=0.0),
         "forward_ms_max": max(fw, default=0.0),
         "tick_ms_median": round(statistics.median(ticks), 1) if ticks else 0.0,
+        **ammo,
     }

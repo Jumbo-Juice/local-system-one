@@ -65,6 +65,13 @@ Without a model:
 .venv/Scripts/python -m demo.shooter.capture --config config/mock.toml --seed 0
 ```
 
+Ammo is on by default (6-bullet magazine, reloads, ammo boxes; tick limit 600). The game without
+ammo, as evaluated on seeds 0-39 (writes `demo/output/shooter/classic_<model>_seed<N>/`):
+
+```bash
+.venv/Scripts/python -m demo.shooter.capture --classic --config config/default.toml --seed 0
+```
+
 Rebuild a replay page after editing `demo/shooter/viewer.html` (same trace, new page):
 
 ```bash
@@ -100,10 +107,16 @@ start docs/shooter_quad.html
 ### Shooter evaluation
 
 Full closed-loop evaluation (setups `1.5b`, `3b`, `1.5b-listed`, `3b-listed`, `random`,
-`bot-reference`, `bot-nododge`; seeds 0-9 by default):
+`bot-reference`, `bot-nododge`; seeds 0-9 by default; with ammo):
 
 ```bash
 .venv/Scripts/python -m bench.shooter_eval
+```
+
+The same without ammo (the game every result so far was measured on):
+
+```bash
+.venv/Scripts/python -m bench.shooter_eval --game classic
 ```
 
 Only some setups and seeds:
@@ -115,13 +128,19 @@ Only some setups and seeds:
 Resume an interrupted evaluation (reuses finished runs in that folder):
 
 ```bash
-.venv/Scripts/python -m bench.shooter_eval --traces demo/output/shooter/eval_<time>
+.venv/Scripts/python -m bench.shooter_eval --traces demo/output/shooter/eval_<game>_<time>
 ```
 
 Rule calibration with bots only (no model):
 
 ```bash
 .venv/Scripts/python -m bench.shooter_calibration
+```
+
+Ammo calibration (bots only; the grid that chose the ammo rules):
+
+```bash
+.venv/Scripts/python -m bench.shooter_calibration --ammo
 ```
 
 ## Dungeon demo

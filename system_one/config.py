@@ -19,6 +19,7 @@ DEFAULT_CONFIG = REPO_ROOT / "config" / "default.toml"
 # kind -> "module:Class". Backends are imported lazily so the mock needs no torch.
 BACKENDS = {
     "hf": "system_one.backends.hf:HFBackend",
+    "llamacpp": "system_one.backends.llamacpp:LlamaCppBackend",
     "mock": "system_one.backends.mock:MockBackend",
 }
 

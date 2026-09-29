@@ -300,6 +300,8 @@ def test_shoot_options_hold_fire_last_or_only_option():
     assert opts[-1] == HOLD and opts[0].startswith(f"shoot gunner #{e.id}, ") and " cells " in opts[0]
     assert "3 hits to kill; clear line" in opts[0] and enemy_of(opts[0]) == e.id and enemy_of(HOLD) is None
     d.cooldown = 1
+    assert b.shoot_options() == ["hold fire (next shot ready in 1 tick)"]
+    d.rules = CLASSIC  # the evaluated wording without ammo
     assert b.shoot_options() == ["hold fire (the gun is reloading: ready in 1 tick)"]
 
 
@@ -453,3 +455,167 @@ def test_order_averaging_default_comes_from_the_config():
     from demo.shooter.capture import order_debias
     assert order_debias({}) is True and order_debias({"shooter": {"order_debias": False}}) is False
     assert order_debias({"shooter": {"order_debias": False}}, True) is True  # the flag wins
+
+
+# -- ammo --------------------------------------------------------------------------------------
+
+from demo.shooter.brain import RELOAD, is_reload  # noqa: E402
+from demo.shooter.world import CLASSIC  # noqa: E402
+
+
+def test_ammo_boxes_leave_the_rest_of_the_dungeon_unchanged():
+    for seed in range(12):
+        d, c = Dungeon(seed), Dungeon(seed, CLASSIC)
+        for k in ("rooms", "corridors", "exit", "start_room", "key_room", "exit_room"):
+            assert d.layout()[k] == c.layout()[k]
+        assert [(e.kind, e.pos, e.hp, e.timer) for e in d.enemies] == [(e.kind, e.pos, e.hp, e.timer) for e in c.enemies]
+        assert d.potions == c.potions and d.key == c.key and d.pos == c.pos and c.ammo == []
+        rooms = [d.area[b] for b in d.ammo]
+        assert len(d.ammo) == d.rules.ammo_boxes and len(set(rooms)) == len(rooms) and d.start_room not in rooms
+        assert all(d.inside(b) is not None for b in d.ammo)
+        assert not set(d.ammo) & ({d.pos, d.exit, d.key, *d.potions} | {e.pos for e in d.enemies})
+        assert "ammo" not in c.snapshot()["items"] and "loaded" not in c.snapshot()["agent"]
+
+
+def shooting_range(**rules):
+    """The agent three cells from one awake gunner that never fires, with a clear line."""
+    d = quiet(cooldown=1, **rules)
+    e, room = place_enemy(d, hp=99)  # timer 99: it never aims (the tests reset it each tick)
+    d.pos = next(c for c in room.cells if c[1] == e.pos[1] and abs(c[0] - e.pos[0]) == 3)
+    d.seen.add(room.id)
+    d._known = None
+    return d, e
+
+
+def test_each_shot_uses_a_bullet_and_an_empty_gun_cannot_fire():
+    d, e = shooting_range()
+    for k in range(d.rules.magazine):
+        e.timer = 99
+        ev = d.step("stay", shoot=e.id)
+        assert any(x["kind"] == "shot" for x in ev) and d.loaded == d.rules.magazine - 1 - k
+    assert not d.can_fire() and d.reserve == d.rules.reserve
+    ev = d.step("stay", shoot=e.id)
+    assert {"kind": "dry_fire", "enemy": e.id} in ev and d.shots == d.rules.magazine
+
+
+def test_a_reload_takes_its_ticks_then_refills_from_the_reserve():
+    d, e = shooting_range(reserve=4)
+    d.loaded = 1
+    ev = d.step("stay", reload=True)
+    assert any(x["kind"] == "reload" for x in ev) and d.reloading == d.rules.reload_ticks - 1
+    for _ in range(d.rules.reload_ticks - 1):
+        assert not d.can_fire()
+        e.timer = 99
+        ev = d.step("stay", shoot=e.id)
+        assert {"kind": "dry_fire", "enemy": e.id} in ev  # no shooting while reloading
+    assert any(x["kind"] == "reloaded" for x in ev)
+    assert (d.loaded, d.reserve) == (5, 0)  # the loaded bullet is kept; the reserve ran short
+    assert not d.can_reload()  # nothing left to load
+    ev = d.step("stay", reload=True)
+    assert {"kind": "reload_refused"} in ev
+
+
+def test_ammo_boxes_fill_the_reserve_up_to_its_cap():
+    d = quiet(ammo_boxes=1)
+    box = d.ammo[0]
+    d.reserve = d.rules.max_reserve  # full: the box stays where it lies
+    d.step(walk_to(d, box))
+    assert d.pos == box and d.ammo == [box]
+    d.reserve = d.rules.max_reserve - 4
+    ev = d.step("stay")  # picked up from under the agent once there is room
+    assert d.ammo == [] and d.reserve == d.rules.max_reserve and {"kind": "ammo", "cell": list(box), "gain": 4} in ev
+
+
+def test_classic_rules_have_unlimited_bullets():
+    d, e = shooting_range(ammo=False)
+    for _ in range(20):
+        e.timer = 99
+        d.step("stay", shoot=e.id)
+    assert d.shots == 20 and d.loaded is None and d.can_fire() and not d.can_reload()
+
+
+def test_shoot_head_offers_reload_and_commits_it_when_empty():
+    d, e, room = fight()
+    b = ShooterBrain(d)
+    assert b.stack.tier("shoot").instruction == "What do you do with your gun this tick?"
+    d.cooldown, d.loaded = 0, 3
+    b.refresh()
+    opts = b.shoot_options()
+    assert opts[0].startswith("shoot gunner") and is_reload(opts[-2]) and opts[-1] == HOLD
+    assert opts[-2] == f"{RELOAD} (3 of 6 bullets loaded; {d.reserve} in reserve; takes 3 ticks, no shooting meanwhile)"
+    d.loaded = 0
+    assert [o.split(" (")[0] for o in b.shoot_options()] == [RELOAD]  # the only option: no model call
+    d.reserve = 0
+    assert b.shoot_options() == ["hold fire (out of bullets)"]
+    d.loaded, d.reserve, d.reloading = 2, 10, 2
+    assert b.shoot_options() == ["hold fire (reloading: ready in 2 ticks)"]
+    d.reloading, d.cooldown = 0, 1
+    assert b.shoot_options() == ["hold fire (next shot ready in 1 tick)"]
+    d.cooldown = 0
+    e.hp = 0  # no enemy in sight: reloading is a choice
+    b.refresh()
+    assert [o.split(" (")[0] for o in b.shoot_options()] == [RELOAD, HOLD]
+    d.loaded = d.rules.magazine
+    assert b.shoot_options() == ["hold fire (no enemy in sight)"]
+
+
+def test_ammo_goal_targets_labels_and_state():
+    d = quiet(ammo_boxes=5)
+    d.seen = set(range(9))
+    d._known = None
+    b = ShooterBrain(d)
+    d.reserve = 12
+    b.refresh()
+    assert "pick up ammo" in b.goal_options()
+    targets = b.target_options("pick up ammo")
+    assert len(targets) == 5 and all(t.startswith("ammo box at (") for t in targets)
+    s = b.strategy_state()
+    assert "Ammo: fine (18 bullets: 6 loaded, 12 in reserve, at most 30 in reserve); no living enemy you know of." in s
+    assert "Ammo boxes: 5 known, nearest" in s
+    d.reserve = d.rules.max_reserve
+    b.refresh()
+    assert "pick up ammo" not in b.goal_options() and "your reserve is full" in b.strategy_state()
+    d.reserve = 25
+    move = walk_to(d, d.ammo[0])
+    b.refresh()
+    assert "ammo box: +5 bullets" in next(o for o in b.move_options() if o.startswith(move))
+    c = ShooterBrain(quiet(ammo=False))
+    assert "Ammo" not in c.strategy_state() and "pick up ammo" not in c.goal_options()
+    assert c.stack.tier("shoot").instruction == "Which shot do you take this tick?"
+
+
+def test_ammo_word_counts_bullets_against_the_hits_needed():
+    d, e, room = fight()  # one gunner with 3 health
+    b = ShooterBrain(d)
+    d.loaded, d.reserve = 2, 0
+    b.refresh()
+    assert b.ammo_word() == "LOW" and "the 1 living enemy you know of takes 3 hits" in b.ammo_status()
+    d.loaded = 0
+    assert b.ammo_status().startswith("Ammo: OUT")
+    before = b._situation_now()
+    d.loaded, d.reserve = 6, 30
+    assert b._situation_now() != before  # an ammo change re-plans the strategy
+
+
+def test_runner_passes_a_reload_to_the_world():
+    d, e, room = fight()
+    d.loaded = 0
+    r = Runner(d, Engine(MockBackend()))
+    rec = r.tick()
+    shoot = next(x for x in rec["decisions"] if x["tier"] == "shoot")
+    assert shoot["method"] == "only_option" and is_reload(shoot["options"][0])
+    assert rec["reload"] is True and any(x["kind"] == "reload" for x in rec["events"])
+    for _ in range(3):
+        r.tick()
+    s = r.end()["summary"]
+    assert s["reloads"] == 1 and s["reloads_chosen"] == 0 and "ticks_out_of_ammo" in s
+
+
+def test_reference_bot_manages_ammo_on_dev_seeds():
+    """The calibration claim (docs/research.md): with ammo the reference bot escapes and never runs dry."""
+    for s in range(1000, 1004):
+        d, dry = Dungeon(s), 0
+        while d.outcome is None:
+            d.step(*bots.reference(d))
+            dry += d.ammo_total() == 0
+        assert d.outcome == "escaped" and dry == 0 and d.reloads > 0
