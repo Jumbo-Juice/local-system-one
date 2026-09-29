@@ -24,7 +24,7 @@ from collections import Counter
 
 from system_one.goals import ONLY_OPTION, GoalStack, Tier, step_all
 
-from ..brain import _steps, base_move
+from ..common import _steps, base_move
 from .world import DIRS, MOVES, STEP, Cell, Dungeon
 
 STANDING_ORDER = "Find the key, then leave through the exit alive. Gems are a bonus. Eat and heal when needed."

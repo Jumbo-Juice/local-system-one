@@ -1,9 +1,9 @@
 """Real-time 2D demo: every tick, all agents' due decisions go through the engine in ONE batch.
 
-    python -m demo.sim                                   # window, model from config/default.toml
-    python -m demo.sim --config config/mock.toml         # window, no model (random decisions)
-    python -m demo.sim --headless --ticks 100            # text only; prints a summary
-    python -m demo.sim --headless --ticks 100 --no-goals # flat control: no strategy/target tiers
+    python -m demo.grid                                   # window, model from config/default.toml
+    python -m demo.grid --config config/mock.toml         # window, no model (random decisions)
+    python -m demo.grid --headless --ticks 100            # text only; prints a summary
+    python -m demo.grid --headless --ticks 100 --no-goals # flat control: no strategy/target tiers
 
 Window keys: space = pause/resume, Esc = quit. Visuals are deliberately minimal.
 """

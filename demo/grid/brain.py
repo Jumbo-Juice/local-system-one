@@ -20,20 +20,12 @@ from dataclasses import dataclass, field
 
 from system_one.goals import GoalStack, Tier, step_all
 
+from ..common import _steps, base_move
 from .world import MOVES, STEP, Agent, Cell, World
 
 GOALS = ("collect gems", "find food", "avoid hazards", "explore")
 REGIONS = ("north-west", "north", "north-east", "south-west", "south", "south-east")
 _CELL = re.compile(r"\((\d+),(\d+)\)")
-
-
-def _steps(n: int) -> str:
-    return f"{n} step" if n == 1 else f"{n} steps"
-
-
-def base_move(choice: str) -> str:
-    """'move west (target: 2 steps)' -> 'move west'."""
-    return choice.split(" (")[0]
 
 
 def annotate_moves(world: World, agent: Agent, target: Cell | None) -> list[str]:

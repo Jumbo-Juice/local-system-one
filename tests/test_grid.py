@@ -2,9 +2,9 @@
 
 import re
 
-from demo.brain import GOALS, Brain, Controller
-from demo.sim import run_headless
-from demo.world import World
+from demo.grid.brain import GOALS, Brain, Controller
+from demo.grid.sim import run_headless
+from demo.grid.world import World
 from system_one import Engine
 from system_one.backends.mock import MockBackend
 
@@ -90,7 +90,7 @@ def test_starvation_death_is_counted():
 
 
 def test_condition_change_triggers_strategy_replan():
-    from demo.brain import Brain
+    from demo.grid.brain import Brain
 
     w = World(seed=0, n_agents=1, n_hazards=0)
     b = Brain(w, w.agents[0])
@@ -107,7 +107,7 @@ def test_condition_change_triggers_strategy_replan():
 
 
 def test_strategy_state_spells_out_low_energy():
-    from demo.brain import Brain
+    from demo.grid.brain import Brain
 
     w = World(seed=0, n_agents=1)
     w.agents[0].energy = 20
@@ -118,7 +118,7 @@ def test_strategy_state_spells_out_low_energy():
 
 
 def test_move_labels_describe_outcomes():
-    from demo.brain import annotate_moves
+    from demo.grid.brain import annotate_moves
 
     w = World(seed=0, n_agents=1, n_hazards=0)
     a = w.agents[0]
@@ -130,7 +130,7 @@ def test_move_labels_describe_outcomes():
 
 
 def test_target_shown_to_move_tier_without_stale_distance():
-    from demo.brain import Brain
+    from demo.grid.brain import Brain
 
     w = World(seed=0, n_agents=1)
     b = Brain(w, w.agents[0])

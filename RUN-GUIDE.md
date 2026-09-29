@@ -1,7 +1,7 @@
 # Run guide
 
 Every command, in one place. Run them from the repo root. Background and results are in
-[README.md](README.md). This file is updated whenever a command, flag or output path changes.
+[README.md](README.md) and the demo write-ups in `docs/`. This file is updated whenever a command, flag or output path changes.
 
 Configs: `config/default.toml` (Qwen2.5-1.5B), `config/lenovo-3b.toml` (Qwen2.5-3B),
 `config/mock.toml` (no model, random choices), `config/nuc.example.toml` (copy to `config/nuc.toml`
@@ -45,9 +45,39 @@ Without the model tests:
 .venv/Scripts/python -m pytest -m "not model"
 ```
 
+## Watch runs (Master Viewer)
+
+Start page: load a trace, a random run, or auto-demo (two panes, newest to oldest, looping). Opens a
+browser tab; Ctrl+C stops it:
+
+```bash
+.venv/Scripts/python -m viewer
+```
+
+Open one run:
+
+```bash
+.venv/Scripts/python -m viewer runs/shooter/<run>.jsonl
+```
+
+Reachable from other devices on the network (default: this machine only):
+
+```bash
+.venv/Scripts/python -m viewer --host 0.0.0.0
+```
+
+One self-contained page with one run, to share (opens from disk, no server; `-o` picks the file):
+
+```bash
+.venv/Scripts/python -m viewer --bundle runs/shooter/<run>.jsonl
+```
+
+Flags: `--port N` (default 8765; the next free one if taken), `--no-browser`, `--verbose`. In the
+page: Space play/pause, ←/→ one tick, Home restart; `#run=<path>&tick=N` in the URL opens a tick.
+
 ## Shooter demo
 
-Capture one run with the 1.5B (writes `demo/output/shooter/<model>_seed<N>/trace.jsonl` + `replay.html`):
+Capture one run with the 1.5B (writes `runs/shooter/<time>_qwen2.5-1.5b_seed<N>.jsonl`):
 
 ```bash
 .venv/Scripts/python -m demo.shooter.capture --config config/default.toml --seed 0
@@ -66,60 +96,29 @@ Without a model:
 ```
 
 Ammo is on by default (6-bullet magazine, reloads, ammo boxes; tick limit 600). The game without
-ammo, as evaluated on seeds 0-39 (writes `demo/output/shooter/classic_<model>_seed<N>/`):
+ammo, as evaluated on seeds 0-39 (the run's name starts `classic_`):
 
 ```bash
 .venv/Scripts/python -m demo.shooter.capture --classic --config config/default.toml --seed 0
 ```
 
-Rebuild a replay page after editing `demo/shooter/viewer.html` (same trace, new page):
-
-```bash
-.venv/Scripts/python -m demo.shooter.capture --rebuild demo/output/shooter/<run>/trace.jsonl
-```
-
-Useful flags: `--out <dir>`, `--max-ticks N`, `--plan-budget N` (-1 = unlimited),
-`--order-debias` / `--no-order-debias`, `--fire-head` / `--no-fire-head` (one "shoot" option plus
-an aim head that picks the enemy; default from `[shooter] fire_head`: on for the 1.5B, off for the
-3B, always off with `--classic`), `--quiet`.
-
-### Four-run comparison page
-
-Rebuild `docs/shooter_quad.html` (two random 1.5B + two random 3B runs; pool = every
-`demo/output/shooter/*/trace.jsonl` + `docs/shooter_replay_*.html`). Run it after adding runs or
-editing `demo/shooter/quad.html`:
-
-```bash
-.venv/Scripts/python -m demo.shooter.quad
-```
-
-Build from chosen traces instead, to another file (needs at least two runs per model):
-
-```bash
-.venv/Scripts/python -m demo.shooter.quad --out demo/output/my_quad.html docs/shooter_replay_1.5b_seed0.html docs/shooter_replay_1.5b_seed1_escaped.html docs/shooter_replay_3b_seed0.html docs/shooter_replay_3b_listed_seed0.html
-```
-
-The page supports the classic game only (no ammo); runs of the game with ammo are skipped with a
-note.
-
-Open it (no server needed). In the page: Space play/pause, ←/→ one tick, S shuffle.
-`#runs=a,b,c,d&t=120` in the URL pins four runs and a tick.
-
-```bash
-start docs/shooter_quad.html
-```
+Useful flags: `--out <file>` (write the trace there instead of the pool), `--max-ticks N`,
+`--plan-budget N` (-1 = unlimited), `--order-debias` / `--no-order-debias`, `--fire-head` /
+`--no-fire-head` (one "shoot" option plus an aim head that picks the enemy; default from
+`[shooter] fire_head`: on for the 1.5B, off for the 3B, always off with `--classic`), `--quiet`.
 
 ### Shooter evaluation
 
 Full closed-loop evaluation (setups `1.5b`, `3b`, `1.5b-listed`, `3b-listed`, `1.5b-onehead`
 (the 1.5B without the fire head), `random`, `bot-reference`, `bot-nododge`, `bot-noammo`; seeds 0-9
-by default; with ammo):
+by default; with ammo). Traces go to the shooter pool as `<eval id>_eval-<game>_<setup>_seed<N>.jsonl`
+(bots write none); results to `bench/results/shooter_eval/`:
 
 ```bash
 .venv/Scripts/python -m bench.shooter_eval
 ```
 
-The same without ammo (the game every result so far was measured on):
+The same without ammo (the game every result before 2026-09-29 was measured on):
 
 ```bash
 .venv/Scripts/python -m bench.shooter_eval --game classic
@@ -131,11 +130,15 @@ Only some setups and seeds:
 .venv/Scripts/python -m bench.shooter_eval --setups 1.5b 3b --seeds 10 11 12
 ```
 
-Resume an interrupted evaluation (reuses finished runs in that folder):
+Resume an interrupted evaluation (reuses its finished runs; the eval id is the time at the start of
+its trace names; pass the same `--game`):
 
 ```bash
-.venv/Scripts/python -m bench.shooter_eval --traces demo/output/shooter/eval_<game>_<time>
+.venv/Scripts/python -m bench.shooter_eval --resume <eval id>
 ```
+
+A long evaluation run from a Claude session stops if the desktop app restarts; run it from your own
+terminal to be safe.
 
 Rule calibration with bots only (no model):
 
@@ -151,55 +154,58 @@ Ammo calibration (bots only; the grid that chose the ammo rules):
 
 ## Dungeon demo
 
-Capture one run (writes `demo/output/dungeon/<model>_seed<N>/`):
+Capture one run (writes `runs/dungeon/<time>_<model>_seed<N>.jsonl`):
 
 ```bash
 .venv/Scripts/python -m demo.dungeon.capture --config config/lenovo-3b.toml --seed 0
 ```
 
-Rebuild its replay page:
+Extra flags: `--label-style closer|steps`, `--enemy-aware` (both show up in the run's name), plus
+the shooter's `--out`, `--max-ticks`, `--plan-budget`, `--quiet`.
 
-```bash
-.venv/Scripts/python -m demo.dungeon.capture --rebuild demo/output/dungeon/<run>/trace.jsonl
-```
-
-Extra flags: `--label-style closer|steps`, `--enemy-aware`, plus the shooter's `--out`,
-`--max-ticks`, `--plan-budget`, `--quiet`.
-
-Evaluation (setups `3b-closer`, `3b-steps`, `1.5b-closer`, `random`, `3b-enemy-aware`; resume with `--traces <dir>`):
+Evaluation (setups `3b-closer`, `3b-steps`, `1.5b-closer`, `random`, `3b-enemy-aware`; traces go to
+the dungeon pool as `<eval id>_eval_<setup>_seed<N>.jsonl`, results to `bench/results/dungeon_eval/`):
 
 ```bash
 .venv/Scripts/python -m bench.dungeon_eval
 ```
 
+Resume an interrupted evaluation:
+
+```bash
+.venv/Scripts/python -m bench.dungeon_eval --resume <eval id>
+```
+
 ## 2D grid demo (live window)
 
 ```bash
-.venv/Scripts/python -m demo.sim
+.venv/Scripts/python -m demo.grid
 ```
 
 Without a model:
 
 ```bash
-.venv/Scripts/python -m demo.sim --config config/mock.toml
+.venv/Scripts/python -m demo.grid --config config/mock.toml
 ```
 
 Headless, 100 ticks:
 
 ```bash
-.venv/Scripts/python -m demo.sim --headless --ticks 100
+.venv/Scripts/python -m demo.grid --headless --ticks 100
 ```
 
 Most responsive setup (3B, one agent, ~5 ticks/s on the reference machine):
 
 ```bash
-.venv/Scripts/python -m demo.sim --config config/lenovo-3b.toml --agents 1
+.venv/Scripts/python -m demo.grid --config config/lenovo-3b.toml --agents 1
 ```
 
 Flags: `--agents N`, `--seed N`, `--gems N`, `--food N`, `--plan-budget N`, `--no-goals`,
 `--json <file>` (headless summary).
 
 ## Benchmarks
+
+Each writes to `bench/results/<script>/`:
 
 ```bash
 .venv/Scripts/python -m bench.bench --gen-baseline
@@ -221,8 +227,8 @@ Flags: `--agents N`, `--seed N`, `--gems N`, `--food N`, `--plan-budget N`, `--n
 
 | what | where |
 |---|---|
-| captured runs | `demo/output/<demo>/<run>/` (git-ignored) |
-| lessons from the pruned test and eval runs, and what is kept | `demo/output/LESSONS-LEARNED.md` |
-| committed replay pages | `docs/shooter_replay_*.html`, `docs/dungeon_replay_seed0.html`, `docs/shooter_quad.html` |
-| shareable best runs | `docs/share/shooter_best_*.html` (copies of a kept run's `replay.html`; outside the quad pool) |
-| benchmark results | `bench/results/` |
+| every captured run (captures and evals) | `runs/shooter/`, `runs/dungeon/`: one `<time>_<label>.jsonl` per run, git-ignored |
+| pinned runs (committed) | `runs/<game>/*.pinned.jsonl`, listed in `runs/README.md`; pin a run by renaming it |
+| benchmark and eval results | `bench/results/<script>/` (committed) |
+| lessons from past test and eval runs | `docs/lessons-learned.md` |
+| the viewer of each game demo | `viewer/games/<game>.js` (a new demo adds one; see `viewer/README.md`) |

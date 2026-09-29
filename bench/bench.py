@@ -10,7 +10,7 @@ For every (prompt length, batch size) the same B distinct decisions are timed:
 Each mode gets one untimed warm-up call per configuration, then --repeats timed calls.
 Optionally (--gen-baseline) a greedy text-generation baseline answers the same decisions
 by generating the whole JSON answer token by token.
-Raw timings go to bench/results/bench_<model>_<timestamp>.json plus a .md summary.
+Raw timings go to bench/results/bench/bench_<model>_<timestamp>.json plus a .md summary.
 """
 
 from __future__ import annotations
@@ -27,7 +27,7 @@ from system_one import Decision, load_config, make_engine
 
 from .hwinfo import host_info
 
-OUT = Path(__file__).parent / "results"
+OUT = Path(__file__).parent / "results" / "bench"
 MOVES = ("move north", "move south", "move east", "move west", "stay")
 DIRS = ("north", "south", "east", "west")
 SENTENCES = (
@@ -180,7 +180,7 @@ def main() -> None:
                   f"{g['per_decision_ms_max']:.1f}] new tokens {g['new_tokens_mean']:.1f} parse failures "
                   f"{g['parse_failures']} agreement {g['agreement_with_single_token']:.0%}", flush=True)
 
-    OUT.mkdir(exist_ok=True)
+    OUT.mkdir(parents=True, exist_ok=True)
     model = re.sub(r"[^A-Za-z0-9._-]+", "-", str(info["backend"].get("model", "model")).split("/")[-1])
     stem = f"bench_{model}_{info['backend'].get('dtype', '')}_{time.strftime('%Y%m%d_%H%M%S')}{args.tag}"
     (OUT / f"{stem}.json").write_text(json.dumps({**info, "rows": rows, "generation": gen_rows}, indent=1), encoding="utf-8")
