@@ -936,6 +936,7 @@ function fillFacts() {
       ["Held fire", `${v(s.held_fire)} of ${v(s.shoot_decisions)}`, "shoot decisions"],
       ["Hits taken", v(s.hits), `${v(s.hits_gunner)} from bullets, ${v(s.hits_brute)} from brutes`],
       ["Risky moves", v(s.avoidable_risky_moves), "moves into danger when a safe move existed"],
+      ...(s.hits_after_safe_move != null ? [["Hits after a safe move", v(s.hits_after_safe_move), "a move labelled safe that was not"]] : []),
       ["Potions drunk", v(s.potions_drunk)],
     ]],
     ["Model", [
