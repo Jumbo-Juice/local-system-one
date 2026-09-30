@@ -1,7 +1,7 @@
 # Shooter demo
 
-The first dungeon ([`dungeon.md`](dungeon.md)) was never escaped. This is its redo as a
-room-clearing shooter in the spirit of *Enter the Gungeon*:
+The first dungeon was never escaped (it has since been rebuilt: [`dungeon.md`](dungeon.md)). This
+is its redo as a room-clearing shooter in the spirit of *Enter the Gungeon*:
 
 - The agent shoots. Rooms lock it in until their enemies are dead.
 - Doorways are three cells wide, so no enemy can trap it in one.
@@ -29,7 +29,8 @@ One run with each model:
 
 The first runs Qwen2.5-1.5B, the second Qwen2.5-3B. Each writes one trace to the shooter pool,
 `runs/shooter/<time>_<model>_seed0.jsonl`. `--config config/mock.toml` runs without a model.
-`--classic` plays the game without ammo, the version evaluated on seeds 0–39.
+The default game has ammo and the dash. `--game ammo` plays it without the dash (evaluated on
+seeds 40–49), `--classic` without ammo or dash (evaluated on seeds 0–39).
 
 Watch it, with every other run, in the Master Viewer. It can load a trace, pick a random run, or
 auto-demo the pool:
@@ -59,7 +60,7 @@ Each tick is one batched forward pass with up to three decisions (strategy or ta
 |---|---|---|
 | strategy | 12 ticks, or at once when the situation changes | the goals possible now: explore, fight the enemies here, get the key, go to the exit, drink a health potion (and pick up ammo, with ammo) |
 | target | 6 ticks, or when reached, gone or unsafe | unexplored rooms, the key, the exit, potions, or up to 5 firing spots (a clear line to an enemy, away from enemies, out of every bullet's path) |
-| move (control head) | every tick | open moves and stay, labelled with outcomes: `move west (safe; closer: 4 steps to the target)`, `stay (BULLET: -15 health)` |
+| move (control head) | every tick | open moves, dashes (when ready) and stay, labelled with outcomes: `move west (safe; closer: 4 steps to the target)`, `dash north (3 cells; safe; closer: 2 steps to the target)` |
 | shoot (control head) | every tick | `shoot gunner #4, 3 cells east (AIMING at you; 3 hits to kill; clear line)` or `hold fire`; committed without a model call while the gun reloads |
 
 **Order averaging (implementation choice, per model).** Small models often pick an option for its
@@ -99,6 +100,35 @@ won every time. With `fire_head`:
 - It is on for the 1.5B (`[shooter] fire_head`), off for the 3B, and always off in the classic
   game.
 
+**Dash (on by default since 2026-09-30).** Instead of a step the agent can dash up to 3 cells in a
+straight line in one tick. It stops before a wall, a sealed doorway or an enemy, picks up what it
+passes, and recharges for 8 ticks. Bullets fly after the move, so a dash can leave a bullet's path
+that a step could not. The move head offers `dash <direction>` while the dash is ready and it covers
+at least two cells.
+
+**Brain changes of 2026-09-30** (from reading the 3B's failed runs on seeds 0–4 of the game with
+ammo; they apply to every game, so results before that date are reproducible at commit `52bb540`):
+
+- **Held targets.** Seed 1: the 3B picked up the key at tick 9, then circled a few cells for 570
+  ticks. The target tier was re-decided every 6 ticks, and from alternating positions the 3B
+  alternated between two doorways, reaching neither. Navigation targets (doorways, the key, the
+  exit, potions, ammo boxes) and the strategy behind them are now held until reached, gone, unsafe
+  or stalled (`GoalStack.hold`). Firing spots keep the 6-tick period.
+- **Stalls re-plan.** After 6 ticks without getting closer, the target is re-decided (every second
+  time the strategy too); after 30 ticks without a new cell or any progress, both.
+- **No `stay` trap.** Seeds 3 and 4: the 3B chose `stay (safe; no closer)` in one static state for
+  400+ ticks. `stay` is not offered while a safe move gets closer.
+- **No risky option next to a safe one.** In the first dash runs every hit the 3B took (33 of 33)
+  came from a move labelled `BULLET` or `next to a brute` while a safe move was offered; that label,
+  without "farther", stood out among safe moves that all read "farther". A risky move is now offered
+  only when nothing is safe (a move onto the exit is kept). `avoidable_risky_moves` is 0 by
+  construction since then.
+- **Leave once you can.** "explore" is not offered once the agent carries the key and knows the
+  way to the exit (the 3B's seed-37 timeout in the classic game).
+- **A loop metric.** `stuck_ticks` counts ticks without getting closer to one unchanged target, so
+  a loop between shifting targets never registered (seed 1: 0 stuck ticks). `loop_ticks` counts
+  ticks in streaks of 30+ without a new cell or any progress; the viewer marks them in orange.
+
 ## What the viewer shows
 
 The stage has more contrast than the dungeon's: lighter floors, darker walls, bright enemies and
@@ -107,6 +137,8 @@ bullets. It shows:
 - the map with fog, sealed doorways (red bars), aim telegraphs (red dashed lines), bullets in
   flight and enemy health pips;
 - one card per tier and head, and the latency timeline with hits and kills;
+- the dash: a charge bar in the HUD and a white streak on the map; loops as an orange strip on the
+  timeline and a "going in circles" warning on the map;
 - below the stage, a prompt inspector;
 - in auto-demo, each pane shows the map, the HUD and one chip per tier.
 
@@ -167,6 +199,10 @@ commit on an RTX 3060 Ti with CUDA, so on different hardware than the runs above
 
 6 vs 0 of 10 (two-sided Fisher p = 0.011), so by the rule fixed before the run the fire head stays
 on. The 3B with ammo is not evaluated yet.
+
+**Dash game, 20-run escape checks** (Observed, Lenovo; `bench/escape_check.py`): the 1.5B and
+the 3B each escaped 5 of 5 on seeds 0–4 (development data for the 2026-09-30 changes) and 5 of 5
+on fresh seeds 50–54. Details: [`research.md`](research.md) → Dash and loops.
 
 Details, development probes and the rule calibration: [`research.md`](research.md) → Observed →
 Shooter demo. What the runs taught us: [`lessons-learned.md`](lessons-learned.md).
