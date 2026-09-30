@@ -492,6 +492,10 @@ Four seeds is a small sample. The labels cost ~25 ms per tick (longer options). 
 
 ### Dungeon demo: one agent in closed loop (Qwen2.5-3B)
 
+*The first dungeon, kept here as history. It was removed on 2026-09-30 and replaced by a rebuilt
+dungeon (see Dash and loops below); its code, viewer and runs are in git history up to `52bb540`,
+its results in `bench/results/dungeon_eval/dungeon_eval_20260926_*.json`.*
+
 A single-agent scenario built to be harder than the gem field: nine rooms joined by corridors, a
 key that opens the exit, two enemies that chase, and gems, food and potions (`demo/dungeon/`).
 The agent sees only the rooms it has visited. Every decision is recorded to JSONL and replayed in
@@ -886,3 +890,81 @@ escapes at least as many seeds as the old head). Raw data:
   decision; why was not investigated.
 - The 3B with ammo has not been evaluated; seed 0 of the ammo game is development data for this
   change.
+
+### Dash and loops: the rebuilt dungeon, the dash, and the 20-run check (2026-09-30)
+
+Asked for: make the dungeon beatable (wider corridors, or two ways in and out of each room), remove
+the old one, add a dash that recharges within 8 ticks to both games, fix loops such as the 3B's on
+shooter seed 1, and rerun the 20 runs of 2026-09-29 (both games, both models, seeds 0–4) until at
+least 80% escape.
+
+**The 20 runs before (Observed, 2026-09-29, Lenovo):** 6 of 20 escaped. Dungeon (first version):
+0 of 10. Shooter with ammo: 1.5B 5 of 5, 3B 1 of 5.
+
+**What the 3B's failed shooter runs showed (Observed, read from the traces):**
+
+- Seed 1: the key at tick 9, then 570 ticks exploring among 3 rooms. The target tier was re-decided
+  every 6 ticks, and from alternating positions the 3B alternated between two doorways, (23,15) and
+  (23,24), reaching neither. `stuck_ticks` was 0, because each 6-tick leg got closer to its own
+  target.
+- Seeds 3 and 4 (427 and 475 stuck ticks): one static state, `stay (safe; no closer)` chosen at
+  p ≈ 0.6 every tick while `move north (safe; closer)` was on offer.
+
+**Changes (implementation choices):**
+
+- *Engine:* `GoalStack.hold(name)`: a held tier is re-decided only when invalidated, not on its
+  period.
+- *Both brains:* navigation targets and the strategy behind them are held until reached, gone,
+  unsafe or stalled; 6 ticks without getting closer re-decide the target (every second time the
+  strategy too); 30 ticks without a new cell or any progress re-decide both. `stay` is not offered
+  while a safe move gets closer. Exploring (and, in the dungeon, gems) is not offered once the key
+  is carried and the exit is within reach (the shooter 3B's seed-37 timeout).
+- *Metric:* `loop_ticks`, ticks in streaks of 30+ without a new cell or any progress event (kills,
+  hits scored, pickups, rooms). On the seed-1 trace it would count the 570-tick loop; `stuck_ticks`
+  counted 0.
+- *Dash* in both games: up to 3 cells in one tick, stopping before walls, sealed doorways and
+  enemies, picking up what it passes; recharges in 8 ticks. Offered in the move head while ready.
+- *The dungeon, rebuilt:* 3-wide corridors and doorways, every room with 2+ doorways, ghouls that
+  cannot be fought (chase only inside their room, hit for 20, back off, tire after 12 ticks of
+  chasing), no hunger. Rules chosen with bots only on dev seeds 1000–1059 (not pre-registered;
+  `bench/dungeon_calibration.py`): reference bot 59/60, careless bot 52/60, random 0/60.
+
+**Shooter development pass (Observed; dash and the changes above, but risky moves still offered;
+seeds 0–4; `bench/results/shooter_eval/shooter_eval_dash_20260930_093147.json`):** 1.5B 5/5, 3B 2/5.
+No stuck or loop ticks any more; the 3B died to gunners three times (7 hits each). All 33 of its
+hits came from a move labelled `BULLET` or `next to a brute` while a safe move was on offer. When
+the agent stood on a firing spot, every safe move read "farther" and the risky one carried no target
+note, and the 3B took it (p 0.6–0.98).
+
+**One more change:** a risky move is offered only when no option is safe (a move onto the exit is
+kept). `avoidable_risky_moves` is 0 by construction since then. This makes the games safer by
+design: what the runs measure is planning and navigation, not whether the model heeds a warning.
+
+**Dungeon development pass (Observed; dev seeds 1000–1004;
+`bench/results/dungeon_eval/dungeon_eval_20260930_094943.json`):** 1.5B 5/5, 3B 5/5, 0 hits.
+
+**The 20-run check (`bench/escape_check.py`, rule fixed in the script before its first run: done at
+16 of 20; Observed, Lenovo, Arc 140V; `bench/results/escape_check/escape_check_20260930-095727.json`):**
+
+| seeds 0–4 | dungeon | shooter |
+|---|---:|---:|
+| Qwen2.5-1.5B | 5 / 5 | 5 / 5 |
+| Qwen2.5-3B | 5 / 5 | 5 / 5 |
+
+**20 of 20 escaped**, on the first run of the check. Loop ticks 0 in every run, hits taken 0–1 per
+run. Seeds 0–4 of the shooter are development data for these changes (the dev pass above ran on
+them), and the dungeon's texts were checked on dev seeds 1000–1004 first.
+
+**Confirmation on seeds 50–54** (never run with any model or bot in either game; fixed in
+`bench/escape_check.py` before the first check; run with no change in between; Observed, Lenovo;
+`bench/results/escape_check/escape_check_20260930-101725.json`):
+
+| seeds 50–54 | dungeon | shooter |
+|---|---:|---:|
+| Qwen2.5-1.5B | 5 / 5 | 5 / 5 |
+| Qwen2.5-3B | 5 / 5 | 5 / 5 |
+
+**20 of 20 escaped again.** One hit taken in all 20 runs, loop ticks 0, stuck ticks at most 27.
+Forty runs is still a small sample, and the result holds for the games as designed: the option
+lists keep the agent out of harm's way, so these numbers say the models plan and navigate
+reliably, not that they read danger well (the earlier evidence says they do not).

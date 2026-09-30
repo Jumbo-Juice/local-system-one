@@ -22,6 +22,9 @@ which also lists the pinned runs). Watch them with `python -m viewer`.
   decisions: which move was chosen when a hit happened, and what the options said at that moment.
 - **Averages hide traps.** A 97-100% single-decision accuracy coexisted with one state that
   repeated for 200+ ticks, because nothing changes in an empty corridor.
+- **A metric can miss the failure it is named for.** `stuck_ticks` (no progress toward one
+  unchanged target) read 0 on a 570-tick loop, because the target changed every 6 ticks. Count
+  what the agent achieves instead: `loop_ticks` counts streaks without a new cell or any progress.
 - **A deterministic mock is not a random floor.** The mock backend picks a fixed function of the
   prompt, so in a static state it repeats forever and never leaves the start room.
 - **Don't render or run other GPU work during a latency run** (shared iGPU power budget).
@@ -46,6 +49,12 @@ which also lists the pinned runs). Watch them with `python -m viewer`.
   took the 1.5B from 0 to 6 escapes of 10 in the game with ammo.
 - **With several similar options the probability spreads across them (Observed)**, and a single
   "do nothing" option can win without being the model's preferred kind of action.
+- **Re-deciding a goal too often is its own trap (Observed).** Re-planning the target every 6 ticks
+  from wherever the agent stood made the 3B alternate between two doorways for 570 ticks. Holding
+  navigation targets until reached, gone or stalled removed the loops (0 loop ticks in 20 runs).
+- **A warning label only helps if the other options don't read worse (Observed).** On a firing spot
+  every safe move read "farther"; the risky move carried only `BULLET: -15 health`, and the 3B took
+  it (33 of 33 hits). Not offering risky moves next to safe ones took the 3B from 2 to 5 of 5.
 - **Don't offer trap options.** Offering walls as moves let the 3B choose `move west (wall)` at
   p = 0.71 for 200+ ticks; a compass bearing to a target behind a bend did the same. Only offering
   open moves and giving the route's waypoint fixed it.
@@ -63,14 +72,20 @@ which also lists the pinned runs). Watch them with `python -m viewer`.
   seen room from its doorways and corridors, decided by position (line of sight made the bot
   flip-flop between two cells).
 - **Open:** that sleeping-brute fix left the 1.5B with "no safe route" on seed 37 (key next to a
-  sleeping brute, timeout).
+  sleeping brute, timeout). Not re-tested since the dash and the 2026-09-30 changes.
 
 ## Game design
 
 - **Prove the level beatable with bots before any model runs.** The first dungeon was never
   escaped (0 of 48 model runs); the shooter was tuned with a reference bot first (60/60 on dev
   seeds) and the models then escaped about 7 in 10.
-- **One-cell doorways trap agents**; three-cell doorways and sealed rooms fixed that.
+- **One-cell doorways trap agents**; three-cell doorways and sealed rooms fixed that. The rebuilt
+  dungeon also gives every room two doorways.
+- **A careful bot finds deadlocks a careless one walks through.** The rebuilt dungeon's first draft
+  let a ghoul shadow the agent along a doorway from inside its room forever: the careful bot escaped
+  28 of 60, the careless one 50. Ghouls that tire after 12 ticks of chasing: 59 of 60.
+- **The rebuilt dungeon is escaped (Observed):** 20 of 20 in the escape check across both games
+  and both models, where the first dungeon was escaped 0 times in 48 runs.
 - **An agent that moves with purpose meets more enemies.** Fixing loops in the first dungeon cut
   stuck ticks from 63 to 6 but raised enemy deaths from 3 to 7.
 
