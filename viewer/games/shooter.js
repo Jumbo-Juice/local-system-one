@@ -15,7 +15,7 @@
     // map: floors clearly lighter than walls, walls clearly lighter than the void
     wall: "#141b26", wallTop: "#27344a", wallFace: "#0c1118", floor: "#34445c", floorLine: "#3f5170",
     corridor: "#2c3a4f", jamb: "#d6ae6e", shot: "#effff8",
-    ammo: "#b6f05a", brass: "#ffd28a", crate: "#34401f",
+    ammo: "#b6f05a", brass: "#ffd28a", crate: "#34401f", dash: "#e6fff5", orange: "#ff9f43",
   };
   const CARDS = {
     strategy: { x: 992, y: 112, w: 888, h: 199 },
@@ -25,7 +25,9 @@
   };
   const TL = { x: 992, y: 976, w: 888, h: 76 };
   const TIER_LABEL = { strategy: "Strategy", target: "Target", move: "Move", shoot: "Shoot", aim: "Aim" };
-  const ROW = 20;
+  const ROW = 20, LOOP = 30;
+  const STEP = { "move north": [0, -1], "move south": [0, 1], "move east": [1, 0], "move west": [-1, 0],
+    "dash north": [0, -1], "dash south": [0, 1], "dash east": [1, 0], "dash west": [-1, 0] };
 
   // The run, context and playback state being drawn; set by begin() for each frame and pane.
   let R = null, ctx = null, clock = 0, playing = false;
@@ -38,6 +40,7 @@
 
   function prepare(run) {
     run.rules = run.map.rules;
+    run.loop = (run.header.brain && run.header.brain.loop) || LOOP;
     run.open = openCells(run.map);
     run.roomDoors = new Map();  // room id -> doorway cells
     for (const c of run.map.corridors) c.rooms.forEach((rid, k) => {
@@ -280,32 +283,54 @@
     spacing(1.5); text("SEEN · CLEARED", 870, y + 22, K.muted, 13, 700, UI, "right"); spacing(0);
   }
 
-  // With ammo: health, the magazine as bullet pips with the reserve, kills, key, rooms.
+  // With ammo: health, the magazine as bullet pips with the reserve, kills, the dash (if on), key, rooms.
   function drawAmmoHud(w) {
-    const a = w.agent, y = 204, rules = R.rules;
+    const a = w.agent, y = 204, rules = R.rules, dash = a.dash !== undefined;
     spacing(1.5); text("HEALTH", 40, y + 22, K.muted, 14, 700); spacing(0);
-    const bx = 112, bw = 118; rrect(bx, y + 10, bw, 14, 7); ctx.fillStyle = K.track; ctx.fill();
+    const bx = 112, bw = dash ? 92 : 118; rrect(bx, y + 10, bw, 14, 7); ctx.fillStyle = K.track; ctx.fill();
     const hc = a.health > 60 ? K.mint : a.health > 30 ? K.amber : K.red;
     if (a.health > 0) { rrect(bx, y + 10, Math.max(14, bw * a.health / rules.health), 14, 7); ctx.fillStyle = hc; ctx.fill(); }
     text(String(a.health), bx + bw + 8, y + 23, K.ink, 18, 700, MONO);
-    spacing(1.5); text("AMMO", 300, y + 22, K.muted, 14, 700); spacing(0);
+    const ax0 = dash ? 262 : 300;
+    spacing(1.5); text("AMMO", ax0, y + 22, K.muted, 14, 700); spacing(0);
     const out = a.loaded + a.reserve === 0;
     for (let k = 0; k < rules.magazine; k++) {
-      const px = 352 + k * 11, full = k < a.loaded;
+      const px = ax0 + 52 + k * 11, full = k < a.loaded;
       ctx.fillStyle = full ? K.brass : K.track;
       ctx.beginPath(); ctx.moveTo(px, y + 27); ctx.lineTo(px, y + 13); ctx.arc(px + 3.5, y + 13, 3.5, Math.PI, 0); ctx.lineTo(px + 7, y + 27); ctx.closePath(); ctx.fill();
     }
-    const rx = 352 + rules.magazine * 11 + 4;
+    const rx = ax0 + 52 + rules.magazine * 11 + 4;
     text(`+${a.reserve}`, rx, y + 23, a.reserve ? K.ink : K.red, 18, 700, MONO);
     const state = out ? ["OUT", K.red] : a.reloading ? [`RELOAD ${a.reloading}`, K.amber] : a.loaded === 0 ? ["EMPTY", K.red]
       : a.cooldown ? [`NEXT ${a.cooldown}`, K.muted] : ["READY", K.ammo];
-    text(state[0], rx + 46, y + 22, state[1], 14, 700);
-    text(`${a.kills}`, 612, y + 23, K.ink, 18, 700, MONO, "right");
-    spacing(1.5); text("KILLS", 620, y + 22, K.muted, 14, 700); spacing(0);
-    if (a.has_key) keyGlyph(705, y + 16, 15); else { ctx.globalAlpha = 0.35; keyGlyph(705, y + 16, 15); ctx.globalAlpha = 1; }
-    spacing(1.5); text(a.has_key ? "KEY" : "NO KEY", 725, y + 22, a.has_key ? K.amber : K.muted, 14, 700); spacing(0);
+    text(state[0], rx + 42, y + 22, state[1], 14, 700);
+    const kx = dash ? 536 : 612;
+    text(`${a.kills}`, kx, y + 23, K.ink, 18, 700, MONO, "right");
+    spacing(1.5); text("KILLS", kx + 8, y + 22, K.muted, 14, 700); spacing(0);
+    if (dash) {  // a charge bar that fills over the recharge ticks
+      spacing(1.5); text("DASH", 604, y + 22, K.muted, 14, 700); spacing(0);
+      const ready = !a.dash, frac = ready ? 1 : 1 - a.dash / rules.dash_recharge;
+      rrect(650, y + 10, 34, 14, 7); ctx.fillStyle = K.track; ctx.fill();
+      if (frac > 0) { rrect(650, y + 10, Math.max(14, 34 * frac), 14, 7); ctx.fillStyle = ready ? K.dash : K.slate; ctx.fill(); }
+      if (!ready) text(String(a.dash), 688, y + 23, K.amber, 16, 700, MONO);
+    }
+    const keyX = dash ? 722 : 705;
+    if (a.has_key) keyGlyph(keyX, y + 16, 15); else { ctx.globalAlpha = 0.35; keyGlyph(keyX, y + 16, 15); ctx.globalAlpha = 1; }
+    spacing(1.5); text(a.has_key ? "KEY" : "NO KEY", keyX + 20, y + 22, a.has_key ? K.amber : K.muted, 14, 700); spacing(0);
     text(`${w.seen.length}/9 · ${w.cleared.length}`, 952, y + 23, K.ink, 18, 700, MONO, "right");
     spacing(1.5); text("ROOMS", 872, y + 22, K.muted, 13, 700, UI, "right"); spacing(0);
+  }
+
+  // A dash: a streak and fading after-images from where it started to where the agent is now.
+  function dashTrail(x0, y0, x1, y1, f) {
+    const fade = Math.max(0, 1 - Math.max(0, f - 0.85) / 0.15);
+    ctx.save(); ctx.strokeStyle = alpha(K.dash, 0.55 * fade); ctx.lineWidth = 6; ctx.lineCap = "round";
+    ctx.beginPath(); ctx.moveTo(x0, y0); ctx.lineTo(x1, y1); ctx.stroke(); ctx.restore(); ctx.lineCap = "butt";
+    for (let k = 1; k <= 3; k++) {
+      const q = k / 4;
+      ctx.fillStyle = alpha(K.mint, 0.18 * fade * q);
+      ctx.beginPath(); ctx.arc(lerp(x0, x1, q), lerp(y0, y1, q), 9, 0, 7); ctx.fill();
+    }
   }
 
   function bulletEnd(t, id) {
@@ -414,9 +439,9 @@
         ctx.beginPath(); ctx.moveTo(tx + dx * (pr - 4), ty + dy * (pr - 4)); ctx.lineTo(tx + dx * (pr + 5), ty + dy * (pr + 5)); ctx.stroke();
       }
     }
-    const step = { "move north": [0, -1], "move south": [0, 1], "move east": [1, 0], "move west": [-1, 0] }[t.move] || null;
+    if (t.events.some((ev) => ev.kind === "dash")) dashTrail(cx(a0[0]), cy(a0[1]), ax, ay, f);
     const hurt = recentAge(i, f, "hit", 1.2);
-    agentGlyph(ax, ay, 11, step, hurt);
+    agentGlyph(ax, ay, 11, STEP[t.move] || null, hurt);
     // Event pop-ups: events of tick k appear as its move lands.
     for (let k = Math.max(0, i - 3); k <= i; k++) {
       const age = p - (k + 0.85);
@@ -429,8 +454,9 @@
       g.addColorStop(0, "rgba(255,90,90,0)"); g.addColorStop(1, `rgba(255,90,90,${0.35 * hurt})`);
       ctx.fillStyle = g; ctx.fillRect(MX, MY, w, h);
     }
-    const s = t.stuck_streak;
-    if (s >= 6) pill(`NO PROGRESS FOR ${s} TICKS`, MX + map.width * CS - 10, MY + 24, K.void, K.red);
+    let py = MY + 24;
+    if (t.stuck_streak >= 6) { pill(`NO PROGRESS FOR ${t.stuck_streak} TICKS`, MX + map.width * CS - 10, py, K.void, K.red); py += 32; }
+    if ((t.idle || 0) >= R.loop) pill(`GOING IN CIRCLES: ${t.idle} TICKS`, MX + map.width * CS - 10, py, K.void, K.orange);
   }
 
   function recentAge(i, f, kind, span) {
@@ -445,7 +471,7 @@
   function popup(ev, age, pos) {
     const labels = { potion: [`+${ev.gain} HEALTH`, K.pink], key: ["KEY!", K.amber], hit: [`−${ev.damage} HEALTH`, K.red],
       exit_locked: ["LOCKED: NO KEY", K.amber], bump: ["BUMP", K.faint], blocked: ["BLOCKED", K.faint],
-      ammo: [`+${ev.gain} AMMO`, K.ammo], reload: ["RELOADING", K.amber] };
+      ammo: [`+${ev.gain} AMMO`, K.ammo], reload: ["RELOADING", K.amber], dash: ["DASH", K.dash] };
     let where = pos, label, col;
     const room = (id) => R.map.rooms[id], mid = (r) => [r.x0 + (r.w - 1) / 2, r.y0 + (r.h - 1) / 2];
     if (ev.kind === "room_seen") { where = mid(room(ev.room)); label = room(ev.room).name.toUpperCase() + " DISCOVERED"; col = K.cyan; }
@@ -586,6 +612,7 @@
       const h = ph * Math.min(ms, cap) / cap;
       g.fillStyle = plan ? K.cyan : K.slate; g.fillRect(x, bot - h, Math.max(1, bw - (bw > 3 ? 1 : 0)), h);
       if (t.stuck_streak >= 6) { g.fillStyle = K.red; g.fillRect(x, bot + 2, Math.max(1, bw), 4); }
+      if ((t.idle || 0) >= run.loop) { g.fillStyle = K.orange; g.fillRect(x, bot + 11, Math.max(1, bw), 3); }
       const ag = t.world.agent;
       if (ag.loaded !== undefined && ag.loaded + ag.reserve === 0) { g.fillStyle = K.amber; g.fillRect(x, bot + 7, Math.max(1, bw), 3); }
       for (const ev of t.events) {
@@ -611,6 +638,7 @@
     ctx.fillStyle = K.ink; ctx.fillRect(x - 1, TL.y, 2, TL.h);
     const legend = [["plan + control", K.cyan], ["control only", K.slate], ["hit", K.red], ["kill", K.ink], ["no progress 6+", K.red]];
     if (R.rules.ammo) { legend.splice(4, 0, ["ammo box", K.ammo]); legend.push(["out of ammo", K.amber]); }
+    if (R.ticks[0].idle !== undefined) legend.push([`in circles ${R.loop}+`, K.orange]);
     let lx = TL.x;
     const ly = TL.y + TL.h + 18;  // under the timeline, clear of the latency figures above it
     for (const [s, c] of legend) {
@@ -656,6 +684,8 @@
         ["Rooms seen", `${v(s.rooms_seen)} of ${m.rooms.length}`],
         ["Rooms cleared", v(s.rooms_cleared)],
         ["Stuck ticks", v(s.stuck_ticks), "ticks in streaks of 6+ without getting closer to the same target"],
+        ...(s.loop_ticks != null ? [["Loop ticks", v(s.loop_ticks),
+          `ticks in streaks of ${run.loop}+ without a new cell or any progress; longest ${v(s.longest_idle)}`]] : []),
       ]],
       ["Combat", [
         ["Kills", v(s.kills)],
@@ -665,6 +695,7 @@
         ["Risky moves", v(s.avoidable_risky_moves), "moves into danger when a safe move existed"],
         ...(s.hits_after_safe_move != null ? [["Hits after a safe move", v(s.hits_after_safe_move), "a move labelled safe that was not"]] : []),
         ["Potions drunk", v(s.potions_drunk)],
+        ...(s.dashes != null ? [["Dashes", v(s.dashes), `offered on ${v(s.dashes_offered)} move decisions`]] : []),
       ]],
       ...(s.reloads === undefined ? [] : [["Ammo", [
         ["Reloads", v(s.reloads), `${v(s.reloads_chosen)} chosen by the model (${v(s.reloads_chosen_in_fight)} with an enemy in sight); the rest refilled an empty gun`],
@@ -690,6 +721,7 @@
         "Dimmed rooms: not seen by the agent yet. You see the whole map; the agent does not.",
         "Red bars across a doorway: the room is sealed until its enemies are dead.",
         "Red dashed line: a gunner is aiming. It fires at the end of that tick.",
+        ...(run.rules.dash ? [`A white streak is a dash: up to ${run.rules.dash_cells} cells in one tick, then ${run.rules.dash_recharge} ticks to recharge (the DASH bar).`] : []),
         ...(run.rules.ammo ? ["Green crates with bullet tips: ammo boxes. Stepping on one adds up to 10 bullets to the reserve; a box stays where it lies while the reserve is full."] : []),
       ]],
       ["Reading the decisions", [

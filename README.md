@@ -250,7 +250,8 @@ system_one/backends/   base.py (interface), hf.py (PyTorch + transformers), llam
                         llama-server, GGUF; untested), mock.py (no model)
 demo/                  the game demos; runs.py (where captured runs go), common.py (shared helpers)
 demo/grid/             the live 2D window: world.py, brain.py, sim.py (python -m demo.grid)
-demo/dungeon/          world.py (rules), brain.py (tiers, text, runner), capture.py (a run into runs/dungeon/)
+demo/dungeon/          world.py (rules), bots.py (non-model reference bots), brain.py (tiers, texts,
+                        runner), capture.py (a run into runs/dungeon/)
 demo/shooter/          world.py (rules), bots.py (non-model reference bots), brain.py (tiers, heads,
                         runner), capture.py (a run into runs/shooter/)
 viewer/                the Master Viewer (python -m viewer): index.html, shell.js, core.js, paint.js,
@@ -305,7 +306,12 @@ tests/                 pytest suite (mock tests always; `model` tests when weigh
   every hit was a move labelled `BULLET` chosen while a safe move was offered.
 - **Option order sways small models.** In the shooter the 1.5B's decision to fire followed the
   option order; order averaging (`Engine(order_debias=True)`) fixes that at the cost of twice the
-  rows per forward pass. It is off by default outside the shooter.
+  rows per forward pass. The demos turn it on per model (`[shooter]` / `[dungeon] order_debias`);
+  the engine's default is off.
+- **The demos' safety comes from the option lists, not from the model's judgement.** Since
+  2026-09-30 a move into danger is offered only when nothing is safe, because both models kept
+  choosing labelled-dangerous moves next to safe ones. The games are beatable by design; what the
+  runs measure is whether the model plans and navigates, not whether it reads a warning.
 - The demo state text gives relative offsets and names conditions in words, because the model
   cannot do the arithmetic in one pass. That is part of the demo design, not of the engine.
 

@@ -78,9 +78,16 @@ Check result (run at fb3f106 on the Lenovo, Arc 140V; bench/results/shooter_eval
 escaped 1.5b 6/10, 1.5b-onehead 0/10 (two-sided Fisher p = 0.011), bot-reference 10/10. Held fire
 0% vs 98% of shoot decisions; kills 8.8 vs 0.6 per run. By the rule the fire head stays on.
 
+Dash (added 2026-09-30, with the brain changes of that day: held navigation targets, no "stay"
+while a safe move gets closer, re-plans when stalled or idle; docs/research.md -> Dash and loops).
+The default game is now "dash" (ammo plus the dash); "ammo" is the game with ammo as evaluated on
+seeds 40-49 above, "classic" the one without ammo. The brain changes apply to every game, so rerun
+the older results at commit 52bb540. The 20-run check across both demos is bench/escape_check.py.
+
 Usage:
-    python -m bench.shooter_eval                          # all setups, seeds 0-9, with ammo
-    python -m bench.shooter_eval --game classic           # the same without ammo (as evaluated above)
+    python -m bench.shooter_eval                          # all setups, seeds 0-9, the dash game
+    python -m bench.shooter_eval --game ammo              # ammo without the dash (as evaluated on seeds 40-49)
+    python -m bench.shooter_eval --game classic           # no ammo, no dash (as evaluated on seeds 0-39)
     python -m bench.shooter_eval --setups random bot-reference --seeds 0 1
     python -m bench.shooter_eval --resume 20260929-134450   # resume that eval (its id is in the trace names)
 Traces go to the shooter pool: runs/shooter/<eval id>_eval-<game>_<setup>_seed<N>.jsonl (python -m viewer).
@@ -98,8 +105,8 @@ from pathlib import Path
 from demo import runs as pool
 from demo.common import warm_up
 from demo.shooter import bots
-from demo.shooter.capture import capture
-from demo.shooter.world import CLASSIC, Dungeon, Rules
+from demo.shooter.capture import GAMES, capture
+from demo.shooter.world import Dungeon, Rules
 from system_one import load_config, make_engine
 from system_one.config import REPO_ROOT
 
@@ -118,7 +125,6 @@ SETUPS = {  # name -> (config or None for a bot, Runner options or bot name)
     "bot-nododge": (None, "nododge"),
     "bot-noammo": (None, "noammo"),  # ammo: reloads only an empty gun, never walks to a box
 }
-GAMES = {"ammo": Rules(), "classic": CLASSIC}
 
 
 def bot_run(seed: int, which: str, rules: Rules | None = None) -> dict:
@@ -190,8 +196,9 @@ def main() -> None:
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--setups", nargs="+", default=list(SETUPS), choices=list(SETUPS))
     ap.add_argument("--seeds", type=int, nargs="+", default=list(range(10)))
-    ap.add_argument("--game", choices=list(GAMES), default="ammo",
-                    help="ammo (default) or classic: without ammo, the game evaluated on seeds 0-39")
+    ap.add_argument("--game", choices=list(GAMES), default="dash",
+                    help="dash (default: ammo and the dash), ammo (no dash, evaluated on seeds 40-49) or classic "
+                         "(no ammo, evaluated on seeds 0-39)")
     ap.add_argument("--resume", default=None, metavar="EVAL_ID",
                     help="reuse the finished runs of this eval (the time at the start of its trace names)")
     args = ap.parse_args()
