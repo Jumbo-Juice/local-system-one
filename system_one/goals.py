@@ -17,6 +17,10 @@ Implementation choices (the sources leave these open):
   tournament finishes. By default a whole round runs per tick.
 - ``plan_budget`` caps planning work (slow tiers and their tournament groups) per agent per
   tick, so the fast tier's tick latency stays nearly constant.
+- A tier can be *held*: it is then re-decided only when invalidated, not on its period. A demo
+  holds a navigation target until it is reached, gone or stalled; re-deciding it every few ticks
+  from wherever the agent stands let a model alternate between two targets and reach neither
+  (Observed: shooter, 3B, seed 1, docs/research.md).
 """
 
 from __future__ import annotations
@@ -62,6 +66,7 @@ class GoalStack:
         self._decided_at: dict[str, int] = {}
         self._stale: set[str] = set()
         self._pending: set[str] = set()  # decided over several ticks (e.g. a tournament)
+        self._held: set[str] = set()  # re-decided only when invalidated, not on their period
         self.tournaments: dict[str, Tournament] = {}  # tier name -> tournament in progress
 
     def tier(self, name: str) -> Tier:
@@ -88,7 +93,7 @@ class GoalStack:
             if t.name in self._pending:
                 continue
             last = self._decided_at.get(t.name)
-            if last is None or t.name in self._stale or tick - last >= t.every:
+            if last is None or t.name in self._stale or (t.name not in self._held and tick - last >= t.every):
                 out.append(t)
         return out
 
@@ -98,6 +103,13 @@ class GoalStack:
     def invalidate(self, name: str) -> None:
         """Re-decide this tier on the next tick (e.g. its target was reached or disappeared)."""
         self._stale.add(name)
+
+    def hold(self, name: str, on: bool = True) -> None:
+        """While held, a tier keeps its choice past its period; ``invalidate`` still re-decides it."""
+        (self._held.add if on else self._held.discard)(name)
+
+    def held(self, name: str) -> bool:
+        return name in self._held
 
     def waiting(self, name: str) -> bool:
         """True while a new choice for this tier is owed: invalidated, or a tournament running."""

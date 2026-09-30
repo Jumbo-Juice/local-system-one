@@ -1,10 +1,37 @@
-"""The single-agent dungeon demo: world rules, brain texts, runner and trace, replay page."""
+"""The dungeon demo (rebuilt 2026-09-30): rules, ghouls, dash, bots, brain texts, runner (mock backend only)."""
 
 import json
+import random
+from dataclasses import replace
 
-import pytest
+from demo.dungeon import bots
+from demo.dungeon.world import Dungeon, Ghoul, Rules
 
-from demo.dungeon.world import Dungeon, Rules
+
+def quiet(seed=0, **rules):
+    """A dungeon without ghouls or supplies unless asked for, so single rules can be tested."""
+    base = dict(room_ghouls=(0, 0), key_room_ghouls=0, exit_room_ghouls=0, gems=0, potions=0)
+    base.update(rules)
+    return Dungeon(seed, Rules(**base))
+
+
+def walk_to(d, cell):
+    """Put the agent next to ``cell`` and return the move onto it."""
+    for move, (dx, dy) in (("move east", (-1, 0)), ("move west", (1, 0)), ("move south", (0, -1)), ("move north", (0, 1))):
+        here = (cell[0] + dx, cell[1] + dy)
+        if d.passable(here) and d.ghoul_at(here) is None:
+            d.pos = here
+            return move
+    raise AssertionError("no open neighbour")
+
+
+def place_ghoul(d, room=None, awake=True):
+    """Replace the ghouls with one ghoul at the centre of ``room`` (default: a room next to the start)."""
+    room = d.rooms[room if room is not None else next(c.rooms[1] if c.rooms[0] == d.start_room else c.rooms[0]
+                                                        for c in d.corridors if d.start_room in c.rooms)]
+    g = Ghoul(0, room.centre, room.id, room.centre, awake=awake)
+    d.ghouls = [g]
+    return g, room
 
 
 def test_layout_is_deterministic_connected_and_consistent():
@@ -12,18 +39,28 @@ def test_layout_is_deterministic_connected_and_consistent():
         d, again = Dungeon(seed), Dungeon(seed)
         assert d.layout() == again.layout() and d.snapshot() == again.snapshot()
         assert set(d.room_distances(d.start_room)) == set(range(9))  # every room reachable
-        assert len(d.corridors) == 9  # spanning tree (8) + one extra link
         reach = d.distances(d.pos)
-        items = [d.exit, d.key, *d.gems, *d.food, *d.potions, *(e.pos for e in d.enemies)]
+        items = [d.exit, d.key, *d.gems, *d.potions, *(g.pos for g in d.ghouls)]
         assert all(c in reach for c in items)
         assert len(set(items + [d.pos])) == len(items) + 1  # nothing shares a cell
-        assert all(d.room_at(c) is not None and not d.is_door(c) for c in items)
+        assert all(d.inside(c) is not None for c in items)
         assert d.exit_room != d.start_room and d.key_room not in (d.start_room, d.exit_room)
-        assert d.enemies[0].home == d.key_room and all(e.home != d.start_room for e in d.enemies)
+        assert sum(g.home == d.key_room for g in d.ghouls) == 2 and all(g.home != d.start_room for g in d.ghouls)
         assert d.seen == {d.start_room}
 
 
-def test_rooms_open_only_through_their_doors():
+def test_every_room_has_two_doorways_three_cells_wide():
+    """No dead ends and no one-cell doors: the first dungeon's corridors trapped its agent."""
+    for seed in range(40):
+        d = Dungeon(seed)
+        for room in d.rooms:
+            assert sum(room.id in c.rooms for c in d.corridors) >= 2
+        for c in d.corridors:
+            assert all(len(door) == 3 for door in c.doors)
+            assert len(c.cells) % 3 == 0
+
+
+def test_rooms_open_only_through_their_doorways():
     d = Dungeon(4)
     for room in d.rooms:
         border = set()
@@ -34,187 +71,182 @@ def test_rooms_open_only_through_their_doors():
         assert border and all(d.is_door(c) and d.area[c] == room.id for c in border)
 
 
-def quiet(seed=0, **rules):
-    """A dungeon without enemies or supplies unless asked for, so single rules can be tested."""
-    base = dict(enemies=0, gems=0, food=0, potions=0)
-    base.update(rules)
-    return Dungeon(seed, Rules(**base))
-
-
-def walk_to(d, cell):
-    """Teleport the agent next to ``cell`` (on a known open cell) and return the move onto it."""
-    for move, (dx, dy) in (("move east", (-1, 0)), ("move west", (1, 0)), ("move south", (0, -1)), ("move north", (0, 1))):
-        here = (cell[0] + dx, cell[1] + dy)
-        if d.passable(here):
-            d.pos = here
-            return move
-    raise AssertionError("no open neighbour")
-
-
 def test_exit_is_locked_without_the_key_and_opens_with_it():
     d = quiet()
-    move = walk_to(d, d.exit)
-    ev = d.step(move)
+    ev = d.step(walk_to(d, d.exit))
     assert d.pos == d.exit and d.outcome is None and {"kind": "exit_locked"} in ev
-    key = d.key
-    move = walk_to(d, key)
-    ev = d.step(move)
-    assert d.has_key and d.key is None and any(e["kind"] == "key" for e in ev)
-    move = walk_to(d, d.exit)
-    ev = d.step(move)
-    assert d.outcome == "escaped" and ev[-1] == {"kind": "escaped"}
-    with pytest.raises(RuntimeError):
-        d.step("stay")
+    d.step(walk_to(d, d.key))
+    assert d.has_key and d.key is None
+    ev = d.step(walk_to(d, d.exit))
+    assert d.outcome == "escaped" and {"kind": "escaped"} in ev
 
 
-def test_walls_block_and_pickups_apply_caps():
-    d = quiet(gems=1, food=1, potions=1)
-    wall_move = next(m for m, (dx, dy) in (("move north", (0, -1)), ("move south", (0, 1)), ("move east", (1, 0)),
-                                           ("move west", (-1, 0))) if not d.passable((d.pos[0] + dx, d.pos[1] + dy)))
-    before = d.pos
-    assert d.step(wall_move)[0]["kind"] == "bump" and d.pos == before
+def test_gems_count_and_potions_heal_up_to_the_cap():
+    d = quiet(gems=1, potions=1)
     d.step(walk_to(d, d.gems[0]))
     assert d.collected == 1 and not d.gems
-    d.energy = 90
-    ev = d.step(walk_to(d, d.food[0]))
-    assert d.energy == 99 and any(e["kind"] == "food" and e["gain"] == 10 for e in ev)  # capped at 100, then -1
-    d.health = 50
-    d.step(walk_to(d, d.potions[0]))
-    assert d.health == 90
-
-
-def test_starvation_kills():
-    d = quiet(energy=2)
-    outcomes = []
-    for _ in range(40):
-        d.step("stay")
-        outcomes.append(d.outcome)
-        if d.outcome:
-            break
-    assert d.outcome == "died" and d.cause == "starvation" and d.health == 0
-    assert d.tick == 1 + 20  # 1 tick to reach 0 energy, then 20 ticks x 5 health
+    d.health = 80
+    ev = d.step(walk_to(d, d.potions[0]))
+    assert d.health == 100 and any(e["kind"] == "potion" and e["gain"] == 20 for e in ev)
 
 
 def test_tick_limit():
-    d = quiet(max_ticks=3)
-    for _ in range(3):
+    d = quiet(max_ticks=5)
+    for _ in range(5):
         d.step("stay")
     assert d.outcome == "timeout"
 
 
-def test_enemy_chases_hits_and_is_stunned():
-    d = Dungeon(0, Rules(enemies=1, gems=0, food=0, potions=0))
-    e = d.enemies[0]
-    room = d.rooms[e.home]
-    d.pos = room.cells[0]
-    e.pos = next(c for c in room.cells if d.distances(d.pos)[c] == 3)
-    d.seen.add(e.home)
-    d._known = None
-    hits = []
-    for _ in range(12):
-        ev = d.step("stay")
-        hits += [x for x in ev if x["kind"] == "hit"]
-        if hits:
-            break
-    assert len(hits) == 1 and d.health == 100 - d.rules.enemy_damage
-    assert e.mode == "stunned" and e.stunned == d.rules.stun_ticks
-    assert d.distances(d.pos)[e.pos] == 1
-    for _ in range(d.rules.stun_ticks):
-        assert not any(x["kind"] == "hit" for x in d.step("stay"))
-    assert d.visible_enemies()[0][0] is e
-
-
-def test_walking_into_an_enemy_costs_a_hit():
-    d = Dungeon(0, Rules(enemies=1, gems=0, food=0, potions=0))
-    e = d.enemies[0]
-    move = walk_to(d, e.pos)
-    ev = d.step(move)
-    assert any(x["kind"] == "hit" for x in ev) and d.pos != e.pos
-
-
-def test_fog_of_war_reveals_rooms_through_their_doors():
-    d = quiet(3)
-    known = d.known_cells()
-    start = d.rooms[d.start_room]
-    assert set(start.cells) <= known
-    other = next(r for r in d.rooms if r.id != d.start_room)
-    assert not set(other.cells) & known
-    cor = next(c for c in d.corridors if d.start_room in c.rooms)
-    far_room = cor.rooms[1] if cor.rooms[0] == d.start_room else cor.rooms[0]
-    far_door = cor.doors[cor.rooms.index(far_room)]
-    assert far_door in known and not set(d.rooms[far_room].cells) & known
-    d.pos = far_door  # standing in a doorway shows the room behind it
+def test_ghouls_sleep_until_the_agent_steps_inside_then_act_from_the_next_tick():
+    d = quiet()
+    g, room = place_ghoul(d, awake=False)
+    d.pos = next(c for c in room.cells if abs(c[0] - g.pos[0]) + abs(c[1] - g.pos[1]) == 2)
+    d.step("stay")  # already inside: wakes the room, but a woken ghoul does not act yet
+    assert g.awake and g.pos == g.post and d.health == 100
     ev = d.step("stay")
-    assert far_room in d.seen and set(d.rooms[far_room].cells) <= d.known_cells()
-    assert {"kind": "room_seen", "room": far_room, "name": d.rooms[far_room].name} in ev
+    assert g.pos != g.post  # now it closes in
+    for _ in range(4):
+        ev += d.step("stay")
+    assert any(e["kind"] == "hit" for e in ev) and d.health == 100 - d.rules.ghoul_damage
+    assert g.rest > 0 or abs(g.pos[0] - d.pos[0]) + abs(g.pos[1] - d.pos[1]) > 1  # backs off after a hit
 
 
-def test_snapshot_and_layout_are_json():
-    d = Dungeon(1)
-    json.dumps(d.layout())
-    json.dumps(d.snapshot())
+def test_a_ghoul_tires_then_goes_home_and_sleeps_once_the_agent_has_left():
+    d = quiet(ghoul_chase=3)
+    g, room = place_ghoul(d)
+    d.pos = next(c for c in room.cells if abs(c[0] - g.pos[0]) + abs(c[1] - g.pos[1]) >= 4)
+    ev = []
+    for _ in range(4):
+        ev += d.step("stay")
+    assert any(e["kind"] == "ghoul_tired" for e in ev) and g.tired > 0
+    assert not bots.ghoul_reach(d, g)  # a tired ghoul hits nobody
+    d.pos = d.rooms[d.start_room].centre  # the agent left
+    for _ in range(40):
+        ev += d.step("stay")
+    assert g.pos == g.post and not g.awake and any(e["kind"] == "ghoul_slept" for e in ev)
 
 
-# -- brain, runner, trace ----------------------------------------------------------------
+def test_ghouls_never_leave_their_room():
+    d = quiet()
+    g, room = place_ghoul(d)
+    door = next(iter(d.doors[room.id]))
+    d.pos = door
+    for _ in range(30):
+        d.step("stay")
+        assert g.pos in room
 
-from demo.dungeon.brain import GOALS, DungeonBrain, Runner, cell_of, drop_distance  # noqa: E402
-from demo.runs import to_jsonl  # noqa: E402
+
+def test_dash_moves_three_cells_and_recharges_in_eight_ticks():
+    d = quiet()
+    room = d.rooms[d.start_room]
+    d.pos = (room.x0, room.y0)
+    ev = d.step("dash east")
+    assert d.pos == (room.x0 + 3, room.y0) and any(e["kind"] == "dash" for e in ev)
+    for _ in range(7):
+        assert not d.can_dash() and any(e["kind"] == "dash_refused" for e in d.step("dash west"))
+    assert d.can_dash()
+    d.pos = (room.x0, room.y0)
+    d.step("dash north")  # a wall right there: nothing moves, no charge used
+    assert d.pos == (room.x0, room.y0) and d.can_dash()
+
+
+def test_dash_stops_before_a_ghoul_and_picks_up_what_it_passes():
+    d = quiet(gems=0)
+    room = d.rooms[d.start_room]
+    d.pos = (room.x0, room.y0)
+    d.gems = [(room.x0 + 1, room.y0)]
+    d.ghouls = [Ghoul(0, (room.x0 + 3, room.y0), room.id, (room.x0 + 3, room.y0))]
+    d.step("dash east")
+    assert d.pos == (room.x0 + 2, room.y0) and d.collected == 1
+
+
+def test_reference_bot_escapes_and_random_does_not_on_dev_seeds():
+    ref = [bots.play(Dungeon(s), bots.reference).outcome for s in range(1000, 1010)]
+    rnd = [bots.play(Dungeon(s), bots.random_policy(random.Random(s))).outcome for s in range(1000, 1010)]
+    assert ref.count("escaped") >= 9 and rnd.count("escaped") == 0
+
+
+def test_sleeping_tired_and_resting_ghouls_are_no_threat():
+    d = quiet()
+    g, room = place_ghoul(d, awake=False)
+    d.seen.add(room.id)
+    assert not bots.threat_cells(d)
+    g.awake = True
+    assert (g.pos[0] + 1, g.pos[1]) in bots.threat_cells(d)
+    g.rest = 2
+    assert not bots.threat_cells(d)
+
+
+# -- brain -------------------------------------------------------------------------------------
+
 from system_one import Engine  # noqa: E402
 from system_one.backends.mock import MockBackend  # noqa: E402
 
+from demo.dungeon.brain import GOALS, DungeonBrain, Runner, cell_of  # noqa: E402
+from demo.runs import to_jsonl  # noqa: E402
 
-def test_goals_offered_only_when_possible():
-    d = Dungeon(0)
+
+def test_goals_offered_only_when_possible_and_leaving_once_the_way_out_is_known():
+    d = quiet()
     b = DungeonBrain(d)
-    first = b.goal_options()
-    assert "explore" in first and "get the key" not in first and "go to the exit" not in first
-    assert all(g in GOALS for g in first)
-    d.seen = set(range(9))  # as if explored; in play, seen rooms are joined by known corridors
+    assert b.goal_options() == ["explore"]
+    d.seen = set(range(9))  # the whole map known
     d._known = None
     b.refresh()
-    assert "get the key" in b.goal_options() and "explore" not in b.goal_options()
-    assert b.target_options("get the key")[0].startswith(f"the key at ({d.key[0]},{d.key[1]}) in the ")
-    d.key, d.has_key = None, True
+    assert "get the key" in b.goal_options() and "go to the exit" not in b.goal_options()
+    d.has_key, d.key = True, None
     b.refresh()
-    opts = b.goal_options()
-    assert "get the key" not in opts and "go to the exit" in opts
-    assert "The key: you carry it" in b.strategy_state()
+    assert b.goal_options() == ["go to the exit"]  # no more exploring or gems with the key in hand
+    d.health = 50
+    d.potions = [next(c for c in d.rooms[d.start_room].cells if c != d.pos)]
+    b.refresh()
+    assert b.goal_options() == ["go to the exit", "drink a health potion"]
+    assert all(g in GOALS for g in b.goal_options())
 
 
-def test_texts_spell_out_consequences():
-    d = Dungeon(0)
-    d.energy, d.health = 20, 30
+def test_targets_name_cells_and_distances():
+    d = quiet(gems=3)
     b = DungeonBrain(d)
-    s = b.strategy_state()
-    assert s.startswith("Standing order: Find the key")
-    assert "about 20 ticks until starving" in s and "CRITICAL (30/100): 1 more enemy hit would kill you" in s
-    assert "The key: not found yet. The exit stays locked until you carry it." in s
+    opts = b.target_options("explore")
+    assert opts and all(o.startswith("unexplored room behind the doorway at (") and " away" in o for o in opts)
+    assert all(cell_of(o) in b._dist for o in opts)
 
 
-def test_move_options_are_labelled_with_outcomes():
-    d = Dungeon(0)
-    e = d.enemies[0]
-    b = DungeonBrain(d, enemy_aware=True)
-    x, y = d.pos
-    free = [(m, c) for m, c in (("move north", (x, y - 1)), ("move south", (x, y + 1)), ("move east", (x + 1, y)),
-                                ("move west", (x - 1, y))) if d.passable(c)]
-    move, cell = free[0]
-    e.pos = cell
+def test_moves_are_labelled_closer_and_stay_is_left_out():
+    d = quiet()
+    b = DungeonBrain(d)
+    b.stack.apply(b.stack.tier("strategy"), "explore", 0)
+    b.stack.apply(b.stack.tier("target"), b.target_options("explore")[0], 0)
     b.refresh()
     opts = b.move_options()
-    assert f"{move} (ENEMY: you stay here and lose 30 health)" in opts
-    assert any(o.endswith("(wall)") for o in opts) or len(free) == 4
-    assert any("next to an enemy: it can hit you for 30 health" in o for o in opts if o.startswith("stay"))
-    v1 = DungeonBrain(d)  # enemy_aware off: the wording of the pre-registered evaluation
-    v1.refresh()
-    assert f"{move} (ENEMY: -30 health)" in v1.move_options()
-    assert len(opts) == 5 and [o.split(" (")[0] for o in opts] == ["move north", "move south", "move east", "move west", "stay"]
+    assert any("safe; closer" in o for o in opts) and not any(o.startswith("stay") for o in opts)
+    assert any(o.startswith("dash") and "cells; safe" in o for o in opts)
+    s = b.move_state()
+    assert "North is up" in s and "Dash: ready" in s and "safe route" in s
 
 
-def test_target_text_for_lower_tiers_drops_the_stale_distance():
-    assert drop_distance("gem at (5,6) in the hall, 4 steps away") == "gem at (5,6) in the hall"
-    assert drop_distance("safe spot at (1,2) in a corridor, 3 steps away, 7 steps from the enemy") == \
-        "safe spot at (1,2) in a corridor"
+def test_moves_into_a_ghouls_reach_are_left_out_while_a_safe_move_exists():
+    d = quiet()
+    g, room = place_ghoul(d)
+    d.pos = (g.pos[0] - 2, g.pos[1])
+    d.seen.add(room.id)
+    d._known = None
+    b = DungeonBrain(d)
+    assert "GHOUL: -20 health" in b._label([(d.pos[0] + 1, d.pos[1])], None, {}, None)[0]
+    opts = b.move_options()
+    assert opts and not any("GHOUL" in o for o in opts) and not any(o.startswith("move east") for o in opts)
+    assert "ghoul #0 2 cells east (awake, chasing you)" in b.move_state()
+
+
+def test_navigation_targets_are_held_and_replanned_when_stalled():
+    d = quiet()
+    b = DungeonBrain(d)
+    b.stack.apply(b.stack.tier("strategy"), "explore", 0)
+    b.stack.apply(b.stack.tier("target"), b.target_options("explore")[0], 0)
+    b.refresh()
+    assert {t.name for t in b.stack.due(50)} == {"move"}
+    b.replan()
+    assert {t.name for t in b.stack.due(51)} == {"target", "move"}
 
 
 def test_runner_one_forward_pass_per_tick_and_json_records():
@@ -224,61 +256,32 @@ def test_runner_one_forward_pass_per_tick_and_json_records():
     for _ in range(60):
         before = be.forward_calls
         rec = r.tick()
-        assert be.forward_calls - before == 1  # the action tier always needs the model
+        assert be.forward_calls - before <= 1
         model = [x for x in rec["decisions"] if x["method"] != "only_option"]
         assert rec["batch"]["decisions"] == len(model)
-        assert sum(1 for x in model if x["kind"] == "plan") <= 1  # plan budget
-        assert sum(1 for x in rec["decisions"] if x["tier"] == "action") == 1
-        for x in rec["decisions"]:
-            assert abs(sum(x["probs"]) - 1) < 1e-3 and 0 <= x["choice"] < len(x["options"])
+        assert sum(1 for x in model if x["kind"] == "plan") <= 1
+        assert sum(1 for x in rec["decisions"] if x["tier"] == "move") == 1
         if r.d.outcome:
             break
+    assert not r.engine.order_debias  # restored after each tick
     end = r.end()
-    text = to_jsonl([header, *r.records, end])
-    lines = [json.loads(x) for x in text.splitlines()]
-    assert lines[0]["type"] == "header" and lines[-1]["type"] == "end" and len(lines) == len(r.records) + 2
-    assert lines[0]["map"]["width"] == 24 and "Standing order" not in lines[0]["standing_order"]
-    assert end["summary"]["ticks"] == len(r.records)
+    lines = [json.loads(x) for x in to_jsonl([header, *r.records, end]).splitlines()]
+    assert lines[0]["scenario"] == "dungeon" and lines[0]["version"] == 2 and lines[-1]["type"] == "end"
+    assert "ghouls" in lines[1]["world"] and "idle" in lines[1]
+    assert {"loop_ticks", "stuck_ticks", "dashes", "hits_after_safe_move"} <= set(end["summary"])
 
 
-def test_only_option_goals_skip_the_model():
-    d = Dungeon(0)
-    d.seen = set(range(9))
-    d._known = None
-    r = Runner(d, Engine(MockBackend()), plan_budget=1)
-    r.brain.stack.apply(r.brain.stack.tier("strategy"), "get the key", 0, 0.9)
-    rec = r.tick()
-    target = [x for x in rec["decisions"] if x["tier"] == "target"]
-    assert target and target[0]["method"] == "only_option" and target[0]["options"][0].startswith("the key at")
+def test_order_averaging_default_comes_from_the_config():
+    from demo.dungeon.capture import order_debias
+    assert order_debias({}) is True
+    assert order_debias({"shooter": {"order_debias": False}}) is False
+    assert order_debias({"shooter": {"order_debias": False}, "dungeon": {"order_debias": True}}) is True
+    assert order_debias({"dungeon": {"order_debias": True}}, flag=False) is False
 
 
-def test_move_labels_say_closer_or_farther():
-    d = quiet(0)
-    b = DungeonBrain(d)
-    b.stack.apply(b.stack.tier("strategy"), "explore", 0)
-    b.stack.apply(b.stack.tier("target"), b.target_options("explore")[0], 0)
-    b.refresh()
-    opts = [o for o in b.move_options() if "to the target" in o]
-    assert any("(closer:" in o or "; closer:" in o for o in opts) and any("farther:" in o or "no closer" in o for o in opts)
-    steps = DungeonBrain(d, label_style="steps")
-    steps.stack.current.update(b.stack.current)
-    steps.refresh()
-    assert any("target: " in o for o in steps.move_options()) and not any("closer" in o for o in steps.move_options())
-    with pytest.raises(ValueError):
-        DungeonBrain(d, label_style="other")
-
-
-def test_safe_spots_are_reached_before_the_enemy():
-    d = quiet(0, enemies=1)
-    e = d.enemies[0]
-    room = d.rooms[d.start_room]
-    e.home = d.start_room
-    e.pos = next(c for c in room.cells if d.distances(d.pos)[c] == 2)
-    b = DungeonBrain(d, enemy_aware=True)
-    b.refresh()
-    spots = b.safe_spots()
-    assert spots
-    from_enemy = d.distances(e.pos)
-    for text in spots:
-        c = cell_of(text)
-        assert d.distances(d.pos)[c] < from_enemy[c] and "the enemy is" in text
+def test_rules_are_frozen_as_calibrated():
+    """Changing them invalidates bench/results/dungeon_calibration/ and every dungeon result."""
+    r = Rules()
+    assert (r.ghoul_move_every, r.ghoul_chase, r.ghoul_tired, r.ghoul_rest, r.ghoul_damage) == (3, 12, 10, 3, 20)
+    assert (r.dash_cells, r.dash_recharge, r.max_ticks, r.min_doors, r.door_width) == (3, 8, 400, 2, 3)
+    assert replace(r, dash=False).dash is False

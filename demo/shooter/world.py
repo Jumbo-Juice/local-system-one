@@ -28,9 +28,15 @@ decision can be a short list of text options. Rules (implementation choices; the
   a box stays where it lies while the reserve is full. Out of bullets in a sealed room, the agent
   cannot win that fight. Boxes are placed with their own random generator, so a seed gives the same
   map, enemies and potions with or without ammo.
+- Dash (``Rules.dash``; added on 2026-09-30, after every evaluation above, which ran without it):
+  instead of a step the agent can dash up to ``dash_cells`` cells in a straight line in one tick. It
+  stops before a wall, a sealed doorway or an enemy, and picks up what lies on every cell it passes.
+  Then the dash recharges for ``dash_recharge`` ticks. Bullets fly after the move, so a dash can
+  carry the agent out of a bullet's path that a step could not leave.
 - The agent knows only the rooms it has seen (room-level fog of war, as in the first dungeon).
-- Order within a tick: the agent moves and picks up what lies on its cell, then fires or starts a
-  reload; bullets fly; enemies act; doorways seal or open; the gun's cooldown and reload count down.
+- Order within a tick: the agent moves (or dashes) and picks up what lies on its cells, then fires or
+  starts a reload; bullets fly; enemies act; doorways seal or open; the gun's cooldown, the reload and
+  the dash's recharge count down.
 
 North is up: "move north" decreases y. Positions of bullets are fractional cell coordinates; a
 bullet is in the cell its position rounds to.
@@ -43,9 +49,7 @@ import random
 from collections import deque
 from dataclasses import asdict, dataclass
 
-MOVES = ("move north", "move south", "move east", "move west", "stay")
-STEP = {"move north": (0, -1), "move south": (0, 1), "move east": (1, 0), "move west": (-1, 0), "stay": (0, 0)}
-DIRS = {"north": (0, -1), "south": (0, 1), "east": (1, 0), "west": (-1, 0)}
+from ..common import DASHES, DIRS, MOVES, STEP, dash_path, is_dash  # noqa: F401 (re-exported)
 ROOM_NAMES = ("hall", "library", "armoury", "crypt", "kitchen", "chapel", "vault", "cellar", "gallery")
 COLS, ROWS, SLOT_W, SLOT_H = 3, 3, 11, 9  # each room lies inside its own SLOT_W x SLOT_H slot
 SUBSTEP = 0.25  # bullets are moved and checked in steps of this many cells
@@ -94,9 +98,14 @@ class Rules:
     max_reserve: int = 30
     ammo_boxes: int = 5  # at most one per room, never in the start room
     ammo_box: int = 10  # bullets in a box
+    # dash (dash=False: the games evaluated before 2026-09-30)
+    dash: bool = True
+    dash_cells: int = 3  # cells a dash covers at most
+    dash_recharge: int = 8  # ticks after a dash until the next one
 
 
-CLASSIC = Rules(ammo=False, max_ticks=400)  # the game as evaluated on seeds 0-39 (unlimited bullets)
+CLASSIC = Rules(ammo=False, dash=False, max_ticks=400)  # the game as evaluated on seeds 0-39 (unlimited bullets)
+AMMO = Rules(dash=False)  # the game with ammo as evaluated on seeds 40-49, before the dash
 
 
 @dataclass(frozen=True)
@@ -176,6 +185,8 @@ class Dungeon:
         self.reserve: int | None = self.rules.reserve if ammo else None
         self.reloading = 0  # ticks until the reload in progress is done
         self.reloads = self.ammo_picked = 0
+        self.dash_charge = 0  # ticks until the dash is ready again
+        self.dashes = 0
         self.bullets: list[Bullet] = []
         self._bullet_ids = 0
         self.sealed: int | None = None  # the room whose doorways are closed, if any
@@ -402,8 +413,12 @@ class Dungeon:
         ev: list[dict] = []
         dx, dy = STEP.get(move, (0, 0))
         to = (self.pos[0] + dx, self.pos[1] + dy)
-        if (dx, dy) != (0, 0):
-            if not self.passable(to):
+        if is_dash(move) and self.can_dash():
+            self._dash(move, ev)
+        elif (dx, dy) != (0, 0):
+            if is_dash(move):
+                ev.append({"kind": "dash_refused", "recharge": self.dash_charge})
+            elif not self.passable(to):
                 ev.append({"kind": "bump", "cell": list(to)})
             elif self.enemy_at(to) is not None:
                 ev.append({"kind": "blocked", "enemy": self.enemy_at(to).id})
@@ -425,11 +440,39 @@ class Dungeon:
             self.cooldown = max(0, self.cooldown - 1)
             if self.reloading:
                 self._reload_tick(ev)
+        self.dash_charge = max(0, self.dash_charge - 1)
         self.tick += 1
         if self.outcome is None and self.tick >= self.rules.max_ticks:
             self.outcome = "timeout"
             ev.append({"kind": "timeout"})
         return ev
+
+    # -- dash ----------------------------------------------------------------------------
+
+    def can_dash(self) -> bool:
+        return self.rules.dash and self.dash_charge == 0
+
+    def dash_cells(self, move: str) -> list[Cell]:
+        """The cells a dash in that direction would pass through now (the last one is where it lands)."""
+        return dash_path(self.pos, move, self.rules.dash_cells, lambda c: self.passable(c) and self.enemy_at(c) is None)
+
+    def _dash(self, move: str, ev: list[dict]) -> None:
+        path = self.dash_cells(move)
+        if not path:
+            ev.append({"kind": "bump", "cell": [self.pos[0] + STEP[move][0], self.pos[1] + STEP[move][1]]})
+            return
+        start = self.pos
+        for c in path:  # pick up what lies on every cell passed; the exit ends the run at once
+            self.pos = c
+            self._pickups(ev)
+            if self.rules.ammo:
+                self._take_ammo(ev)
+            self._look(ev)
+            if self.outcome is not None:
+                break
+        self.dash_charge = self.rules.dash_recharge
+        self.dashes += 1
+        ev.append({"kind": "dash", "from": list(start), "to": list(self.pos), "path": [list(c) for c in path]})
 
     def _new_bullet(self, owner: str, frm: Cell, to: Cell, speed: float, damage: int, source=None) -> Bullet:
         d = math.dist(frm, to) or 1.0
@@ -685,6 +728,8 @@ class Dungeon:
             "items": {"potions": [list(c) for c in self.potions], "key": list(self.key) if self.key else None},
             "seen": sorted(self.seen), "sealed": self.sealed, "cleared": sorted(self.cleared),
         }
+        if self.rules.dash:
+            snap["agent"].update(dash=self.dash_charge, dashes=self.dashes)
         if self.rules.ammo:
             snap["agent"].update(loaded=self.loaded, reserve=self.reserve, reloading=self.reloading,
                                  reloads=self.reloads)

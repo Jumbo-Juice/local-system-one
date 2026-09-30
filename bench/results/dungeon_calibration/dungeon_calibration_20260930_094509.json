@@ -1,0 +1,366 @@
+{
+ "seeds": [
+  1000,
+  1001,
+  1002,
+  1003,
+  1004,
+  1005,
+  1006,
+  1007,
+  1008,
+  1009,
+  1010,
+  1011,
+  1012,
+  1013,
+  1014,
+  1015,
+  1016,
+  1017,
+  1018,
+  1019,
+  1020,
+  1021,
+  1022,
+  1023,
+  1024,
+  1025,
+  1026,
+  1027,
+  1028,
+  1029,
+  1030,
+  1031,
+  1032,
+  1033,
+  1034,
+  1035,
+  1036,
+  1037,
+  1038,
+  1039,
+  1040,
+  1041,
+  1042,
+  1043,
+  1044,
+  1045,
+  1046,
+  1047,
+  1048,
+  1049,
+  1050,
+  1051,
+  1052,
+  1053,
+  1054,
+  1055,
+  1056,
+  1057,
+  1058,
+  1059
+ ],
+ "grid": {
+  "draft": {
+   "rules": {
+    "max_ticks": 400,
+    "health": 100,
+    "door_width": 3,
+    "min_doors": 2,
+    "extra_links": 1,
+    "room_ghouls": [
+     0,
+     1
+    ],
+    "key_room_ghouls": 2,
+    "exit_room_ghouls": 1,
+    "ghoul_damage": 20,
+    "ghoul_rest": 3,
+    "ghoul_move_every": 3,
+    "ghoul_chase": 1000000,
+    "ghoul_tired": 10,
+    "gems": 6,
+    "potions": 3,
+    "potion_health": 40,
+    "dash": true,
+    "dash_cells": 3,
+    "dash_recharge": 8
+   },
+   "reference": {
+    "escaped": 28,
+    "died": 0,
+    "out_of_time": 32,
+    "escape_tick_median": 94.5,
+    "escape_tick_max": 159,
+    "hits_mean": 0.42
+   },
+   "careless": {
+    "escaped": 50,
+    "died": 10,
+    "out_of_time": 0,
+    "escape_tick_median": 84.0,
+    "escape_tick_max": 209,
+    "hits_mean": 4.2
+   },
+   "random": {
+    "escaped": 0,
+    "died": 36,
+    "out_of_time": 24,
+    "escape_tick_median": null,
+    "escape_tick_max": null,
+    "hits_mean": 3.42
+   }
+  },
+  "slower ghouls (1 tick in 2)": {
+   "rules": {
+    "max_ticks": 400,
+    "health": 100,
+    "door_width": 3,
+    "min_doors": 2,
+    "extra_links": 1,
+    "room_ghouls": [
+     0,
+     1
+    ],
+    "key_room_ghouls": 2,
+    "exit_room_ghouls": 1,
+    "ghoul_damage": 20,
+    "ghoul_rest": 3,
+    "ghoul_move_every": 2,
+    "ghoul_chase": 1000000,
+    "ghoul_tired": 10,
+    "gems": 6,
+    "potions": 3,
+    "potion_health": 40,
+    "dash": true,
+    "dash_cells": 3,
+    "dash_recharge": 8
+   },
+   "reference": {
+    "escaped": 30,
+    "died": 0,
+    "out_of_time": 30,
+    "escape_tick_median": 84.0,
+    "escape_tick_max": 146,
+    "hits_mean": 0.23
+   },
+   "careless": {
+    "escaped": 49,
+    "died": 11,
+    "out_of_time": 0,
+    "escape_tick_median": 75,
+    "escape_tick_max": 242,
+    "hits_mean": 3.82
+   },
+   "random": {
+    "escaped": 0,
+    "died": 32,
+    "out_of_time": 28,
+    "escape_tick_median": null,
+    "escape_tick_max": null,
+    "hits_mean": 3.27
+   }
+  },
+  "tire after 12 ticks (chosen)": {
+   "rules": {
+    "max_ticks": 400,
+    "health": 100,
+    "door_width": 3,
+    "min_doors": 2,
+    "extra_links": 1,
+    "room_ghouls": [
+     0,
+     1
+    ],
+    "key_room_ghouls": 2,
+    "exit_room_ghouls": 1,
+    "ghoul_damage": 20,
+    "ghoul_rest": 3,
+    "ghoul_move_every": 3,
+    "ghoul_chase": 12,
+    "ghoul_tired": 10,
+    "gems": 6,
+    "potions": 3,
+    "potion_health": 40,
+    "dash": true,
+    "dash_cells": 3,
+    "dash_recharge": 8
+   },
+   "reference": {
+    "escaped": 59,
+    "died": 0,
+    "out_of_time": 1,
+    "escape_tick_median": 90,
+    "escape_tick_max": 184,
+    "hits_mean": 0.4
+   },
+   "careless": {
+    "escaped": 52,
+    "died": 8,
+    "out_of_time": 0,
+    "escape_tick_median": 84.0,
+    "escape_tick_max": 209,
+    "hits_mean": 3.92
+   },
+   "random": {
+    "escaped": 0,
+    "died": 33,
+    "out_of_time": 27,
+    "escape_tick_median": null,
+    "escape_tick_max": null,
+    "hits_mean": 3.32
+   }
+  },
+  "tire after 8 ticks": {
+   "rules": {
+    "max_ticks": 400,
+    "health": 100,
+    "door_width": 3,
+    "min_doors": 2,
+    "extra_links": 1,
+    "room_ghouls": [
+     0,
+     1
+    ],
+    "key_room_ghouls": 2,
+    "exit_room_ghouls": 1,
+    "ghoul_damage": 20,
+    "ghoul_rest": 3,
+    "ghoul_move_every": 3,
+    "ghoul_chase": 8,
+    "ghoul_tired": 10,
+    "gems": 6,
+    "potions": 3,
+    "potion_health": 40,
+    "dash": true,
+    "dash_cells": 3,
+    "dash_recharge": 8
+   },
+   "reference": {
+    "escaped": 59,
+    "died": 0,
+    "out_of_time": 1,
+    "escape_tick_median": 84,
+    "escape_tick_max": 154,
+    "hits_mean": 0.28
+   },
+   "careless": {
+    "escaped": 55,
+    "died": 5,
+    "out_of_time": 0,
+    "escape_tick_median": 83,
+    "escape_tick_max": 250,
+    "hits_mean": 3.42
+   },
+   "random": {
+    "escaped": 0,
+    "died": 32,
+    "out_of_time": 28,
+    "escape_tick_median": null,
+    "escape_tick_max": null,
+    "hits_mean": 3.15
+   }
+  },
+  "tire after 20 ticks": {
+   "rules": {
+    "max_ticks": 400,
+    "health": 100,
+    "door_width": 3,
+    "min_doors": 2,
+    "extra_links": 1,
+    "room_ghouls": [
+     0,
+     1
+    ],
+    "key_room_ghouls": 2,
+    "exit_room_ghouls": 1,
+    "ghoul_damage": 20,
+    "ghoul_rest": 3,
+    "ghoul_move_every": 3,
+    "ghoul_chase": 20,
+    "ghoul_tired": 10,
+    "gems": 6,
+    "potions": 3,
+    "potion_health": 40,
+    "dash": true,
+    "dash_cells": 3,
+    "dash_recharge": 8
+   },
+   "reference": {
+    "escaped": 56,
+    "died": 0,
+    "out_of_time": 4,
+    "escape_tick_median": 102.5,
+    "escape_tick_max": 205,
+    "hits_mean": 0.47
+   },
+   "careless": {
+    "escaped": 51,
+    "died": 9,
+    "out_of_time": 0,
+    "escape_tick_median": 85,
+    "escape_tick_max": 209,
+    "hits_mean": 4.15
+   },
+   "random": {
+    "escaped": 0,
+    "died": 36,
+    "out_of_time": 24,
+    "escape_tick_median": null,
+    "escape_tick_max": null,
+    "hits_mean": 3.42
+   }
+  },
+  "slower and tire after 12": {
+   "rules": {
+    "max_ticks": 400,
+    "health": 100,
+    "door_width": 3,
+    "min_doors": 2,
+    "extra_links": 1,
+    "room_ghouls": [
+     0,
+     1
+    ],
+    "key_room_ghouls": 2,
+    "exit_room_ghouls": 1,
+    "ghoul_damage": 20,
+    "ghoul_rest": 3,
+    "ghoul_move_every": 2,
+    "ghoul_chase": 12,
+    "ghoul_tired": 10,
+    "gems": 6,
+    "potions": 3,
+    "potion_health": 40,
+    "dash": true,
+    "dash_cells": 3,
+    "dash_recharge": 8
+   },
+   "reference": {
+    "escaped": 60,
+    "died": 0,
+    "out_of_time": 0,
+    "escape_tick_median": 85.5,
+    "escape_tick_max": 186,
+    "hits_mean": 0.2
+   },
+   "careless": {
+    "escaped": 53,
+    "died": 7,
+    "out_of_time": 0,
+    "escape_tick_median": 77,
+    "escape_tick_max": 242,
+    "hits_mean": 3.62
+   },
+   "random": {
+    "escaped": 0,
+    "died": 28,
+    "out_of_time": 32,
+    "escape_tick_median": null,
+    "escape_tick_max": null,
+    "hits_mean": 3.15
+   }
+  }
+ }
+}
