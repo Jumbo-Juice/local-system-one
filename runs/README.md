@@ -4,14 +4,15 @@ Every captured run lands here as one `.jsonl` trace, in one flat folder per game
 
 | folder | written by |
 |---|---|
-| `shooter/` | `python -m demo.shooter.capture`, `python -m bench.shooter_eval` |
-| `dungeon/` | `python -m demo.dungeon.capture`, `python -m bench.dungeon_eval` |
+| `shooter/` | `python -m demo.shooter.capture`, `python -m bench.shooter_eval`, `python -m bench.escape_check` |
+| `dungeon/` | `python -m demo.dungeon.capture`, `python -m bench.dungeon_eval`, `python -m bench.escape_check` |
 
 Names start with the time the run (or its eval) started, so sorting by name sorts by time:
 
 ```
 20260929-133306_qwen2.5-3b_seed0.jsonl          one capture (model, seed)
 20260929-134450_eval-ammo_1.5b_seed3.jsonl      one run of an eval (eval id, game, setup, seed)
+20260930-095727_check_3b_seed1.jsonl            one run of the escape check (check id, model, seed)
 ```
 
 Watch them with the Master Viewer (load one, a random one, or auto-demo through all of them):
@@ -25,7 +26,7 @@ is deterministic, so a pruned run can be captured again with the same command an
 
 ## Pinned runs
 
-Shooter, all in the classic game (no ammo). Ticks are the last tick of the run, as the viewer shows them:
+Shooter. The first six are the classic game (no ammo, no dash). Ticks are the last tick of the run, as the viewer shows them:
 
 | file | why it is pinned | outcome |
 |---|---|---|
@@ -36,8 +37,14 @@ Shooter, all in the classic game (no ammo). Ticks are the last tick of the run, 
 | `shooter/20260927-005931_classic_qwen2.5-1.5b_seed12.pinned.jsonl` | best 1.5B run, chosen after the results (escaped, then kills, rooms cleared, minimum health) | escaped at tick 261, 14 kills |
 | `shooter/20260927-004052_classic_qwen2.5-3b_seed5.pinned.jsonl` | best 3B run, chosen the same way | escaped at tick 287, 15 kills |
 
-Dungeon:
+| `shooter/20260930-095727_check_3b_seed1.pinned.jsonl` | the 3B's seed 1 in the escape check (dash game): the seed that looped for 570 ticks before the 2026-09-30 fixes | escaped at tick 145, key at tick 7 |
+
+Dungeon (the rebuilt dungeon of 2026-09-30; the first dungeon's pinned run was removed with it):
 
 | file | why it is pinned | outcome |
 |---|---|---|
-| `dungeon/20260926-162605_qwen2.5-3b_seed0.pinned.jsonl` | pre-registered showcase: seed 0 with the 3B | died to an enemy at tick 143; 8 gems, 5 of 9 rooms, no key |
+| `dungeon/20260930-095727_check_1.5b_seed0.pinned.jsonl` | seed 0 of the escape check with the 1.5B, whatever the outcome | escaped at tick 189, 22 dashes, no hits |
+| `dungeon/20260930-095727_check_3b_seed0.pinned.jsonl` | seed 0 of the escape check with the 3B, whatever the outcome | escaped at tick 45, no hits |
+
+A pinned escape-check run no longer counts for `--resume` of its check (the name changed); the
+check's results are in `bench/results/escape_check/`.

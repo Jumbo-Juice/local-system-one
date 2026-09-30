@@ -130,8 +130,8 @@ unless noted; full tables in each write-up):
 
 | demo | what the agent does | headline result | write-up |
 |---|---|---|---|
-| **Shooter** | one agent clears locked rooms of gunners and brutes, takes the key, leaves by the exit | classic game, seeds 0–9: the 1.5B (order averaging) and the 3B (listed order) each escape **7 of 10**; with ammo, the 1.5B's fire head escapes **6 of 10** vs 0 of 10 without it | [`docs/shooter.md`](docs/shooter.md) |
-| **Dungeon** (replaced by the shooter) | one agent looks for the key and the exit among chasing enemies, gems and food | no run escaped (**0 of 48** model runs); the agent walks into enemies it is warned about | [`docs/dungeon.md`](docs/dungeon.md) |
+| **Shooter** | one agent clears locked rooms of gunners and brutes, takes the key, leaves by the exit | with ammo and the dash: both models escape **10 of 10** (seeds 0–4 and fresh seeds 50–54 each); classic game, seeds 0–9: **7 of 10** each | [`docs/shooter.md`](docs/shooter.md) |
+| **Dungeon** (rebuilt 2026-09-30) | one agent without a weapon sneaks past ghouls to the key and the exit, with a dash | both models escape **10 of 10** (seeds 0–4 and fresh seeds 50–54 each); the first dungeon: 0 of 48 | [`docs/dungeon.md`](docs/dungeon.md) |
 | **2D grid** (live window) | four agents collect gems, eat food and avoid hazards, all in one batch per tick | tiered goals: 2.3× the gems and 5.4× the food of flat control, which was no better than random | [`docs/grid.md`](docs/grid.md) |
 
 ```bash
@@ -301,9 +301,10 @@ tests/                 pytest suite (mock tests always; `model` tests when weigh
   deterministic model repeats a mistake every time it returns to the same state, so an agent can
   loop forever. Test agents in closed loop, not only per decision. Hazard avoidance by the
   strategy tier is still weak (11–44% in the probe).
-- **The first dungeon was not solved** (0 of 48 model runs escaped). Its shooter redo is beatable
-  (1.5B: 7 of 10 escaped), but the models still step into bullets they are warned about: nearly
-  every hit was a move labelled `BULLET` chosen while a safe move was offered.
+- **The models step into danger they are warned about.** Nearly every hit in the shooter came from
+  a move labelled `BULLET` chosen while a safe move was offered. Since 2026-09-30 such moves are not
+  offered next to safe ones, and both games are escaped 40 of 40 times in the escape checks; the
+  first dungeon, without that and with one-cell corridors, was escaped 0 of 48 times.
 - **Option order sways small models.** In the shooter the 1.5B's decision to fire followed the
   option order; order averaging (`Engine(order_debias=True)`) fixes that at the cost of twice the
   rows per forward pass. The demos turn it on per model (`[shooter]` / `[dungeon] order_debias`);
