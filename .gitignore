@@ -242,3 +242,6 @@ node_modules/
 .DS_Store
 Thumbs.db
 # Captured runs: runs/.gitignore keeps them local, except *.pinned.jsonl
+
+# Claude Code personal settings
+.claude/settings.local.json
