@@ -313,13 +313,13 @@ def test_moves_are_labelled_and_walls_are_not_offered():
     b.refresh()
     opts = b.move_options()
     names = [o.split(" (")[0] for o in opts]
-    assert names[-1] == "stay" and all(d.passable((x + dx, y + dy)) for dx, dy in
+    assert "stay" not in names and all(d.passable((x + dx, y + dy)) for dx, dy in
                                         ((0, -1) if n == "move north" else (0, 1) if n == "move south" else
                                          (1, 0) if n == "move east" else (-1, 0) if n == "move west" else (0, 0)
                                          for n in names))
-    stay = opts[-1]
+    assert all("BULLET" not in o for o in opts)  # staying in the bullet's path is not offered next to safe moves
+    stay = b._label([], None, {}, None)[0]
     assert "BULLET: -15 health" in stay and "safe" not in stay
-    assert any(o.startswith("move") and "(safe" in o for o in opts)
 
 
 def test_brute_neighbourhood_is_labelled():
@@ -329,8 +329,10 @@ def test_brute_neighbourhood_is_labelled():
     e.timer = 0
     b.refresh()
     toward = "move east" if e.pos[0] > d.pos[0] else "move west"
-    opt = next(o for o in b.move_options() if o.startswith(toward))
-    assert "next to a brute: -20 health" in opt
+    step = (1, 0) if toward == "move east" else (-1, 0)
+    label = b._label([(d.pos[0] + step[0], d.pos[1])], None, {}, None)[0]
+    assert "next to a brute: -20 health" in label and "safe" not in label
+    assert not any(o.startswith(toward) for o in b.move_options())  # a safe move exists, so it is not offered
 
 
 def doorway(d):
@@ -354,8 +356,9 @@ def test_sleeping_brute_counts_when_the_move_enters_its_room():
     b = ShooterBrain(d)
     move = next(n for n, (sx, sy) in (("move east", (1, 0)), ("move west", (-1, 0)), ("move south", (0, 1)),
                                        ("move north", (0, -1))) if (sx, sy) == (dx, dy))
-    opt = next(o for o in b.move_options() if o.startswith(move))
-    assert "next to a brute: -20 health" in opt and "safe" not in opt
+    label = b._label([(m[0] + dx, m[1] + dy)], None, {}, None)[0]
+    assert "next to a brute: -20 health" in label and "safe" not in label
+    assert not any(o.startswith(move) for o in b.move_options())
     ev = d.step(move)
     assert any(x["kind"] == "hit" and x["by"] == "brute" for x in ev)  # the label was right
     d2 = quiet()
@@ -373,8 +376,22 @@ def test_stay_on_the_target_in_a_bullet_path_reads_on_the_target():
     b.refresh()
     b.stack.apply(b.stack.tier("strategy"), "fight the enemies here", 0)
     b.stack.apply(b.stack.tier("target"), f"firing spot at ({x},{y}), where you stand: clear shot at 1 of 1 enemy", 0)
-    stay = b.move_options()[-1]
-    assert stay == "stay (BULLET: -15 health; on the target)"
+    b.refresh()
+    tdist = b._route_dist()
+    assert b._label([], (x, y), tdist, tdist.get((x, y)))[0] == "BULLET: -15 health; on the target"
+    assert not any(o.startswith("stay") for o in b.move_options())  # safe moves exist
+
+
+def test_risky_moves_are_offered_only_when_nothing_is_safe():
+    d, e, room = fight()
+    b = ShooterBrain(d)
+    x, y = d.pos
+    b.refresh()
+    b._danger = {c: 15 for c in [(x, y)] + [(x + dx, y + dy) for dx, dy in ((1, 0), (-1, 0), (0, 1), (0, -1))]}
+    b._threat = set(b._danger)
+    d.dash_charge = 5
+    opts = b.move_options()
+    assert opts and all("BULLET: -15 health" in o for o in opts)
 
 
 def test_brutes_guarding_a_doorway_can_be_fought_from_outside():
@@ -670,3 +687,118 @@ def test_reference_bot_manages_ammo_on_dev_seeds():
             d.step(*bots.reference(d))
             dry += d.ammo_total() == 0
         assert d.outcome == "escaped" and dry == 0 and d.reloads > 0
+
+
+# -- dash, held targets and loops (2026-09-30) ---------------------------------------------------
+
+from demo.common import IdleTracker, streak_ticks  # noqa: E402
+from demo.shooter.world import AMMO  # noqa: E402
+
+
+def open_line(d, n=4):
+    """A cell and a direction with n open cells ahead of it inside one room."""
+    for room in d.rooms:
+        for (x, y) in room.cells:
+            if all((x + k, y) in room for k in range(1, n + 1)):
+                return (x, y), "east"
+    raise AssertionError("no room wide enough")
+
+
+def test_dash_moves_three_cells_then_recharges_for_eight_ticks():
+    d = quiet()
+    (x, y), _ = open_line(d)
+    d.pos = (x, y)
+    ev = d.step("dash east")
+    assert d.pos == (x + 3, y) and d.dashes == 1
+    dash = next(e for e in ev if e["kind"] == "dash")
+    assert dash["path"] == [[x + 1, y], [x + 2, y], [x + 3, y]]
+    for _ in range(7):
+        assert not d.can_dash()
+        ev = d.step("dash west")
+        assert any(e["kind"] == "dash_refused" for e in ev) and d.pos == (x + 3, y)
+    assert d.can_dash()  # ready again 8 ticks after the dash
+    assert "dash" in d.snapshot()["agent"]
+
+
+def test_dash_stops_before_a_wall_and_picks_up_what_it_passes():
+    d = quiet(potions=0)
+    room = d.rooms[d.start_room]
+    d.pos = (room.x0 + 1, room.y0)
+    d.potions = [(room.x0 + 1, room.y0 + 1)]
+    d.health = 50
+    d.step("dash north")  # the wall is right there: nothing to pass
+    assert d.pos == (room.x0 + 1, room.y0) and d.can_dash()
+    d.pos = (room.x0 + 1, room.y0)
+    ev = d.step("dash south")
+    assert d.health == 90 and any(e["kind"] == "potion" for e in ev)
+
+
+def test_the_evaluated_games_have_no_dash():
+    for rules in (CLASSIC, AMMO):
+        d = Dungeon(0, rules)
+        before = d.pos
+        ev = d.step("dash east")
+        assert not d.can_dash() and any(e["kind"] == "dash_refused" for e in ev) and d.pos == before
+        assert "dash" not in d.snapshot()["agent"]
+
+
+def test_move_head_offers_dashes_only_while_ready():
+    d = quiet()
+    (x, y), _ = open_line(d)
+    d.pos = (x, y)
+    b = ShooterBrain(d)
+    opts = b.move_options()
+    dash = next(o for o in opts if o.startswith("dash east"))
+    assert dash.startswith("dash east (3 cells; safe")
+    assert "Dash: ready" in b.move_state()
+    d.dash_charge = 5
+    b.refresh()
+    assert not any(o.startswith("dash") for o in b.move_options())
+    assert "Dash: recharging, ready in 5 ticks." in b.move_state()
+
+
+def test_stay_is_not_offered_while_a_safe_move_gets_closer():
+    """The 3B chose "stay (safe; no closer)" in one static state for 400+ ticks (seed 4)."""
+    d = quiet()
+    b = ShooterBrain(d)
+    b.stack.apply(b.stack.tier("strategy"), "explore", 0)
+    b.stack.apply(b.stack.tier("target"), b.target_options("explore")[0], 0)
+    b.refresh()
+    opts = b.move_options()
+    assert any("closer" in o and "(safe" in o for o in opts)
+    assert not any(o.startswith("stay") for o in opts)
+
+
+def test_navigation_targets_are_held_and_firing_spots_are_not():
+    d = quiet()
+    b = ShooterBrain(d)
+    b.stack.apply(b.stack.tier("strategy"), "explore", 0)
+    b.stack.apply(b.stack.tier("target"), b.target_options("explore")[0], 0)
+    b.refresh()
+    assert b.stack.held("target") and b.stack.held("strategy")
+    assert "target" not in [t.name for t in b.stack.due(30)]
+    b.replan(strategy=True)
+    assert {"strategy", "target"} <= {t.name for t in b.stack.due(31)}
+    d2, e, room = fight()
+    b2 = ShooterBrain(d2)
+    b2.stack.apply(b2.stack.tier("strategy"), "fight the enemies here", 0)
+    b2.stack.apply(b2.stack.tier("target"), b2.target_options("fight the enemies here")[0], 0)
+    b2.refresh()
+    assert not b2.stack.held("target")
+
+
+def test_loop_between_shifting_targets_is_counted():
+    """Circling a few cells with a new target every few ticks: no stuck streak ever, but idle grows."""
+    t = IdleTracker((0, 0), ("key",))
+    cells = [(1, 0), (2, 0), (1, 0), (0, 0)] * 20
+    idle = [t.update(c, []) for c in cells]
+    assert idle[:2] == [0, 0] and max(idle) == len(cells) - 2
+    assert streak_ticks(idle, 30) == len(cells) - 2  # the whole streak, once it reaches 30
+    assert t.update((5, 5), []) == 0 and t.update((5, 5), [{"kind": "key"}]) == 0
+
+
+def test_runner_records_idle_and_summary_has_loop_ticks():
+    r = Runner(Dungeon(3), Engine(MockBackend()))
+    for _ in range(40):
+        rec = r.tick()
+    assert "idle" in rec and {"loop_ticks", "longest_idle", "dashes"} <= set(r.end()["summary"])

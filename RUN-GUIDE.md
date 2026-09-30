@@ -97,8 +97,14 @@ Without a model:
 .venv/Scripts/python -m demo.shooter.capture --config config/mock.toml --seed 0
 ```
 
-Ammo is on by default (6-bullet magazine, reloads, ammo boxes; tick limit 600). The game without
-ammo, as evaluated on seeds 0-39 (the run's name starts `classic_`):
+The default game has ammo (6-bullet magazine, reloads, ammo boxes; tick limit 600) and the dash (up
+to 3 cells in one tick, recharges in 8 ticks). `--game` picks an older one (the run's name starts
+with its name): `ammo` is ammo without the dash (as evaluated on seeds 40-49), `classic` neither
+ammo nor dash (as evaluated on seeds 0-39; `--classic` is short for it):
+
+```bash
+.venv/Scripts/python -m demo.shooter.capture --game ammo --config config/default.toml --seed 0
+```
 
 ```bash
 .venv/Scripts/python -m demo.shooter.capture --classic --config config/default.toml --seed 0
@@ -113,14 +119,15 @@ Useful flags: `--out <file>` (write the trace there instead of the pool), `--max
 
 Full closed-loop evaluation (setups `1.5b`, `3b`, `1.5b-listed`, `3b-listed`, `1.5b-onehead`
 (the 1.5B without the fire head), `random`, `bot-reference`, `bot-nododge`, `bot-noammo`; seeds 0-9
-by default; with ammo). Traces go to the shooter pool as `<eval id>_eval-<game>_<setup>_seed<N>.jsonl`
+by default; the dash game). Traces go to the shooter pool as `<eval id>_eval-<game>_<setup>_seed<N>.jsonl`
 (bots write none); results to `bench/results/shooter_eval/`:
 
 ```bash
 .venv/Scripts/python -m bench.shooter_eval
 ```
 
-The same without ammo (the game every result before 2026-09-29 was measured on):
+An older game: `--game ammo` (no dash; the results of 2026-09-29) or `--game classic` (no ammo, no
+dash; every result before 2026-09-29):
 
 ```bash
 .venv/Scripts/python -m bench.shooter_eval --game classic
@@ -157,18 +164,32 @@ Ammo calibration (bots only; the grid that chose the ammo rules):
 
 ## Dungeon demo
 
-Capture one run (writes `runs/dungeon/<time>_<model>_seed<N>.jsonl`):
+The dungeon was rebuilt on 2026-09-30 (wide corridors, two or more doorways per room, ghouls, the
+dash); the first dungeon is gone. Capture one run (writes `runs/dungeon/<time>_<model>_seed<N>.jsonl`):
+
+```bash
+.venv/Scripts/python -m demo.dungeon.capture --config config/default.toml --seed 0
+```
+
+Same with the 3B:
 
 ```bash
 .venv/Scripts/python -m demo.dungeon.capture --config config/lenovo-3b.toml --seed 0
 ```
 
-Extra flags: `--label-style closer|steps`, `--enemy-aware` (both show up in the run's name), plus
-the shooter's `--out`, `--max-ticks`, `--plan-budget`, `--group-size`, `--quiet`.
+Without a model:
 
-Evaluation (setups `3b-closer`, `3b-steps`, `1.5b-closer`, `random`, `3b-enemy-aware`; the first
-four and seeds 0-7 by default; traces go to the dungeon pool as `<eval id>_eval_<setup>_seed<N>.jsonl`,
-results to `bench/results/dungeon_eval/`):
+```bash
+.venv/Scripts/python -m demo.dungeon.capture --config config/mock.toml --seed 0
+```
+
+Flags: `--out <file>`, `--max-ticks N` (default 400), `--plan-budget N` (-1 = unlimited),
+`--group-size N`, `--order-debias` / `--no-order-debias` (default: `[dungeon] order_debias` in the
+config), `--quiet`.
+
+Evaluation (setups `1.5b`, `3b`, `random`, `bot-reference`, `bot-careless`, `bot-random`; seeds 0-9
+by default; traces go to the dungeon pool as `<eval id>_eval_<setup>_seed<N>.jsonl`, results to
+`bench/results/dungeon_eval/`):
 
 ```bash
 .venv/Scripts/python -m bench.dungeon_eval
@@ -177,7 +198,7 @@ results to `bench/results/dungeon_eval/`):
 Only some setups and seeds:
 
 ```bash
-.venv/Scripts/python -m bench.dungeon_eval --setups 3b-closer 3b-enemy-aware --seeds 0 1 2
+.venv/Scripts/python -m bench.dungeon_eval --setups 1.5b 3b --seeds 1000 1001 1002
 ```
 
 Resume an interrupted evaluation:
@@ -185,6 +206,35 @@ Resume an interrupted evaluation:
 ```bash
 .venv/Scripts/python -m bench.dungeon_eval --resume <eval id>
 ```
+
+How the ghoul rules were chosen (bots only, dev seeds 1000-1059; writes
+`bench/results/dungeon_calibration/`):
+
+```bash
+.venv/Scripts/python -m bench.dungeon_calibration
+```
+
+## Escape check (both demos, 20 runs)
+
+Each model plays each game on seeds 0-4 (20 runs); done when at least 16 escape. Traces go to each
+game's pool as `<check id>_check_<model>_seed<N>.jsonl`, results to `bench/results/escape_check/`:
+
+```bash
+.venv/Scripts/python -m bench.escape_check
+```
+
+Other seeds, only some models or games, or resume an interrupted check:
+
+```bash
+.venv/Scripts/python -m bench.escape_check --seeds 50 51 52 53 54
+```
+
+```bash
+.venv/Scripts/python -m bench.escape_check --resume <check id>
+```
+
+Flags: `--models 1.5b 3b`, `--games dungeon shooter`. About 40 minutes on the Lenovo (Arc 140V); it
+stops if the desktop app restarts, so a long check is safer from your own terminal.
 
 ## 2D grid demo (live window)
 
@@ -265,7 +315,7 @@ Do move decisions approach the target (`--n` decisions, default 60):
 
 | what | where |
 |---|---|
-| every captured run (captures and evals) | `runs/shooter/`, `runs/dungeon/`: one `<time>_<label>.jsonl` per run, git-ignored |
+| every captured run (captures, evals, escape checks) | `runs/shooter/`, `runs/dungeon/`: one `<time>_<label>.jsonl` per run, git-ignored |
 | pinned runs (committed) | `runs/<game>/*.pinned.jsonl`, listed in `runs/README.md`; pin a run by renaming it |
 | benchmark and eval results | `bench/results/<script>/` (committed) |
 | lessons from past test and eval runs | `docs/lessons-learned.md` |

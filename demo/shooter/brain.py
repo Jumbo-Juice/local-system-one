@@ -18,6 +18,21 @@ the strategy tier offers "pick up ammo" when an ammo box is within reach and the
 and the state texts count the bullets against the hits the known enemies still take. Without
 ammo every text is exactly as it was evaluated on seeds 0-39.
 
+With the dash (Rules.dash) the move head also offers "dash <direction>" while the dash is ready,
+labelled like a move with the cell it lands on. Changes of 2026-09-30, from the 3B's failed runs on
+seeds 1, 3 and 4 of the game with ammo (docs/research.md -> Dash and loops):
+- A navigation target (a doorway, the key, the exit, a potion, an ammo box) and the strategy behind
+  it are held until the target is reached, gone or unsafe, or the agent has not got closer to it for
+  STUCK ticks; they are no longer re-decided every few ticks. Firing spots keep the 6-tick period.
+- "stay" is not offered while a safe move gets closer to the target: the 3B chose "stay (safe; no
+  closer)" in the same static state for 400+ ticks.
+- A move into a bullet's path or next to a brute is not offered while any option is safe (a move
+  onto the exit is kept): in the first dash runs every hit the 3B took (33 of 33, seeds 0-4) came
+  from such a move while a safe one was on offer; its label, without "farther", stood out among
+  safe moves that all read "farther".
+- "explore" is not offered once the agent carries the key and knows the way to the exit: the 3B
+  stayed on an explore target with the key in hand until time ran out (seed 37 of the classic game).
+
 The two control heads run side by side in the same batch, like the Doom demo's control heads
 in sgoedecke/system-one [S4]; neither sees the other's answer. The model makes every choice.
 The code only computes what the text says: walking distances over the cells the agent knows,
@@ -35,9 +50,9 @@ from collections import Counter
 
 from system_one.goals import ONLY_OPTION, GoalStack, Tier, step_all
 
-from ..common import _steps, base_move
+from ..common import LOOP, IdleTracker, _steps, base_move, is_dash, streak_ticks
 from .bots import brute_reach, fight_cells, fighting, frontier, threat_cells
-from .world import DIRS, MOVES, STEP, Cell, Dungeon
+from .world import DASHES, DIRS, MOVES, STEP, Cell, Dungeon
 
 STANDING_ORDER = ("Find the key, then leave through the exit alive. Rooms lock you in until their enemies are dead: "
                   "shoot them and keep out of their bullets.")
@@ -137,6 +152,15 @@ class ShooterBrain:
         target = self.stack.current.get("target")
         if target is not None and self._target_done(target):
             self.stack.invalidate("target")
+        navigating = target is not None and not target.startswith("firing spot")
+        self.stack.hold("target", navigating)
+        self.stack.hold("strategy", navigating)
+
+    def replan(self, strategy: bool = False) -> None:
+        """Re-decide the target (and the strategy) next tick: the agent stopped making progress."""
+        self.stack.invalidate("target")
+        if strategy:
+            self.stack.invalidate("strategy")
 
     def _situation_now(self) -> tuple:
         d = self.d
@@ -174,7 +198,7 @@ class ShooterBrain:
         """The goals that are possible now, in the fixed order of GOALS."""
         d = self.d
         ok = {
-            "explore": bool(frontier(d, self._dist)),
+            "explore": bool(frontier(d, self._dist)) and not (d.has_key and d.exit in self._dist),
             "fight the enemies here": bool(self._foes),
             "get the key": d.key is not None and d.key in self._dist,
             "go to the exit": d.has_key and d.exit in self._dist,
@@ -242,54 +266,75 @@ class ShooterBrain:
         return any(c in brute_reach(self.d, e) for e in self.d.living() if e.home in self.d.seen)
 
     def move_options(self) -> list[str]:
-        """Each move labelled with its outcome. The model still chooses.
+        """Each move (and dash, when ready) labelled with its outcome. The model still chooses.
 
         "closer/farther" is measured along routes that avoid the cells an enemy can hurt next tick
         (bullet paths, next to a brute). Observed on dev seed 1000 with plain walking distance: the
         1.5B chose "next to a brute; closer" at p = 0.78 when the only short route passed the brute.
-        A move into danger is labelled with the damage only."""
+        A move into danger is labelled with the damage only. "stay" is left out while a safe move
+        gets closer to the target (a trap option for the 3B, see the module notes)."""
         d, target = self.d, self.target_cell()
         tdist = self._route_dist()
         here = tdist.get(d.pos)
-        out = []
-        for move in MOVES:
-            dx, dy = STEP[move]
-            c = (d.pos[0] + dx, d.pos[1] + dy)
-            if move != "stay" and (not d.passable(c) or d.enemy_at(c) is not None):
-                continue  # walls, sealed doorways and enemies are not offered (they would be trap options)
-            notes = []
-            if c in self._danger:
-                notes.append(f"BULLET: -{self._danger[c]} health")
-            if self._brute_next_to(c):
-                notes.append(f"next to a brute: -{d.rules.brute_damage} health")
-            if move != "stay":
-                if c == d.exit:
-                    notes.append("EXIT: you escape" if d.has_key else "the exit, locked without the key")
-                elif c == d.key:
-                    notes.append("pick up the key")
-                elif c in d.potions:
-                    notes.append(f"potion: +{d.rules.potion_health} health")
-            if d.rules.ammo and c in d.ammo:
-                gain = d.box_gain()
-                notes.append(f"ammo box: +{gain} bullets" if gain else "ammo box: your reserve is full")
-            risky = c in self._danger or self._brute_next_to(c)
-            if target is not None and not risky:
-                if c == target:
-                    notes.append("on the target" if move == "stay" else "reach the target")
-                elif c in tdist and here is not None:
-                    n = tdist[c]
-                    rel = "closer" if n < here else "farther" if n > here else "no closer"
-                    notes.append(f"{rel}: {_steps(n)} to the target")
-                elif c in tdist:
-                    notes.append(f"target: {_steps(tdist[c])}")
-                else:
-                    notes.append("no safe route to the target")
-            elif target is not None and c == target:
-                notes.append("on the target" if move == "stay" else "reach the target")
-            if not risky:
-                notes.insert(0, "safe")
-            out.append(f"{move} ({'; '.join(notes)})")
-        return out
+        out, progress = [], False
+        for move in MOVES[:4] + (DASHES if d.can_dash() else ()):
+            if is_dash(move):
+                path = d.dash_cells(move)
+                if len(path) < 2:
+                    continue  # a one-cell dash is a step that wastes the charge
+            else:
+                dx, dy = STEP[move]
+                path = [(d.pos[0] + dx, d.pos[1] + dy)]
+                if not d.passable(path[0]) or d.enemy_at(path[0]) is not None:
+                    continue  # walls, sealed doorways and enemies are not offered (they would be trap options)
+            label, good = self._label(path, target, tdist, here)
+            progress |= good
+            out.append(f"{move} ({len(path)} cells; {label})" if is_dash(move) else f"{move} ({label})")
+        if not progress or target is None or target == d.pos:
+            out.append(f"stay ({self._label([], target, tdist, here)[0]})")
+        safe = [o for o in out if "(safe" in o or "cells; safe" in o or "EXIT: you escape" in o]
+        return safe or out  # risky options only when nothing is safe
+
+    def _label(self, path: list[Cell], target: Cell | None, tdist: dict[Cell, int], here: int | None) -> tuple[str, bool]:
+        """The outcome of landing on path[-1] after passing the cells of ``path`` (empty: staying),
+        and whether it is safe progress (closer to the target, or onto it)."""
+        d = self.d
+        c = path[-1] if path else d.pos
+        notes = []
+        if c in self._danger:
+            notes.append(f"BULLET: -{self._danger[c]} health")
+        if self._brute_next_to(c):
+            notes.append(f"next to a brute: -{d.rules.brute_damage} health")
+        if d.exit in path:
+            notes.append("EXIT: you escape" if d.has_key else "the exit, locked without the key")
+        elif d.key is not None and d.key in path:
+            notes.append("pick up the key")
+        elif any(x in d.potions for x in path):
+            notes.append(f"potion: +{d.rules.potion_health} health")
+        if d.rules.ammo and any(x in d.ammo for x in path + [c]):
+            gain = d.box_gain()
+            notes.append(f"ammo box: +{gain} bullets" if gain else "ammo box: your reserve is full")
+        risky = c in self._danger or self._brute_next_to(c)
+        good = False
+        if target is not None and (c == target or not risky):
+            if c == target:
+                notes.append("reach the target" if path else "on the target")
+                good = bool(path) and not risky
+            elif target in path:
+                notes.append("passes over the target")
+                good = True
+            elif c in tdist and here is not None:
+                n = tdist[c]
+                rel = "closer" if n < here else "farther" if n > here else "no closer"
+                notes.append(f"{rel}: {_steps(n)} to the target")
+                good = n < here
+            elif c in tdist:
+                notes.append(f"target: {_steps(tdist[c])}")
+            else:
+                notes.append("no safe route to the target")
+        if not risky:
+            notes.insert(0, "safe")
+        return "; ".join(notes), good
 
     def _route_dist(self) -> dict[Cell, int]:
         """Walking distance to the target over known cells that no enemy can hurt next tick."""
@@ -492,8 +537,17 @@ class ShooterBrain:
             c = (x + dx, y + dy)
             nb.append(f"{name} {'wall' if not d.passable(c) else 'enemy' if d.enemy_at(c) else 'bullet path' if c in self._danger else 'free'}")
         return " ".join([f"You are at ({x},{y}) in {self.place(d.pos)}. North is up.", where,
-                         "Neighbouring cells: " + ", ".join(nb) + ".", self._bullets_line(), self._enemies_line(3),
-                         self.status()])
+                         "Neighbouring cells: " + ", ".join(nb) + ".", *self._dash_line(), self._bullets_line(),
+                         self._enemies_line(3), self.status()])
+
+    def _dash_line(self) -> list[str]:
+        R = self.d.rules
+        if not R.dash:
+            return []
+        if self.d.can_dash():
+            return [f"Dash: ready. A dash moves you up to {R.dash_cells} cells in a straight line in one tick; "
+                    f"then it recharges for {_ticks(R.dash_recharge)}."]
+        return [f"Dash: recharging, ready in {_ticks(self.d.dash_charge)}."]
 
     def shoot_state(self) -> str:
         d, R = self.d, self.d.rules
@@ -521,6 +575,7 @@ class Runner:
     options and probabilities, the batch latency, and what happened."""
 
     STUCK = 6  # ticks without getting closer to an unchanged target that count as stuck (as in the dungeon)
+    PROGRESS = ("room_seen", "key", "enemy_hit", "enemy_killed", "room_cleared", "potion", "ammo", "escaped")
 
     def __init__(self, dungeon: Dungeon, engine, group_size: int = 8, plan_budget: int | None = 1,
                  order_debias: bool = True, **brain_options):
@@ -532,6 +587,7 @@ class Runner:
         self._t0: float | None = None
         self._best: int | None = None
         self._streak = 0
+        self._idle = IdleTracker(dungeon.pos, self.PROGRESS)
 
     def header(self) -> dict:
         eng = self.engine
@@ -545,7 +601,8 @@ class Runner:
             "fire_head": self.brain.fire_head,
             "backend": eng.backend.info(),
             "brain": {"strategy_every": self.brain.stack.tier("strategy").every,
-                      "target_every": self.brain.stack.tier("target").every},
+                      "target_every": self.brain.stack.tier("target").every, "hold_navigation": True,
+                      "stuck_replan": self.STUCK, "loop": LOOP},
             "engine": {"answer": eng.answer, "prompt_order": eng.prompt_order, "system_prompt": eng.system_prompt,
                        "prefill": eng.prefill, "suffix": eng.suffix},
             "example_prompt": example,
@@ -577,10 +634,15 @@ class Runner:
         dist_before = self._dist_to(target_before)
         events = d.step(move, shoot, reload)
         self._track_progress(target_before, dist_before, target)
+        idle = self._idle.update(d.pos, events)
+        if self._streak and self._streak % self.STUCK == 0:  # stalled: re-plan, and the strategy too every 2nd time
+            self.brain.replan(strategy=self._streak % (2 * self.STUCK) == 0)
+        if idle and idle % LOOP == 0:  # going in circles: re-plan both
+            self.brain.replan(strategy=True)
         rec = {
             "type": "tick", "tick": tick, "t": round(start - self._t0, 4), "move": move, "shoot": shoot, "world": world,
             **({"reload": reload} if d.rules.ammo else {}),
-            "target": list(target) if target else None, "events": events, "stuck_streak": self._streak,
+            "target": list(target) if target else None, "events": events, "stuck_streak": self._streak, "idle": idle,
             "batch": {"decisions": len(model), "forward_ms": round(1000 * stats.get("forward_s", 0.0), 1),
                       "prompt_tokens": stats.get("prompt_tokens", 0),
                       "tick_ms": round(1000 * (time.perf_counter() - start), 1)},
@@ -654,10 +716,7 @@ def summarise(records: list[dict], d: Dungeon) -> dict:
 
     fw = [r["batch"]["forward_ms"] for r in records if r["batch"]["decisions"]]
     ticks = [r["batch"]["tick_ms"] for r in records]
-    stuck = 0
-    for r in records:
-        s = r["stuck_streak"]
-        stuck += 0 if s < Runner.STUCK else Runner.STUCK if s == Runner.STUCK else 1
+    stuck = streak_ticks((r["stuck_streak"] for r in records), Runner.STUCK)
     decisions = [x for r in records for x in r["decisions"]]
     moves = [x for x in decisions if x["tier"] == "move" and x["method"] != ONLY_OPTION]
     # a move into a bullet's path or next to a brute when a safe open move existed
@@ -699,12 +758,16 @@ def summarise(records: list[dict], d: Dungeon) -> dict:
         "shoot_decisions": len(shoots), "held_fire": sum(1 for x in shoots if x["options"][x["choice"]] == HOLD),
         "move_decisions": len(moves), "avoidable_risky_moves": len(avoidable),
         "potions_drunk": sum(1 for _, e in events if e["kind"] == "potion"),
+        **({"dashes": d.dashes, "dashes_offered": sum(1 for x in moves if any(is_dash(o) for o in x["options"]))}
+           if d.rules.dash else {}),
         "bumps": sum(1 for _, e in events if e["kind"] == "bump"),
         "rooms_seen": len(d.seen), "rooms_cleared": len(d.cleared),
         "key_seen_tick": first("room_seen", room=d.key_room), "key_tick": first("key"),
         "exit_seen_tick": first("room_seen", room=d.exit_room), "escape_tick": first("escaped"),
         "min_health": min([r["world"]["agent"]["health"] for r in records] + [d.health]),
         "stuck_ticks": stuck,
+        "loop_ticks": streak_ticks((r.get("idle", 0) for r in records), LOOP),
+        "longest_idle": max((r.get("idle", 0) for r in records), default=0),
         "strategy_ticks": dict(Counter(r["goals"]["strategy"]["choice"] or "-" for r in records)),
         "model_decisions": sum(1 for x in decisions if x["method"] != ONLY_OPTION),
         "planning_decisions": sum(1 for x in decisions if x["kind"] == "plan" and x["method"] != ONLY_OPTION),
