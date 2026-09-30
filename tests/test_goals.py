@@ -33,6 +33,19 @@ def test_schedule_by_period():
     assert due[6] == ["strategy", "target", "action"]
 
 
+def test_a_held_tier_skips_its_period_until_invalidated():
+    s = GoalStack(tiers())
+    for t in s.due(0):
+        s.apply(t, s.options(t)[0], 0)
+    s.hold("target")
+    assert [t.name for t in s.due(3)] == ["action"] and s.held("target")
+    s.invalidate("target")
+    assert [t.name for t in s.due(4)] == ["target", "action"]
+    s.apply(s.tier("target"), "gem 1", 4)
+    s.hold("target", False)
+    assert "target" in [t.name for t in s.due(7)]
+
+
 def test_context_lists_only_higher_tiers():
     s = GoalStack(tiers())
     s.apply(s.tier("strategy"), "find food", 0)

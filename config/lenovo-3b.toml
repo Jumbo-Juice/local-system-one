@@ -17,3 +17,6 @@ prompt_order = "state_first"  # question/options first reuse more but cost accur
 [shooter]
 order_debias = false  # demo.shooter: the 3B escaped 14 of 20 seeds without it, 8 of 20 with it (docs/research.md)
 fire_head = false  # demo.shooter: the 3B fires with one option per enemy (held fire 0 of 62 on seed 0)
+
+[dungeon]
+order_debias = false  # demo.dungeon: the same setting as in the shooter (not evaluated separately)

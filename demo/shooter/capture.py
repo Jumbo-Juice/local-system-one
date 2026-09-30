@@ -3,7 +3,8 @@
     python -m demo.shooter.capture --config config/default.toml --seed 0     # Qwen2.5-1.5B
     python -m demo.shooter.capture --config config/lenovo-3b.toml --seed 0   # Qwen2.5-3B
     python -m demo.shooter.capture --config config/mock.toml --seed 0        # no model: random choices
-    python -m demo.shooter.capture --classic --seed 0                        # without ammo (as evaluated on seeds 0-39)
+    python -m demo.shooter.capture --game ammo --seed 0                      # ammo, no dash (as evaluated on seeds 40-49)
+    python -m demo.shooter.capture --classic --seed 0                        # no ammo, no dash (as evaluated on seeds 0-39)
 
 Writes runs/shooter/<time>_<model>_seed<N>.jsonl (a header line, one line per tick, an end line).
 Watch it with the Master Viewer: python -m viewer <that file>, or python -m viewer for the pools.
@@ -22,7 +23,9 @@ from system_one import load_config, make_engine
 from ..common import warm_up
 from ..runs import model_tag, stamp, to_jsonl, write_run
 from .brain import Runner
-from .world import CLASSIC, Dungeon, Rules
+from .world import AMMO, CLASSIC, Dungeon, Rules
+
+GAMES = {"dash": Rules(), "ammo": AMMO, "classic": CLASSIC}  # the default game, and the two evaluated before it
 
 
 def order_debias(cfg: dict, flag: bool | None = None) -> bool:
@@ -67,8 +70,11 @@ def main() -> None:
     ap.add_argument("--config", default=None)
     ap.add_argument("--seed", type=int, default=0)
     ap.add_argument("--out", default=None, help="write the trace to this file instead of the shooter pool")
-    ap.add_argument("--max-ticks", type=int, default=None, help="override the tick limit (default 400)")
-    ap.add_argument("--classic", action="store_true", help="the game without ammo, as evaluated on seeds 0-39")
+    ap.add_argument("--max-ticks", type=int, default=None, help="override the tick limit (600; 400 in the classic game)")
+    ap.add_argument("--game", choices=list(GAMES), default="dash",
+                    help="dash (default: ammo and the dash), ammo (no dash, as evaluated on seeds 40-49) or classic "
+                         "(no ammo, no dash, as evaluated on seeds 0-39)")
+    ap.add_argument("--classic", action="store_true", help="the same as --game classic")
     ap.add_argument("--group-size", type=int, default=8)
     ap.add_argument("--plan-budget", type=int, default=1, help="planning decisions per tick; -1 = unlimited")
     ap.add_argument("--order-debias", action=argparse.BooleanOptionalAction, default=None,
@@ -83,14 +89,15 @@ def main() -> None:
     engine = make_engine(cfg)
     if cfg["backend"].get("kind") != "mock":
         warm_up(engine)
-    rules = CLASSIC if args.classic else Rules()
+    game = "classic" if args.classic else args.game
+    rules = GAMES[game]
     if args.max_ticks:
         rules = replace(rules, max_ticks=args.max_ticks)
     started = stamp()  # the run's name carries its start time
     records = capture(engine, args.seed, rules, args.group_size, args.plan_budget if args.plan_budget >= 0 else None,
                       verbose=not args.quiet, order_debias=order_debias(cfg, args.order_debias),
-                      fire_head=fire_head(cfg, args.fire_head, args.classic))
-    label = f"{'classic_' if args.classic else ''}{model_tag(engine.backend.info())}_seed{args.seed}"
+                      fire_head=fire_head(cfg, args.fire_head, game == "classic"))
+    label = f"{'' if game == 'dash' else game + '_'}{model_tag(engine.backend.info())}_seed{args.seed}"
     if args.out:
         path = Path(args.out)
         path.parent.mkdir(parents=True, exist_ok=True)
