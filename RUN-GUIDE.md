@@ -354,6 +354,23 @@ The pre-registered eval (20 test windows × 6 setups → `fraud/results/eval/<ev
 Flags: `--setups rules logreg ...` (a subset), `--resume <eval id>`, `--report <eval id>` (rebuild
 the results files from the traces).
 
+The analyst console (replay only; start page, a run at 1×, auto-demo, the eval page), on
+http://127.0.0.1:8766:
+
+```bash
+.venv/Scripts/python -m fraud.viewer
+```
+
+Open one run directly:
+
+```bash
+.venv/Scripts/python -m fraud.viewer fraud/runs/20261003-052030_hybrid_qwen2.5-1.5b_dev0.pinned.jsonl
+```
+
+Flags: `--port N` (default 8766), `--host <addr>` (default 127.0.0.1), `--no-browser`, `--verbose`.
+Pages: `#/` runs, `#/run/<file>`, `#/eval` (latest) or `#/eval/<eval id>`, `#/demo`. Pin a run by
+renaming it to `*.pinned.jsonl` and listing it in `fraud/runs/README.md`.
+
 ## Where things land
 
 | what | where |

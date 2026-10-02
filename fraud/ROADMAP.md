@@ -40,10 +40,10 @@ p50/p90 latency logged.
 **Accept:** results committed; both bars reported pass or fail with numbers; negative results stated.
 
 ## Phase 4: the analyst console
-- [ ] `fraud/viewer/`: start page (runs, auto-demo, eval link), replay console at 1× (feed,
+- [x] `fraud/viewer/`: start page (runs, auto-demo, eval link), replay console at 1× (feed,
       decision card, running cost and confusion, latency timeline, About this run), eval page
-- [ ] A pinned example run committed; RUN-GUIDE and README updated
-- [ ] Checked: start page, full replay, auto-demo, eval page, 375 px with no sideways scroll, no
+- [x] A pinned example run committed; RUN-GUIDE and README updated
+- [x] Checked: start page, full replay, auto-demo, eval page, 375 px with no sideways scroll, no
       console errors
 
 **Accept:** `python -m fraud.viewer` opens, and a recorded run replays at 1× with the decisions
