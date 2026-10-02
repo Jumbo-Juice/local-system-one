@@ -23,7 +23,7 @@
 | `runs.py` | trace paths and writing (`fraud/runs/`) |
 | `capture.py` | one window, one setup → one trace; `python -m fraud.capture` |
 | `eval.py` | the pre-registered eval → `fraud/results/eval/`; `python -m fraud.eval` |
-| `viewer/` | `server.py`, `index.html`, `console.js`; `python -m fraud.viewer` |
+| `viewer/` | `server.py`, `index.html`, `console.js`, `console.css`; `python -m fraud.viewer` |
 
 ## Data model
 **Transaction** (one PaySim row, balances dropped): `row` (index in the CSV = arrival order),
@@ -65,4 +65,5 @@ finished in the recorded run.
 - PaySim is synthetic and has no PII. Raw rows and the cache stay in `fraud/data/` (git-ignored).
   Traces hold single rows from windows. Only pinned traces are committed (CC BY-SA attribution in
   `fraud/runs/README.md`).
-- The viewer serves only `fraud/viewer/*`, `fraud/runs/*.jsonl` and `fraud/results/**/*.json`.
+- The viewer serves only its own three files, `fraud/runs/*.jsonl` and `fraud/results/eval/*.json` (tested in
+  `fraud/tests/test_viewer.py`).

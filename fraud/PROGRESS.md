@@ -158,3 +158,29 @@ test100–test119 once (about 9 min). Full write-up: `fraud/docs/results.md`. Ob
   and `--report 20261003-052158` rebuilt the files from the traces. No result changed.
 
 Next: Phase 4, the analyst console.
+
+## 2026-10-03: Phase 4, the analyst console
+
+`python -m fraud.viewer` (stdlib server on 127.0.0.1:8766; `fraud/viewer/server.py`,
+`index.html`, `console.js`, `console.css`; no code shared with the game viewer). Pages: start (runs
+table with setup filter and an "include eval runs" switch, latest eval with its bars, auto-demo),
+replay, eval, auto-demo (model runs at 1×, pinned first, 3 s between runs).
+Replay: a play/pause/step/restart/speed control with a scrubber; the transaction feed (newest
+first, click to inspect); a decision card (decider, rule or "model scores (uncalibrated)" with
+both option orders, outside mass, tokens, latency, truth, cost, signals); running totals (cost
+split into missed fraud / wrong declines / reviews, confusion matrix, reviews left); a latency
+chart with the 250 ms bar; "About this run" (banner, fact cards with hints, notes, the prompt).
+
+Checked (Observed):
+- 1× replay of the pinned dev0 run, driven by hand with `frame(ts)` (the hidden pane does not
+  animate): 17 transactions shown at 1.0 s, 106 at 6.0 s, 265 at 16.0 s, all 500 at 32.2 s, the
+  sum of the recorded decision times. Each transaction appears when its recorded decision finished.
+- Start page, full replay, auto-demo (first run = the pinned one) and eval page render
+  (headless Edge, 1440 px). No console errors. At 375 px no page scrolls sideways (scrollWidth =
+  375 on the start page, eval page, a model run and a rules run).
+- Fixed on the way: at the end of a run the hero cost now shows the trace's own total (the
+  per-row costs are rounded, and the running sum was 1 unit off); latencies below 0.001 ms read
+  "<0.001 ms"; the rule-table note no longer nests parentheses.
+- Pinned: `fraud/runs/20261003-052030_hybrid_qwen2.5-1.5b_dev0.pinned.jsonl`, listed in
+  `fraud/runs/README.md` with the PaySim attribution (CC BY-SA 4.0).
+- Tests: `fraud/tests/test_viewer.py` (served paths only, listing, own files only).
