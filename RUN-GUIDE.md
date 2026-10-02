@@ -311,6 +311,49 @@ Do move decisions approach the target (`--n` decisions, default 60):
 .venv/Scripts/python -m bench.action_probe --config config/lenovo-3b.toml
 ```
 
+## Fraud app
+
+A separate application on PaySim (`fraud/`, its own rules in `fraud/CLAUDE.md`). Its runs go to
+`fraud/runs/`, its results to `fraud/results/`; nothing here touches the game pools.
+
+Build the data cache (needs the PaySim CSV in `fraud/data/raw/`; the balance columns are dropped):
+
+```bash
+.venv/Scripts/python -m fraud.data
+```
+
+One window under one setup, written to `fraud/runs/<time>_<label>.jsonl`:
+
+```bash
+.venv/Scripts/python -m fraud.capture --setup hybrid --window dev0
+```
+
+```bash
+.venv/Scripts/python -m fraud.capture --setup rules --window dev3
+```
+
+Flags: `--setup hybrid|rules|logreg|random|approve-all`, `--window dev<seed>` (test windows need
+`--test-ok`; they belong to the eval), `--config <toml>` (the hybrid's model, e.g.
+`config/lenovo-3b.toml` or `config/mock.toml`), `--no-order-debias`, `--head-dtype model|float32`,
+`--out <file>`, `--quiet`.
+
+Prompt development on dev windows (prints AUC, actions and latency per prompt variant; defined in
+`fraud/dev/promptdev.py`). Arguments: dev window seeds, then variants; `HEAD=float32` sets the LM
+head dtype (default the model dtype):
+
+```bash
+HEAD=float32 .venv/Scripts/python -m fraud.dev.promptdev 1,2 v1,v2
+```
+
+The pre-registered eval (20 test windows × 6 setups → `fraud/results/eval/<eval id>.json|.md`):
+
+```bash
+.venv/Scripts/python -m fraud.eval
+```
+
+Flags: `--setups rules logreg ...` (a subset), `--resume <eval id>`, `--report <eval id>` (rebuild
+the results files from the traces).
+
 ## Where things land
 
 | what | where |
@@ -320,3 +363,4 @@ Do move decisions approach the target (`--n` decisions, default 60):
 | benchmark and eval results | `bench/results/<script>/` (committed) |
 | lessons from past test and eval runs | `docs/lessons-learned.md` |
 | the viewer of each game demo | `viewer/games/<game>.js` (a new demo adds one; see `viewer/README.md`) |
+| fraud app runs and results | `fraud/runs/` (git-ignored but `*.pinned.jsonl`), `fraud/results/<script>/` (committed) |
