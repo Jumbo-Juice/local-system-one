@@ -37,6 +37,7 @@ import argparse
 import gc
 import json
 import math
+import sys
 import time
 from pathlib import Path
 
@@ -292,6 +293,8 @@ def markdown(r: dict) -> str:
 
 
 def main() -> None:
+    if hasattr(sys.stdout, "reconfigure"):
+        sys.stdout.reconfigure(encoding="utf-8")  # the report has arrows; a Windows console is cp1252
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--setups", nargs="+", choices=list(SETUPS), default=list(SETUPS))
     ap.add_argument("--resume", metavar="EVAL_ID", help="continue this eval: skip its finished traces")
