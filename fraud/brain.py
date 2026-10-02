@@ -15,17 +15,21 @@ from system_one import Decision
 
 from .data import TYPES, Transactions
 
-ACTIONS = ("approve", "review", "decline")
+ACTIONS = ("approve", "review", "decline")  # option k of OPTIONS is action k
+# Prompt v4 of fraud/dev/promptdev.py, frozen on 2026-10-03 (fraud/PROGRESS.md): the best ranking of
+# v0-v7 on dev windows (AUC 0.90-0.93). Like every variant, its top option is "yes" for nearly every
+# transaction; the owner chose to keep argmax and report that.
 OPTIONS = (
-    "approve: let it through",
-    "review: hold it for a human analyst",
-    "decline: block it",
+    "no: approve it",
+    "unsure: send it to an analyst",
+    "yes: decline it",
 )
-QUESTION = "What should happen to this transaction?"
+QUESTION = "Does this transaction match the fraud pattern?"
 CONTEXT = (
-    "Mobile-money service. Fraudsters take over an account, TRANSFER its money to another "
-    "account, then CASH_OUT. Most transactions are legitimate. Approving fraud loses the amount; "
-    "declining a real customer loses business; review is cheap but limited."
+    "Mobile-money service. Fraudsters take over an account, TRANSFER all its money to a fresh account "
+    "that never received money before, then CASH_OUT exactly that amount within the same hour. "
+    "Legitimate TRANSFERs usually go to known accounts; legitimate CASH_OUTs rarely repeat an amount "
+    "moved earlier in the hour. Most transactions are legitimate."
 )
 
 
@@ -34,18 +38,19 @@ def _times(n: int) -> str:
 
 
 def describe(t: Transactions, s: dict, i: int) -> str:
-    """The state the model reads: about 60 words, no account ids, no balances."""
-    kind = TYPES[t.type[i]]
-    to = "a merchant" if t.dest_merchant[i] else "a customer"
-    lines = [
-        f"{kind} of {t.amount[i]:,.2f} to {to}, hour {int(s['hour'][i])}:00.",
-        f"Sender: sent {_times(int(s['orig_out_before'][i]))} before, received {_times(int(s['orig_in_before'][i]))}.",
-        f"Receiver: received {_times(int(s['dest_in_before'][i]))} before "
-        f"({_times(int(s['dest_transfer_in_before'][i]))} by TRANSFER), sent {_times(int(s['dest_out_before'][i]))}.",
-        f"Same amount moved earlier this hour: {_times(int(s['same_amount_step_before'][i]))}.",
+    """The state the model reads: the signals as flags, no account ids, no balances."""
+    din = int(s["dest_in_before"][i])
+    same = int(s["same_amount_step_before"][i])
+    recv = ("NEW account: it never received money before" if din == 0
+            else f"known account: received money {_times(din)} before")
+    amt = (f"the SAME amount was already moved {_times(same)} earlier this hour" if same
+           else "no earlier transaction this hour had this amount")
+    return "\n".join([
+        f"{TYPES[t.type[i]]} of {t.amount[i]:,.2f}, hour {int(s['hour'][i])}:00.",
+        f"Receiver: {recv}.",
+        f"Amount: {amt}.",
         f"Round amount: {'yes' if s['round_amount'][i] else 'no'}.",
-    ]
-    return "\n".join(lines)
+    ])
 
 
 def decision(t: Transactions, s: dict, i: int) -> Decision:
@@ -82,7 +87,7 @@ class ModelDecider:
 
 def warm_up(engine) -> None:
     """The first XPU passes compile kernels and allocate buffers; keep them out of the run."""
-    filler = "TRANSFER of 1,000.00 to a customer, hour 3:00. Sender: sent never before." * 3
+    filler = "TRANSFER of 1,000.00, hour 3:00. Receiver: NEW account: it never received money before." * 3
     for _ in range(3):
         engine.decide_batch([Decision(QUESTION, OPTIONS, state=filler, context=CONTEXT)])
 

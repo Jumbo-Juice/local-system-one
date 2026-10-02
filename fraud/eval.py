@@ -1,6 +1,6 @@
-"""The pre-registered fraud eval: 20 held-out test windows × 6 setups → fraud/results/eval/.
+"""The pre-registered fraud eval: 20 held-out test windows × 5 setups → fraud/results/eval/.
 
-    python -m fraud.eval                          # everything (about 40 min on the Lenovo)
+    python -m fraud.eval                          # everything (about 15 min on the Lenovo)
     python -m fraud.eval --setups rules logreg    # a subset (no model)
     python -m fraud.eval --resume <eval id>       # finish an interrupted eval (same id, skips finished traces)
     python -m fraud.eval --report <eval id>       # rebuild the results files from that eval's traces
@@ -12,16 +12,21 @@ fraud/results/eval/<eval id>.md.
 PRE-REGISTRATION (written and committed before any test window ran; see fraud/PROGRESS.md)
 - Test windows: test100 … test119 (windows.make(t, "test", seed), 500 rows, 25 fraud target),
   steps 301–743. Nothing else runs on them: prompts, rules and thresholds were set on dev0–dev9.
-- Setups: hybrid-1.5b (config/default.toml, order_debias on, LM head in bfloat16),
-  hybrid-3b (config/lenovo-3b.toml, order_debias on, LM head in bfloat16), rules, logreg, random (seed = the window seed), approve-all.
+- Setups: hybrid-1.5b (config/default.toml, order_debias on, LM head in float32, the brain.py
+  prompt frozen on dev variant v4, action = the top option: argmax), rules, logreg, random (seed =
+  the window seed), approve-all. hybrid-3b was dropped (owner, 2026-10-03): the 3B (6.2 GB) does
+  not fit in the 5.36 GiB free on the Arc 140V.
 - Costs: fraud.costs.DEFAULT (friction 10% of the amount, min 10; review 50; budget 5%).
 - Logistic regression: fitted on every TRANSFER and CASH_OUT of steps 1–300. Thresholds from the
   grid below, minimising total cost over dev0–dev9 (ties: first in grid order).
-- Bar 1 (pass/fail): hybrid-1.5b cost < rules cost in >= 16 of 20 test windows.
+- Bar 1 (pass/fail): hybrid-1.5b cost < rules cost in >= 16 of 20 test windows. Expected to FAIL
+  (stated before the run): on dev0-dev9 the hybrid's top option was "decline" for 2,194 of 2,194
+  model decisions, and rules-only was perfect in every dev window (fraud/PROGRESS.md). Kept as
+  agreed (owner, 2026-10-03), not restated.
 - Bar 2 (pass/fail): p90 of hybrid-1.5b per-decision latency over all its model decisions in the
   20 test windows <= 250 ms.
 - Reported, no bar: every setup's cost, natural-rate cost, recall, precision, alert rate; the
-  hybrid vs logreg and hybrid-3b vs rules window counts; ECE of the model's top score against
+  hybrid vs logreg window counts; ECE of the model's top score against
   "the right action" (legit → approve, fraud → review or decline), 10 equal-width bins; mean
   outside_mass; a two-sided sign test p-value for each paired count.
 """
@@ -50,7 +55,6 @@ DEV_SEEDS = tuple(range(0, 10))
 TEST_SEEDS = tuple(range(100, 120))
 SETUPS = {
     "hybrid-1.5b": REPO / "config" / "default.toml",
-    "hybrid-3b": REPO / "config" / "lenovo-3b.toml",
     "rules": None,
     "logreg": None,
     "random": None,
@@ -244,7 +248,6 @@ def report(eval_id: str) -> dict:
         "paired": {
             "hybrid-1.5b vs rules": b1,
             "hybrid-1.5b vs logreg": paired("hybrid-1.5b", "logreg"),
-            "hybrid-3b vs rules": paired("hybrid-3b", "rules"),
             "hybrid-1.5b vs random": paired("hybrid-1.5b", "random"),
             "logreg vs rules": paired("logreg", "rules"),
         },

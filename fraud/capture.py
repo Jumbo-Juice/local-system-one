@@ -1,7 +1,6 @@
 """Decide one window under one setup and write the trace to fraud/runs/.
 
     python -m fraud.capture --setup hybrid --window dev0                            # Qwen2.5-1.5B
-    python -m fraud.capture --setup hybrid --window dev0 --config config/lenovo-3b.toml
     python -m fraud.capture --setup hybrid --window dev0 --config config/mock.toml  # no model
     python -m fraud.capture --setup rules --window dev3                             # rules only (no model)
 
@@ -23,9 +22,9 @@ import numpy as np
 from . import baselines, brain, costs, data, rules, signals, windows
 from .runs import model_tag, stamp, to_jsonl, write_run
 
-# Implementation choice (fraud/PROGRESS.md → Phase 2): on 2026-10-03 the iGPU reported 5.42 GiB, not the
-# 8,097 MB in docs/machine.md, and the 1.5B with its float32 LM head ran out of memory.
-HEAD_DTYPE = "model"  # the model dtype (bfloat16)
+# The repo default (config/default.toml). On 2026-10-03 the iGPU briefly reported 5.42 GiB and this
+# was "model" (bfloat16); at 7.18 GiB the float32 head fits again (fraud/PROGRESS.md).
+HEAD_DTYPE = "float32"
 SETUPS = ("hybrid", "rules", "logreg", "random", "approve-all")
 SIGNALS_SHOWN = [k for k in signals.NAMES if k != "hour"]
 
@@ -124,7 +123,7 @@ def main() -> None:
     ap.add_argument("--config", default=None, help="model config for the hybrid (default config/default.toml)")
     ap.add_argument("--order-debias", action=argparse.BooleanOptionalAction, default=True)
     ap.add_argument("--head-dtype", default=HEAD_DTYPE,
-                    help=f"LM head dtype (default {HEAD_DTYPE}: the float32 head did not fit the iGPU; fraud/PROGRESS.md)")
+                    help=f"LM head dtype: float32 or model (default {HEAD_DTYPE})")
     ap.add_argument("--test-ok", action="store_true", help="allow a test window (normally only the eval runs them)")
     ap.add_argument("--out", default=None, help="write the trace here instead of fraud/runs/")
     ap.add_argument("--quiet", action="store_true")
