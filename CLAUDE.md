@@ -1,9 +1,20 @@
 # Working in this repo
 
-A local System One-style decision engine (`system_one/`) and game demos that exercise it (`demo/`).
+A local System One-style decision engine (`system_one/`) and two applications that exercise it.
 Start with the "Where things are" table in `README.md`; every command is in `RUN-GUIDE.md`.
 
-## Rules
+## Two applications, kept apart
+
+| app | where | its rules |
+|---|---|---|
+| **Game demos** (playful): grid, dungeon, shooter | `demo/`, `viewer/`, `runs/`, `bench/` | the Rules below |
+| **Fraud app** (serious): approve / review / decline on PaySim | `fraud/` (its own runs, results, viewer, docs) | `fraud/CLAUDE.md` |
+
+They share only `system_one/`, `config/`, `.venv` and the pytest run. Neither imports from or writes
+for the other. The game rules below do not apply to `fraud/`, and the fraud app never appears in the
+game viewer.
+
+## Rules (game demos)
 
 - **Every captured run goes into its game's pool: `runs/<game>/`, one flat `.jsonl` per run.**
   Write runs only through `demo/runs.py` (`write_run` / `trace_path`), never to another folder,
