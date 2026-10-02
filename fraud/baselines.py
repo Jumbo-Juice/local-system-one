@@ -17,22 +17,23 @@ from .signals import NAMES
 COUNTS = [k for k in NAMES if k.endswith("_before")]
 
 
+BASE = ("log_amount", "night", "round_amount", *[f"log1p_{k}" for k in COUNTS])
+# Each base feature twice: once for TRANSFERs, once for CASH_OUTs (the patterns differ by type;
+# fraud/docs/data.md). Other types never reach the model (the type filter approves them).
+FEATURES = ("is_transfer", "is_cash_out", *[f"{f}*transfer" for f in BASE], *[f"{f}*cash_out" for f in BASE])
+
+
 def features(t: Transactions, s: dict, idx: np.ndarray) -> np.ndarray:
     hour = s["hour"][idx]
-    cols = [
-        (t.type[idx] == TYPE_ID["TRANSFER"]).astype(float),
-        (t.type[idx] == TYPE_ID["CASH_OUT"]).astype(float),
+    base = np.stack([
         np.log1p(t.amount[idx]),
-        t.dest_merchant[idx].astype(float),
         ((hour >= 1) & (hour <= 6)).astype(float),  # night hours
         s["round_amount"][idx].astype(float),
         *[np.log1p(s[k][idx]) for k in COUNTS],
-    ]
-    return np.stack(cols, axis=1)
-
-
-FEATURES = ("is_transfer", "is_cash_out", "log_amount", "dest_merchant", "night", "round_amount",
-            *[f"log1p_{k}" for k in COUNTS])
+    ], axis=1)
+    tr = (t.type[idx] == TYPE_ID["TRANSFER"]).astype(float)
+    co = (t.type[idx] == TYPE_ID["CASH_OUT"]).astype(float)
+    return np.c_[tr, co, base * tr[:, None], base * co[:, None]]
 
 
 class LogReg:
