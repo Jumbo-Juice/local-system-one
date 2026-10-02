@@ -117,3 +117,24 @@ Next after that: freeze brain.py, commit the eval pre-registration, run `python 
   and report "declines everything" as the negative result, or switch to a dev-tuned score rule
   (also a clear loss); (2) Bar 1 as pre-registered looks structurally unreachable (see above):
   keep it and expect FAIL, or restate it before any test window runs.
+
+## 2026-10-03: owner decisions; Phase 2 done
+
+Owner decisions (answers to the open questions above):
+- **Argmax stays**, prompt **v4** frozen in `brain.py` (question "Does this transaction match the
+  fraud pattern?", options no: approve / unsure: analyst / yes: decline, the v2 context, signals as
+  flags). The dev score-rule result above stays a note; it is not an eval setup.
+- **Bar 1 is kept as pre-registered**, with the expected FAIL stated in `fraud/eval.py` before the run.
+- **hybrid-3b is dropped** from the eval: the 3B (6.2 GB) does not fit the 5.36 GiB free (Observed
+  limit of this machine, not a result about the 3B).
+
+Implementation choice: `HEAD_DTYPE` back to "float32" (the repo default) now that it fits.
+`promptdev.py` keeps its own copy of the v0 prompt so the table above stays reproducible.
+
+Phase 2 acceptance (Observed, `python -m fraud.capture --setup hybrid --window dev0`):
+- mock (`--config config/mock.toml`): finished trace, cost 24.6M, recall 0.62 (random choices).
+- Qwen2.5-1.5B, prompt v4, float32 head: finished trace; cost 4.38M, recall 1.00, alert rate 0.51,
+  0 reviews (every model row declined); latency **p50 125 ms, p90 126 ms**, max 188 ms over 257
+  model decisions (bar: p90 ≤ 250 ms).
+- New tests `fraud/tests/test_brain_capture.py`: the prompt shows flags and no account ids, the
+  option→action order, a mock model decision, a mock capture writes a finished trace.

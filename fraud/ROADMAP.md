@@ -14,20 +14,20 @@ console replaying a run at 1×.
 `data.md` answers which types are fraud-free and whether origin accounts repeat.
 
 ## Phase 1: signals, windows, costs, rules, baselines
-- [ ] `signals.py` (no look-ahead, tested on hand-made rows)
-- [ ] `windows.py`: train/test step cut, seeded enriched windows, natural-rate weights (tested)
-- [ ] `costs.py`: cost model + review budget (tested)
-- [ ] `rules.py`: type filter + rules-only table, written from training steps only
-- [ ] `baselines.py`: numpy logistic regression trained on training steps; random; approve-all
-- [ ] Constants and the rule table logged in PROGRESS before Phase 3
+- [x] `signals.py` (no look-ahead, tested on hand-made rows)
+- [x] `windows.py`: train/test step cut, seeded enriched windows, natural-rate weights (tested)
+- [x] `costs.py`: cost model + review budget (tested)
+- [x] `rules.py`: type filter + rules-only table, written from training steps only
+- [x] `baselines.py`: numpy logistic regression trained on training steps; random; approve-all
+- [x] Constants and the rule table logged in PROGRESS before Phase 3
 
 **Accept:** tests green; on dev windows the non-model setups score without errors and the
 numbers are logged.
 
 ## Phase 2: model brain and capture
-- [ ] `brain.py`: prompt (≤ ~250 tokens), approve/review/decline, order debias, timing
-- [ ] `runs.py`, `capture.py` → `fraud/runs/` (mock backend for tests)
-- [ ] Prompt development on dev windows only; latency checked against the 250 ms bar
+- [x] `brain.py`: prompt (≤ ~250 tokens), approve/review/decline, order debias, timing
+- [x] `runs.py`, `capture.py` → `fraud/runs/` (mock backend for tests)
+- [x] Prompt development on dev windows only; latency checked against the 250 ms bar
 
 **Accept:** a mock capture and a 1.5B capture of a dev window each write a finished trace;
 p50/p90 latency logged.

@@ -20,7 +20,8 @@ licence, PaySim CC BY-SA 4.0).
    setups:
    - **hybrid**: a rule filter auto-approves the types with no fraud in training; Qwen2.5-1.5B
      decides the rest (order-debiased);
-   - **hybrid-3b**: the same with Qwen2.5-3B (extra setup);
+   - ~~hybrid-3b~~: dropped on 2026-10-03 (owner): the 3B does not fit in the iGPU memory free on the
+     Lenovo (Observed, `fraud/PROGRESS.md`);
    - **rules-only**: a pre-registered rule table decides every transaction;
    - **filter + logistic regression** (numpy, same signals as the prompt);
    - **filter + random**; **approve-all** (the cost of catching nothing).
@@ -35,7 +36,7 @@ licence, PaySim CC BY-SA 4.0).
 - **Bar 1:** hybrid (1.5B) total cost < rules-only total cost in **≥ 16 of 20** test windows.
 - **Bar 2:** hybrid (1.5B) per-decision latency **p90 ≤ 250 ms** on the Arc iGPU, order debias on,
   measured over the model decisions of the 20 test windows.
-- Reported whatever they show: logistic regression, random, approve-all, the 3B, ECE and
+- Reported whatever they show: logistic regression, random, approve-all, ECE and
   `outside_mass` of the model scores, and costs reweighted to the natural fraud rate.
 - **Done for the owner:** the console runs and replays a recorded run at 1× recorded speed.
 
