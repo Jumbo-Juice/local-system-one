@@ -71,3 +71,49 @@ on dev windows). Don't decide that alone: argmax was agreed in the grilling.
 
 Next after that: freeze brain.py, commit the eval pre-registration, run `python -m fraud.eval`
 (Phase 3), then the viewer (Phase 4).
+
+## 2026-10-03: XPU memory back; prompt variants v0–v7 finished
+
+- XPU memory (Observed): `total_memory` 7.18 GiB ("Arc 140V GPU (8GB)"), 5.36 GiB free at idle. The
+  1.5B with the **float32 LM head** (the repo default) now loads and runs. The 3B (6.2 GB) still
+  cannot fit in 5.36 GiB free (Inferred, not tried this session).
+- `fraud/dev/promptdev.py`: `HEAD=float32|model` env switch, a v5 (the v4 question with the original
+  options, to separate the question from the options), `SAVE=<dir>` to keep the scores. Rerun of all
+  variants with the float32 head on dev1+dev2 (389 model decisions, 52 fraud), Observed:
+
+| variant | change | AUC review+decline | AUC decline | top action | p50 / p90 ms | tokens |
+|---|---|---:|---:|---|---:|---:|
+| v0 | brain.py prompt (raw counts) | 0.579 | 0.634 | decline 389/389 | 146 / 161 | 209 |
+| v1 | signals as flags | 0.852 | 0.850 | decline 389/389 | 140 / 144 | 195 |
+| v2 | v1 + both fraud patterns in context | 0.863 | 0.871 | decline 389/389 | 138 / 139 | 215 |
+| v3 | v2 + options normal/suspicious/fraud | 0.637 | 0.833 | decline 389/389 | 137 / 139 | 216 |
+| v4 | v2 + "Does this match the fraud pattern?" no/unsure/yes | **0.927** | 0.926 | decline 389/389 | 137 / 139 | 214 |
+| v5 | v2 + the v4 question, original options | 0.885 | 0.904 | decline 389/389 | 138 / 140 | 216 |
+| v6 | v2 + base rate ("about 1 in 10 … is fraud") | 0.869 | 0.896 | decline 389/389 | 162 / 168 | 235 |
+| v7 | v4 + base rate | 0.927 | 0.928 | decline 389/389 | 162 / 164 | 234 |
+
+  v0–v3 match the bfloat16-head numbers of the previous entry within 0.02 (the head dtype does not
+  explain the argmax). **Negative result:** no prompt variant moves the 1.5B's top option off the
+  third option; its ranking is good (v4: AUC 0.93) but its argmax is constant. All variants stay well
+  under the 250 ms p90 bar.
+- Rules-only and logistic regression on all ten dev windows (Observed): rules-only has recall 1.00
+  and no wrong decline in **every** dev window; its cost is review fees only (750–1,000). Logistic
+  regression (thresholds 0.01 / 0.2) costs 7k–393k.
+- Inside the cell rules-only reviews (TRANSFER to a new receiver, not round; training steps, 40,092
+  rows, 1,649 fraud), no simple subset is pure enough to decline: hours 0–6 are 42% fraud, amounts
+  ≥ 5M 56%, the rest 2–14%. **Inferred:** with these signals and costs (a wrong decline costs 10% of
+  ~0.5M, a missed fraud its full amount, a review 50), rules-only is close to the cheapest possible
+  policy. A decider beats it in a window only if it gets every one of that window's ~15–20 reviewed
+  transfers right without a review. Bar 1 ("cheaper in ≥ 16 of 20", ties not counted) looks
+  structurally out of reach for any decider on these signals, the model included.
+- A score-threshold rule instead of argmax (Observed, offline on saved v4 scores, dev windows only):
+  v4 on dev0–dev9 (2,194 model decisions, 260 fraud): AUC 0.90, argmax decline 2,194/2,194, p90
+  135 ms. Its decline score spans only 0.63–0.86. Thresholds on the decline score from the logreg-style
+  grid, tuned on dev0–4 (review ≥ 0.30, decline ≥ 0.70), checked on dev5–9: cost **0.70M–1.71M** per
+  check window vs rules-only 750–1,000; cheaper than rules in **0 of 10** dev windows. It reviews 25
+  (the budget) and then declines legit transfers by fallback. Even with a dev-tuned rule, the 1.5B's
+  scores do not separate well enough to compete with rules-only or logistic regression.
+- **Open for the owner** (not decided alone; argmax was agreed in the grilling): (1) keep argmax
+  and report "declines everything" as the negative result, or switch to a dev-tuned score rule
+  (also a clear loss); (2) Bar 1 as pre-registered looks structurally unreachable (see above):
+  keep it and expect FAIL, or restate it before any test window runs.
