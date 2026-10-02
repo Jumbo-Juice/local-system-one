@@ -1,5 +1,5 @@
 """Prompt development on dev windows only (never test windows)."""
-import sys, time
+import os, sys, time
 import numpy as np
 from system_one import load_config, make_engine, Decision
 from fraud import brain, costs, windows, rules
@@ -7,7 +7,8 @@ from fraud.capture import load_all
 from fraud.data import TYPES
 
 t, s = load_all()
-cfg = load_config(None); cfg["engine"]["order_debias"] = True; cfg["backend"]["head_dtype"] = "model"
+cfg = load_config(None); cfg["engine"]["order_debias"] = True; cfg["backend"]["head_dtype"] = os.environ.get("HEAD", "model")
+print("head_dtype", cfg["backend"]["head_dtype"], flush=True)
 eng = make_engine(cfg); brain.warm_up(eng)
 DEV = [int(x) for x in sys.argv[1].split(",")] if len(sys.argv) > 1 else [1, 2]
 rows = []
@@ -44,6 +45,7 @@ VARIANTS = {
     "v2": (d_v1, CTX2, brain.OPTIONS),
     "v3": (d_v1, CTX2, OPT3),
     "v4": (d_v1, CTX2, OPT4, Q4),
+    "v5": (d_v1, CTX2, brain.OPTIONS, Q4),
     "v6": (d_v1, CTX6, brain.OPTIONS),
     "v7": (d_v1, CTX6, OPT4, Q4),
 }
@@ -57,6 +59,8 @@ for name in pick:
         t0 = time.perf_counter(); r = eng.decide_batch([d])[0]; ms.append((time.perf_counter() - t0) * 1000)
         P.append(r.probs); toks.append(r.prompt_tokens)
     P = np.array(P); act = P.argmax(1)
+    if os.environ.get("SAVE"):  # scores for offline analysis (a directory outside the repo)
+        np.savez(os.path.join(os.environ["SAVE"], f"{name}_dev{'-'.join(map(str, DEV))}.npz"), rows=np.array(rows), P=P, ms=np.array(ms))
     def auc(p):
         pos, neg = p[y == 1], p[y == 0]
         return (pos[:, None] > neg[None, :]).mean() + 0.5 * (pos[:, None] == neg[None, :]).mean()
