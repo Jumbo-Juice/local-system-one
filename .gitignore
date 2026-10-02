@@ -245,3 +245,6 @@ Thumbs.db
 
 # Claude Code personal settings
 .claude/settings.local.json
+
+# Fraud app: PaySim raw data and cache stay local (fraud/CLAUDE.md)
+fraud/data/
