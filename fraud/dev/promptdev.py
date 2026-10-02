@@ -29,7 +29,23 @@ def d_v1(i):
                       f"Receiver: {recv}.", f"Amount: {amt}.",
                       f"Round amount: {'yes' if s['round_amount'][i] else 'no'}."])
 
-CTX0 = brain.CONTEXT
+# v0: the first brain.py prompt (raw counts), kept here since brain.py was frozen on v4.
+def d_v0(i):
+    to = "a merchant" if t.dest_merchant[i] else "a customer"
+    return "
+".join([
+        f"{TYPES[t.type[i]]} of {t.amount[i]:,.2f} to {to}, hour {int(s['hour'][i])}:00.",
+        f"Sender: sent {times(int(s['orig_out_before'][i]))} before, received {times(int(s['orig_in_before'][i]))}.",
+        f"Receiver: received {times(int(s['dest_in_before'][i]))} before "
+        f"({times(int(s['dest_transfer_in_before'][i]))} by TRANSFER), sent {times(int(s['dest_out_before'][i]))}.",
+        f"Same amount moved earlier this hour: {times(int(s['same_amount_step_before'][i]))}.",
+        f"Round amount: {'yes' if s['round_amount'][i] else 'no'}."])
+
+CTX0 = ("Mobile-money service. Fraudsters take over an account, TRANSFER its money to another "
+        "account, then CASH_OUT. Most transactions are legitimate. Approving fraud loses the amount; "
+        "declining a real customer loses business; review is cheap but limited.")
+OPT0 = ("approve: let it through", "review: hold it for a human analyst", "decline: block it")
+Q0 = "What should happen to this transaction?"
 CTX2 = ("Mobile-money service. Fraudsters take over an account, TRANSFER all its money to a fresh account "
         "that never received money before, then CASH_OUT exactly that amount within the same hour. "
         "Legitimate TRANSFERs usually go to known accounts; legitimate CASH_OUTs rarely repeat an amount "
@@ -40,19 +56,19 @@ OPT4 = ("no: approve it", "unsure: send it to an analyst", "yes: decline it")
 Q4 = "Does this transaction match the fraud pattern?"
 CTX6 = CTX2 + " Only about 1 in 10 TRANSFERs or CASH_OUTs here is fraud."
 VARIANTS = {
-    "v0": (lambda i: brain.describe(t, s, i), CTX0, brain.OPTIONS),
-    "v1": (d_v1, CTX0, brain.OPTIONS),
-    "v2": (d_v1, CTX2, brain.OPTIONS),
+    "v0": (d_v0, CTX0, OPT0),
+    "v1": (d_v1, CTX0, OPT0),
+    "v2": (d_v1, CTX2, OPT0),
     "v3": (d_v1, CTX2, OPT3),
     "v4": (d_v1, CTX2, OPT4, Q4),
-    "v5": (d_v1, CTX2, brain.OPTIONS, Q4),
-    "v6": (d_v1, CTX6, brain.OPTIONS),
+    "v5": (d_v1, CTX2, OPT0, Q4),
+    "v6": (d_v1, CTX6, OPT0),
     "v7": (d_v1, CTX6, OPT4, Q4),
 }
 pick = sys.argv[2].split(",") if len(sys.argv) > 2 else list(VARIANTS)
 for name in pick:
     desc, ctx, opts, *q = VARIANTS[name]
-    q = q[0] if q else brain.QUESTION
+    q = q[0] if q else Q0
     P, ms, toks = [], [], []
     for i in rows:
         d = Decision(q, opts, state=desc(i), context=ctx)
