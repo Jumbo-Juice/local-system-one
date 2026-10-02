@@ -5,9 +5,9 @@ The owner asked for autonomous work (2026-10-03): each phase is self-verified, c
 console replaying a run at 1×.
 
 ## Phase 0: specs and data look
-- [ ] Spec files (`fraud/CLAUDE.md`, PRD, ARCHITECTURE, ROADMAP, PROGRESS); root CLAUDE.md "two applications"
-- [ ] Download PaySim; `fraud/data.py` builds the cache without balance columns (tested)
-- [ ] `fraud/docs/data.md`: Observed counts: rows, fraud by type, steps, origin/destination repeats,
+- [x] Spec files (`fraud/CLAUDE.md`, PRD, ARCHITECTURE, ROADMAP, PROGRESS); root CLAUDE.md "two applications"
+- [x] Download PaySim; `fraud/data.py` builds the cache without balance columns (tested)
+- [x] `fraud/docs/data.md`: Observed counts: rows, fraud by type, steps, origin/destination repeats,
       the fraud pattern, `isFlaggedFraud`
 
 **Accept:** `python -m fraud.data` builds the cache; a test proves no balance column is in it;

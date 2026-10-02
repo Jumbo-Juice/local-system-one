@@ -19,3 +19,18 @@ choice):
 - Viewer: replay console + eval page, replay only.
 - The owner asked for autonomous work without stops for small decisions. "Done" = the console
   replaying a run at 1× recorded speed.
+
+## 2026-10-03: Phase 0, data look
+
+- PaySim downloaded without a login from Kaggle's public endpoint (186 MB zip, 494 MB CSV) into
+  `fraud/data/raw/` (git-ignored). `python -m fraud.data` builds `fraud/data/paysim.npz` in about
+  20 s; a test proves no balance column or value reaches the cache.
+- Observed facts are in `fraud/docs/data.md`. The ones that shape the build:
+  CASH_IN/DEBIT/PAYMENT are fraud-free; origin accounts almost never repeat (no per-account tier);
+  each fraud TRANSFER is followed by a CASH_OUT of the same amount in the same hour, with unlinked
+  ids; legitimate volume collapses after step ~400.
+- Implementation choice: train = steps 1–300, test = steps 301–743 (time split; the test period is
+  sparser and higher-fraud, reported, not hidden).
+- Signals were written test-first (`fraud/signals.py`, no look-ahead test). Same-amount-this-hour
+  and new-receiver nearly separate fraud. Expectation stated before any model run (Inferred):
+  rules-only will be hard to beat.
