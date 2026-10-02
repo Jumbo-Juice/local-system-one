@@ -138,3 +138,23 @@ Phase 2 acceptance (Observed, `python -m fraud.capture --setup hybrid --window d
   model decisions (bar: p90 ≤ 250 ms).
 - New tests `fraud/tests/test_brain_capture.py`: the prompt shows flags and no account ids, the
   option→action order, a mock model decision, a mock capture writes a finished trace.
+
+## 2026-10-03: Phase 3, the eval (20261003-052158)
+
+The pre-registration was committed in `47c32b1`, then `python -m fraud.eval` ran all 5 setups on
+test100–test119 once (about 9 min). Full write-up: `fraud/docs/results.md`. Observed:
+- **Bar 1 FAIL** (as stated before the run): hybrid-1.5b cheaper than rules-only in 0 of 20.
+  **Bar 2 PASS**: p90 127.2 ms (p50 121, max 203; 3,800 model decisions).
+- The hybrid declined 3,800 of 3,800 model rows. Read in the listed order the model always picked
+  the last option ("decline"); read reversed it picked the last option ("approve") 71% of the time.
+  The averaged argmax stayed "decline" because the listed-order readings were more confident.
+- Mean / median cost: rules 400,845 / 825; logreg 549,247 / 134,044; hybrid 6.37M / 5.40M; random
+  17.9M / 14.4M; approve-all 31.7M / 27.7M. Rules cheaper than logreg in 18 of 20.
+- Rules-only failed once: test109 (steps 327–328) holds a burst of legit 10,000,000 TRANSFERs (the
+  PaySim cap); the "round transfer" rule declined 8 of them (8.0M, 99.8% of rules-only's total).
+  Not fixed: a test result doesn't change the rules (`fraud/CLAUDE.md`).
+- A bug found after the run: printing the report crashed on the Windows console (cp1252 can't
+  encode "→"), after the results files were written. `main()` now reconfigures stdout to UTF-8,
+  and `--report 20261003-052158` rebuilt the files from the traces. No result changed.
+
+Next: Phase 4, the analyst console.

@@ -33,9 +33,9 @@ numbers are logged.
 p50/p90 latency logged.
 
 ## Phase 3: the pre-registered eval
-- [ ] `eval.py`: test window seeds, setups, bars and the decision rule written and committed before running
-- [ ] Run all setups on the 20 test windows → `fraud/results/eval/`
-- [ ] `fraud/docs/results.md`: bars pass/fail, baselines, ECE/outside_mass, labelled claims
+- [x] `eval.py`: test window seeds, setups, bars and the decision rule written and committed before running
+- [x] Run all setups on the 20 test windows → `fraud/results/eval/`
+- [x] `fraud/docs/results.md`: bars pass/fail, baselines, ECE/outside_mass, labelled claims
 
 **Accept:** results committed; both bars reported pass or fail with numbers; negative results stated.
 
