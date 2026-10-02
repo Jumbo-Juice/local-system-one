@@ -1,0 +1,6 @@
+# Fraud runs stay local, except pinned ones (named *.pinned.jsonl) and this folder's notes.
+# To pin a run: rename it from <name>.jsonl to <name>.pinned.jsonl and list it in README.md here.
+*
+!.gitignore
+!README.md
+!*.pinned.jsonl
