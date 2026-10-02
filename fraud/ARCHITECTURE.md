@@ -4,7 +4,7 @@
 | Layer | Choice | Why |
 |---|---|---|
 | Engine | `system_one` from this repo (`make_engine`, `decide_batch`, `order_debias`) | The thing being showcased |
-| Models | Qwen2.5-1.5B-Instruct (`config/default.toml`), Qwen2.5-3B-Instruct (`config/lenovo-3b.toml`) | Repo defaults; the latency bar is sized for the 1.5B |
+| Model | Qwen2.5-1.5B-Instruct (`config/default.toml`, LM head in float32) | Repo default; the latency bar is sized for it. The 3B was dropped: it does not fit the free iGPU memory (`fraud/PROGRESS.md`) |
 | Data | PaySim CSV → `fraud/data/paysim.npz` (numpy) | No pandas; the cache loads in about a second |
 | Baselines | numpy only | No new dependencies (`fraud/CLAUDE.md`) |
 | Viewer | stdlib `http.server` + one HTML page + plain JS | Same approach as the game viewer, separate code |
