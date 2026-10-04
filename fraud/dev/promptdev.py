@@ -32,8 +32,7 @@ def d_v1(i):
 # v0: the first brain.py prompt (raw counts), kept here since brain.py was frozen on v4.
 def d_v0(i):
     to = "a merchant" if t.dest_merchant[i] else "a customer"
-    return "
-".join([
+    return "\n".join([
         f"{TYPES[t.type[i]]} of {t.amount[i]:,.2f} to {to}, hour {int(s['hour'][i])}:00.",
         f"Sender: sent {times(int(s['orig_out_before'][i]))} before, received {times(int(s['orig_in_before'][i]))}.",
         f"Receiver: received {times(int(s['dest_in_before'][i]))} before "
