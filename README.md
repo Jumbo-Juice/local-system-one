@@ -23,7 +23,7 @@ Sources, and which claims are documented, observed, inferred or our own choices:
 | see the evidence | [`docs/research.md`](docs/research.md) (sources and Observed results), `bench/results/<benchmark>/` (raw data) |
 | learn from past runs | [`docs/lessons-learned.md`](docs/lessons-learned.md) |
 | read or change the engine | `system_one/` (see How it works below) |
-| see the fraud app (separate, serious) | [`fraud/`](fraud/CLAUDE.md): approve / review / decline on PaySim; results in [`fraud/docs/results.md`](fraud/docs/results.md); console `python -m fraud.viewer` |
+| see the fraud app (separate, serious) | [`fraud/`](fraud/CLAUDE.md): approve / review / decline on PaySim; results in [`fraud/docs/results.md`](fraud/docs/results.md) and, for the fine-tuned brain, [`fraud/docs/results-ft.md`](fraud/docs/results-ft.md); console `python -m fraud.viewer` |
 
 ## How it works
 

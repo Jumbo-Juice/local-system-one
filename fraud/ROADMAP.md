@@ -54,10 +54,10 @@ appearing at their recorded latency.
 - [x] `finetune.py` (training rows, examples, encoding; tested) and `eval_ft.py` (new windows,
       thresholds, AUC; tested); `brain.ThresholdDecider`, `brain.load_adapter`
 - [x] Pre-registration in the `eval_ft.py` docstring, committed before training
-- [ ] Train the adapter once (`python -m fraud.finetune`); manifest logged in PROGRESS
-- [ ] `python -m fraud.eval_ft`: dev gate, thresholds, then the 20 new windows (if the gate passes)
-- [ ] `fraud/docs/results-ft.md`: bars A/B, dev AUCs, paired counts, labelled claims, negatives
-- [ ] Console: `hybrid-ft` label and eval-chart series; the new eval page renders
+- [x] Train the adapter once (`python -m fraud.finetune`); manifest logged in PROGRESS
+- [x] `python -m fraud.eval_ft`: dev gate, thresholds, then the 20 new windows (if the gate passes)
+- [x] `fraud/docs/results-ft.md`: bars A/B, dev AUCs, paired counts, labelled claims, negatives
+- [x] Console: `hybrid-ft` label and eval-chart series; the new eval page renders
 
 **Accept:** results committed with both bars reported pass or fail (or the gate's failure),
 whatever they show.

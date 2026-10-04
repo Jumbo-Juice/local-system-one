@@ -224,3 +224,31 @@ New windows share no hour with test100–test119. Training set: all fraud + 3× 
   ~54 min. The merged smoke adapter ran the dev path at 128 ms p50 (same as the base model).
 - The pre-registration is the `fraud/eval_ft.py` docstring, committed with this entry before the
   adapter is trained.
+
+## 2026-10-05: Phase 5, the adapter and the dev gate
+
+- Adapter `fraud/models/20261005-013044_lora` (git-ignored), trained once with the committed
+  configuration (Observed, its manifest): 1,510 steps in 52.4 min (1.99 s/step p50), peak 3.38 GiB,
+  loss mean 0.416 over the first 100 steps → 0.054 over the last 100; adapter sha256 02a0c5d9…;
+  torch 2.14.0+xpu, peft 0.21.2.
+- Dev gate (Observed, `python -m fraud.eval_ft`, dev0–dev9, 2,194 model rows, 260 fraud): AUC of
+  the order-averaged decline score 0.9028 (frozen hybrid-1.5b) → **0.9950** (hybrid-ft). Gate
+  PASS. For reference (computed separately, same rows): logistic regression 0.9916.
+- Thresholds picked on dev (Observed): review ≥ 0.05, decline ≥ 0.95.
+- With argmax (the dev traces), mean dev cost per window fell from 5.35M (hybrid-1.5b) to 0.31M
+  (hybrid-ft); recall 1.00 for both. Latency p90 128 ms (hybrid-ft) vs 139 ms (hybrid-1.5b) on dev.
+
+## 2026-10-05: Phase 5 eval and results
+
+Eval `20261005-022333` (`python -m fraud.eval_ft --adapter fraud/models/20261005-013044_lora`,
+~27 min). Write-up: `fraud/docs/results-ft.md`. Observed:
+- Bar A PASS: hybrid-ft cost ≤ logreg in 19 of 20 new windows (sign test p = 4.0e-5).
+  Bar B PASS: p90 127.9 ms. Old bar 1 (vs rules) FAIL as stated: 0 cheaper, 9 dearer, 11 ties.
+- Mean cost: hybrid-ft 830, rules 808, logreg 190,910, hybrid-1.5b 5.15M. Recall hybrid-ft 1.00.
+- hybrid-ft wanted the same action as rules-only on 3,853 of 3,862 model rows. The 9 differences
+  are fraud 10M TRANSFERs to new accounts (score 0.92–0.93 < 0.95 → review, +50 each).
+- 57 of logreg's 59 approved frauds were TRANSFERs to a new receiver scored ~0.009, under its
+  dev-picked review threshold 0.01 (the grid floor).
+- Console: `hybrid-ft` label, a fourth eval-chart series, a dev-gate panel, generic bar titles;
+  the old and new eval pages render, no console errors, 375 px without sideways scroll.
+Phase 5 done.
