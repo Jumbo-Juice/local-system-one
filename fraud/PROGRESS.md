@@ -261,3 +261,11 @@ hybrid-ft on test109 with the frozen adapter (sha256 02a0c5d9…) and the frozen
 (review ≥ 0.05, decline ≥ 0.95). Nothing (adapter, thresholds, rules, prompt) changes on its
 result. Reported: total cost vs rules-only / logreg / hybrid-1.5b from eval 20261003-052158, the
 action and decline score of each 10M row, and whether the review budget (5% = 25) runs out.
+Result (Observed; trace `fraud/runs/20261005-030728_explore_hybrid-ft_test109.jsonl`, git-ignored):
+- hybrid-ft cost **8,000,800**, identical to rules-only: its final action equals rules-only's on all
+  500 rows. It declined all 8 legit 10M TRANSFERs, decline scores 0.989–0.994 (rules and logreg
+  declined them too). Review budget not exhausted (16 wanted, 9 left). p90 173 ms.
+- Negative for the guess in results-ft.md: the model is *more* sure on these legit 10M rows than
+  on the fraud 10M rows of the new windows (0.92–0.93). **Inferred:** the legit burst carries "the
+  SAME amount was already moved 41–322 times earlier this hour" and a round amount, the strongest
+  fraud cues it learned; its hesitation is on new receivers without a repeated amount.
