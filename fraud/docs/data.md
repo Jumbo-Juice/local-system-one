@@ -1,8 +1,10 @@
 # PaySim: what the data looks like (balances excluded)
 
-Source: Kaggle `ealaxi/paysim1`, `PS_20174392719_1491204439457_log.csv`, licence CC BY-SA 4.0
-(Documented: [dataset page mirror](https://baselight.app/u/kaggle/dataset/ealaxi_paysim1)). It was
-downloaded on 2026-10-03 from Kaggle's public download endpoint (no login needed). Build the cache
+Source: Kaggle `sriharshaeedala/financial-fraud-detection-dataset`, `Synthetic_Financial_datasets_log.csv`
+(493,534,783 bytes), licence CC BY-SA 4.0 (Documented: [dataset page](https://www.kaggle.com/datasets/sriharshaeedala/financial-fraud-detection-dataset)). PaySim itself is by
+E. A. Lopez-Rojas, A. Elmir and S. Axelsson. Provenance: the results up to 2026-10-05 were computed on a
+copy downloaded on 2026-10-03 under PaySim's original file name; it is the same file (byte size
+Observed equal; checked identical by the owner on 2026-10-05). Build the cache
 with `python -m fraud.data`. Everything below is **Observed** on that file unless labelled
 otherwise. The four balance columns are never read (`fraud/CLAUDE.md`).
 

@@ -316,7 +316,8 @@ Do move decisions approach the target (`--n` decisions, default 60):
 A separate application on PaySim (`fraud/`, its own rules in `fraud/CLAUDE.md`). Its runs go to
 `fraud/runs/`, its results to `fraud/results/`; nothing here touches the game pools.
 
-Build the data cache (needs the PaySim CSV in `fraud/data/raw/`; the balance columns are dropped):
+Build the data cache (needs `Synthetic_Financial_datasets_log.csv` from Kaggle
+`sriharshaeedala/financial-fraud-detection-dataset` in `fraud/data/raw/`; the balance columns are dropped):
 
 ```bash
 .venv/Scripts/python -m fraud.data
