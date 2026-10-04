@@ -6,3 +6,5 @@ torch>=2.8
 transformers>=5.0
 numpy
 pytest
+# Only for the fraud app's fine-tune (fraud/finetune.py, fraud/eval_ft.py); pulls in accelerate.
+peft>=0.21

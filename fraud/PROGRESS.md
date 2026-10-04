@@ -197,3 +197,30 @@ Checked (Observed):
   AUC review+decline 0.579, AUC decline 0.634, decline 389/389 (52 fraud, 337 legit), p50 147 /
   p90 155 ms, 209 tokens. AUCs, actions and tokens match the 2026-10-03 table exactly; latency
   differs by ≤ 6 ms (146 / 161 there).
+
+## 2026-10-05: Phase 5 opened, the fine-tuned brain (pre-registration)
+
+Owner's goal: a LoRA fine-tune of the 1.5B, measured against logistic regression (Bar A: cost ≤
+logreg in ≥ 10 of 20 new windows; Bar B: p90 ≤ 250 ms). Action from dev thresholds, not argmax.
+New windows share no hour with test100–test119. Training set: all fraud + 3× legit, 1 epoch.
+
+- Spike (Observed, throwaway script outside the repo): Unsloth did not install on this machine
+  (its install replaced the XPU torch with a CPU build; `triton-windows` and `triton-xpu` clash).
+  `peft` 0.21.2 + `accelerate` 1.15.0 in the repo `.venv` left torch 2.14.0+xpu intact. A toy
+  4-option task in the engine's prompt format: 100 LoRA steps (r16, batch 8, ~113 tokens) took
+  1.33 s/step at 3.16 GiB peak and moved held-out accuracy 53.5% → 88.0%. Before training the
+  model chose the last option in 82 of 200 items; after, picks were spread evenly. A reloaded
+  adapter gave the same argmax and accuracy; label logits differed by up to 0.375 (bf16 on the
+  XPU differs by up to 0.25 between two identical passes, so the pre-set 1e-2 check was unreachable).
+- Packages: `peft` and `accelerate` approved by the owner for this phase (vetted: upstream
+  huggingface/peft and huggingface/accelerate document `pip install peft` / `accelerate`).
+- Training set (Observed, `python -m fraud.finetune --dry-run`): 12,084 rows (3,021 fraud, 9,063
+  legit; 3,211 TRANSFER, 8,873 CASH_OUT), row sha256 983ed4fa…; prompts 214 tokens mean, 223 max;
+  6,075 of 12,084 shown with reversed options.
+- New test windows (Observed, `python -m fraud.eval_ft --windows`): test200, 201, 202, 204, 208,
+  210–217, 219, 221, 222, 224, 228, 232, 233; seeds 203, 205–207, 209, 218, 220, 223, 225–227,
+  229–231 skipped for shared hours.
+- Smoke run (10 steps; adapter deleted): 2.13 s/step, 3.37 GiB peak, so the full 1,510 steps take
+  ~54 min. The merged smoke adapter ran the dev path at 128 ms p50 (same as the base model).
+- The pre-registration is the `fraud/eval_ft.py` docstring, committed with this entry before the
+  adapter is trained.
