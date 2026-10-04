@@ -40,13 +40,27 @@ licence, PaySim CC BY-SA 4.0).
   `outside_mass` of the model scores, and costs reweighted to the natural fraud rate.
 - **Done for the owner:** the console runs and replays a recorded run at 1× recorded speed.
 
+## v2: the fine-tuned brain (added 2026-10-05, owner)
+The v1 hybrid's argmax declined every transaction (`fraud/docs/results.md`), although its scores
+ranked fraud above legit. v2 asks: **can a LoRA fine-tuned 1.5B, behind the same filter and
+reading the same prompt, decide as cheaply as logistic regression?** Owner's choices:
+- Bar A: the fine-tuned hybrid costs ≤ logistic regression in **≥ 10 of 20** new test windows.
+  Bar B: its latency p90 ≤ 250 ms. The old bar 1 (vs rules) is reported, expected to fail.
+- Its action comes from two thresholds on its "decline" score, picked on dev windows like
+  logistic regression's.
+- Training: steps 1–300, TRANSFER and CASH_OUT, minus the dev hours; all fraud + 3× legit; 1 epoch.
+- Test: 20 new windows that share no hour with test100–test119 or with each other.
+- Gate: the test windows run only if the fine-tune's dev AUC beats the frozen model's.
+Pre-registration: the docstring of `fraud/eval_ft.py`. Packages: `peft` (+ `accelerate`), approved
+for this only.
+
 ## Non-goals
 - No balance columns, not even as a comparison. (Documented leak; the dataset authors forbid it.)
 - No live inference in the viewer. (Replay only; it keeps the console shareable and model-free.)
 - No per-account or slow tier. (In PaySim origin accounts rarely repeat; to be confirmed in Phase 0.)
 - No calibrated fraud probability (Platt, isotonic, temperature). Scores are measured and labelled
   uncalibrated.
-- No gradient boosting and no new packages. (Logistic regression in numpy is the classic baseline;
+- No gradient boosting and no new packages (except `peft` for v2, see above). (Logistic regression in numpy is the classic baseline;
   the docs say it is the weaker kind.)
 - No fraud-type classification and no analyst workflow beyond the review decision.
 - No integration with the game viewer, its pools or its styling.

@@ -354,6 +354,26 @@ The pre-registered eval (20 test windows × 6 setups → `fraud/results/eval/<ev
 Flags: `--setups rules logreg ...` (a subset), `--resume <eval id>`, `--report <eval id>` (rebuild
 the results files from the traces).
 
+Phase 5, the fine-tuned brain (needs `peft`, see `requirements.txt`). Train a LoRA adapter on the
+training steps (about 1 h on the Lenovo) into `fraud/models/<time>_lora/` (git-ignored):
+
+```bash
+.venv/Scripts/python -m fraud.finetune
+```
+
+Flags: `--dry-run` (build the training set, print counts and the row hash, no training),
+`--steps N` (a smoke run of N batches, saved as `<time>_lora-smoke`).
+
+Its pre-registered eval (dev gate and thresholds on dev0–dev9, then 20 new test windows × 6 setups
+→ `fraud/results/eval/<eval id>.json|.md`; about 45 min):
+
+```bash
+.venv/Scripts/python -m fraud.eval_ft --adapter fraud/models/<time>_lora
+```
+
+Flags: `--windows` (print the new test windows, no model), `--setups hybrid-ft logreg ...`,
+`--resume <eval id>` (with `--adapter`), `--report <eval id>`.
+
 The analyst console (replay only; start page, a run at 1×, auto-demo, the eval page), on
 http://127.0.0.1:8766:
 

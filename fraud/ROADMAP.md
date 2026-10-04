@@ -48,3 +48,16 @@ p50/p90 latency logged.
 
 **Accept:** `python -m fraud.viewer` opens, and a recorded run replays at 1× with the decisions
 appearing at their recorded latency.
+
+## Phase 5: the fine-tuned brain (owner, 2026-10-05)
+- [x] Spike: LoRA trains on the Arc 140V with `peft` in the repo `.venv` (PROGRESS 2026-10-05)
+- [x] `finetune.py` (training rows, examples, encoding; tested) and `eval_ft.py` (new windows,
+      thresholds, AUC; tested); `brain.ThresholdDecider`, `brain.load_adapter`
+- [x] Pre-registration in the `eval_ft.py` docstring, committed before training
+- [ ] Train the adapter once (`python -m fraud.finetune`); manifest logged in PROGRESS
+- [ ] `python -m fraud.eval_ft`: dev gate, thresholds, then the 20 new windows (if the gate passes)
+- [ ] `fraud/docs/results-ft.md`: bars A/B, dev AUCs, paired counts, labelled claims, negatives
+- [ ] Console: `hybrid-ft` label and eval-chart series; the new eval page renders
+
+**Accept:** results committed with both bars reported pass or fail (or the gate's failure),
+whatever they show.
