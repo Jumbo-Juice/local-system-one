@@ -11,6 +11,7 @@ const BY = {
 };
 const SETUP_NAME = {
   hybrid: "hybrid (filter + model)", "hybrid-1.5b": "hybrid (filter + Qwen2.5-1.5B)", rules: "rules-only",
+  "hybrid-ft": "hybrid (filter + fine-tuned 1.5B)",
   logreg: "filter + logistic regression", random: "filter + random", "approve-all": "approve-all",
 };
 const SIGNALS = [
@@ -505,7 +506,10 @@ async function startPage() {
         body))));
 }
 
-const EVAL_SERIES = [["hybrid-1.5b", "var(--series-1)"], ["rules", "var(--series-2)"], ["logreg", "var(--series-3)"]];
+const EVAL_SERIES = [["hybrid-1.5b", "var(--series-1)"], ["rules", "var(--series-2)"], ["logreg", "var(--series-3)"],
+  ["hybrid-ft", "var(--series-4)"]];
+const BAR_TITLE = { bar1: "Bar 1: cost", bar2: "Bar 2: speed", barA: "Bar A: vs logistic regression", barB: "Bar B: speed" };
+const SPEED_BARS = new Set(["bar2", "barB"]);
 
 function evalChart(r) {
   const ws = r.test_windows;
@@ -516,7 +520,7 @@ function evalChart(r) {
   const x = (i) => L + ((W - L - R) * (i + 0.5)) / ws.length;
   const y = (v) => T + (H - T - B) * (1 - (Math.log10(Math.max(v, 10 ** lo)) - lo) / (hi - lo));
   const svg = svgEl("svg", { class: "chart", viewBox: `0 0 ${W} ${H}`, role: "img",
-    "aria-label": "Cost per test window for the hybrid, rules-only and logistic regression, log scale" });
+    "aria-label": `Cost per test window for ${series.map(([s]) => SETUP_NAME[s] || s).join(", ")}, log scale` });
   for (let p = lo; p <= hi; p++) {
     svg.append(svgEl("line", { x1: L, x2: W - R, y1: y(10 ** p), y2: y(10 ** p), stroke: "var(--grid)", "stroke-width": 1 }));
     const t = svgEl("text", { x: L - 6, y: y(10 ** p) + 4, "text-anchor": "end" });
@@ -530,9 +534,10 @@ function evalChart(r) {
   series.forEach(([s, color], j) => ws.forEach((w, i) => {
     const v = r.windows[s][w] && r.windows[s][w].cost;
     if (v === undefined) return;
-    const c = svgEl("circle", { cx: x(i) + (j - 1) * 6, cy: y(v), r: 4.5, fill: color, stroke: "var(--surface)", "stroke-width": 2 });
+    const dx = (j - (series.length - 1) / 2) * 6;
+    const c = svgEl("circle", { cx: x(i) + dx, cy: y(v), r: 4.5, fill: color, stroke: "var(--surface)", "stroke-width": 2 });
     svg.append(c);
-    dots.push({ cx: x(i) + (j - 1) * 6, cy: y(v), s, w, v });
+    dots.push({ cx: x(i) + dx, cy: y(v), s, w, v });
   }));
   svg.addEventListener("mousemove", (e) => {
     const box = svg.getBoundingClientRect();
@@ -548,6 +553,15 @@ function evalChart(r) {
     svg, el("div", { class: "hint" }, "Cost per test window, log scale (window number on the x axis). Random and approve-all are in the table below."));
 }
 
+function devGate(d) {
+  return el("section", { class: "panel bar-card", style: "margin-bottom:12px" }, el("h3", {}, "Dev gate (dev0–dev9)"),
+    el("div", {}, chip(d.gate.pass ? "pass" : "fail", d.gate.pass ? "PASS" : "FAIL"), ` ${d.gate.rule}`),
+    ...Object.entries(d.auc).map(([s, a]) => el("div", { style: "margin-top:6px" }, `${SETUP_NAME[s] || s}: AUC ${a.auc.toFixed(3)}`,
+      el("div", { class: "hint" }, `decline score, ${a.rows} model rows, ${a.fraud} fraud`))),
+    el("div", { style: "margin-top:6px" }, `Thresholds: review ≥ ${d.thresholds.review}, decline ≥ ${d.thresholds.decline}`,
+      el("div", { class: "hint" }, "picked on dev windows by cost, before any new test window ran")));
+}
+
 async function evalPage(id) {
   const { evals } = await getJSON("api/evals");
   const meta = id ? evals.find((e) => e.id === id) : evals[0];
@@ -558,9 +572,9 @@ async function evalPage(id) {
   document.title = `Eval ${r.eval} · Fraud Console`;
   const setups = Object.keys(r.totals);
   const bars = Object.entries(r.bars).map(([k, b]) => el("section", { class: "panel bar-card" },
-    el("h3", {}, k === "bar1" ? "Bar 1: cost" : "Bar 2: speed"),
+    el("h3", {}, BAR_TITLE[k] || k),
     el("div", {}, chip(b.pass ? "pass" : "fail", b.pass ? "PASS" : "FAIL")),
-    el("div", { class: "value", style: "margin-top:6px" }, k === "bar2" ? (b.value === null ? "–" : `${b.value.toFixed(1)} ms`) : `${b.value} of ${r.test_windows.length}`),
+    el("div", { class: "value", style: "margin-top:6px" }, b.value === null ? "–" : SPEED_BARS.has(k) ? `${b.value.toFixed(1)} ms` : `${b.value} of ${r.test_windows.length}`),
     el("div", { class: "hint" }, b.rule)));
   const tot = el("table", {},
     el("thead", {}, el("tr", {}, ...["setup", "mean cost", "mean cost (natural rate)", "recall", "precision", "alert rate", "p50 / p90 ms"]
@@ -584,8 +598,10 @@ async function evalPage(id) {
   const cal = Object.entries(r.totals).filter(([, v]) => v.calibration);
   app.replaceChildren(
     el("h1", {}, `Eval ${r.eval}`),
-    el("p", { class: "intro" }, `${r.test_windows.length} held-out test windows, run once per setup. Pre-registered in the docstring of fraud/eval.py before any ` +
-      `test window ran. Complete: ${r.complete ? "yes" : "no"}. Write-up with labelled claims: fraud/docs/results.md.`),
+    el("p", { class: "intro" }, `${r.test_windows.length} held-out test windows, run once per setup. Pre-registered in the docstring of ${r.script || "fraud/eval.py"} before any ` +
+      `test window ran. Complete: ${r.complete ? "yes" : "no"}. Write-up with labelled claims: ` +
+      `${r.script === "fraud/eval_ft.py" ? "fraud/docs/results-ft.md" : "fraud/docs/results.md"}.`),
+    ...(r.dev ? [devGate(r.dev)] : []),
     el("div", { class: "cards" }, ...bars),
     el("section", { class: "panel", style: "margin-top:12px" }, el("h2", {}, "Cost per window"), evalChart(r)),
     el("section", { class: "panel", style: "margin-top:12px" }, el("h2", {}, "Setups (means over the test windows)"), el("div", { class: "scroll-x" }, tot)),
