@@ -5,8 +5,8 @@ are git-ignored; only `*.pinned.jsonl` is committed, and each one is listed here
 Watch any run with `python -m fraud.viewer`. The trace format is in `fraud/ARCHITECTURE.md`.
 
 Traces hold single PaySim rows (balance columns excluded). PaySim: E. A. Lopez-Rojas, A. Elmir and
-S. Axelsson, "PaySim: A financial mobile money simulator for fraud detection", Kaggle
-`ealaxi/paysim1`, licence CC BY-SA 4.0. The pinned traces are shared under the same licence.
+S. Axelsson, "PaySim: A financial mobile money simulator for fraud detection"; data from Kaggle
+`sriharshaeedala/financial-fraud-detection-dataset`, licence CC BY-SA 4.0. The pinned traces are shared under the same licence.
 
 | pinned run | why |
 |---|---|
