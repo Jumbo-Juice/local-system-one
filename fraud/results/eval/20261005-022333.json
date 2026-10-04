@@ -1,0 +1,5001 @@
+{
+ "eval": "20261005-022333",
+ "script": "fraud/eval_ft.py",
+ "created": "2026-10-05T02:50:23",
+ "complete": true,
+ "costs": {
+  "friction_rate": 0.1,
+  "friction_min": 10.0,
+  "review_fee": 50.0,
+  "review_share": 0.05
+ },
+ "test_windows": [
+  "test200",
+  "test201",
+  "test202",
+  "test204",
+  "test208",
+  "test210",
+  "test211",
+  "test212",
+  "test213",
+  "test214",
+  "test215",
+  "test216",
+  "test217",
+  "test219",
+  "test221",
+  "test222",
+  "test224",
+  "test228",
+  "test232",
+  "test233"
+ ],
+ "dev": {
+  "auc": {
+   "hybrid-1.5b": {
+    "auc": 0.9027642987829131,
+    "rows": 2194,
+    "fraud": 260
+   },
+   "hybrid-ft": {
+    "auc": 0.9949725558825869,
+    "rows": 2194,
+    "fraud": 260
+   }
+  },
+  "gate": {
+   "rule": "AUC(hybrid-ft) > AUC(hybrid-1.5b) on dev0-dev9 model rows",
+   "pass": true
+  },
+  "thresholds": {
+   "review": 0.05,
+   "decline": 0.95
+  },
+  "grid_best": [
+   [
+    0.05,
+    0.95,
+    8700.0
+   ],
+   [
+    0.05,
+    0.99,
+    8700.0
+   ],
+   [
+    0.1,
+    0.95,
+    8700.0
+   ],
+   [
+    0.1,
+    0.99,
+    8700.0
+   ],
+   [
+    0.2,
+    0.95,
+    8700.0
+   ]
+  ]
+ },
+ "adapter": "20261005-013044_lora",
+ "bars": {
+  "barA": {
+   "rule": "hybrid-ft cost <= logreg cost in >= 10 of 20 new windows",
+   "value": 19,
+   "pass": true
+  },
+  "barB": {
+   "rule": "hybrid-ft p90 latency <= 250 ms",
+   "value": 127.9178,
+   "pass": true
+  }
+ },
+ "paired": {
+  "hybrid-ft vs logreg": {
+   "windows": 20,
+   "a_cheaper": 19,
+   "b_cheaper": 1,
+   "ties": 0,
+   "sign_test_p": 4.00543212890625e-05
+  },
+  "hybrid-ft vs rules": {
+   "windows": 20,
+   "a_cheaper": 0,
+   "b_cheaper": 9,
+   "ties": 11,
+   "sign_test_p": 0.00390625
+  },
+  "hybrid-ft vs hybrid-1.5b": {
+   "windows": 20,
+   "a_cheaper": 20,
+   "b_cheaper": 0,
+   "ties": 0,
+   "sign_test_p": 1.9073486328125e-06
+  },
+  "hybrid-ft vs random": {
+   "windows": 20,
+   "a_cheaper": 20,
+   "b_cheaper": 0,
+   "ties": 0,
+   "sign_test_p": 1.9073486328125e-06
+  },
+  "logreg vs rules": {
+   "windows": 20,
+   "a_cheaper": 1,
+   "b_cheaper": 19,
+   "ties": 0,
+   "sign_test_p": 4.00543212890625e-05
+  }
+ },
+ "totals": {
+  "hybrid-ft": {
+   "windows": 20,
+   "cost_total": 16600.0,
+   "cost_mean": 830.0,
+   "cost_median": 825.0,
+   "cost_natural_mean": 7133.222114316952,
+   "recall_mean": 0.9960769230769231,
+   "precision_mean": 0.868234858984998,
+   "alert_rate_mean": 0.059800000000000006,
+   "fraud_amount_stopped_share": 1.0,
+   "latency_ms": {
+    "p50": 125.193,
+    "p90": 127.9178,
+    "max": 292.936,
+    "decisions": 3862
+   },
+   "calibration": {
+    "decisions": 3862,
+    "ece": 0.011348842457205577,
+    "mean_top_score": 0.9895984540574128,
+    "top_right_rate": 0.9782496116002072,
+    "outside_mass_mean": 0.0001529472126847003
+   }
+  },
+  "hybrid-1.5b": {
+   "windows": 20,
+   "cost_total": 102935542.682,
+   "cost_mean": 5146777.1341,
+   "cost_median": 4988781.729,
+   "cost_natural_mean": 207111346.59578902,
+   "recall_mean": 1.0,
+   "precision_mean": 0.14332749282110735,
+   "alert_rate_mean": 0.3862,
+   "fraud_amount_stopped_share": 1.0,
+   "latency_ms": {
+    "p50": 122.4365,
+    "p90": 124.7608,
+    "max": 149.975,
+    "decisions": 3862
+   },
+   "calibration": {
+    "decisions": 3862,
+    "ece": 0.575277705735029,
+    "mean_top_score": 0.7094051008670847,
+    "top_right_rate": 0.13412739513205593,
+    "outside_mass_mean": 0.011667143413778723
+   }
+  },
+  "logreg": {
+   "windows": 20,
+   "cost_total": 3818201.953,
+   "cost_mean": 190910.09765,
+   "cost_median": 167148.494,
+   "cost_natural_mean": 450721.5269571976,
+   "recall_mean": 0.8861538461538461,
+   "precision_mean": 0.851644221379446,
+   "alert_rate_mean": 0.0558,
+   "fraud_amount_stopped_share": 0.9960902067480715
+  },
+  "rules": {
+   "windows": 20,
+   "cost_total": 16150.0,
+   "cost_mean": 807.5,
+   "cost_median": 800.0,
+   "cost_natural_mean": 7072.21442200926,
+   "recall_mean": 0.9960769230769231,
+   "precision_mean": 0.868234858984998,
+   "alert_rate_mean": 0.059800000000000006,
+   "fraud_amount_stopped_share": 1.0
+  },
+  "random": {
+   "windows": 20,
+   "cost_total": 392106836.36899996,
+   "cost_mean": 19605341.81845,
+   "cost_median": 14211557.180999998,
+   "cost_natural_mean": 158028963.54510584,
+   "recall_mean": 0.5828461538461538,
+   "precision_mean": 0.14219353074525798,
+   "alert_rate_mean": 0.22199999999999998,
+   "fraud_amount_stopped_share": 0.5873095317284462
+  },
+  "approve-all": {
+   "windows": 20,
+   "cost_total": 843817672.04,
+   "cost_mean": 42190883.602,
+   "cost_median": 34751285.45999999,
+   "cost_natural_mean": 102490489.74564461,
+   "recall_mean": 0.0,
+   "precision_mean": 0.0,
+   "alert_rate_mean": 0.0,
+   "fraud_amount_stopped_share": 0.0
+  }
+ },
+ "windows": {
+  "hybrid-ft": {
+   "test200": {
+    "n": 500,
+    "fraud": 26,
+    "cost": 800.0,
+    "fraud_amount": 43826189.660000004,
+    "fraud_amount_stopped": 43826189.660000004,
+    "recall": 1.0,
+    "precision": 0.896551724137931,
+    "alert_rate": 0.058,
+    "reviews_wanted": 16,
+    "reviews_done": 16,
+    "confusion": {
+     "legit": {
+      "approve": 471,
+      "review": 3,
+      "decline": 0
+     },
+     "fraud": {
+      "approve": 0,
+      "review": 13,
+      "decline": 13
+     }
+    },
+    "cost_natural": 2890.506329113924,
+    "precision_natural": 0.5140719049943061,
+    "setup": "hybrid-ft",
+    "total_ms": 29761.0,
+    "decisions_by": {
+     "filter": 272,
+     "model": 228
+    },
+    "model_decisions": 228,
+    "latency_ms": {
+     "p50": 127.3615,
+     "p90": 137.1473,
+     "max": 292.936,
+     "mean": 130.52900438596492
+    },
+    "outside_mass_mean": 0.00014948121847109042
+   },
+   "test201": {
+    "n": 500,
+    "fraud": 26,
+    "cost": 750.0,
+    "fraud_amount": 55444212.220000006,
+    "fraud_amount_stopped": 55444212.220000006,
+    "recall": 1.0,
+    "precision": 0.9285714285714286,
+    "alert_rate": 0.056,
+    "reviews_wanted": 15,
+    "reviews_done": 15,
+    "confusion": {
+     "legit": {
+      "approve": 472,
+      "review": 2,
+      "decline": 0
+     },
+     "fraud": {
+      "approve": 0,
+      "review": 13,
+      "decline": 13
+     }
+    },
+    "cost_natural": 2585.864978902953,
+    "precision_natural": 0.4496584872248925,
+    "setup": "hybrid-ft",
+    "total_ms": 30794.5,
+    "decisions_by": {
+     "filter": 259,
+     "model": 241
+    },
+    "model_decisions": 241,
+    "latency_ms": {
+     "p50": 126.929,
+     "p90": 130.525,
+     "max": 222.997,
+     "mean": 127.77675933609959
+    },
+    "outside_mass_mean": 0.00014694652794126336
+   },
+   "test202": {
+    "n": 500,
+    "fraud": 26,
+    "cost": 950.0,
+    "fraud_amount": 28021834.8,
+    "fraud_amount_stopped": 28021834.8,
+    "recall": 1.0,
+    "precision": 0.8125,
+    "alert_rate": 0.064,
+    "reviews_wanted": 19,
+    "reviews_done": 19,
+    "confusion": {
+     "legit": {
+      "approve": 468,
+      "review": 6,
+      "decline": 0
+     },
+     "fraud": {
+      "approve": 0,
+      "review": 13,
+      "decline": 13
+     }
+    },
+    "cost_natural": 4087.974683544304,
+    "precision_natural": 0.6459119496855346,
+    "setup": "hybrid-ft",
+    "total_ms": 30143.6,
+    "decisions_by": {
+     "filter": 260,
+     "model": 240
+    },
+    "model_decisions": 240,
+    "latency_ms": {
+     "p50": 125.4765,
+     "p90": 127.199,
+     "max": 137.958,
+     "mean": 125.59735416666668
+    },
+    "outside_mass_mean": 0.0001502710201757224
+   },
+   "test204": {
+    "n": 500,
+    "fraud": 26,
+    "cost": 700.0,
+    "fraud_amount": 39247218.260000005,
+    "fraud_amount_stopped": 39247218.260000005,
+    "recall": 1.0,
+    "precision": 0.9629629629629629,
+    "alert_rate": 0.054,
+    "reviews_wanted": 14,
+    "reviews_done": 14,
+    "confusion": {
+     "legit": {
+      "approve": 473,
+      "review": 1,
+      "decline": 0
+     },
+     "fraud": {
+      "approve": 0,
+      "review": 13,
+      "decline": 13
+     }
+    },
+    "cost_natural": 939.3459915611813,
+    "precision_natural": 0.9500677946118021,
+    "setup": "hybrid-ft",
+    "total_ms": 14033.5,
+    "decisions_by": {
+     "filter": 387,
+     "model": 113
+    },
+    "model_decisions": 113,
+    "latency_ms": {
+     "p50": 124.295,
+     "p90": 125.3402,
+     "max": 127.064,
+     "mean": 124.18953982300884
+    },
+    "outside_mass_mean": 0.0001581484139245741
+   },
+   "test208": {
+    "n": 500,
+    "fraud": 26,
+    "cost": 800.0,
+    "fraud_amount": 34873054.599999994,
+    "fraud_amount_stopped": 34873054.599999994,
+    "recall": 1.0,
+    "precision": 0.8666666666666667,
+    "alert_rate": 0.06,
+    "reviews_wanted": 16,
+    "reviews_done": 16,
+    "confusion": {
+     "legit": {
+      "approve": 470,
+      "review": 4,
+      "decline": 0
+     },
+     "fraud": {
+      "approve": 0,
+      "review": 12,
+      "decline": 14
+     }
+    },
+    "cost_natural": 2343.2002596559555,
+    "precision_natural": 0.7110790087787531,
+    "setup": "hybrid-ft",
+    "total_ms": 29017.9,
+    "decisions_by": {
+     "filter": 268,
+     "model": 232
+    },
+    "model_decisions": 232,
+    "latency_ms": {
+     "p50": 124.98150000000001,
+     "p90": 126.31400000000001,
+     "max": 142.363,
+     "mean": 125.07627586206895
+    },
+    "outside_mass_mean": 0.00015022599498050435
+   },
+   "test210": {
+    "n": 500,
+    "fraud": 26,
+    "cost": 850.0,
+    "fraud_amount": 14586430.899999999,
+    "fraud_amount_stopped": 14586430.899999999,
+    "recall": 1.0,
+    "precision": 0.8666666666666667,
+    "alert_rate": 0.06,
+    "reviews_wanted": 17,
+    "reviews_done": 17,
+    "confusion": {
+     "legit": {
+      "approve": 470,
+      "review": 4,
+      "decline": 0
+     },
+     "fraud": {
+      "approve": 0,
+      "review": 13,
+      "decline": 13
+     }
+    },
+    "cost_natural": 950.4219409282701,
+    "precision_natural": 0.8821339950372209,
+    "setup": "hybrid-ft",
+    "total_ms": 17825.0,
+    "decisions_by": {
+     "filter": 357,
+     "model": 143
+    },
+    "model_decisions": 143,
+    "latency_ms": {
+     "p50": 124.521,
+     "p90": 126.17559999999999,
+     "max": 129.161,
+     "mean": 124.64962237762238
+    },
+    "outside_mass_mean": 0.00015441370044200908
+   },
+   "test211": {
+    "n": 500,
+    "fraud": 26,
+    "cost": 700.0,
+    "fraud_amount": 26482909.68,
+    "fraud_amount_stopped": 26482909.68,
+    "recall": 1.0,
+    "precision": 0.9629629629629629,
+    "alert_rate": 0.054,
+    "reviews_wanted": 14,
+    "reviews_done": 14,
+    "confusion": {
+     "legit": {
+      "approve": 473,
+      "review": 1,
+      "decline": 0
+     },
+     "fraud": {
+      "approve": 0,
+      "review": 13,
+      "decline": 13
+     }
+    },
+    "cost_natural": 1162.6582278481014,
+    "precision_natural": 0.8726603252531453,
+    "setup": "hybrid-ft",
+    "total_ms": 28846.1,
+    "decisions_by": {
+     "filter": 269,
+     "model": 231
+    },
+    "model_decisions": 231,
+    "latency_ms": {
+     "p50": 124.804,
+     "p90": 126.272,
+     "max": 127.737,
+     "mean": 124.87417316017317
+    },
+    "outside_mass_mean": 0.0001469337223762955
+   },
+   "test212": {
+    "n": 500,
+    "fraud": 25,
+    "cost": 500.0,
+    "fraud_amount": 77953717.85999998,
+    "fraud_amount_stopped": 77953717.85999998,
+    "recall": 0.96,
+    "precision": 1.0,
+    "alert_rate": 0.048,
+    "reviews_wanted": 10,
+    "reviews_done": 10,
+    "confusion": {
+     "legit": {
+      "approve": 475,
+      "review": 0,
+      "decline": 0
+     },
+     "fraud": {
+      "approve": 1,
+      "review": 10,
+      "decline": 14
+     }
+    },
+    "cost_natural": 800.0,
+    "precision_natural": 1.0,
+    "setup": "hybrid-ft",
+    "total_ms": 25427.6,
+    "decisions_by": {
+     "filter": 298,
+     "model": 202
+    },
+    "model_decisions": 202,
+    "latency_ms": {
+     "p50": 125.598,
+     "p90": 127.7958,
+     "max": 134.716,
+     "mean": 125.87787623762377
+    },
+    "outside_mass_mean": 0.00014652339954002912
+   },
+   "test213": {
+    "n": 500,
+    "fraud": 25,
+    "cost": 850.0,
+    "fraud_amount": 71263837.09000002,
+    "fraud_amount_stopped": 71263837.09000002,
+    "recall": 1.0,
+    "precision": 0.8333333333333334,
+    "alert_rate": 0.06,
+    "reviews_wanted": 17,
+    "reviews_done": 17,
+    "confusion": {
+     "legit": {
+      "approve": 470,
+      "review": 5,
+      "decline": 0
+     },
+     "fraud": {
+      "approve": 0,
+      "review": 12,
+      "decline": 13
+     }
+    },
+    "cost_natural": 2965.8947368421054,
+    "precision_natural": 0.7441253263707572,
+    "setup": "hybrid-ft",
+    "total_ms": 27071.4,
+    "decisions_by": {
+     "filter": 285,
+     "model": 215
+    },
+    "model_decisions": 215,
+    "latency_ms": {
+     "p50": 125.176,
+     "p90": 130.5034,
+     "max": 134.934,
+     "mean": 125.91244186046514
+    },
+    "outside_mass_mean": 0.00015421575195806317
+   },
+   "test214": {
+    "n": 500,
+    "fraud": 26,
+    "cost": 800.0,
+    "fraud_amount": 45702440.72,
+    "fraud_amount_stopped": 45702440.72,
+    "recall": 1.0,
+    "precision": 0.896551724137931,
+    "alert_rate": 0.058,
+    "reviews_wanted": 16,
+    "reviews_done": 16,
+    "confusion": {
+     "legit": {
+      "approve": 471,
+      "review": 3,
+      "decline": 0
+     },
+     "fraud": {
+      "approve": 0,
+      "review": 13,
+      "decline": 13
+     }
+    },
+    "cost_natural": 2030.0632911392404,
+    "precision_natural": 0.539556061468412,
+    "setup": "hybrid-ft",
+    "total_ms": 28000.9,
+    "decisions_by": {
+     "filter": 275,
+     "model": 225
+    },
+    "model_decisions": 225,
+    "latency_ms": {
+     "p50": 124.352,
+     "p90": 125.51480000000001,
+     "max": 140.086,
+     "mean": 124.44741777777779
+    },
+    "outside_mass_mean": 0.00014986486764077163
+   },
+   "test215": {
+    "n": 500,
+    "fraud": 26,
+    "cost": 1000.0,
+    "fraud_amount": 69836834.0,
+    "fraud_amount_stopped": 69836834.0,
+    "recall": 1.0,
+    "precision": 0.7428571428571429,
+    "alert_rate": 0.07,
+    "reviews_wanted": 20,
+    "reviews_done": 20,
+    "confusion": {
+     "legit": {
+      "approve": 465,
+      "review": 9,
+      "decline": 0
+     },
+     "fraud": {
+      "approve": 0,
+      "review": 11,
+      "decline": 15
+     }
+    },
+    "cost_natural": 7456.329113924052,
+    "precision_natural": 0.9479635398638513,
+    "setup": "hybrid-ft",
+    "total_ms": 14397.4,
+    "decisions_by": {
+     "filter": 385,
+     "model": 115
+    },
+    "model_decisions": 115,
+    "latency_ms": {
+     "p50": 125.07,
+     "p90": 126.76140000000001,
+     "max": 128.985,
+     "mean": 125.19267826086957
+    },
+    "outside_mass_mean": 0.0001762888411711673
+   },
+   "test216": {
+    "n": 500,
+    "fraud": 26,
+    "cost": 950.0,
+    "fraud_amount": 34629516.32,
+    "fraud_amount_stopped": 34629516.32,
+    "recall": 1.0,
+    "precision": 0.8125,
+    "alert_rate": 0.064,
+    "reviews_wanted": 19,
+    "reviews_done": 19,
+    "confusion": {
+     "legit": {
+      "approve": 468,
+      "review": 6,
+      "decline": 0
+     },
+     "fraud": {
+      "approve": 0,
+      "review": 13,
+      "decline": 13
+     }
+    },
+    "cost_natural": 1215.8227848101267,
+    "precision_natural": 0.8229166666666665,
+    "setup": "hybrid-ft",
+    "total_ms": 14656.0,
+    "decisions_by": {
+     "filter": 383,
+     "model": 117
+    },
+    "model_decisions": 117,
+    "latency_ms": {
+     "p50": 125.28,
+     "p90": 126.582,
+     "max": 133.89,
+     "mean": 125.26394017094015
+    },
+    "outside_mass_mean": 0.0001602335337415193
+   },
+   "test217": {
+    "n": 500,
+    "fraud": 26,
+    "cost": 900.0,
+    "fraud_amount": 32266194.819999997,
+    "fraud_amount_stopped": 32266194.819999997,
+    "recall": 1.0,
+    "precision": 0.8387096774193549,
+    "alert_rate": 0.062,
+    "reviews_wanted": 18,
+    "reviews_done": 18,
+    "confusion": {
+     "legit": {
+      "approve": 469,
+      "review": 5,
+      "decline": 0
+     },
+     "fraud": {
+      "approve": 0,
+      "review": 13,
+      "decline": 13
+     }
+    },
+    "cost_natural": 2826.5822784810125,
+    "precision_natural": 0.3969849246231156,
+    "setup": "hybrid-ft",
+    "total_ms": 21210.9,
+    "decisions_by": {
+     "filter": 333,
+     "model": 167
+    },
+    "model_decisions": 167,
+    "latency_ms": {
+     "p50": 126.831,
+     "p90": 128.79739999999998,
+     "max": 133.329,
+     "mean": 127.01028143712576
+    },
+    "outside_mass_mean": 0.00015555599958996086
+   },
+   "test219": {
+    "n": 500,
+    "fraud": 26,
+    "cost": 950.0,
+    "fraud_amount": 17209558.22,
+    "fraud_amount_stopped": 17209558.22,
+    "recall": 1.0,
+    "precision": 0.8125,
+    "alert_rate": 0.064,
+    "reviews_wanted": 19,
+    "reviews_done": 19,
+    "confusion": {
+     "legit": {
+      "approve": 468,
+      "review": 6,
+      "decline": 0
+     },
+     "fraud": {
+      "approve": 0,
+      "review": 13,
+      "decline": 13
+     }
+    },
+    "cost_natural": 36443.67088607595,
+    "precision_natural": 0.03504641004641005,
+    "setup": "hybrid-ft",
+    "total_ms": 28565.4,
+    "decisions_by": {
+     "filter": 271,
+     "model": 229
+    },
+    "model_decisions": 229,
+    "latency_ms": {
+     "p50": 124.603,
+     "p90": 126.2468,
+     "max": 133.903,
+     "mean": 124.73846724890828
+    },
+    "outside_mass_mean": 0.00015258198077410797
+   },
+   "test221": {
+    "n": 500,
+    "fraud": 26,
+    "cost": 800.0,
+    "fraud_amount": 23151509.9,
+    "fraud_amount_stopped": 23151509.9,
+    "recall": 1.0,
+    "precision": 0.896551724137931,
+    "alert_rate": 0.058,
+    "reviews_wanted": 16,
+    "reviews_done": 16,
+    "confusion": {
+     "legit": {
+      "approve": 471,
+      "review": 3,
+      "decline": 0
+     },
+     "fraud": {
+      "approve": 0,
+      "review": 13,
+      "decline": 13
+     }
+    },
+    "cost_natural": 27417.08860759493,
+    "precision_natural": 0.06014061170570059,
+    "setup": "hybrid-ft",
+    "total_ms": 28317.6,
+    "decisions_by": {
+     "filter": 275,
+     "model": 225
+    },
+    "model_decisions": 225,
+    "latency_ms": {
+     "p50": 125.742,
+     "p90": 127.3198,
+     "max": 139.723,
+     "mean": 125.85455555555556
+    },
+    "outside_mass_mean": 0.00014825669920230438
+   },
+   "test222": {
+    "n": 500,
+    "fraud": 26,
+    "cost": 700.0,
+    "fraud_amount": 92823081.72999999,
+    "fraud_amount_stopped": 92823081.72999999,
+    "recall": 0.9615384615384616,
+    "precision": 0.8620689655172413,
+    "alert_rate": 0.058,
+    "reviews_wanted": 14,
+    "reviews_done": 14,
+    "confusion": {
+     "legit": {
+      "approve": 470,
+      "review": 4,
+      "decline": 0
+     },
+     "fraud": {
+      "approve": 1,
+      "review": 10,
+      "decline": 15
+     }
+    },
+    "cost_natural": 3030.347289840961,
+    "precision_natural": 0.4427293284829416,
+    "setup": "hybrid-ft",
+    "total_ms": 29281.5,
+    "decisions_by": {
+     "filter": 267,
+     "model": 233
+    },
+    "model_decisions": 233,
+    "latency_ms": {
+     "p50": 125.241,
+     "p90": 128.1926,
+     "max": 133.779,
+     "mean": 125.670660944206
+    },
+    "outside_mass_mean": 0.0001514453350326363
+   },
+   "test224": {
+    "n": 500,
+    "fraud": 26,
+    "cost": 850.0,
+    "fraud_amount": 17981520.0,
+    "fraud_amount_stopped": 17981520.0,
+    "recall": 1.0,
+    "precision": 0.8666666666666667,
+    "alert_rate": 0.06,
+    "reviews_wanted": 17,
+    "reviews_done": 17,
+    "confusion": {
+     "legit": {
+      "approve": 470,
+      "review": 4,
+      "decline": 0
+     },
+     "fraud": {
+      "approve": 0,
+      "review": 13,
+      "decline": 13
+     }
+    },
+    "cost_natural": 1850.632911392405,
+    "precision_natural": 0.6543948458352508,
+    "setup": "hybrid-ft",
+    "total_ms": 22512.1,
+    "decisions_by": {
+     "filter": 320,
+     "model": 180
+    },
+    "model_decisions": 180,
+    "latency_ms": {
+     "p50": 124.7865,
+     "p90": 127.2621,
+     "max": 132.35,
+     "mean": 125.0657
+    },
+    "outside_mass_mean": 0.00015720070192211543
+   },
+   "test228": {
+    "n": 500,
+    "fraud": 26,
+    "cost": 800.0,
+    "fraud_amount": 18988477.44,
+    "fraud_amount_stopped": 18988477.44,
+    "recall": 1.0,
+    "precision": 0.896551724137931,
+    "alert_rate": 0.058,
+    "reviews_wanted": 16,
+    "reviews_done": 16,
+    "confusion": {
+     "legit": {
+      "approve": 471,
+      "review": 3,
+      "decline": 0
+     },
+     "fraud": {
+      "approve": 0,
+      "review": 13,
+      "decline": 13
+     }
+    },
+    "cost_natural": 36566.77215189874,
+    "precision_natural": 0.03756697774343385,
+    "setup": "hybrid-ft",
+    "total_ms": 26711.8,
+    "decisions_by": {
+     "filter": 286,
+     "model": 214
+    },
+    "model_decisions": 214,
+    "latency_ms": {
+     "p50": 124.6485,
+     "p90": 126.3711,
+     "max": 133.088,
+     "mean": 124.82003271028037
+    },
+    "outside_mass_mean": 0.00015103237215107897
+   },
+   "test232": {
+    "n": 500,
+    "fraud": 26,
+    "cost": 1100.0,
+    "fraud_amount": 30281631.180000003,
+    "fraud_amount_stopped": 30281631.180000003,
+    "recall": 1.0,
+    "precision": 0.7428571428571429,
+    "alert_rate": 0.07,
+    "reviews_wanted": 22,
+    "reviews_done": 22,
+    "confusion": {
+     "legit": {
+      "approve": 465,
+      "review": 9,
+      "decline": 0
+     },
+     "fraud": {
+      "approve": 0,
+      "review": 13,
+      "decline": 13
+     }
+    },
+    "cost_natural": 1948.73417721519,
+    "precision_natural": 0.582086115588303,
+    "setup": "hybrid-ft",
+    "total_ms": 20096.4,
+    "decisions_by": {
+     "filter": 340,
+     "model": 160
+    },
+    "model_decisions": 160,
+    "latency_ms": {
+     "p50": 125.562,
+     "p90": 126.7723,
+     "max": 131.784,
+     "mean": 125.60082499999999
+    },
+    "outside_mass_mean": 0.00016416770698260592
+   },
+   "test233": {
+    "n": 500,
+    "fraud": 26,
+    "cost": 850.0,
+    "fraud_amount": 69247502.64000002,
+    "fraud_amount_stopped": 69247502.64000002,
+    "recall": 1.0,
+    "precision": 0.8666666666666667,
+    "alert_rate": 0.06,
+    "reviews_wanted": 17,
+    "reviews_done": 17,
+    "confusion": {
+     "legit": {
+      "approve": 470,
+      "review": 4,
+      "decline": 0
+     },
+     "fraud": {
+      "approve": 0,
+      "review": 13,
+      "decline": 13
+     }
+    },
+    "cost_natural": 3152.53164556962,
+    "precision_natural": 0.4247311827956989,
+    "setup": "hybrid-ft",
+    "total_ms": 19004.5,
+    "decisions_by": {
+     "filter": 348,
+     "model": 152
+    },
+    "model_decisions": 152,
+    "latency_ms": {
+     "p50": 124.8805,
+     "p90": 126.3991,
+     "max": 132.236,
+     "mean": 125.0283355263158
+    },
+    "outside_mass_mean": 0.00016074623068861805
+   }
+  },
+  "hybrid-1.5b": {
+   "test200": {
+    "n": 500,
+    "fraud": 26,
+    "cost": 6142527.68,
+    "fraud_amount": 43826189.660000004,
+    "fraud_amount_stopped": 43826189.660000004,
+    "recall": 1.0,
+    "precision": 0.11403508771929824,
+    "alert_rate": 0.456,
+    "reviews_wanted": 0,
+    "reviews_done": 0,
+    "confusion": {
+     "legit": {
+      "approve": 272,
+      "review": 0,
+      "decline": 202
+     },
+     "fraud": {
+      "approve": 0,
+      "review": 0,
+      "decline": 26
+     }
+    },
+    "cost_natural": 77416583.0386498,
+    "precision_natural": 0.01546861079474067,
+    "setup": "hybrid-1.5b",
+    "total_ms": 27942.9,
+    "decisions_by": {
+     "filter": 272,
+     "model": 228
+    },
+    "model_decisions": 228,
+    "latency_ms": {
+     "p50": 122.238,
+     "p90": 124.4706,
+     "max": 149.975,
+     "mean": 122.55528070175438
+    },
+    "outside_mass_mean": 0.01162939651426391
+   },
+   "test201": {
+    "n": 500,
+    "fraud": 26,
+    "cost": 6774795.5600000005,
+    "fraud_amount": 55444212.220000006,
+    "fraud_amount_stopped": 55444212.220000006,
+    "recall": 1.0,
+    "precision": 0.1078838174273859,
+    "alert_rate": 0.482,
+    "reviews_wanted": 0,
+    "reviews_done": 0,
+    "confusion": {
+     "legit": {
+      "approve": 259,
+      "review": 0,
+      "decline": 215
+     },
+     "fraud": {
+      "approve": 0,
+      "review": 0,
+      "decline": 26
+     }
+    },
+    "cost_natural": 124376099.07831225,
+    "precision_natural": 0.007543166326287032,
+    "setup": "hybrid-1.5b",
+    "total_ms": 29534.8,
+    "decisions_by": {
+     "filter": 259,
+     "model": 241
+    },
+    "model_decisions": 241,
+    "latency_ms": {
+     "p50": 122.401,
+     "p90": 123.716,
+     "max": 141.696,
+     "mean": 122.5497510373444
+    },
+    "outside_mass_mean": 0.01168350074455803
+   },
+   "test202": {
+    "n": 500,
+    "fraud": 26,
+    "cost": 6529810.118000001,
+    "fraud_amount": 28021834.8,
+    "fraud_amount_stopped": 28021834.8,
+    "recall": 1.0,
+    "precision": 0.10833333333333334,
+    "alert_rate": 0.48,
+    "reviews_wanted": 0,
+    "reviews_done": 0,
+    "confusion": {
+     "legit": {
+      "approve": 260,
+      "review": 0,
+      "decline": 214
+     },
+     "fraud": {
+      "approve": 0,
+      "review": 0,
+      "decline": 26
+     }
+    },
+    "cost_natural": 46535229.06878481,
+    "precision_natural": 0.048656075297684856,
+    "setup": "hybrid-1.5b",
+    "total_ms": 29862.1,
+    "decisions_by": {
+     "filter": 260,
+     "model": 240
+    },
+    "model_decisions": 240,
+    "latency_ms": {
+     "p50": 124.0085,
+     "p90": 127.0312,
+     "max": 129.984,
+     "mean": 124.42416666666666
+    },
+    "outside_mass_mean": 0.011519180115911017
+   },
+   "test204": {
+    "n": 500,
+    "fraud": 26,
+    "cost": 2664075.126,
+    "fraud_amount": 39247218.260000005,
+    "fraud_amount_stopped": 39247218.260000005,
+    "recall": 1.0,
+    "precision": 0.23008849557522124,
+    "alert_rate": 0.226,
+    "reviews_wanted": 0,
+    "reviews_done": 0,
+    "confusion": {
+     "legit": {
+      "approve": 387,
+      "review": 0,
+      "decline": 87
+     },
+     "fraud": {
+      "approve": 0,
+      "review": 0,
+      "decline": 26
+     }
+    },
+    "cost_natural": 4760488.674518988,
+    "precision_natural": 0.1794554868882579,
+    "setup": "hybrid-1.5b",
+    "total_ms": 13917.7,
+    "decisions_by": {
+     "filter": 387,
+     "model": 113
+    },
+    "model_decisions": 113,
+    "latency_ms": {
+     "p50": 122.966,
+     "p90": 125.0898,
+     "max": 129.566,
+     "mean": 123.16394690265489
+    },
+    "outside_mass_mean": 0.011789489445241184
+   },
+   "test208": {
+    "n": 500,
+    "fraud": 26,
+    "cost": 5142657.443,
+    "fraud_amount": 34873054.599999994,
+    "fraud_amount_stopped": 34873054.599999994,
+    "recall": 1.0,
+    "precision": 0.11206896551724138,
+    "alert_rate": 0.464,
+    "reviews_wanted": 0,
+    "reviews_done": 0,
+    "confusion": {
+     "legit": {
+      "approve": 268,
+      "review": 0,
+      "decline": 206
+     },
+     "fraud": {
+      "approve": 0,
+      "review": 0,
+      "decline": 26
+     }
+    },
+    "cost_natural": 28208669.5185654,
+    "precision_natural": 0.0456097334977441,
+    "setup": "hybrid-1.5b",
+    "total_ms": 28570.6,
+    "decisions_by": {
+     "filter": 268,
+     "model": 232
+    },
+    "model_decisions": 232,
+    "latency_ms": {
+     "p50": 122.664,
+     "p90": 125.72,
+     "max": 135.821,
+     "mean": 123.14810344827586
+    },
+    "outside_mass_mean": 0.01205799787086987
+   },
+   "test210": {
+    "n": 500,
+    "fraud": 26,
+    "cost": 2938356.489,
+    "fraud_amount": 14586430.899999999,
+    "fraud_amount_stopped": 14586430.899999999,
+    "recall": 1.0,
+    "precision": 0.18181818181818182,
+    "alert_rate": 0.286,
+    "reviews_wanted": 0,
+    "reviews_done": 0,
+    "confusion": {
+     "legit": {
+      "approve": 357,
+      "review": 0,
+      "decline": 117
+     },
+     "fraud": {
+      "approve": 0,
+      "review": 0,
+      "decline": 26
+     }
+    },
+    "cost_natural": 2944555.553322785,
+    "precision_natural": 0.20373952288845903,
+    "setup": "hybrid-1.5b",
+    "total_ms": 17362.5,
+    "decisions_by": {
+     "filter": 357,
+     "model": 143
+    },
+    "model_decisions": 143,
+    "latency_ms": {
+     "p50": 121.387,
+     "p90": 122.45700000000001,
+     "max": 123.961,
+     "mean": 121.41500699300698
+    },
+    "outside_mass_mean": 0.011068309468482836
+   },
+   "test211": {
+    "n": 500,
+    "fraud": 26,
+    "cost": 13515228.296999998,
+    "fraud_amount": 26482909.68,
+    "fraud_amount_stopped": 26482909.68,
+    "recall": 1.0,
+    "precision": 0.11255411255411256,
+    "alert_rate": 0.462,
+    "reviews_wanted": 0,
+    "reviews_done": 0,
+    "confusion": {
+     "legit": {
+      "approve": 269,
+      "review": 0,
+      "decline": 205
+     },
+     "fraud": {
+      "approve": 0,
+      "review": 0,
+      "decline": 26
+     }
+    },
+    "cost_natural": 70997718.26905063,
+    "precision_natural": 0.03234795664190903,
+    "setup": "hybrid-1.5b",
+    "total_ms": 28308.8,
+    "decisions_by": {
+     "filter": 269,
+     "model": 231
+    },
+    "model_decisions": 231,
+    "latency_ms": {
+     "p50": 122.512,
+     "p90": 123.885,
+     "max": 128.523,
+     "mean": 122.54814718614716
+    },
+    "outside_mass_mean": 0.011447317954905912
+   },
+   "test212": {
+    "n": 500,
+    "fraud": 25,
+    "cost": 4983711.238000001,
+    "fraud_amount": 77953717.85999998,
+    "fraud_amount_stopped": 77953717.85999998,
+    "recall": 1.0,
+    "precision": 0.12376237623762376,
+    "alert_rate": 0.404,
+    "reviews_wanted": 0,
+    "reviews_done": 0,
+    "confusion": {
+     "legit": {
+      "approve": 298,
+      "review": 0,
+      "decline": 177
+     },
+     "fraud": {
+      "approve": 0,
+      "review": 0,
+      "decline": 25
+     }
+    },
+    "cost_natural": 23680497.398244213,
+    "precision_natural": 0.04540143229571149,
+    "setup": "hybrid-1.5b",
+    "total_ms": 24753.8,
+    "decisions_by": {
+     "filter": 298,
+     "model": 202
+    },
+    "model_decisions": 202,
+    "latency_ms": {
+     "p50": 122.5375,
+     "p90": 123.96050000000001,
+     "max": 126.048,
+     "mean": 122.54248019801979
+    },
+    "outside_mass_mean": 0.011779417563157616
+   },
+   "test213": {
+    "n": 500,
+    "fraud": 25,
+    "cost": 4993852.220000001,
+    "fraud_amount": 71263837.09000002,
+    "fraud_amount_stopped": 71263837.09000002,
+    "recall": 1.0,
+    "precision": 0.11627906976744186,
+    "alert_rate": 0.43,
+    "reviews_wanted": 0,
+    "reviews_done": 0,
+    "confusion": {
+     "legit": {
+      "approve": 285,
+      "review": 0,
+      "decline": 190
+     },
+     "fraud": {
+      "approve": 0,
+      "review": 0,
+      "decline": 25
+     }
+    },
+    "cost_natural": 24727453.518821053,
+    "precision_natural": 0.07109004739336493,
+    "setup": "hybrid-1.5b",
+    "total_ms": 26322.5,
+    "decisions_by": {
+     "filter": 285,
+     "model": 215
+    },
+    "model_decisions": 215,
+    "latency_ms": {
+     "p50": 122.031,
+     "p90": 124.326,
+     "max": 136.882,
+     "mean": 122.42909767441861
+    },
+    "outside_mass_mean": 0.011116570283557139
+   },
+   "test214": {
+    "n": 500,
+    "fraud": 26,
+    "cost": 4446497.694,
+    "fraud_amount": 45702440.72,
+    "fraud_amount_stopped": 45702440.72,
+    "recall": 1.0,
+    "precision": 0.11555555555555555,
+    "alert_rate": 0.45,
+    "reviews_wanted": 0,
+    "reviews_done": 0,
+    "confusion": {
+     "legit": {
+      "approve": 275,
+      "review": 0,
+      "decline": 199
+     },
+     "fraud": {
+      "approve": 0,
+      "review": 0,
+      "decline": 26
+     }
+    },
+    "cost_natural": 37945323.148164555,
+    "precision_natural": 0.017358928189947203,
+    "setup": "hybrid-1.5b",
+    "total_ms": 27494.0,
+    "decisions_by": {
+     "filter": 275,
+     "model": 225
+    },
+    "model_decisions": 225,
+    "latency_ms": {
+     "p50": 122.198,
+     "p90": 123.46260000000001,
+     "max": 131.205,
+     "mean": 122.19457333333334
+    },
+    "outside_mass_mean": 0.01153618443609103
+   },
+   "test215": {
+    "n": 500,
+    "fraud": 26,
+    "cost": 992290.917,
+    "fraud_amount": 69836834.0,
+    "fraud_amount_stopped": 69836834.0,
+    "recall": 1.0,
+    "precision": 0.22608695652173913,
+    "alert_rate": 0.23,
+    "reviews_wanted": 0,
+    "reviews_done": 0,
+    "confusion": {
+     "legit": {
+      "approve": 385,
+      "review": 0,
+      "decline": 89
+     },
+     "fraud": {
+      "approve": 0,
+      "review": 0,
+      "decline": 26
+     }
+    },
+    "cost_natural": 1888283.5593544305,
+    "precision_natural": 0.6481596732203747,
+    "setup": "hybrid-1.5b",
+    "total_ms": 14165.2,
+    "decisions_by": {
+     "filter": 385,
+     "model": 115
+    },
+    "model_decisions": 115,
+    "latency_ms": {
+     "p50": 123.205,
+     "p90": 124.7796,
+     "max": 127.398,
+     "mean": 123.17385217391306
+    },
+    "outside_mass_mean": 0.012425931377460248
+   },
+   "test216": {
+    "n": 500,
+    "fraud": 26,
+    "cost": 3219637.9830000005,
+    "fraud_amount": 34629516.32,
+    "fraud_amount_stopped": 34629516.32,
+    "recall": 1.0,
+    "precision": 0.2222222222222222,
+    "alert_rate": 0.234,
+    "reviews_wanted": 0,
+    "reviews_done": 0,
+    "confusion": {
+     "legit": {
+      "approve": 383,
+      "review": 0,
+      "decline": 91
+     },
+     "fraud": {
+      "approve": 0,
+      "review": 0,
+      "decline": 26
+     }
+    },
+    "cost_natural": 3926056.443405064,
+    "precision_natural": 0.23453735774369125,
+    "setup": "hybrid-1.5b",
+    "total_ms": 14329.8,
+    "decisions_by": {
+     "filter": 383,
+     "model": 117
+    },
+    "model_decisions": 117,
+    "latency_ms": {
+     "p50": 122.491,
+     "p90": 123.9178,
+     "max": 129.63,
+     "mean": 122.47619658119659
+    },
+    "outside_mass_mean": 0.011210513421688427
+   },
+   "test217": {
+    "n": 500,
+    "fraud": 26,
+    "cost": 3996020.899,
+    "fraud_amount": 32266194.819999997,
+    "fraud_amount_stopped": 32266194.819999997,
+    "recall": 1.0,
+    "precision": 0.15568862275449102,
+    "alert_rate": 0.334,
+    "reviews_wanted": 0,
+    "reviews_done": 0,
+    "confusion": {
+     "legit": {
+      "approve": 333,
+      "review": 0,
+      "decline": 141
+     },
+     "fraud": {
+      "approve": 0,
+      "review": 0,
+      "decline": 26
+     }
+    },
+    "cost_natural": 33991468.91301266,
+    "precision_natural": 0.02281259023967658,
+    "setup": "hybrid-1.5b",
+    "total_ms": 20361.0,
+    "decisions_by": {
+     "filter": 333,
+     "model": 167
+    },
+    "model_decisions": 167,
+    "latency_ms": {
+     "p50": 121.929,
+     "p90": 123.0698,
+     "max": 125.124,
+     "mean": 121.92068862275453
+    },
+    "outside_mass_mean": 0.011744807778321438
+   },
+   "test219": {
+    "n": 500,
+    "fraud": 26,
+    "cost": 6090548.139,
+    "fraud_amount": 17209558.22,
+    "fraud_amount_stopped": 17209558.22,
+    "recall": 1.0,
+    "precision": 0.11353711790393013,
+    "alert_rate": 0.458,
+    "reviews_wanted": 0,
+    "reviews_done": 0,
+    "confusion": {
+     "legit": {
+      "approve": 271,
+      "review": 0,
+      "decline": 203
+     },
+     "fraud": {
+      "approve": 0,
+      "review": 0,
+      "decline": 26
+     }
+    },
+    "cost_natural": 726676918.6772279,
+    "precision_natural": 0.0010723248479524458,
+    "setup": "hybrid-1.5b",
+    "total_ms": 28354.1,
+    "decisions_by": {
+     "filter": 271,
+     "model": 229
+    },
+    "model_decisions": 229,
+    "latency_ms": {
+     "p50": 122.646,
+     "p90": 128.3686,
+     "max": 131.907,
+     "mean": 123.8154192139738
+    },
+    "outside_mass_mean": 0.011824247267480253
+   },
+   "test221": {
+    "n": 500,
+    "fraud": 26,
+    "cost": 8034364.802999999,
+    "fraud_amount": 23151509.9,
+    "fraud_amount_stopped": 23151509.9,
+    "recall": 1.0,
+    "precision": 0.11555555555555555,
+    "alert_rate": 0.45,
+    "reviews_wanted": 0,
+    "reviews_done": 0,
+    "confusion": {
+     "legit": {
+      "approve": 275,
+      "review": 0,
+      "decline": 199
+     },
+     "fraud": {
+      "approve": 0,
+      "review": 0,
+      "decline": 26
+     }
+    },
+    "cost_natural": 1422997877.5136204,
+    "precision_natural": 0.0009637278111179602,
+    "setup": "hybrid-1.5b",
+    "total_ms": 27701.8,
+    "decisions_by": {
+     "filter": 275,
+     "model": 225
+    },
+    "model_decisions": 225,
+    "latency_ms": {
+     "p50": 123.12,
+     "p90": 124.45479999999999,
+     "max": 128.471,
+     "mean": 123.11752
+    },
+    "outside_mass_mean": 0.011595901844948653
+   },
+   "test222": {
+    "n": 500,
+    "fraud": 26,
+    "cost": 6387090.1620000005,
+    "fraud_amount": 92823081.72999999,
+    "fraud_amount_stopped": 92823081.72999999,
+    "recall": 1.0,
+    "precision": 0.11158798283261803,
+    "alert_rate": 0.466,
+    "reviews_wanted": 0,
+    "reviews_done": 0,
+    "confusion": {
+     "legit": {
+      "approve": 267,
+      "review": 0,
+      "decline": 207
+     },
+     "fraud": {
+      "approve": 0,
+      "review": 0,
+      "decline": 26
+     }
+    },
+    "cost_natural": 73438061.9892405,
+    "precision_natural": 0.015715055986850027,
+    "setup": "hybrid-1.5b",
+    "total_ms": 28352.5,
+    "decisions_by": {
+     "filter": 267,
+     "model": 233
+    },
+    "model_decisions": 233,
+    "latency_ms": {
+     "p50": 121.756,
+     "p90": 123.0642,
+     "max": 126.836,
+     "mean": 121.68336051502148
+    },
+    "outside_mass_mean": 0.011990303286599818
+   },
+   "test224": {
+    "n": 500,
+    "fraud": 26,
+    "cost": 4239652.1850000005,
+    "fraud_amount": 17981520.0,
+    "fraud_amount_stopped": 17981520.0,
+    "recall": 1.0,
+    "precision": 0.14444444444444443,
+    "alert_rate": 0.36,
+    "reviews_wanted": 0,
+    "reviews_done": 0,
+    "confusion": {
+     "legit": {
+      "approve": 320,
+      "review": 0,
+      "decline": 154
+     },
+     "fraud": {
+      "approve": 0,
+      "review": 0,
+      "decline": 26
+     }
+    },
+    "cost_natural": 20151764.49958861,
+    "precision_natural": 0.04687577260964876,
+    "setup": "hybrid-1.5b",
+    "total_ms": 21893.4,
+    "decisions_by": {
+     "filter": 320,
+     "model": 180
+    },
+    "model_decisions": 180,
+    "latency_ms": {
+     "p50": 121.586,
+     "p90": 122.96929999999999,
+     "max": 130.754,
+     "mean": 121.62850000000003
+    },
+    "outside_mass_mean": 0.011349903909923145
+   },
+   "test228": {
+    "n": 500,
+    "fraud": 26,
+    "cost": 5769722.15,
+    "fraud_amount": 18988477.44,
+    "fraud_amount_stopped": 18988477.44,
+    "recall": 1.0,
+    "precision": 0.12149532710280374,
+    "alert_rate": 0.428,
+    "reviews_wanted": 0,
+    "reviews_done": 0,
+    "confusion": {
+     "legit": {
+      "approve": 286,
+      "review": 0,
+      "decline": 188
+     },
+     "fraud": {
+      "approve": 0,
+      "review": 0,
+      "decline": 26
+     }
+    },
+    "cost_natural": 1379608731.5587552,
+    "precision_natural": 0.000622484757284413,
+    "setup": "hybrid-1.5b",
+    "total_ms": 26593.5,
+    "decisions_by": {
+     "filter": 286,
+     "model": 214
+    },
+    "model_decisions": 214,
+    "latency_ms": {
+     "p50": 123.661,
+     "p90": 128.11610000000002,
+     "max": 132.261,
+     "mean": 124.26678037383178
+    },
+    "outside_mass_mean": 0.011833397230198633
+   },
+   "test232": {
+    "n": 500,
+    "fraud": 26,
+    "cost": 3569323.198,
+    "fraud_amount": 30281631.180000003,
+    "fraud_amount_stopped": 30281631.180000003,
+    "recall": 1.0,
+    "precision": 0.1625,
+    "alert_rate": 0.32,
+    "reviews_wanted": 0,
+    "reviews_done": 0,
+    "confusion": {
+     "legit": {
+      "approve": 340,
+      "review": 0,
+      "decline": 134
+     },
+     "fraud": {
+      "approve": 0,
+      "review": 0,
+      "decline": 26
+     }
+    },
+    "cost_natural": 9111563.437932491,
+    "precision_natural": 0.08554605545153066,
+    "setup": "hybrid-1.5b",
+    "total_ms": 19671.8,
+    "decisions_by": {
+     "filter": 340,
+     "model": 160
+    },
+    "model_decisions": 160,
+    "latency_ms": {
+     "p50": 122.72149999999999,
+     "p90": 124.63640000000001,
+     "max": 130.538,
+     "mean": 122.94768749999999
+    },
+    "outside_mass_mean": 0.011720434299077567
+   },
+   "test233": {
+    "n": 500,
+    "fraud": 26,
+    "cost": 2505380.381,
+    "fraud_amount": 69247502.64000002,
+    "fraud_amount_stopped": 69247502.64000002,
+    "recall": 1.0,
+    "precision": 0.17105263157894737,
+    "alert_rate": 0.304,
+    "reviews_wanted": 0,
+    "reviews_done": 0,
+    "confusion": {
+     "legit": {
+      "approve": 348,
+      "review": 0,
+      "decline": 126
+     },
+     "fraud": {
+      "approve": 0,
+      "review": 0,
+      "decline": 26
+     }
+    },
+    "cost_natural": 28843588.057208862,
+    "precision_natural": 0.02290186983620815,
+    "setup": "hybrid-1.5b",
+    "total_ms": 18471.0,
+    "decisions_by": {
+     "filter": 348,
+     "model": 152
+    },
+    "model_decisions": 152,
+    "latency_ms": {
+     "p50": 121.456,
+     "p90": 122.77250000000001,
+     "max": 126.43,
+     "mean": 121.51803289473685
+    },
+    "outside_mass_mean": 0.012115790118159369
+   }
+  },
+  "logreg": {
+   "test200": {
+    "n": 500,
+    "fraud": 26,
+    "cost": 231227.98,
+    "fraud_amount": 43826189.660000004,
+    "fraud_amount_stopped": 43595511.68,
+    "recall": 0.8461538461538461,
+    "precision": 0.88,
+    "alert_rate": 0.05,
+    "reviews_wanted": 11,
+    "reviews_done": 11,
+    "confusion": {
+     "legit": {
+      "approve": 471,
+      "review": 3,
+      "decline": 0
+     },
+     "fraud": {
+      "approve": 4,
+      "review": 8,
+      "decline": 14
+     }
+    },
+    "cost_natural": 357395.09094449854,
+    "precision_natural": 0.4723403677080078,
+    "setup": "logreg",
+    "total_ms": 11.3,
+    "decisions_by": {
+     "filter": 272,
+     "logreg": 228
+    },
+    "model_decisions": 0,
+    "latency_ms": {
+     "p50": 0.0,
+     "p90": 0.0,
+     "max": 0.0,
+     "mean": 0.0
+    },
+    "outside_mass_mean": 0.0
+   },
+   "test201": {
+    "n": 500,
+    "fraud": 26,
+    "cost": 193011.61,
+    "fraud_amount": 55444212.220000006,
+    "fraud_amount_stopped": 55251750.61,
+    "recall": 0.8846153846153846,
+    "precision": 0.92,
+    "alert_rate": 0.05,
+    "reviews_wanted": 11,
+    "reviews_done": 11,
+    "confusion": {
+     "legit": {
+      "approve": 472,
+      "review": 2,
+      "decline": 0
+     },
+     "fraud": {
+      "approve": 3,
+      "review": 9,
+      "decline": 14
+     }
+    },
+    "cost_natural": 224426.18420967215,
+    "precision_natural": 0.41954220564315436,
+    "setup": "logreg",
+    "total_ms": 6.7,
+    "decisions_by": {
+     "filter": 259,
+     "logreg": 241
+    },
+    "model_decisions": 0,
+    "latency_ms": {
+     "p50": 0.0,
+     "p90": 0.0,
+     "max": 0.0,
+     "mean": 0.0
+    },
+    "outside_mass_mean": 0.0
+   },
+   "test202": {
+    "n": 500,
+    "fraud": 26,
+    "cost": 96429.50000000001,
+    "fraud_amount": 28021834.8,
+    "fraud_amount_stopped": 27926155.300000004,
+    "recall": 0.8846153846153846,
+    "precision": 0.8214285714285714,
+    "alert_rate": 0.056,
+    "reviews_wanted": 15,
+    "reviews_done": 15,
+    "confusion": {
+     "legit": {
+      "approve": 469,
+      "review": 5,
+      "decline": 0
+     },
+     "fraud": {
+      "approve": 3,
+      "review": 10,
+      "decline": 13
+     }
+    },
+    "cost_natural": 290320.1455696203,
+    "precision_natural": 0.6594483426082748,
+    "setup": "logreg",
+    "total_ms": 7.7,
+    "decisions_by": {
+     "filter": 260,
+     "logreg": 240
+    },
+    "model_decisions": 0,
+    "latency_ms": {
+     "p50": 0.0,
+     "p90": 0.0,
+     "max": 0.0,
+     "mean": 0.0
+    },
+    "outside_mass_mean": 0.0
+   },
+   "test204": {
+    "n": 500,
+    "fraud": 26,
+    "cost": 132248.9,
+    "fraud_amount": 39247218.260000005,
+    "fraud_amount_stopped": 39115419.36,
+    "recall": 0.8461538461538461,
+    "precision": 0.9565217391304348,
+    "alert_rate": 0.046,
+    "reviews_wanted": 9,
+    "reviews_done": 9,
+    "confusion": {
+     "legit": {
+      "approve": 473,
+      "review": 1,
+      "decline": 0
+     },
+     "fraud": {
+      "approve": 4,
+      "review": 8,
+      "decline": 14
+     }
+    },
+    "cost_natural": 172964.8306069458,
+    "precision_natural": 0.9415201261903371,
+    "setup": "logreg",
+    "total_ms": 3.2,
+    "decisions_by": {
+     "filter": 387,
+     "logreg": 113
+    },
+    "model_decisions": 0,
+    "latency_ms": {
+     "p50": 0.0,
+     "p90": 0.0,
+     "max": 0.0,
+     "mean": 0.0
+    },
+    "outside_mass_mean": 0.0
+   },
+   "test208": {
+    "n": 500,
+    "fraud": 26,
+    "cost": 87634.72,
+    "fraud_amount": 34873054.599999994,
+    "fraud_amount_stopped": 34786019.88,
+    "recall": 0.9230769230769231,
+    "precision": 0.9230769230769231,
+    "alert_rate": 0.052,
+    "reviews_wanted": 12,
+    "reviews_done": 12,
+    "confusion": {
+     "legit": {
+      "approve": 472,
+      "review": 2,
+      "decline": 0
+     },
+     "fraud": {
+      "approve": 2,
+      "review": 10,
+      "decline": 14
+     }
+    },
+    "cost_natural": 182351.40320675107,
+    "precision_natural": 0.8196140380838527,
+    "setup": "logreg",
+    "total_ms": 6.3,
+    "decisions_by": {
+     "filter": 268,
+     "logreg": 232
+    },
+    "model_decisions": 0,
+    "latency_ms": {
+     "p50": 0.0,
+     "p90": 0.0,
+     "max": 0.0,
+     "mean": 0.0
+    },
+    "outside_mass_mean": 0.0
+   },
+   "test210": {
+    "n": 500,
+    "fraud": 26,
+    "cost": 356696.845,
+    "fraud_amount": 14586430.899999999,
+    "fraud_amount_stopped": 14586430.899999999,
+    "recall": 1.0,
+    "precision": 0.4642857142857143,
+    "alert_rate": 0.112,
+    "reviews_wanted": 23,
+    "reviews_done": 23,
+    "confusion": {
+     "legit": {
+      "approve": 444,
+      "review": 23,
+      "decline": 7
+     },
+     "fraud": {
+      "approve": 0,
+      "review": 0,
+      "decline": 26
+     }
+    },
+    "cost_natural": 357449.3699894516,
+    "precision_natural": 0.49947312961011586,
+    "setup": "logreg",
+    "total_ms": 4.0,
+    "decisions_by": {
+     "filter": 357,
+     "logreg": 143
+    },
+    "model_decisions": 0,
+    "latency_ms": {
+     "p50": 0.0,
+     "p90": 0.0,
+     "max": 0.0,
+     "mean": 0.0
+    },
+    "outside_mass_mean": 0.0
+   },
+   "test211": {
+    "n": 500,
+    "fraud": 26,
+    "cost": 279337.38,
+    "fraud_amount": 26482909.68,
+    "fraud_amount_stopped": 26203922.300000004,
+    "recall": 0.7307692307692307,
+    "precision": 0.95,
+    "alert_rate": 0.04,
+    "reviews_wanted": 7,
+    "reviews_done": 7,
+    "confusion": {
+     "legit": {
+      "approve": 473,
+      "review": 1,
+      "decline": 0
+     },
+     "fraud": {
+      "approve": 7,
+      "review": 6,
+      "decline": 13
+     }
+    },
+    "cost_natural": 386968.2613047712,
+    "precision_natural": 0.8335544380341221,
+    "setup": "logreg",
+    "total_ms": 6.2,
+    "decisions_by": {
+     "filter": 269,
+     "logreg": 231
+    },
+    "model_decisions": 0,
+    "latency_ms": {
+     "p50": 0.0,
+     "p90": 0.0,
+     "max": 0.0,
+     "mean": 0.0
+    },
+    "outside_mass_mean": 0.0
+   },
+   "test212": {
+    "n": 500,
+    "fraud": 25,
+    "cost": 136031.63,
+    "fraud_amount": 77953717.85999998,
+    "fraud_amount_stopped": 77817986.22999999,
+    "recall": 0.84,
+    "precision": 1.0,
+    "alert_rate": 0.042,
+    "reviews_wanted": 6,
+    "reviews_done": 6,
+    "confusion": {
+     "legit": {
+      "approve": 475,
+      "review": 0,
+      "decline": 0
+     },
+     "fraud": {
+      "approve": 4,
+      "review": 6,
+      "decline": 15
+     }
+    },
+    "cost_natural": 217650.608,
+    "precision_natural": 1.0,
+    "setup": "logreg",
+    "total_ms": 5.5,
+    "decisions_by": {
+     "filter": 298,
+     "logreg": 202
+    },
+    "model_decisions": 0,
+    "latency_ms": {
+     "p50": 0.0,
+     "p90": 0.0,
+     "max": 0.0,
+     "mean": 0.0
+    },
+    "outside_mass_mean": 0.0
+   },
+   "test213": {
+    "n": 500,
+    "fraud": 25,
+    "cost": 63448.81,
+    "fraud_amount": 71263837.09000002,
+    "fraud_amount_stopped": 71200938.28,
+    "recall": 0.96,
+    "precision": 0.8275862068965517,
+    "alert_rate": 0.058,
+    "reviews_wanted": 11,
+    "reviews_done": 11,
+    "confusion": {
+     "legit": {
+      "approve": 470,
+      "review": 5,
+      "decline": 0
+     },
+     "fraud": {
+      "approve": 1,
+      "review": 6,
+      "decline": 18
+     }
+    },
+    "cost_natural": 183250.4675368421,
+    "precision_natural": 0.736275565123789,
+    "setup": "logreg",
+    "total_ms": 5.8,
+    "decisions_by": {
+     "filter": 285,
+     "logreg": 215
+    },
+    "model_decisions": 0,
+    "latency_ms": {
+     "p50": 0.0,
+     "p90": 0.0,
+     "max": 0.0,
+     "mean": 0.0
+    },
+    "outside_mass_mean": 0.0
+   },
+   "test214": {
+    "n": 500,
+    "fraud": 26,
+    "cost": 264011.23,
+    "fraud_amount": 45702440.72,
+    "fraud_amount_stopped": 45438879.49,
+    "recall": 0.8076923076923077,
+    "precision": 0.9130434782608695,
+    "alert_rate": 0.046,
+    "reviews_wanted": 9,
+    "reviews_done": 9,
+    "confusion": {
+     "legit": {
+      "approve": 472,
+      "review": 2,
+      "decline": 0
+     },
+     "fraud": {
+      "approve": 5,
+      "review": 7,
+      "decline": 14
+     }
+    },
+    "cost_natural": 305366.3332197338,
+    "precision_natural": 0.5867258723671802,
+    "setup": "logreg",
+    "total_ms": 6.1,
+    "decisions_by": {
+     "filter": 275,
+     "logreg": 225
+    },
+    "model_decisions": 0,
+    "latency_ms": {
+     "p50": 0.0,
+     "p90": 0.0,
+     "max": 0.0,
+     "mean": 0.0
+    },
+    "outside_mass_mean": 0.0
+   },
+   "test215": {
+    "n": 500,
+    "fraud": 26,
+    "cost": 356764.42000000004,
+    "fraud_amount": 69836834.0,
+    "fraud_amount_stopped": 69480469.58,
+    "recall": 0.8846153846153846,
+    "precision": 0.8518518518518519,
+    "alert_rate": 0.054,
+    "reviews_wanted": 8,
+    "reviews_done": 8,
+    "confusion": {
+     "legit": {
+      "approve": 470,
+      "review": 4,
+      "decline": 0
+     },
+     "fraud": {
+      "approve": 3,
+      "review": 4,
+      "decline": 19
+     }
+    },
+    "cost_natural": 4279153.6307173,
+    "precision_natural": 0.9731611521066411,
+    "setup": "logreg",
+    "total_ms": 3.2,
+    "decisions_by": {
+     "filter": 385,
+     "logreg": 115
+    },
+    "model_decisions": 0,
+    "latency_ms": {
+     "p50": 0.0,
+     "p90": 0.0,
+     "max": 0.0,
+     "mean": 0.0
+    },
+    "outside_mass_mean": 0.0
+   },
+   "test216": {
+    "n": 500,
+    "fraud": 26,
+    "cost": 173434.928,
+    "fraud_amount": 34629516.32,
+    "fraud_amount_stopped": 34608183.86,
+    "recall": 0.9615384615384616,
+    "precision": 0.6578947368421053,
+    "alert_rate": 0.076,
+    "reviews_wanted": 11,
+    "reviews_done": 11,
+    "confusion": {
+     "legit": {
+      "approve": 461,
+      "review": 8,
+      "decline": 5
+     },
+     "fraud": {
+      "approve": 1,
+      "review": 3,
+      "decline": 22
+     }
+    },
+    "cost_natural": 213384.69770074656,
+    "precision_natural": 0.673448511025233,
+    "setup": "logreg",
+    "total_ms": 5.0,
+    "decisions_by": {
+     "filter": 383,
+     "logreg": 117
+    },
+    "model_decisions": 0,
+    "latency_ms": {
+     "p50": 0.0,
+     "p90": 0.0,
+     "max": 0.0,
+     "mean": 0.0
+    },
+    "outside_mass_mean": 0.0
+   },
+   "test217": {
+    "n": 500,
+    "fraud": 26,
+    "cost": 650.0,
+    "fraud_amount": 32266194.819999997,
+    "fraud_amount_stopped": 32266194.819999997,
+    "recall": 1.0,
+    "precision": 0.896551724137931,
+    "alert_rate": 0.058,
+    "reviews_wanted": 13,
+    "reviews_done": 13,
+    "confusion": {
+     "legit": {
+      "approve": 471,
+      "review": 3,
+      "decline": 0
+     },
+     "fraud": {
+      "approve": 0,
+      "review": 10,
+      "decline": 16
+     }
+    },
+    "cost_natural": 1814.4109055501458,
+    "precision_natural": 0.5231788079470199,
+    "setup": "logreg",
+    "total_ms": 4.6,
+    "decisions_by": {
+     "filter": 333,
+     "logreg": 167
+    },
+    "model_decisions": 0,
+    "latency_ms": {
+     "p50": 0.0,
+     "p90": 0.0,
+     "max": 0.0,
+     "mean": 0.0
+    },
+    "outside_mass_mean": 0.0
+   },
+   "test219": {
+    "n": 500,
+    "fraud": 26,
+    "cost": 373602.39,
+    "fraud_amount": 17209558.22,
+    "fraud_amount_stopped": 16836655.83,
+    "recall": 0.8076923076923077,
+    "precision": 0.7777777777777778,
+    "alert_rate": 0.054,
+    "reviews_wanted": 14,
+    "reviews_done": 14,
+    "confusion": {
+     "legit": {
+      "approve": 468,
+      "review": 6,
+      "decline": 0
+     },
+     "fraud": {
+      "approve": 5,
+      "review": 8,
+      "decline": 13
+     }
+    },
+    "cost_natural": 409096.06088607595,
+    "precision_natural": 0.028498788930307665,
+    "setup": "logreg",
+    "total_ms": 6.5,
+    "decisions_by": {
+     "filter": 271,
+     "logreg": 229
+    },
+    "model_decisions": 0,
+    "latency_ms": {
+     "p50": 0.0,
+     "p90": 0.0,
+     "max": 0.0,
+     "mean": 0.0
+    },
+    "outside_mass_mean": 0.0
+   },
+   "test221": {
+    "n": 500,
+    "fraud": 26,
+    "cost": 160862.06,
+    "fraud_amount": 23151509.9,
+    "fraud_amount_stopped": 22991247.839999996,
+    "recall": 0.8846153846153846,
+    "precision": 0.92,
+    "alert_rate": 0.05,
+    "reviews_wanted": 12,
+    "reviews_done": 12,
+    "confusion": {
+     "legit": {
+      "approve": 472,
+      "review": 2,
+      "decline": 0
+     },
+     "fraud": {
+      "approve": 3,
+      "review": 10,
+      "decline": 13
+     }
+    },
+    "cost_natural": 227938.70163583255,
+    "precision_natural": 0.0782632049680628,
+    "setup": "logreg",
+    "total_ms": 6.2,
+    "decisions_by": {
+     "filter": 275,
+     "logreg": 225
+    },
+    "model_decisions": 0,
+    "latency_ms": {
+     "p50": 0.0,
+     "p90": 0.0,
+     "max": 0.0,
+     "mean": 0.0
+    },
+    "outside_mass_mean": 0.0
+   },
+   "test222": {
+    "n": 500,
+    "fraud": 26,
+    "cost": 35023.07,
+    "fraud_amount": 92823081.72999999,
+    "fraud_amount_stopped": 92788608.66,
+    "recall": 0.9230769230769231,
+    "precision": 0.8888888888888888,
+    "alert_rate": 0.054,
+    "reviews_wanted": 11,
+    "reviews_done": 11,
+    "confusion": {
+     "legit": {
+      "approve": 471,
+      "review": 3,
+      "decline": 0
+     },
+     "fraud": {
+      "approve": 2,
+      "review": 8,
+      "decline": 16
+     }
+    },
+    "cost_natural": 52693.01662122687,
+    "precision_natural": 0.5041918011448726,
+    "setup": "logreg",
+    "total_ms": 6.2,
+    "decisions_by": {
+     "filter": 267,
+     "logreg": 233
+    },
+    "model_decisions": 0,
+    "latency_ms": {
+     "p50": 0.0,
+     "p90": 0.0,
+     "max": 0.0,
+     "mean": 0.0
+    },
+    "outside_mass_mean": 0.0
+   },
+   "test224": {
+    "n": 500,
+    "fraud": 26,
+    "cost": 174963.93,
+    "fraud_amount": 17981520.0,
+    "fraud_amount_stopped": 17807206.07,
+    "recall": 0.8846153846153846,
+    "precision": 0.8846153846153846,
+    "alert_rate": 0.052,
+    "reviews_wanted": 13,
+    "reviews_done": 13,
+    "confusion": {
+     "legit": {
+      "approve": 471,
+      "review": 3,
+      "decline": 0
+     },
+     "fraud": {
+      "approve": 3,
+      "review": 10,
+      "decline": 13
+     }
+    },
+    "cost_natural": 242763.03160662123,
+    "precision_natural": 0.6907213229004973,
+    "setup": "logreg",
+    "total_ms": 4.7,
+    "decisions_by": {
+     "filter": 320,
+     "logreg": 180
+    },
+    "model_decisions": 0,
+    "latency_ms": {
+     "p50": 0.0,
+     "p90": 0.0,
+     "max": 0.0,
+     "mean": 0.0
+    },
+    "outside_mass_mean": 0.0
+   },
+   "test228": {
+    "n": 500,
+    "fraud": 26,
+    "cost": 37133.9,
+    "fraud_amount": 18988477.44,
+    "fraud_amount_stopped": 18952043.54,
+    "recall": 0.9230769230769231,
+    "precision": 0.8888888888888888,
+    "alert_rate": 0.054,
+    "reviews_wanted": 14,
+    "reviews_done": 14,
+    "confusion": {
+     "legit": {
+      "approve": 471,
+      "review": 3,
+      "decline": 0
+     },
+     "fraud": {
+      "approve": 2,
+      "review": 11,
+      "decline": 13
+     }
+    },
+    "cost_natural": 75695.58753651411,
+    "precision_natural": 0.03477770972063452,
+    "setup": "logreg",
+    "total_ms": 6.0,
+    "decisions_by": {
+     "filter": 286,
+     "logreg": 214
+    },
+    "model_decisions": 0,
+    "latency_ms": {
+     "p50": 0.0,
+     "p90": 0.0,
+     "max": 0.0,
+     "mean": 0.0
+    },
+    "outside_mass_mean": 0.0
+   },
+   "test232": {
+    "n": 500,
+    "fraud": 26,
+    "cost": 510521.74999999994,
+    "fraud_amount": 30281631.180000003,
+    "fraud_amount_stopped": 29771909.430000003,
+    "recall": 0.8461538461538461,
+    "precision": 0.7586206896551724,
+    "alert_rate": 0.058,
+    "reviews_wanted": 16,
+    "reviews_done": 16,
+    "confusion": {
+     "legit": {
+      "approve": 467,
+      "review": 7,
+      "decline": 0
+     },
+     "fraud": {
+      "approve": 4,
+      "review": 9,
+      "decline": 13
+     }
+    },
+    "cost_natural": 628797.1522233041,
+    "precision_natural": 0.6024306934625467,
+    "setup": "logreg",
+    "total_ms": 4.4,
+    "decisions_by": {
+     "filter": 340,
+     "logreg": 160
+    },
+    "model_decisions": 0,
+    "latency_ms": {
+     "p50": 0.0,
+     "p90": 0.0,
+     "max": 0.0,
+     "mean": 0.0
+    },
+    "outside_mass_mean": 0.0
+   },
+   "test233": {
+    "n": 500,
+    "fraud": 26,
+    "cost": 155166.90000000002,
+    "fraud_amount": 69247502.64000002,
+    "fraud_amount_stopped": 69092985.74000004,
+    "recall": 0.8846153846153846,
+    "precision": 0.8518518518518519,
+    "alert_rate": 0.054,
+    "reviews_wanted": 13,
+    "reviews_done": 13,
+    "confusion": {
+     "legit": {
+      "approve": 470,
+      "review": 4,
+      "decline": 0
+     },
+     "fraud": {
+      "approve": 3,
+      "review": 9,
+      "decline": 14
+     }
+    },
+    "cost_natural": 204951.55472249273,
+    "precision_natural": 0.39508588823657304,
+    "setup": "logreg",
+    "total_ms": 4.1,
+    "decisions_by": {
+     "filter": 348,
+     "logreg": 152
+    },
+    "model_decisions": 0,
+    "latency_ms": {
+     "p50": 0.0,
+     "p90": 0.0,
+     "max": 0.0,
+     "mean": 0.0
+    },
+    "outside_mass_mean": 0.0
+   }
+  },
+  "rules": {
+   "test200": {
+    "n": 500,
+    "fraud": 26,
+    "cost": 750.0,
+    "fraud_amount": 43826189.660000004,
+    "fraud_amount_stopped": 43826189.660000004,
+    "recall": 1.0,
+    "precision": 0.896551724137931,
+    "alert_rate": 0.058,
+    "reviews_wanted": 15,
+    "reviews_done": 15,
+    "confusion": {
+     "legit": {
+      "approve": 471,
+      "review": 3,
+      "decline": 0
+     },
+     "fraud": {
+      "approve": 0,
+      "review": 12,
+      "decline": 14
+     }
+    },
+    "cost_natural": 2813.5832521908474,
+    "precision_natural": 0.5140719049943061,
+    "setup": "rules",
+    "total_ms": 0.1,
+    "decisions_by": {
+     "rules": 500
+    },
+    "model_decisions": 0,
+    "latency_ms": {
+     "p50": 0.0,
+     "p90": 0.0,
+     "max": 0.0,
+     "mean": 0.0
+    },
+    "outside_mass_mean": 0.0
+   },
+   "test201": {
+    "n": 500,
+    "fraud": 26,
+    "cost": 700.0,
+    "fraud_amount": 55444212.220000006,
+    "fraud_amount_stopped": 55444212.220000006,
+    "recall": 1.0,
+    "precision": 0.9285714285714286,
+    "alert_rate": 0.056,
+    "reviews_wanted": 14,
+    "reviews_done": 14,
+    "confusion": {
+     "legit": {
+      "approve": 472,
+      "review": 2,
+      "decline": 0
+     },
+     "fraud": {
+      "approve": 0,
+      "review": 12,
+      "decline": 14
+     }
+    },
+    "cost_natural": 2528.1726712106456,
+    "precision_natural": 0.4496584872248925,
+    "setup": "rules",
+    "total_ms": 0.0,
+    "decisions_by": {
+     "rules": 500
+    },
+    "model_decisions": 0,
+    "latency_ms": {
+     "p50": 0.0,
+     "p90": 0.0,
+     "max": 0.0,
+     "mean": 0.0
+    },
+    "outside_mass_mean": 0.0
+   },
+   "test202": {
+    "n": 500,
+    "fraud": 26,
+    "cost": 950.0,
+    "fraud_amount": 28021834.8,
+    "fraud_amount_stopped": 28021834.8,
+    "recall": 1.0,
+    "precision": 0.8125,
+    "alert_rate": 0.064,
+    "reviews_wanted": 19,
+    "reviews_done": 19,
+    "confusion": {
+     "legit": {
+      "approve": 468,
+      "review": 6,
+      "decline": 0
+     },
+     "fraud": {
+      "approve": 0,
+      "review": 13,
+      "decline": 13
+     }
+    },
+    "cost_natural": 4087.974683544304,
+    "precision_natural": 0.6459119496855346,
+    "setup": "rules",
+    "total_ms": 0.0,
+    "decisions_by": {
+     "rules": 500
+    },
+    "model_decisions": 0,
+    "latency_ms": {
+     "p50": 0.0,
+     "p90": 0.0,
+     "max": 0.0,
+     "mean": 0.0
+    },
+    "outside_mass_mean": 0.0
+   },
+   "test204": {
+    "n": 500,
+    "fraud": 26,
+    "cost": 650.0,
+    "fraud_amount": 39247218.260000005,
+    "fraud_amount_stopped": 39247218.260000005,
+    "recall": 1.0,
+    "precision": 0.9629629629629629,
+    "alert_rate": 0.054,
+    "reviews_wanted": 13,
+    "reviews_done": 13,
+    "confusion": {
+     "legit": {
+      "approve": 473,
+      "review": 1,
+      "decline": 0
+     },
+     "fraud": {
+      "approve": 0,
+      "review": 12,
+      "decline": 14
+     }
+    },
+    "cost_natural": 873.961376176566,
+    "precision_natural": 0.9500677946118021,
+    "setup": "rules",
+    "total_ms": 0.0,
+    "decisions_by": {
+     "rules": 500
+    },
+    "model_decisions": 0,
+    "latency_ms": {
+     "p50": 0.0,
+     "p90": 0.0,
+     "max": 0.0,
+     "mean": 0.0
+    },
+    "outside_mass_mean": 0.0
+   },
+   "test208": {
+    "n": 500,
+    "fraud": 26,
+    "cost": 800.0,
+    "fraud_amount": 34873054.599999994,
+    "fraud_amount_stopped": 34873054.599999994,
+    "recall": 1.0,
+    "precision": 0.8666666666666667,
+    "alert_rate": 0.06,
+    "reviews_wanted": 16,
+    "reviews_done": 16,
+    "confusion": {
+     "legit": {
+      "approve": 470,
+      "review": 4,
+      "decline": 0
+     },
+     "fraud": {
+      "approve": 0,
+      "review": 12,
+      "decline": 14
+     }
+    },
+    "cost_natural": 2343.2002596559555,
+    "precision_natural": 0.7110790087787531,
+    "setup": "rules",
+    "total_ms": 0.0,
+    "decisions_by": {
+     "rules": 500
+    },
+    "model_decisions": 0,
+    "latency_ms": {
+     "p50": 0.0,
+     "p90": 0.0,
+     "max": 0.0,
+     "mean": 0.0
+    },
+    "outside_mass_mean": 0.0
+   },
+   "test210": {
+    "n": 500,
+    "fraud": 26,
+    "cost": 850.0,
+    "fraud_amount": 14586430.899999999,
+    "fraud_amount_stopped": 14586430.899999999,
+    "recall": 1.0,
+    "precision": 0.8666666666666667,
+    "alert_rate": 0.06,
+    "reviews_wanted": 17,
+    "reviews_done": 17,
+    "confusion": {
+     "legit": {
+      "approve": 470,
+      "review": 4,
+      "decline": 0
+     },
+     "fraud": {
+      "approve": 0,
+      "review": 13,
+      "decline": 13
+     }
+    },
+    "cost_natural": 950.4219409282701,
+    "precision_natural": 0.8821339950372209,
+    "setup": "rules",
+    "total_ms": 0.0,
+    "decisions_by": {
+     "rules": 500
+    },
+    "model_decisions": 0,
+    "latency_ms": {
+     "p50": 0.0,
+     "p90": 0.0,
+     "max": 0.0,
+     "mean": 0.0
+    },
+    "outside_mass_mean": 0.0
+   },
+   "test211": {
+    "n": 500,
+    "fraud": 26,
+    "cost": 700.0,
+    "fraud_amount": 26482909.68,
+    "fraud_amount_stopped": 26482909.68,
+    "recall": 1.0,
+    "precision": 0.9629629629629629,
+    "alert_rate": 0.054,
+    "reviews_wanted": 14,
+    "reviews_done": 14,
+    "confusion": {
+     "legit": {
+      "approve": 473,
+      "review": 1,
+      "decline": 0
+     },
+     "fraud": {
+      "approve": 0,
+      "review": 13,
+      "decline": 13
+     }
+    },
+    "cost_natural": 1162.6582278481014,
+    "precision_natural": 0.8726603252531453,
+    "setup": "rules",
+    "total_ms": 0.0,
+    "decisions_by": {
+     "rules": 500
+    },
+    "model_decisions": 0,
+    "latency_ms": {
+     "p50": 0.0,
+     "p90": 0.0,
+     "max": 0.0,
+     "mean": 0.0
+    },
+    "outside_mass_mean": 0.0
+   },
+   "test212": {
+    "n": 500,
+    "fraud": 25,
+    "cost": 450.0,
+    "fraud_amount": 77953717.85999998,
+    "fraud_amount_stopped": 77953717.85999998,
+    "recall": 0.96,
+    "precision": 1.0,
+    "alert_rate": 0.048,
+    "reviews_wanted": 9,
+    "reviews_done": 9,
+    "confusion": {
+     "legit": {
+      "approve": 475,
+      "review": 0,
+      "decline": 0
+     },
+     "fraud": {
+      "approve": 1,
+      "review": 9,
+      "decline": 15
+     }
+    },
+    "cost_natural": 720.0,
+    "precision_natural": 1.0,
+    "setup": "rules",
+    "total_ms": 0.0,
+    "decisions_by": {
+     "rules": 500
+    },
+    "model_decisions": 0,
+    "latency_ms": {
+     "p50": 0.0,
+     "p90": 0.0,
+     "max": 0.0,
+     "mean": 0.0
+    },
+    "outside_mass_mean": 0.0
+   },
+   "test213": {
+    "n": 500,
+    "fraud": 25,
+    "cost": 800.0,
+    "fraud_amount": 71263837.09000002,
+    "fraud_amount_stopped": 71263837.09000002,
+    "recall": 1.0,
+    "precision": 0.8333333333333334,
+    "alert_rate": 0.06,
+    "reviews_wanted": 16,
+    "reviews_done": 16,
+    "confusion": {
+     "legit": {
+      "approve": 470,
+      "review": 5,
+      "decline": 0
+     },
+     "fraud": {
+      "approve": 0,
+      "review": 11,
+      "decline": 14
+     }
+    },
+    "cost_natural": 2821.894736842105,
+    "precision_natural": 0.7441253263707572,
+    "setup": "rules",
+    "total_ms": 0.0,
+    "decisions_by": {
+     "rules": 500
+    },
+    "model_decisions": 0,
+    "latency_ms": {
+     "p50": 0.0,
+     "p90": 0.0,
+     "max": 0.0,
+     "mean": 0.0
+    },
+    "outside_mass_mean": 0.0
+   },
+   "test214": {
+    "n": 500,
+    "fraud": 26,
+    "cost": 750.0,
+    "fraud_amount": 45702440.72,
+    "fraud_amount_stopped": 45702440.72,
+    "recall": 1.0,
+    "precision": 0.896551724137931,
+    "alert_rate": 0.058,
+    "reviews_wanted": 15,
+    "reviews_done": 15,
+    "confusion": {
+     "legit": {
+      "approve": 471,
+      "review": 3,
+      "decline": 0
+     },
+     "fraud": {
+      "approve": 0,
+      "review": 12,
+      "decline": 14
+     }
+    },
+    "cost_natural": 1972.3709834469328,
+    "precision_natural": 0.539556061468412,
+    "setup": "rules",
+    "total_ms": 0.0,
+    "decisions_by": {
+     "rules": 500
+    },
+    "model_decisions": 0,
+    "latency_ms": {
+     "p50": 0.0,
+     "p90": 0.0,
+     "max": 0.0,
+     "mean": 0.0
+    },
+    "outside_mass_mean": 0.0
+   },
+   "test215": {
+    "n": 500,
+    "fraud": 26,
+    "cost": 950.0,
+    "fraud_amount": 69836834.0,
+    "fraud_amount_stopped": 69836834.0,
+    "recall": 1.0,
+    "precision": 0.7428571428571429,
+    "alert_rate": 0.07,
+    "reviews_wanted": 19,
+    "reviews_done": 19,
+    "confusion": {
+     "legit": {
+      "approve": 465,
+      "review": 9,
+      "decline": 0
+     },
+     "fraud": {
+      "approve": 0,
+      "review": 10,
+      "decline": 16
+     }
+    },
+    "cost_natural": 6856.329113924052,
+    "precision_natural": 0.9479635398638513,
+    "setup": "rules",
+    "total_ms": 0.0,
+    "decisions_by": {
+     "rules": 500
+    },
+    "model_decisions": 0,
+    "latency_ms": {
+     "p50": 0.0,
+     "p90": 0.0,
+     "max": 0.0,
+     "mean": 0.0
+    },
+    "outside_mass_mean": 0.0
+   },
+   "test216": {
+    "n": 500,
+    "fraud": 26,
+    "cost": 950.0,
+    "fraud_amount": 34629516.32,
+    "fraud_amount_stopped": 34629516.32,
+    "recall": 1.0,
+    "precision": 0.8125,
+    "alert_rate": 0.064,
+    "reviews_wanted": 19,
+    "reviews_done": 19,
+    "confusion": {
+     "legit": {
+      "approve": 468,
+      "review": 6,
+      "decline": 0
+     },
+     "fraud": {
+      "approve": 0,
+      "review": 13,
+      "decline": 13
+     }
+    },
+    "cost_natural": 1215.8227848101267,
+    "precision_natural": 0.8229166666666665,
+    "setup": "rules",
+    "total_ms": 0.0,
+    "decisions_by": {
+     "rules": 500
+    },
+    "model_decisions": 0,
+    "latency_ms": {
+     "p50": 0.0,
+     "p90": 0.0,
+     "max": 0.0,
+     "mean": 0.0
+    },
+    "outside_mass_mean": 0.0
+   },
+   "test217": {
+    "n": 500,
+    "fraud": 26,
+    "cost": 900.0,
+    "fraud_amount": 32266194.819999997,
+    "fraud_amount_stopped": 32266194.819999997,
+    "recall": 1.0,
+    "precision": 0.8387096774193549,
+    "alert_rate": 0.062,
+    "reviews_wanted": 18,
+    "reviews_done": 18,
+    "confusion": {
+     "legit": {
+      "approve": 469,
+      "review": 5,
+      "decline": 0
+     },
+     "fraud": {
+      "approve": 0,
+      "review": 13,
+      "decline": 13
+     }
+    },
+    "cost_natural": 2826.5822784810125,
+    "precision_natural": 0.3969849246231156,
+    "setup": "rules",
+    "total_ms": 0.0,
+    "decisions_by": {
+     "rules": 500
+    },
+    "model_decisions": 0,
+    "latency_ms": {
+     "p50": 0.0,
+     "p90": 0.0,
+     "max": 0.0,
+     "mean": 0.0
+    },
+    "outside_mass_mean": 0.0
+   },
+   "test219": {
+    "n": 500,
+    "fraud": 26,
+    "cost": 950.0,
+    "fraud_amount": 17209558.22,
+    "fraud_amount_stopped": 17209558.22,
+    "recall": 1.0,
+    "precision": 0.8125,
+    "alert_rate": 0.064,
+    "reviews_wanted": 19,
+    "reviews_done": 19,
+    "confusion": {
+     "legit": {
+      "approve": 468,
+      "review": 6,
+      "decline": 0
+     },
+     "fraud": {
+      "approve": 0,
+      "review": 13,
+      "decline": 13
+     }
+    },
+    "cost_natural": 36443.67088607595,
+    "precision_natural": 0.03504641004641005,
+    "setup": "rules",
+    "total_ms": 0.1,
+    "decisions_by": {
+     "rules": 500
+    },
+    "model_decisions": 0,
+    "latency_ms": {
+     "p50": 0.0,
+     "p90": 0.0,
+     "max": 0.0,
+     "mean": 0.0
+    },
+    "outside_mass_mean": 0.0
+   },
+   "test221": {
+    "n": 500,
+    "fraud": 26,
+    "cost": 800.0,
+    "fraud_amount": 23151509.9,
+    "fraud_amount_stopped": 23151509.9,
+    "recall": 1.0,
+    "precision": 0.896551724137931,
+    "alert_rate": 0.058,
+    "reviews_wanted": 16,
+    "reviews_done": 16,
+    "confusion": {
+     "legit": {
+      "approve": 471,
+      "review": 3,
+      "decline": 0
+     },
+     "fraud": {
+      "approve": 0,
+      "review": 13,
+      "decline": 13
+     }
+    },
+    "cost_natural": 27417.08860759493,
+    "precision_natural": 0.06014061170570059,
+    "setup": "rules",
+    "total_ms": 0.1,
+    "decisions_by": {
+     "rules": 500
+    },
+    "model_decisions": 0,
+    "latency_ms": {
+     "p50": 0.0,
+     "p90": 0.0,
+     "max": 0.0,
+     "mean": 0.0
+    },
+    "outside_mass_mean": 0.0
+   },
+   "test222": {
+    "n": 500,
+    "fraud": 26,
+    "cost": 650.0,
+    "fraud_amount": 92823081.72999999,
+    "fraud_amount_stopped": 92823081.72999999,
+    "recall": 0.9615384615384616,
+    "precision": 0.8620689655172413,
+    "alert_rate": 0.058,
+    "reviews_wanted": 13,
+    "reviews_done": 13,
+    "confusion": {
+     "legit": {
+      "approve": 470,
+      "review": 4,
+      "decline": 0
+     },
+     "fraud": {
+      "approve": 1,
+      "review": 9,
+      "decline": 16
+     }
+    },
+    "cost_natural": 2957.270366764038,
+    "precision_natural": 0.4427293284829416,
+    "setup": "rules",
+    "total_ms": 0.1,
+    "decisions_by": {
+     "rules": 500
+    },
+    "model_decisions": 0,
+    "latency_ms": {
+     "p50": 0.0,
+     "p90": 0.0,
+     "max": 0.0,
+     "mean": 0.0
+    },
+    "outside_mass_mean": 0.0
+   },
+   "test224": {
+    "n": 500,
+    "fraud": 26,
+    "cost": 850.0,
+    "fraud_amount": 17981520.0,
+    "fraud_amount_stopped": 17981520.0,
+    "recall": 1.0,
+    "precision": 0.8666666666666667,
+    "alert_rate": 0.06,
+    "reviews_wanted": 17,
+    "reviews_done": 17,
+    "confusion": {
+     "legit": {
+      "approve": 470,
+      "review": 4,
+      "decline": 0
+     },
+     "fraud": {
+      "approve": 0,
+      "review": 13,
+      "decline": 13
+     }
+    },
+    "cost_natural": 1850.632911392405,
+    "precision_natural": 0.6543948458352508,
+    "setup": "rules",
+    "total_ms": 0.0,
+    "decisions_by": {
+     "rules": 500
+    },
+    "model_decisions": 0,
+    "latency_ms": {
+     "p50": 0.0,
+     "p90": 0.0,
+     "max": 0.0,
+     "mean": 0.0
+    },
+    "outside_mass_mean": 0.0
+   },
+   "test228": {
+    "n": 500,
+    "fraud": 26,
+    "cost": 800.0,
+    "fraud_amount": 18988477.44,
+    "fraud_amount_stopped": 18988477.44,
+    "recall": 1.0,
+    "precision": 0.896551724137931,
+    "alert_rate": 0.058,
+    "reviews_wanted": 16,
+    "reviews_done": 16,
+    "confusion": {
+     "legit": {
+      "approve": 471,
+      "review": 3,
+      "decline": 0
+     },
+     "fraud": {
+      "approve": 0,
+      "review": 13,
+      "decline": 13
+     }
+    },
+    "cost_natural": 36566.77215189874,
+    "precision_natural": 0.03756697774343385,
+    "setup": "rules",
+    "total_ms": 0.1,
+    "decisions_by": {
+     "rules": 500
+    },
+    "model_decisions": 0,
+    "latency_ms": {
+     "p50": 0.0,
+     "p90": 0.0,
+     "max": 0.0,
+     "mean": 0.0
+    },
+    "outside_mass_mean": 0.0
+   },
+   "test232": {
+    "n": 500,
+    "fraud": 26,
+    "cost": 1100.0,
+    "fraud_amount": 30281631.180000003,
+    "fraud_amount_stopped": 30281631.180000003,
+    "recall": 1.0,
+    "precision": 0.7428571428571429,
+    "alert_rate": 0.07,
+    "reviews_wanted": 22,
+    "reviews_done": 22,
+    "confusion": {
+     "legit": {
+      "approve": 465,
+      "review": 9,
+      "decline": 0
+     },
+     "fraud": {
+      "approve": 0,
+      "review": 13,
+      "decline": 13
+     }
+    },
+    "cost_natural": 1948.73417721519,
+    "precision_natural": 0.582086115588303,
+    "setup": "rules",
+    "total_ms": 0.0,
+    "decisions_by": {
+     "rules": 500
+    },
+    "model_decisions": 0,
+    "latency_ms": {
+     "p50": 0.0,
+     "p90": 0.0,
+     "max": 0.0,
+     "mean": 0.0
+    },
+    "outside_mass_mean": 0.0
+   },
+   "test233": {
+    "n": 500,
+    "fraud": 26,
+    "cost": 800.0,
+    "fraud_amount": 69247502.64000002,
+    "fraud_amount_stopped": 69247502.64000002,
+    "recall": 1.0,
+    "precision": 0.8666666666666667,
+    "alert_rate": 0.06,
+    "reviews_wanted": 16,
+    "reviews_done": 16,
+    "confusion": {
+     "legit": {
+      "approve": 470,
+      "review": 4,
+      "decline": 0
+     },
+     "fraud": {
+      "approve": 0,
+      "review": 12,
+      "decline": 14
+     }
+    },
+    "cost_natural": 3087.1470301850045,
+    "precision_natural": 0.4247311827956989,
+    "setup": "rules",
+    "total_ms": 0.1,
+    "decisions_by": {
+     "rules": 500
+    },
+    "model_decisions": 0,
+    "latency_ms": {
+     "p50": 0.0,
+     "p90": 0.0,
+     "max": 0.0,
+     "mean": 0.0
+    },
+    "outside_mass_mean": 0.0
+   }
+  },
+  "random": {
+   "test200": {
+    "n": 500,
+    "fraud": 26,
+    "cost": 31037214.704,
+    "fraud_amount": 43826189.660000004,
+    "fraud_amount_stopped": 15680404.249999998,
+    "recall": 0.38461538461538464,
+    "precision": 0.07936507936507936,
+    "alert_rate": 0.252,
+    "reviews_wanted": 64,
+    "reviews_done": 25,
+    "confusion": {
+     "legit": {
+      "approve": 358,
+      "review": 25,
+      "decline": 91
+     },
+     "fraud": {
+      "approve": 16,
+      "review": 0,
+      "decline": 10
+     }
+    },
+    "cost_natural": 79742977.52635962,
+    "precision_natural": 0.010413471957003345,
+    "setup": "random",
+    "total_ms": 0.0,
+    "decisions_by": {
+     "filter": 272,
+     "random": 228
+    },
+    "model_decisions": 0,
+    "latency_ms": {
+     "p50": 0.0,
+     "p90": 0.0,
+     "max": 0.0,
+     "mean": 0.0
+    },
+    "outside_mass_mean": 0.0
+   },
+   "test201": {
+    "n": 500,
+    "fraud": 26,
+    "cost": 13725025.721,
+    "fraud_amount": 55444212.220000006,
+    "fraud_amount_stopped": 45213527.93,
+    "recall": 0.6538461538461539,
+    "precision": 0.11971830985915492,
+    "alert_rate": 0.284,
+    "reviews_wanted": 67,
+    "reviews_done": 25,
+    "confusion": {
+     "legit": {
+      "approve": 349,
+      "review": 24,
+      "decline": 101
+     },
+     "fraud": {
+      "approve": 9,
+      "review": 1,
+      "decline": 16
+     }
+    },
+    "cost_natural": 75955166.05407433,
+    "precision_natural": 0.00847519426264337,
+    "setup": "random",
+    "total_ms": 0.0,
+    "decisions_by": {
+     "filter": 259,
+     "random": 241
+    },
+    "model_decisions": 0,
+    "latency_ms": {
+     "p50": 0.0,
+     "p90": 0.0,
+     "max": 0.0,
+     "mean": 0.0
+    },
+    "outside_mass_mean": 0.0
+   },
+   "test202": {
+    "n": 500,
+    "fraud": 26,
+    "cost": 15309868.35,
+    "fraud_amount": 28021834.8,
+    "fraud_amount_stopped": 15391054.95,
+    "recall": 0.5769230769230769,
+    "precision": 0.1171875,
+    "alert_rate": 0.256,
+    "reviews_wanted": 69,
+    "reviews_done": 25,
+    "confusion": {
+     "legit": {
+      "approve": 361,
+      "review": 17,
+      "decline": 96
+     },
+     "fraud": {
+      "approve": 11,
+      "review": 8,
+      "decline": 7
+     }
+    },
+    "cost_natural": 56983433.54367089,
+    "precision_natural": 0.052922261589305394,
+    "setup": "random",
+    "total_ms": 0.0,
+    "decisions_by": {
+     "filter": 260,
+     "random": 240
+    },
+    "model_decisions": 0,
+    "latency_ms": {
+     "p50": 0.0,
+     "p90": 0.0,
+     "max": 0.0,
+     "mean": 0.0
+    },
+    "outside_mass_mean": 0.0
+   },
+   "test204": {
+    "n": 500,
+    "fraud": 26,
+    "cost": 32438812.703,
+    "fraud_amount": 39247218.260000005,
+    "fraud_amount_stopped": 7937221.009999999,
+    "recall": 0.5769230769230769,
+    "precision": 0.20833333333333334,
+    "alert_rate": 0.144,
+    "reviews_wanted": 45,
+    "reviews_done": 25,
+    "confusion": {
+     "legit": {
+      "approve": 417,
+      "review": 21,
+      "decline": 36
+     },
+     "fraud": {
+      "approve": 11,
+      "review": 4,
+      "decline": 11
+     }
+    },
+    "cost_natural": 42960849.43094499,
+    "precision_natural": 0.16148361316077417,
+    "setup": "random",
+    "total_ms": 0.0,
+    "decisions_by": {
+     "filter": 387,
+     "random": 113
+    },
+    "model_decisions": 0,
+    "latency_ms": {
+     "p50": 0.0,
+     "p90": 0.0,
+     "max": 0.0,
+     "mean": 0.0
+    },
+    "outside_mass_mean": 0.0
+   },
+   "test208": {
+    "n": 500,
+    "fraud": 26,
+    "cost": 5989230.591,
+    "fraud_amount": 34873054.599999994,
+    "fraud_amount_stopped": 30870018.34,
+    "recall": 0.6923076923076923,
+    "precision": 0.13953488372093023,
+    "alert_rate": 0.258,
+    "reviews_wanted": 57,
+    "reviews_done": 25,
+    "confusion": {
+     "legit": {
+      "approve": 363,
+      "review": 20,
+      "decline": 91
+     },
+     "fraud": {
+      "approve": 8,
+      "review": 5,
+      "decline": 13
+     }
+    },
+    "cost_natural": 19207883.145615064,
+    "precision_natural": 0.05784894846118845,
+    "setup": "random",
+    "total_ms": 0.0,
+    "decisions_by": {
+     "filter": 268,
+     "random": 232
+    },
+    "model_decisions": 0,
+    "latency_ms": {
+     "p50": 0.0,
+     "p90": 0.0,
+     "max": 0.0,
+     "mean": 0.0
+    },
+    "outside_mass_mean": 0.0
+   },
+   "test210": {
+    "n": 500,
+    "fraud": 26,
+    "cost": 8241766.005999999,
+    "fraud_amount": 14586430.899999999,
+    "fraud_amount_stopped": 7258812.16,
+    "recall": 0.6153846153846154,
+    "precision": 0.1927710843373494,
+    "alert_rate": 0.166,
+    "reviews_wanted": 46,
+    "reviews_done": 25,
+    "confusion": {
+     "legit": {
+      "approve": 407,
+      "review": 23,
+      "decline": 44
+     },
+     "fraud": {
+      "approve": 10,
+      "review": 2,
+      "decline": 14
+     }
+    },
+    "cost_natural": 9371035.720374878,
+    "precision_natural": 0.2156649004237087,
+    "setup": "random",
+    "total_ms": 0.0,
+    "decisions_by": {
+     "filter": 357,
+     "random": 143
+    },
+    "model_decisions": 0,
+    "latency_ms": {
+     "p50": 0.0,
+     "p90": 0.0,
+     "max": 0.0,
+     "mean": 0.0
+    },
+    "outside_mass_mean": 0.0
+   },
+   "test211": {
+    "n": 500,
+    "fraud": 26,
+    "cost": 23480075.777000003,
+    "fraud_amount": 26482909.68,
+    "fraud_amount_stopped": 7526646.18,
+    "recall": 0.6923076923076923,
+    "precision": 0.144,
+    "alert_rate": 0.25,
+    "reviews_wanted": 87,
+    "reviews_done": 25,
+    "confusion": {
+     "legit": {
+      "approve": 367,
+      "review": 23,
+      "decline": 84
+     },
+     "fraud": {
+      "approve": 8,
+      "review": 2,
+      "decline": 16
+     }
+    },
+    "cost_natural": 50011077.537891924,
+    "precision_natural": 0.04245754825739266,
+    "setup": "random",
+    "total_ms": 0.0,
+    "decisions_by": {
+     "filter": 269,
+     "random": 231
+    },
+    "model_decisions": 0,
+    "latency_ms": {
+     "p50": 0.0,
+     "p90": 0.0,
+     "max": 0.0,
+     "mean": 0.0
+    },
+    "outside_mass_mean": 0.0
+   },
+   "test212": {
+    "n": 500,
+    "fraud": 25,
+    "cost": 46760454.679,
+    "fraud_amount": 77953717.85999998,
+    "fraud_amount_stopped": 33047019.959999997,
+    "recall": 0.4,
+    "precision": 0.08771929824561403,
+    "alert_rate": 0.228,
+    "reviews_wanted": 57,
+    "reviews_done": 25,
+    "confusion": {
+     "legit": {
+      "approve": 371,
+      "review": 25,
+      "decline": 79
+     },
+     "fraud": {
+      "approve": 15,
+      "review": 0,
+      "decline": 10
+     }
+    },
+    "cost_natural": 80658988.32463789,
+    "precision_natural": 0.031362450893004525,
+    "setup": "random",
+    "total_ms": 0.0,
+    "decisions_by": {
+     "filter": 298,
+     "random": 202
+    },
+    "model_decisions": 0,
+    "latency_ms": {
+     "p50": 0.0,
+     "p90": 0.0,
+     "max": 0.0,
+     "mean": 0.0
+    },
+    "outside_mass_mean": 0.0
+   },
+   "test213": {
+    "n": 500,
+    "fraud": 25,
+    "cost": 14556123.871,
+    "fraud_amount": 71263837.09000002,
+    "fraud_amount_stopped": 59011265.78,
+    "recall": 0.68,
+    "precision": 0.14166666666666666,
+    "alert_rate": 0.24,
+    "reviews_wanted": 72,
+    "reviews_done": 25,
+    "confusion": {
+     "legit": {
+      "approve": 372,
+      "review": 18,
+      "decline": 85
+     },
+     "fraud": {
+      "approve": 8,
+      "review": 7,
+      "decline": 10
+     }
+    },
+    "cost_natural": 46692902.68537263,
+    "precision_natural": 0.08758926150230498,
+    "setup": "random",
+    "total_ms": 0.0,
+    "decisions_by": {
+     "filter": 285,
+     "random": 215
+    },
+    "model_decisions": 0,
+    "latency_ms": {
+     "p50": 0.0,
+     "p90": 0.0,
+     "max": 0.0,
+     "mean": 0.0
+    },
+    "outside_mass_mean": 0.0
+   },
+   "test214": {
+    "n": 500,
+    "fraud": 26,
+    "cost": 5438738.667,
+    "fraud_amount": 45702440.72,
+    "fraud_amount_stopped": 41798355.07000001,
+    "recall": 0.5384615384615384,
+    "precision": 0.11965811965811966,
+    "alert_rate": 0.234,
+    "reviews_wanted": 73,
+    "reviews_done": 25,
+    "confusion": {
+     "legit": {
+      "approve": 371,
+      "review": 21,
+      "decline": 82
+     },
+     "fraud": {
+      "approve": 12,
+      "review": 4,
+      "decline": 10
+     }
+    },
+    "cost_natural": 17599591.507699613,
+    "precision_natural": 0.01804635596500595,
+    "setup": "random",
+    "total_ms": 0.0,
+    "decisions_by": {
+     "filter": 275,
+     "random": 225
+    },
+    "model_decisions": 0,
+    "latency_ms": {
+     "p50": 0.0,
+     "p90": 0.0,
+     "max": 0.0,
+     "mean": 0.0
+    },
+    "outside_mass_mean": 0.0
+   },
+   "test215": {
+    "n": 500,
+    "fraud": 26,
+    "cost": 54084655.581,
+    "fraud_amount": 69836834.0,
+    "fraud_amount_stopped": 16076351.040000001,
+    "recall": 0.5384615384615384,
+    "precision": 0.21212121212121213,
+    "alert_rate": 0.132,
+    "reviews_wanted": 37,
+    "reviews_done": 25,
+    "confusion": {
+     "legit": {
+      "approve": 422,
+      "review": 25,
+      "decline": 27
+     },
+     "fraud": {
+      "approve": 12,
+      "review": 0,
+      "decline": 14
+     }
+    },
+    "cost_natural": 645742680.9717764,
+    "precision_natural": 0.6293228804450908,
+    "setup": "random",
+    "total_ms": 0.0,
+    "decisions_by": {
+     "filter": 385,
+     "random": 115
+    },
+    "model_decisions": 0,
+    "latency_ms": {
+     "p50": 0.0,
+     "p90": 0.0,
+     "max": 0.0,
+     "mean": 0.0
+    },
+    "outside_mass_mean": 0.0
+   },
+   "test216": {
+    "n": 500,
+    "fraud": 26,
+    "cost": 12661608.636999998,
+    "fraud_amount": 34629516.32,
+    "fraud_amount_stopped": 22934394.98,
+    "recall": 0.4230769230769231,
+    "precision": 0.16176470588235295,
+    "alert_rate": 0.136,
+    "reviews_wanted": 29,
+    "reviews_done": 25,
+    "confusion": {
+     "legit": {
+      "approve": 417,
+      "review": 19,
+      "decline": 38
+     },
+     "fraud": {
+      "approve": 15,
+      "review": 6,
+      "decline": 5
+     }
+    },
+    "cost_natural": 16472190.280327493,
+    "precision_natural": 0.17146803472770325,
+    "setup": "random",
+    "total_ms": 0.0,
+    "decisions_by": {
+     "filter": 383,
+     "random": 117
+    },
+    "model_decisions": 0,
+    "latency_ms": {
+     "p50": 0.0,
+     "p90": 0.0,
+     "max": 0.0,
+     "mean": 0.0
+    },
+    "outside_mass_mean": 0.0
+   },
+   "test217": {
+    "n": 500,
+    "fraud": 26,
+    "cost": 11786830.875999998,
+    "fraud_amount": 32266194.819999997,
+    "fraud_amount_stopped": 22432527.529999997,
+    "recall": 0.46153846153846156,
+    "precision": 0.11650485436893204,
+    "alert_rate": 0.206,
+    "reviews_wanted": 59,
+    "reviews_done": 25,
+    "confusion": {
+     "legit": {
+      "approve": 383,
+      "review": 25,
+      "decline": 66
+     },
+     "fraud": {
+      "approve": 14,
+      "review": 0,
+      "decline": 12
+     }
+    },
+    "cost_natural": 27204355.51123272,
+    "precision_natural": 0.01642070255664103,
+    "setup": "random",
+    "total_ms": 0.0,
+    "decisions_by": {
+     "filter": 333,
+     "random": 167
+    },
+    "model_decisions": 0,
+    "latency_ms": {
+     "p50": 0.0,
+     "p90": 0.0,
+     "max": 0.0,
+     "mean": 0.0
+    },
+    "outside_mass_mean": 0.0
+   },
+   "test219": {
+    "n": 500,
+    "fraud": 26,
+    "cost": 11162001.575,
+    "fraud_amount": 17209558.22,
+    "fraud_amount_stopped": 8974884.49,
+    "recall": 0.5769230769230769,
+    "precision": 0.10638297872340426,
+    "alert_rate": 0.282,
+    "reviews_wanted": 85,
+    "reviews_done": 25,
+    "confusion": {
+     "legit": {
+      "approve": 348,
+      "review": 22,
+      "decline": 104
+     },
+     "fraud": {
+      "approve": 11,
+      "review": 3,
+      "decline": 12
+     }
+    },
+    "cost_natural": 357482958.42647684,
+    "precision_natural": 0.0009967875681663903,
+    "setup": "random",
+    "total_ms": 0.0,
+    "decisions_by": {
+     "filter": 271,
+     "random": 229
+    },
+    "model_decisions": 0,
+    "latency_ms": {
+     "p50": 0.0,
+     "p90": 0.0,
+     "max": 0.0,
+     "mean": 0.0
+    },
+    "outside_mass_mean": 0.0
+   },
+   "test221": {
+    "n": 500,
+    "fraud": 26,
+    "cost": 15295952.322,
+    "fraud_amount": 23151509.9,
+    "fraud_amount_stopped": 12334037.68,
+    "recall": 0.6153846153846154,
+    "precision": 0.11764705882352941,
+    "alert_rate": 0.272,
+    "reviews_wanted": 83,
+    "reviews_done": 25,
+    "confusion": {
+     "legit": {
+      "approve": 354,
+      "review": 25,
+      "decline": 95
+     },
+     "fraud": {
+      "approve": 10,
+      "review": 0,
+      "decline": 16
+     }
+    },
+    "cost_natural": 807347109.858668,
+    "precision_natural": 0.0009834771445916446,
+    "setup": "random",
+    "total_ms": 0.0,
+    "decisions_by": {
+     "filter": 275,
+     "random": 225
+    },
+    "model_decisions": 0,
+    "latency_ms": {
+     "p50": 0.0,
+     "p90": 0.0,
+     "max": 0.0,
+     "mean": 0.0
+    },
+    "outside_mass_mean": 0.0
+   },
+   "test222": {
+    "n": 500,
+    "fraud": 26,
+    "cost": 24809498.786,
+    "fraud_amount": 92823081.72999999,
+    "fraud_amount_stopped": 69622292.05,
+    "recall": 0.6538461538461539,
+    "precision": 0.13076923076923078,
+    "alert_rate": 0.26,
+    "reviews_wanted": 77,
+    "reviews_done": 25,
+    "confusion": {
+     "legit": {
+      "approve": 361,
+      "review": 19,
+      "decline": 94
+     },
+     "fraud": {
+      "approve": 9,
+      "review": 6,
+      "decline": 11
+     }
+    },
+    "cost_natural": 52402596.367766954,
+    "precision_natural": 0.018764450031081664,
+    "setup": "random",
+    "total_ms": 0.0,
+    "decisions_by": {
+     "filter": 267,
+     "random": 233
+    },
+    "model_decisions": 0,
+    "latency_ms": {
+     "p50": 0.0,
+     "p90": 0.0,
+     "max": 0.0,
+     "mean": 0.0
+    },
+    "outside_mass_mean": 0.0
+   },
+   "test224": {
+    "n": 500,
+    "fraud": 26,
+    "cost": 8866325.624000002,
+    "fraud_amount": 17981520.0,
+    "fraud_amount_stopped": 11006963.959999999,
+    "recall": 0.6923076923076923,
+    "precision": 0.16666666666666666,
+    "alert_rate": 0.216,
+    "reviews_wanted": 65,
+    "reviews_done": 25,
+    "confusion": {
+     "legit": {
+      "approve": 384,
+      "review": 19,
+      "decline": 71
+     },
+     "fraud": {
+      "approve": 8,
+      "review": 6,
+      "decline": 12
+     }
+    },
+    "cost_natural": 18647959.165702045,
+    "precision_natural": 0.05505333049420236,
+    "setup": "random",
+    "total_ms": 0.0,
+    "decisions_by": {
+     "filter": 320,
+     "random": 180
+    },
+    "model_decisions": 0,
+    "latency_ms": {
+     "p50": 0.0,
+     "p90": 0.0,
+     "max": 0.0,
+     "mean": 0.0
+    },
+    "outside_mass_mean": 0.0
+   },
+   "test228": {
+    "n": 500,
+    "fraud": 26,
+    "cost": 13866990.490999997,
+    "fraud_amount": 18988477.44,
+    "fraud_amount_stopped": 7934963.210000001,
+    "recall": 0.5384615384615384,
+    "precision": 0.11666666666666667,
+    "alert_rate": 0.24,
+    "reviews_wanted": 67,
+    "reviews_done": 25,
+    "confusion": {
+     "legit": {
+      "approve": 368,
+      "review": 23,
+      "decline": 83
+     },
+     "fraud": {
+      "approve": 12,
+      "review": 2,
+      "decline": 12
+     }
+    },
+    "cost_natural": 684615394.4533441,
+    "precision_natural": 0.0005944941106855326,
+    "setup": "random",
+    "total_ms": 0.0,
+    "decisions_by": {
+     "filter": 286,
+     "random": 214
+    },
+    "model_decisions": 0,
+    "latency_ms": {
+     "p50": 0.0,
+     "p90": 0.0,
+     "max": 0.0,
+     "mean": 0.0
+    },
+    "outside_mass_mean": 0.0
+   },
+   "test232": {
+    "n": 500,
+    "fraud": 26,
+    "cost": 11862707.513999999,
+    "fraud_amount": 30281631.180000003,
+    "fraud_amount_stopped": 20672934.28,
+    "recall": 0.6153846153846154,
+    "precision": 0.16326530612244897,
+    "alert_rate": 0.196,
+    "reviews_wanted": 54,
+    "reviews_done": 25,
+    "confusion": {
+     "legit": {
+      "approve": 392,
+      "review": 19,
+      "decline": 63
+     },
+     "fraud": {
+      "approve": 10,
+      "review": 6,
+      "decline": 10
+     }
+    },
+    "cost_natural": 17579600.851642326,
+    "precision_natural": 0.0859861508329058,
+    "setup": "random",
+    "total_ms": 0.0,
+    "decisions_by": {
+     "filter": 340,
+     "random": 160
+    },
+    "model_decisions": 0,
+    "latency_ms": {
+     "p50": 0.0,
+     "p90": 0.0,
+     "max": 0.0,
+     "mean": 0.0
+    },
+    "outside_mass_mean": 0.0
+   },
+   "test233": {
+    "n": 500,
+    "fraud": 26,
+    "cost": 30732953.893999994,
+    "fraud_amount": 69247502.64000002,
+    "fraud_amount_stopped": 39858486.980000004,
+    "recall": 0.7307692307692307,
+    "precision": 0.20212765957446807,
+    "alert_rate": 0.188,
+    "reviews_wanted": 48,
+    "reviews_done": 25,
+    "confusion": {
+     "legit": {
+      "approve": 399,
+      "review": 18,
+      "decline": 57
+     },
+     "fraud": {
+      "approve": 7,
+      "review": 7,
+      "decline": 12
+     }
+    },
+    "cost_natural": 53900519.538538456,
+    "precision_natural": 0.027970594538187035,
+    "setup": "random",
+    "total_ms": 0.0,
+    "decisions_by": {
+     "filter": 348,
+     "random": 152
+    },
+    "model_decisions": 0,
+    "latency_ms": {
+     "p50": 0.0,
+     "p90": 0.0,
+     "max": 0.0,
+     "mean": 0.0
+    },
+    "outside_mass_mean": 0.0
+   }
+  },
+  "approve-all": {
+   "test200": {
+    "n": 500,
+    "fraud": 26,
+    "cost": 43826189.66,
+    "fraud_amount": 43826189.660000004,
+    "fraud_amount_stopped": 0.0,
+    "recall": 0.0,
+    "precision": 0.0,
+    "alert_rate": 0.0,
+    "reviews_wanted": 0,
+    "reviews_done": 0,
+    "confusion": {
+     "legit": {
+      "approve": 474,
+      "review": 0,
+      "decline": 0
+     },
+     "fraud": {
+      "approve": 26,
+      "review": 0,
+      "decline": 0
+     }
+    },
+    "cost_natural": 67424907.16923079,
+    "precision_natural": 0.0,
+    "setup": "approve-all",
+    "total_ms": 0.0,
+    "decisions_by": {
+     "all": 500
+    },
+    "model_decisions": 0,
+    "latency_ms": {
+     "p50": 0.0,
+     "p90": 0.0,
+     "max": 0.0,
+     "mean": 0.0
+    },
+    "outside_mass_mean": 0.0
+   },
+   "test201": {
+    "n": 500,
+    "fraud": 26,
+    "cost": 55444212.22,
+    "fraud_amount": 55444212.220000006,
+    "fraud_amount_stopped": 0.0,
+    "recall": 0.0,
+    "precision": 0.0,
+    "alert_rate": 0.0,
+    "reviews_wanted": 0,
+    "reviews_done": 0,
+    "confusion": {
+     "legit": {
+      "approve": 474,
+      "review": 0,
+      "decline": 0
+     },
+     "fraud": {
+      "approve": 26,
+      "review": 0,
+      "decline": 0
+     }
+    },
+    "cost_natural": 63974091.02307692,
+    "precision_natural": 0.0,
+    "setup": "approve-all",
+    "total_ms": 0.0,
+    "decisions_by": {
+     "all": 500
+    },
+    "model_decisions": 0,
+    "latency_ms": {
+     "p50": 0.0,
+     "p90": 0.0,
+     "max": 0.0,
+     "mean": 0.0
+    },
+    "outside_mass_mean": 0.0
+   },
+   "test202": {
+    "n": 500,
+    "fraud": 26,
+    "cost": 28021834.8,
+    "fraud_amount": 28021834.8,
+    "fraud_amount_stopped": 0.0,
+    "recall": 0.0,
+    "precision": 0.0,
+    "alert_rate": 0.0,
+    "reviews_wanted": 0,
+    "reviews_done": 0,
+    "confusion": {
+     "legit": {
+      "approve": 474,
+      "review": 0,
+      "decline": 0
+     },
+     "fraud": {
+      "approve": 26,
+      "review": 0,
+      "decline": 0
+     }
+    },
+    "cost_natural": 84065504.39999999,
+    "precision_natural": 0.0,
+    "setup": "approve-all",
+    "total_ms": 0.0,
+    "decisions_by": {
+     "all": 500
+    },
+    "model_decisions": 0,
+    "latency_ms": {
+     "p50": 0.0,
+     "p90": 0.0,
+     "max": 0.0,
+     "mean": 0.0
+    },
+    "outside_mass_mean": 0.0
+   },
+   "test204": {
+    "n": 500,
+    "fraud": 26,
+    "cost": 39247218.26,
+    "fraud_amount": 39247218.260000005,
+    "fraud_amount_stopped": 0.0,
+    "recall": 0.0,
+    "precision": 0.0,
+    "alert_rate": 0.0,
+    "reviews_wanted": 0,
+    "reviews_done": 0,
+    "confusion": {
+     "legit": {
+      "approve": 474,
+      "review": 0,
+      "decline": 0
+     },
+     "fraud": {
+      "approve": 26,
+      "review": 0,
+      "decline": 0
+     }
+    },
+    "cost_natural": 51323285.416923076,
+    "precision_natural": 0.0,
+    "setup": "approve-all",
+    "total_ms": 0.0,
+    "decisions_by": {
+     "all": 500
+    },
+    "model_decisions": 0,
+    "latency_ms": {
+     "p50": 0.0,
+     "p90": 0.0,
+     "max": 0.0,
+     "mean": 0.0
+    },
+    "outside_mass_mean": 0.0
+   },
+   "test208": {
+    "n": 500,
+    "fraud": 26,
+    "cost": 34873054.6,
+    "fraud_amount": 34873054.599999994,
+    "fraud_amount_stopped": 0.0,
+    "recall": 0.0,
+    "precision": 0.0,
+    "alert_rate": 0.0,
+    "reviews_wanted": 0,
+    "reviews_done": 0,
+    "confusion": {
+     "legit": {
+      "approve": 474,
+      "review": 0,
+      "decline": 0
+     },
+     "fraud": {
+      "approve": 26,
+      "review": 0,
+      "decline": 0
+     }
+    },
+    "cost_natural": 72428651.86153847,
+    "precision_natural": 0.0,
+    "setup": "approve-all",
+    "total_ms": 0.0,
+    "decisions_by": {
+     "all": 500
+    },
+    "model_decisions": 0,
+    "latency_ms": {
+     "p50": 0.0,
+     "p90": 0.0,
+     "max": 0.0,
+     "mean": 0.0
+    },
+    "outside_mass_mean": 0.0
+   },
+   "test210": {
+    "n": 500,
+    "fraud": 26,
+    "cost": 14586430.9,
+    "fraud_amount": 14586430.899999999,
+    "fraud_amount_stopped": 0.0,
+    "recall": 0.0,
+    "precision": 0.0,
+    "alert_rate": 0.0,
+    "reviews_wanted": 0,
+    "reviews_done": 0,
+    "confusion": {
+     "legit": {
+      "approve": 474,
+      "review": 0,
+      "decline": 0
+     },
+     "fraud": {
+      "approve": 26,
+      "review": 0,
+      "decline": 0
+     }
+    },
+    "cost_natural": 16830497.192307692,
+    "precision_natural": 0.0,
+    "setup": "approve-all",
+    "total_ms": 0.0,
+    "decisions_by": {
+     "all": 500
+    },
+    "model_decisions": 0,
+    "latency_ms": {
+     "p50": 0.0,
+     "p90": 0.0,
+     "max": 0.0,
+     "mean": 0.0
+    },
+    "outside_mass_mean": 0.0
+   },
+   "test211": {
+    "n": 500,
+    "fraud": 26,
+    "cost": 26482909.680000003,
+    "fraud_amount": 26482909.68,
+    "fraud_amount_stopped": 0.0,
+    "recall": 0.0,
+    "precision": 0.0,
+    "alert_rate": 0.0,
+    "reviews_wanted": 0,
+    "reviews_done": 0,
+    "confusion": {
+     "legit": {
+      "approve": 474,
+      "review": 0,
+      "decline": 0
+     },
+     "fraud": {
+      "approve": 26,
+      "review": 0,
+      "decline": 0
+     }
+    },
+    "cost_natural": 36668644.17230769,
+    "precision_natural": 0.0,
+    "setup": "approve-all",
+    "total_ms": 0.0,
+    "decisions_by": {
+     "all": 500
+    },
+    "model_decisions": 0,
+    "latency_ms": {
+     "p50": 0.0,
+     "p90": 0.0,
+     "max": 0.0,
+     "mean": 0.0
+    },
+    "outside_mass_mean": 0.0
+   },
+   "test212": {
+    "n": 500,
+    "fraud": 25,
+    "cost": 77953717.86000001,
+    "fraud_amount": 77953717.85999998,
+    "fraud_amount_stopped": 0.0,
+    "recall": 0.0,
+    "precision": 0.0,
+    "alert_rate": 0.0,
+    "reviews_wanted": 0,
+    "reviews_done": 0,
+    "confusion": {
+     "legit": {
+      "approve": 475,
+      "review": 0,
+      "decline": 0
+     },
+     "fraud": {
+      "approve": 25,
+      "review": 0,
+      "decline": 0
+     }
+    },
+    "cost_natural": 124725948.57599999,
+    "precision_natural": 0.0,
+    "setup": "approve-all",
+    "total_ms": 0.0,
+    "decisions_by": {
+     "all": 500
+    },
+    "model_decisions": 0,
+    "latency_ms": {
+     "p50": 0.0,
+     "p90": 0.0,
+     "max": 0.0,
+     "mean": 0.0
+    },
+    "outside_mass_mean": 0.0
+   },
+   "test213": {
+    "n": 500,
+    "fraud": 25,
+    "cost": 71263837.09,
+    "fraud_amount": 71263837.09000002,
+    "fraud_amount_stopped": 0.0,
+    "recall": 0.0,
+    "precision": 0.0,
+    "alert_rate": 0.0,
+    "reviews_wanted": 0,
+    "reviews_done": 0,
+    "confusion": {
+     "legit": {
+      "approve": 475,
+      "review": 0,
+      "decline": 0
+     },
+     "fraud": {
+      "approve": 25,
+      "review": 0,
+      "decline": 0
+     }
+    },
+    "cost_natural": 205239850.81919998,
+    "precision_natural": 0.0,
+    "setup": "approve-all",
+    "total_ms": 0.0,
+    "decisions_by": {
+     "all": 500
+    },
+    "model_decisions": 0,
+    "latency_ms": {
+     "p50": 0.0,
+     "p90": 0.0,
+     "max": 0.0,
+     "mean": 0.0
+    },
+    "outside_mass_mean": 0.0
+   },
+   "test214": {
+    "n": 500,
+    "fraud": 26,
+    "cost": 45702440.71999999,
+    "fraud_amount": 45702440.72,
+    "fraud_amount_stopped": 0.0,
+    "recall": 0.0,
+    "precision": 0.0,
+    "alert_rate": 0.0,
+    "reviews_wanted": 0,
+    "reviews_done": 0,
+    "confusion": {
+     "legit": {
+      "approve": 474,
+      "review": 0,
+      "decline": 0
+     },
+     "fraud": {
+      "approve": 26,
+      "review": 0,
+      "decline": 0
+     }
+    },
+    "cost_natural": 52733585.446153834,
+    "precision_natural": 0.0,
+    "setup": "approve-all",
+    "total_ms": 0.0,
+    "decisions_by": {
+     "all": 500
+    },
+    "model_decisions": 0,
+    "latency_ms": {
+     "p50": 0.0,
+     "p90": 0.0,
+     "max": 0.0,
+     "mean": 0.0
+    },
+    "outside_mass_mean": 0.0
+   },
+   "test215": {
+    "n": 500,
+    "fraud": 26,
+    "cost": 69836834.0,
+    "fraud_amount": 69836834.0,
+    "fraud_amount_stopped": 0.0,
+    "recall": 0.0,
+    "precision": 0.0,
+    "alert_rate": 0.0,
+    "reviews_wanted": 0,
+    "reviews_done": 0,
+    "confusion": {
+     "legit": {
+      "approve": 474,
+      "review": 0,
+      "decline": 0
+     },
+     "fraud": {
+      "approve": 26,
+      "review": 0,
+      "decline": 0
+     }
+    },
+    "cost_natural": 838042008.0,
+    "precision_natural": 0.0,
+    "setup": "approve-all",
+    "total_ms": 0.0,
+    "decisions_by": {
+     "all": 500
+    },
+    "model_decisions": 0,
+    "latency_ms": {
+     "p50": 0.0,
+     "p90": 0.0,
+     "max": 0.0,
+     "mean": 0.0
+    },
+    "outside_mass_mean": 0.0
+   },
+   "test216": {
+    "n": 500,
+    "fraud": 26,
+    "cost": 34629516.31999999,
+    "fraud_amount": 34629516.32,
+    "fraud_amount_stopped": 0.0,
+    "recall": 0.0,
+    "precision": 0.0,
+    "alert_rate": 0.0,
+    "reviews_wanted": 0,
+    "reviews_done": 0,
+    "confusion": {
+     "legit": {
+      "approve": 474,
+      "review": 0,
+      "decline": 0
+     },
+     "fraud": {
+      "approve": 26,
+      "review": 0,
+      "decline": 0
+     }
+    },
+    "cost_natural": 45284752.11076923,
+    "precision_natural": 0.0,
+    "setup": "approve-all",
+    "total_ms": 0.0,
+    "decisions_by": {
+     "all": 500
+    },
+    "model_decisions": 0,
+    "latency_ms": {
+     "p50": 0.0,
+     "p90": 0.0,
+     "max": 0.0,
+     "mean": 0.0
+    },
+    "outside_mass_mean": 0.0
+   },
+   "test217": {
+    "n": 500,
+    "fraud": 26,
+    "cost": 32266194.82,
+    "fraud_amount": 32266194.819999997,
+    "fraud_amount_stopped": 0.0,
+    "recall": 0.0,
+    "precision": 0.0,
+    "alert_rate": 0.0,
+    "reviews_wanted": 0,
+    "reviews_done": 0,
+    "confusion": {
+     "legit": {
+      "approve": 474,
+      "review": 0,
+      "decline": 0
+     },
+     "fraud": {
+      "approve": 26,
+      "review": 0,
+      "decline": 0
+     }
+    },
+    "cost_natural": 34748209.80615384,
+    "precision_natural": 0.0,
+    "setup": "approve-all",
+    "total_ms": 0.0,
+    "decisions_by": {
+     "all": 500
+    },
+    "model_decisions": 0,
+    "latency_ms": {
+     "p50": 0.0,
+     "p90": 0.0,
+     "max": 0.0,
+     "mean": 0.0
+    },
+    "outside_mass_mean": 0.0
+   },
+   "test219": {
+    "n": 500,
+    "fraud": 26,
+    "cost": 17209558.22,
+    "fraud_amount": 17209558.22,
+    "fraud_amount_stopped": 0.0,
+    "recall": 0.0,
+    "precision": 0.0,
+    "alert_rate": 0.0,
+    "reviews_wanted": 0,
+    "reviews_done": 0,
+    "confusion": {
+     "legit": {
+      "approve": 474,
+      "review": 0,
+      "decline": 0
+     },
+     "fraud": {
+      "approve": 26,
+      "review": 0,
+      "decline": 0
+     }
+    },
+    "cost_natural": 17209558.22,
+    "precision_natural": 0.0,
+    "setup": "approve-all",
+    "total_ms": 0.0,
+    "decisions_by": {
+     "all": 500
+    },
+    "model_decisions": 0,
+    "latency_ms": {
+     "p50": 0.0,
+     "p90": 0.0,
+     "max": 0.0,
+     "mean": 0.0
+    },
+    "outside_mass_mean": 0.0
+   },
+   "test221": {
+    "n": 500,
+    "fraud": 26,
+    "cost": 23151509.9,
+    "fraud_amount": 23151509.9,
+    "fraud_amount_stopped": 0.0,
+    "recall": 0.0,
+    "precision": 0.0,
+    "alert_rate": 0.0,
+    "reviews_wanted": 0,
+    "reviews_done": 0,
+    "confusion": {
+     "legit": {
+      "approve": 474,
+      "review": 0,
+      "decline": 0
+     },
+     "fraud": {
+      "approve": 26,
+      "review": 0,
+      "decline": 0
+     }
+    },
+    "cost_natural": 30275051.40769231,
+    "precision_natural": 0.0,
+    "setup": "approve-all",
+    "total_ms": 0.0,
+    "decisions_by": {
+     "all": 500
+    },
+    "model_decisions": 0,
+    "latency_ms": {
+     "p50": 0.0,
+     "p90": 0.0,
+     "max": 0.0,
+     "mean": 0.0
+    },
+    "outside_mass_mean": 0.0
+   },
+   "test222": {
+    "n": 500,
+    "fraud": 26,
+    "cost": 92823081.72999999,
+    "fraud_amount": 92823081.72999999,
+    "fraud_amount_stopped": 0.0,
+    "recall": 0.0,
+    "precision": 0.0,
+    "alert_rate": 0.0,
+    "reviews_wanted": 0,
+    "reviews_done": 0,
+    "confusion": {
+     "legit": {
+      "approve": 474,
+      "review": 0,
+      "decline": 0
+     },
+     "fraud": {
+      "approve": 26,
+      "review": 0,
+      "decline": 0
+     }
+    },
+    "cost_natural": 135664504.06692305,
+    "precision_natural": 0.0,
+    "setup": "approve-all",
+    "total_ms": 0.0,
+    "decisions_by": {
+     "all": 500
+    },
+    "model_decisions": 0,
+    "latency_ms": {
+     "p50": 0.0,
+     "p90": 0.0,
+     "max": 0.0,
+     "mean": 0.0
+    },
+    "outside_mass_mean": 0.0
+   },
+   "test224": {
+    "n": 500,
+    "fraud": 26,
+    "cost": 17981520.0,
+    "fraud_amount": 17981520.0,
+    "fraud_amount_stopped": 0.0,
+    "recall": 0.0,
+    "precision": 0.0,
+    "alert_rate": 0.0,
+    "reviews_wanted": 0,
+    "reviews_done": 0,
+    "confusion": {
+     "legit": {
+      "approve": 474,
+      "review": 0,
+      "decline": 0
+     },
+     "fraud": {
+      "approve": 26,
+      "review": 0,
+      "decline": 0
+     }
+    },
+    "cost_natural": 24897489.230769232,
+    "precision_natural": 0.0,
+    "setup": "approve-all",
+    "total_ms": 0.0,
+    "decisions_by": {
+     "all": 500
+    },
+    "model_decisions": 0,
+    "latency_ms": {
+     "p50": 0.0,
+     "p90": 0.0,
+     "max": 0.0,
+     "mean": 0.0
+    },
+    "outside_mass_mean": 0.0
+   },
+   "test228": {
+    "n": 500,
+    "fraud": 26,
+    "cost": 18988477.439999998,
+    "fraud_amount": 18988477.44,
+    "fraud_amount_stopped": 0.0,
+    "recall": 0.0,
+    "precision": 0.0,
+    "alert_rate": 0.0,
+    "reviews_wanted": 0,
+    "reviews_done": 0,
+    "confusion": {
+     "legit": {
+      "approve": 474,
+      "review": 0,
+      "decline": 0
+     },
+     "fraud": {
+      "approve": 26,
+      "review": 0,
+      "decline": 0
+     }
+    },
+    "cost_natural": 20449129.550769232,
+    "precision_natural": 0.0,
+    "setup": "approve-all",
+    "total_ms": 0.0,
+    "decisions_by": {
+     "all": 500
+    },
+    "model_decisions": 0,
+    "latency_ms": {
+     "p50": 0.0,
+     "p90": 0.0,
+     "max": 0.0,
+     "mean": 0.0
+    },
+    "outside_mass_mean": 0.0
+   },
+   "test232": {
+    "n": 500,
+    "fraud": 26,
+    "cost": 30281631.18,
+    "fraud_amount": 30281631.180000003,
+    "fraud_amount_stopped": 0.0,
+    "recall": 0.0,
+    "precision": 0.0,
+    "alert_rate": 0.0,
+    "reviews_wanted": 0,
+    "reviews_done": 0,
+    "confusion": {
+     "legit": {
+      "approve": 474,
+      "review": 0,
+      "decline": 0
+     },
+     "fraud": {
+      "approve": 26,
+      "review": 0,
+      "decline": 0
+     }
+    },
+    "cost_natural": 37269699.91384616,
+    "precision_natural": 0.0,
+    "setup": "approve-all",
+    "total_ms": 0.0,
+    "decisions_by": {
+     "all": 500
+    },
+    "model_decisions": 0,
+    "latency_ms": {
+     "p50": 0.0,
+     "p90": 0.0,
+     "max": 0.0,
+     "mean": 0.0
+    },
+    "outside_mass_mean": 0.0
+   },
+   "test233": {
+    "n": 500,
+    "fraud": 26,
+    "cost": 69247502.64,
+    "fraud_amount": 69247502.64000002,
+    "fraud_amount_stopped": 0.0,
+    "recall": 0.0,
+    "precision": 0.0,
+    "alert_rate": 0.0,
+    "reviews_wanted": 0,
+    "reviews_done": 0,
+    "confusion": {
+     "legit": {
+      "approve": 474,
+      "review": 0,
+      "decline": 0
+     },
+     "fraud": {
+      "approve": 26,
+      "review": 0,
+      "decline": 0
+     }
+    },
+    "cost_natural": 90554426.52923077,
+    "precision_natural": 0.0,
+    "setup": "approve-all",
+    "total_ms": 0.0,
+    "decisions_by": {
+     "all": 500
+    },
+    "model_decisions": 0,
+    "latency_ms": {
+     "p50": 0.0,
+     "p90": 0.0,
+     "max": 0.0,
+     "mean": 0.0
+    },
+    "outside_mass_mean": 0.0
+   }
+  }
+ }
+}
