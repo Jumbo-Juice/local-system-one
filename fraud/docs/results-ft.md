@@ -66,10 +66,15 @@ The new windows reproduce the Phase 3 ordering of the baselines: rules cheaper t
   `fraud/rules.py`. It never saw the rule table. Its
   cost ceiling is the rules' cost, because rules-only already pays only review fees in most windows
   (`fraud/docs/results.md`, "Why rules-only is so hard to beat").
-- **Inferred, untested:** the model is less sure than the rule about capped 10M transfers. In
-  Phase 3, rules-only lost 8.0M in test109 by declining eight legit 10M transfers (a burst at
-  PaySim's cap). Whether the fine-tune would review them instead is not measured here: test109
-  belongs to the Phase 3 eval, and the new windows have no such burst.
+- **Checked afterwards (exploratory, owner's request, not pre-registered; PROGRESS 2026-10-05):**
+  does that hesitation help in Phase 3's test109, where rules-only lost 8.0M by declining eight
+  legit 10M transfers? **No.** One run of hybrid-ft on test109 with the frozen adapter and thresholds
+  cost 8,000,800, identical to rules-only: it declined all eight, with decline scores 0.989–0.994,
+  more sure than on the fraud 10M transfers above. **Inferred:** those legit rows show "the SAME
+  amount was already moved 41–322 times earlier this hour" and a round amount, the strongest fraud
+  cues the model learned. It hesitates on a new receiver without a repeated amount, not on a
+  capped burst. The model inherits the rules' blind spot, because the labels it learned from
+  contain almost no such bursts (39 round TRANSFERs in training, 37 fraud).
 
 ## Why logistic regression lost
 
