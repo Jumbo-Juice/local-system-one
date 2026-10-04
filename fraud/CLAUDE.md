@@ -23,7 +23,10 @@ engine, the `.venv` and the pytest run with the game demos. Keep the two apart.
 - **No look-ahead.** A signal for row *i* uses only rows before *i* in file order (file order is
   treated as arrival order).
 - **Train/test by time.** Prompt and rule development use training steps and dev windows only.
-  The 20 test windows are pre-registered in `fraud/eval.py` and run once per setup.
+  The 20 test windows are pre-registered in `fraud/eval.py` and run once per setup. The fine-tune
+  (Phase 5) trains on steps 1–300 minus the dev hours and is scored on 20 new windows that share
+  no hour with them (`fraud/eval_ft.py`).
+- **Adapters** go to `fraud/models/<time>_lora/` (git-ignored). The eval results record their sha256.
 - **Runs** go to `fraud/runs/<time>_<label>.jsonl` only, through `fraud/runs.py`. They are
   git-ignored except `*.pinned.jsonl`, each listed with a reason in `fraud/runs/README.md`.
 - **Eval results** go to `fraud/results/<script>/` and are committed.
@@ -39,6 +42,8 @@ engine, the `.venv` and the pytest run with the game demos. Keep the two apart.
 .venv/Scripts/python -m fraud.data                            # build fraud/data/paysim.npz from the CSV
 .venv/Scripts/python -m fraud.capture --window dev0           # one run into fraud/runs/
 .venv/Scripts/python -m fraud.eval                            # the pre-registered eval
+.venv/Scripts/python -m fraud.finetune                        # Phase 5: LoRA adapter → fraud/models/
+.venv/Scripts/python -m fraud.eval_ft --adapter <dir>         # Phase 5: its pre-registered eval
 .venv/Scripts/python -m fraud.viewer                          # the analyst console
 ```
 Every command and flag is in the repo's `RUN-GUIDE.md` → Fraud app. Keep it current.
@@ -47,7 +52,8 @@ Every command and flag is in the repo's `RUN-GUIDE.md` → Fraud app. Keep it cu
 - Don't add the fraud app to the game viewer, its filter or its pools, and don't reuse
   `viewer/shell.js`. The console is its own page.
 - Don't add scikit-learn, pandas or other packages. The baselines are numpy. Ask first if a new
-  dependency seems needed.
+  dependency seems needed. (`peft` + `accelerate` were approved by the owner on 2026-10-05 for the
+  Phase 5 fine-tune only; `peft` is imported only by `finetune.py` and `brain.load_adapter`.)
 - Don't tune prompts, rules or thresholds on test windows. If a test result prompts a change, the
   change gets new, untouched windows.
 - Don't run inference in the viewer. It only replays recorded runs.

@@ -8,6 +8,7 @@
 | Data | PaySim CSV → `fraud/data/paysim.npz` (numpy) | No pandas; the cache loads in about a second |
 | Baselines | numpy only | No new dependencies (`fraud/CLAUDE.md`) |
 | Viewer | stdlib `http.server` + one HTML page + plain JS | Same approach as the game viewer, separate code |
+| Fine-tune (Phase 5) | `peft` LoRA on the 1.5B, PyTorch XPU, bf16; merged into the weights at inference (`brain.load_adapter`) | Plain PyTorch XPU works on the Arc; Unsloth did not install (owner's spike, 2026-10-05) |
 | Tests | pytest, `fraud/tests/` (added to `pytest.ini` testpaths) | One `pytest` run covers both apps |
 
 ## Modules (`fraud/`)
@@ -23,6 +24,8 @@
 | `runs.py` | trace paths and writing (`fraud/runs/`) |
 | `capture.py` | one window, one setup → one trace; `python -m fraud.capture` |
 | `eval.py` | the pre-registered eval → `fraud/results/eval/`; `python -m fraud.eval` |
+| `finetune.py` | Phase 5: training rows, prompts, LoRA training → `fraud/models/<time>_lora/` (adapter + manifest); `python -m fraud.finetune` |
+| `eval_ft.py` | Phase 5: new test windows, dev gate, dev thresholds, 6 setups → `fraud/results/eval/`; `python -m fraud.eval_ft` |
 | `viewer/` | `server.py`, `index.html`, `console.js`, `console.css`; `python -m fraud.viewer` |
 
 ## Data model
