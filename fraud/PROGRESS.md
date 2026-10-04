@@ -184,3 +184,16 @@ Checked (Observed):
 - Pinned: `fraud/runs/20261003-052030_hybrid_qwen2.5-1.5b_dev0.pinned.jsonl`, listed in
   `fraud/runs/README.md` with the PaySim attribution (CC BY-SA 4.0).
 - Tests: `fraud/tests/test_viewer.py` (served paths only, listing, own files only).
+
+## 2026-10-04: promptdev.py v0 fixed and rerun
+
+- `fraud/dev/promptdev.py` did not parse from 47c32b1 (Phase 2) until c19556c (Observed): the v0
+  copy had a raw line break inside its `"\n".join` string. So the claim in the Phase 2 entry, that
+  the copy keeps the v0 row reproducible, was not true in that span. The v0 rows above came from
+  `brain.py`'s own prompt before it was frozen on v4, not from this copy (Inferred from the history).
+- Fixed: the copy now matches the pre-freeze `brain.py` `describe()` line for line (Observed, compared
+  against 98bc801).
+- Rerun, `HEAD=float32 python -m fraud.dev.promptdev 1,2 v0` (Observed): 389 decisions, 52 fraud;
+  AUC review+decline 0.579, AUC decline 0.634, decline 389/389 (52 fraud, 337 legit), p50 147 /
+  p90 155 ms, 209 tokens. AUCs, actions and tokens match the 2026-10-03 table exactly; latency
+  differs by ≤ 6 ms (146 / 161 there).
