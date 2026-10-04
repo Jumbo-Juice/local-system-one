@@ -269,3 +269,12 @@ Result (Observed; trace `fraud/runs/20261005-030728_explore_hybrid-ft_test109.js
   on the fraud 10M rows of the new windows (0.92–0.93). **Inferred:** the legit burst carries "the
   SAME amount was already moved 41–322 times earlier this hour" and a round amount, the strongest
   fraud cues it learned; its hesitation is on new receivers without a repeated amount.
+
+## 2026-10-05: data source reference changed (owner)
+
+The owner checked that Kaggle `sriharshaeedala/financial-fraud-detection-dataset`
+(`Synthetic_Financial_datasets_log.csv`) is the same file as the PaySim CSV used so far, and chose it
+as the cited source (its Kaggle usability rating is 10.0). Every source reference now points to it
+(`fraud/data.py`, `docs/data.md`, PRD, `runs/README.md`, the console footer, RUN-GUIDE); the PaySim
+authors stay credited (CC BY-SA). The local raw file was renamed to the new name; `find_csv` still
+accepts the old `PS_*.csv` name. No result changes: same bytes, same cache.

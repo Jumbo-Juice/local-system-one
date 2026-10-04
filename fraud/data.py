@@ -1,9 +1,9 @@
 """PaySim → a compact numpy cache, without the balance columns.
 
-    python -m fraud.data                    # fraud/data/raw/PS_*.csv → fraud/data/paysim.npz
+    python -m fraud.data                    # fraud/data/raw/Synthetic_Financial_datasets_log.csv → fraud/data/paysim.npz
     python -m fraud.data --csv <file.csv>   # another copy of the CSV
 
-PaySim (Kaggle ealaxi/paysim1, CC BY-SA 4.0) documents that fraud-detected transactions are
+PaySim (Kaggle sriharshaeedala/financial-fraud-detection-dataset, CC BY-SA 4.0) documents that fraud-detected transactions are
 cancelled, so oldbalanceOrg, newbalanceOrig, oldbalanceDest and newbalanceDest "must not be used"
 for detection. They are never read into memory here: the reader keeps only the columns in KEEP.
 Row order is kept: it is the arrival order the signals rely on.
@@ -47,8 +47,13 @@ class Transactions:
         return len(self.step)
 
 
+CSV_NAME = "Synthetic_Financial_datasets_log.csv"
+
+
 def find_csv() -> Path:
-    found = sorted((DATA / "raw").glob("PS_*.csv"))
+    raw = DATA / "raw"
+    # Older downloads kept the original PaySim file name (PS_*.csv); the bytes are identical.
+    found = sorted(raw.glob(CSV_NAME)) + sorted(raw.glob("PS_*.csv"))
     if not found:
         raise SystemExit("no PaySim CSV in fraud/data/raw/; see RUN-GUIDE.md → Fraud app → Data")
     return found[0]

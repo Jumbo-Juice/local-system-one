@@ -12,7 +12,7 @@ hardening, no real customer data. Non-commercial licences are acceptable (Qwen2.
 licence, PaySim CC BY-SA 4.0).
 
 ## What v1 does
-1. Loads PaySim (Kaggle `ealaxi/paysim1`, CC BY-SA 4.0) into a local cache without the four
+1. Loads PaySim (Kaggle `sriharshaeedala/financial-fraud-detection-dataset`, CC BY-SA 4.0) into a local cache without the four
    balance columns.
 2. Builds time-ordered **windows** of ~500 transactions from a held-out test period, with fraud
    enriched to ~5%, reproducible from a seed.
