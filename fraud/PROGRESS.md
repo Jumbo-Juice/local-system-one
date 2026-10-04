@@ -252,3 +252,12 @@ Eval `20261005-022333` (`python -m fraud.eval_ft --adapter fraud/models/20261005
 - Console: `hybrid-ft` label, a fourth eval-chart series, a dev-gate panel, generic bar titles;
   the old and new eval pages render, no console errors, 375 px without sideways scroll.
 Phase 5 done.
+
+## 2026-10-05: exploratory check on test109 (owner's request; written before running)
+
+Question: in test109 (steps 327–328) rules-only declined 8 legit TRANSFERs of exactly 10,000,000
+(cost 8.0M, Phase 3). What does hybrid-ft do with them? Not pre-registered and not a bar: one run of
+hybrid-ft on test109 with the frozen adapter (sha256 02a0c5d9…) and the frozen dev thresholds
+(review ≥ 0.05, decline ≥ 0.95). Nothing (adapter, thresholds, rules, prompt) changes on its
+result. Reported: total cost vs rules-only / logreg / hybrid-1.5b from eval 20261003-052158, the
+action and decline score of each 10M row, and whether the review budget (5% = 25) runs out.
