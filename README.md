@@ -1,16 +1,141 @@
 # local-system-one
 
-A local proof of concept of a **System One-style decision engine**, inspired by Jev, running on an
-ordinary open-weight LLM.
+**A small AI that makes every decision with one quick multiple-choice "look", running on an
+ordinary laptop with no internet.** We tested it on three games and on fraud detection, and we
+report what worked and what didn't.
 
-**This is not Jev and does not reproduce Jev.** Jev's model, architecture and training are not
-public. This project reproduces only the publicly described *inference pattern*: answer
-multiple-choice decisions with one forward pass, reading the next-token logits of the option
-labels. All inference runs locally. No remote inference API is called.
+![The shooter demo: the agent explores a dungeon, picks up the key and escapes; the panels show each multiple-choice decision and how strongly the model leaned to each option](docs/media/shooter.gif)
 
-Sources, and which claims are documented, observed, inferred or our own choices:
-[`docs/research.md`](docs/research.md). Machine inspection and runtime choice:
-[`docs/machine.md`](docs/machine.md).
+*The Qwen2.5 3B model plays the shooter, replayed from a recorded run. Every move, target and
+shot is a multiple-choice question the model answered in one forward pass.*
+
+## The idea
+
+Most AI tools think by writing: they produce an answer word by word. A **System One** model, after
+the fast, gut-reaction kind of thinking in psychology, skips the writing. It gets a question
+with lettered options, takes a single look (one forward pass), and we read which letter it leans
+towards. One decision takes about a tenth of a second.
+
+![A game situation and five lettered move options; the model leans 78% to C, move east (safe; closer)](docs/media/one-look.png)
+
+The idea comes from **Jev**, a commercial model described by TypeSafe, and from Sean Goedecke's
+articles about it. **This project is not Jev and does not reproduce Jev**: Jev's model and
+training are not public. We rebuilt only the publicly described trick, on free open-weight models
+(Qwen2.5 with 1.5 billion and 3 billion parameters) that run locally on a laptop graphics chip.
+
+**Read these first. They are the articles this project started from:**
+
+- Sean Goedecke, [Two techniques for working with System One models](https://www.seangoedecke.com/two-techniques-for-working-with-system-one-models/) (the main source)
+- Sean Goedecke, [Jev means structured output is interesting again](https://www.seangoedecke.com/jev-means-structured-output-is-interesting-again/)
+- Sean Goedecke, [System One models like Jev can train their own replacements](https://www.seangoedecke.com/system-one-models-can-train-their-own-replacements/)
+- TypeSafe, [Introducing System One models and Jev](https://typesafe.ai/blog/introducing-system-one-models-and-jev)
+- [sgoedecke/system-one](https://github.com/sgoedecke/system-one), the reference implementation linked from the first article
+
+## The demos
+
+Nothing in the demos is scripted: the model makes every decision itself. Every run is recorded, so
+any moment can be replayed to see exactly what the model was asked and how it answered. Failed
+runs are kept and shown too.
+
+### Shooter
+
+One agent clears locked rooms of gunners and brutes, takes the key, and leaves by the exit. Each
+tick it answers a slow goal question, a target question, a move question and a shoot question.
+**Result:** both models escaped 10 of 10 maps in the final check. In the first version, before
+the fixes described below, they escaped 7 of 10. Write-up: [`docs/shooter.md`](docs/shooter.md).
+
+*(The GIF at the top of this page.)*
+
+### Dungeon
+
+The agent has no weapon here. It sneaks past ghouls to the key and the exit, with a short dash.
+**Result:** both models escaped 10 of 10 maps. Our first dungeon, with one-cell corridors, was
+escaped 0 times in 48 before we rebuilt it. Write-up: [`docs/dungeon.md`](docs/dungeon.md).
+
+![The dungeon demo: the 3B model picks up the key, slips past the ghouls and escapes on tick 45](docs/media/dungeon.gif)
+
+### 2D grid (live)
+
+Four agents collect gems, eat food and avoid hazards. All four agents' decisions go through one
+batched forward pass per tick. This demo runs live in a window and is not recorded.
+**Result:** giving the agents a slow goal and a target above their moves gave 2.3× the gems and
+5.4× the food. Moves alone did no better than random. Write-up: [`docs/grid.md`](docs/grid.md).
+
+![The grid demo: four agents move between gems and food; the side panel shows each agent's goal, target and move probabilities](docs/media/grid.gif)
+
+### Fraud detection (a separate, serious app)
+
+The same engine decides **approve / send for a check / decline** for every payment in PaySim, a
+public simulated mobile-money dataset (CC BY-SA 4.0). We compared it with six hand-written rules
+and with logistic regression. It lives in its own folder, [`fraud/`](fraud/CLAUDE.md), with its
+own replay console.
+Write-ups: [`fraud/docs/results.md`](fraud/docs/results.md) (the model as it comes) and
+[`fraud/docs/results-ft.md`](fraud/docs/results-ft.md) (after fine-tuning).
+
+![The fraud console replaying the fine-tuned model on one test window: payments arrive, each decision shows its scores, signals, cost and decision time](docs/media/fraud.gif)
+
+## What we found
+
+All numbers below were measured on one laptop (Intel Arc 140V graphics). The samples are small,
+so read them as clear signals, not precise rates. The write-ups have the full tables, and they
+report the failures as well.
+
+**The engine**
+
+- **It is fast:** about a tenth of a second per decision, and 3.6× faster than letting the model
+  write its answer. Batching many decisions together helped much less on a laptop chip (at most
+  1.8×) than on the server hardware the idea was designed for.
+- **Its confidence can't be trusted.** Every model we tried was overconfident (one was 99% "sure"
+  of answers that were right 57% of the time). The scores are useful for comparing options, not
+  as real odds.
+- **Many options at once break it; tournaments fix it.** Picking 1 right answer out of 80 in a
+  single question: 17% right. Splitting the options into groups of 10 and running the winners
+  against each other: 80% right, for about twice the time.
+
+![Accuracy falls from 93% at 10 options to 17% at 80 when asked all at once; a tournament stays at 80-100%](docs/media/tournament-accuracy.png)
+
+**The games**
+
+- **The order of the answers can matter more than the model.** The small model chose whichever
+  answer was listed last: it never fired its gun when "hold fire" came last. Asking every
+  question in both orders and averaging took it from 0 escapes in 10 to 7 in 10.
+- **It walks into danger it has been warned about.** 29 of 30 hits (small model) and 66 of 67
+  (larger model) came from picking a move labelled as dangerous while a safe move was on the list.
+  Clearer warnings didn't help. In the end we stopped offering a dangerous move next to a safe
+  one, so the final 40-in-40 escape result shows the model can plan and navigate. It does not
+  show that it judges danger.
+- **Right on single questions, stuck in real games.** It chose a good move 97–100% of the time on
+  one-off test questions, but in a game one wrong answer in one spot repeats every time it comes
+  back there. One agent circled between two doorways for 570 turns until it was made to keep its
+  destination.
+- **Structure beats raw ability.** Layers of decisions (a slow goal, then a target, then a
+  move) more than doubled what the agents achieved.
+
+![The same moment asked twice: with "hold fire" listed last the model holds fire; listed first, it shoots; averaging both orders took the small model from 0 to 7 escapes in 10](docs/media/answer-order.png)
+
+![The larger model steps into a bullet at 99% instead of staying put; 29 of 30 and 66 of 67 hits came from choosing a move labelled as dangerous](docs/media/warned-hits.png)
+
+**Fraud detection**
+
+- **Fast enough for a payment stream:** 127 ms per payment for 9 payments in 10, with each
+  question asked in both orders.
+- **Out of the box, its decisions were worthless.** It declined all 3,800 payments it judged and
+  lost to the hand-written rules in all 20 test windows. Its scores ranked fraud above genuine
+  payments quite well (about 90%), but its top answer never moved off "decline", whatever the
+  wording.
+- **52 minutes of fine-tuning on the laptop fixed that.** The trained 1.5B became cheaper than
+  logistic regression in 19 of 20 new test windows, at the same speed.
+- **It learned the rule book, blind spot included.** It wanted the same decision as the six rules
+  on 99.8% of payments, and never beat them. In this simulated data, two clues give almost every
+  fraud away, so there is little room for a model to add value.
+
+![3,853 of 3,862 decisions matched the hand-written rules; the 9 differences were fraudulent 10M transfers sent for a check instead of declined; average costs: rules 808, trained model 830, logistic regression 190,910, untrained model 5.1 million](docs/media/fraud-rule-book.png)
+
+Every claim in the write-ups is labelled as Documented (with a source), Observed (measured here),
+Inferred or an Implementation choice. Seeds, setups and pass/fail rules were written down and
+committed before each evaluation ran. Sources and measured results:
+[`docs/research.md`](docs/research.md). What went wrong along the way, and what we learned from
+it: [`docs/lessons-learned.md`](docs/lessons-learned.md).
 
 ## Where things are
 
@@ -24,6 +149,55 @@ Sources, and which claims are documented, observed, inferred or our own choices:
 | learn from past runs | [`docs/lessons-learned.md`](docs/lessons-learned.md) |
 | read or change the engine | `system_one/` (see How it works below) |
 | see the fraud app (separate, serious) | [`fraud/`](fraud/CLAUDE.md): approve / review / decline on PaySim; results in [`fraud/docs/results.md`](fraud/docs/results.md) and, for the fine-tuned brain, [`fraud/docs/results-ft.md`](fraud/docs/results-ft.md); console `python -m fraud.viewer` |
+
+## Quick start
+
+All commands, without the explanations: [RUN-GUIDE.md](RUN-GUIDE.md).
+
+```bash
+py -3.13 -m venv .venv
+```
+
+Install the PyTorch build for your hardware first (see `requirements.txt` for the Intel XPU /
+NVIDIA CUDA / CPU-only index URLs), then the rest of the dependencies:
+
+```bash
+.venv/Scripts/python -m pip install -r requirements.txt
+```
+
+The first real run downloads `Qwen/Qwen2.5-1.5B-Instruct` (3.1 GB) from Hugging Face into the
+standard HF cache. After that everything runs offline (set `HF_HUB_OFFLINE=1` to be sure).
+
+```bash
+.venv/Scripts/python -m system_one check
+```
+
+```bash
+.venv/Scripts/python -m system_one decide --question "Which colour is the sky on a clear day?" --options red blue yellow
+```
+
+Play a game, then watch it:
+
+```bash
+.venv/Scripts/python -m demo.shooter.capture --config config/default.toml --seed 0
+```
+
+```bash
+.venv/Scripts/python -m viewer
+```
+
+Tests. The `model` tests load Qwen2.5-0.5B-Instruct (1 GB) and skip when it is not in the HF
+cache. Download it once with `.venv/Scripts/python -c "from huggingface_hub import snapshot_download;
+snapshot_download('Qwen/Qwen2.5-0.5B-Instruct')"`, or point them at another cached model with
+`SYSTEM_ONE_TEST_MODEL=Qwen/Qwen2.5-1.5B-Instruct`.
+
+```bash
+.venv/Scripts/python -m pytest
+```
+
+```bash
+.venv/Scripts/python -m pytest -m "not model"
+```
 
 ## How it works
 
@@ -84,73 +258,14 @@ This table only covers the models actually tried; see [`docs/research.md`](docs/
 Observed → Model selection for how the default was chosen. Concrete numbers for one specific
 machine are in [Benchmarks](#benchmarks) below.
 
-## Setup
-
-All commands without the explanations: [RUN-GUIDE.md](RUN-GUIDE.md).
-
-```bash
-py -3.13 -m venv .venv
-```
-
-Install the PyTorch build for your hardware first (see `requirements.txt` for the Intel XPU /
-NVIDIA CUDA / CPU-only index URLs), then the rest of the dependencies:
-
-```bash
-.venv/Scripts/python -m pip install -r requirements.txt
-```
-
-The first real run downloads `Qwen/Qwen2.5-1.5B-Instruct` (3.1 GB) from Hugging Face into the
-standard HF cache. After that everything runs offline (set `HF_HUB_OFFLINE=1` to be sure).
-
-```bash
-.venv/Scripts/python -m system_one check
-```
-
-```bash
-.venv/Scripts/python -m system_one decide --question "Which colour is the sky on a clear day?" --options red blue yellow
-```
-
-Tests. The `model` tests load Qwen2.5-0.5B-Instruct (1 GB) and skip when it is not in the HF
-cache. Download it once with `.venv/Scripts/python -c "from huggingface_hub import snapshot_download;
-snapshot_download('Qwen/Qwen2.5-0.5B-Instruct')"`, or point them at another cached model with
-`SYSTEM_ONE_TEST_MODEL=Qwen/Qwen2.5-1.5B-Instruct`.
-
-```bash
-.venv/Scripts/python -m pytest
-```
-
-```bash
-.venv/Scripts/python -m pytest -m "not model"
-```
-
-## Demos
-
-Each demo turns a small game into decisions for the engine. The model makes every decision, and
-failed runs are shown as they happened. Headline results (Observed, on the Lenovo's Arc 140V
-unless noted; full tables in each write-up):
-
-| demo | what the agent does | headline result | write-up |
-|---|---|---|---|
-| **Shooter** | one agent clears locked rooms of gunners and brutes, takes the key, leaves by the exit | with ammo and the dash: both models escape **10 of 10** (seeds 0–4 and fresh seeds 50–54 each); classic game, seeds 0–9: **7 of 10** each | [`docs/shooter.md`](docs/shooter.md) |
-| **Dungeon** (rebuilt 2026-09-30) | one agent without a weapon sneaks past ghouls to the key and the exit, with a dash | both models escape **10 of 10** (seeds 0–4 and fresh seeds 50–54 each); the first dungeon: 0 of 48 | [`docs/dungeon.md`](docs/dungeon.md) |
-| **2D grid** (live window) | four agents collect gems, eat food and avoid hazards, all in one batch per tick | tiered goals: 2.3× the gems and 5.4× the food of flat control, which was no better than random | [`docs/grid.md`](docs/grid.md) |
-
-```bash
-.venv/Scripts/python -m demo.shooter.capture --config config/default.toml --seed 0
-```
-
-Every captured run (single captures and eval runs alike) lands in the game's pool, `runs/shooter/`
-or `runs/dungeon/`, as one `<time>_<label>.jsonl`. Each future game demo gets its own pool
-(`runs/<game>/`) and its own viewer (`viewer/games/<game>.js`).
-
 ## Watching runs: the Master Viewer
 
 ```bash
 .venv/Scripts/python -m viewer
 ```
 
-One page for every demo's runs; it replays recorded decisions and never runs the model. The start
-page offers three ways to watch:
+One page for every game demo's runs; it replays recorded decisions and never runs the model. The
+start page offers three ways to watch:
 
 - **Load a trace**: pick or drop any `.jsonl`.
 - **Random run**: one run from the pool, in the full view (map, decision cards, latency timeline,
@@ -164,8 +279,10 @@ A filter (All / Shooter / Dungeon) limits random and auto-demo to one game.
 - `python -m viewer --bundle <run>.jsonl` writes one self-contained `.html` with that run, to
   share.
 
-The committed showcase runs are listed in [`runs/README.md`](runs/README.md). How the viewer is
-built, and how to add a viewer for a new demo: [`viewer/README.md`](viewer/README.md).
+Every captured run lands in its game's pool (`runs/shooter/` or `runs/dungeon/`) as one
+`<time>_<label>.jsonl`. The committed showcase runs are listed in [`runs/README.md`](runs/README.md).
+How the viewer is built, and how to add a viewer for a new demo: [`viewer/README.md`](viewer/README.md).
+The fraud app has its own console: `python -m fraud.viewer`.
 
 ## Benchmarks
 
@@ -173,6 +290,9 @@ Machine: Lenovo 83HM, Intel Core Ultra 7 256V, Intel Arc 140V iGPU (8 GB shared)
 Windows 11. Runtime: PyTorch 2.14.0+xpu, transformers 5.17.0. Model: Qwen2.5-1.5B-Instruct,
 bfloat16, no quantisation. Median of 5 runs after warm-up. Raw data:
 `bench/results/bench/bench_Qwen2.5-1.5B-Instruct_bfloat16_20260926_050240.{json,md}`.
+
+<details>
+<summary>Batching, generation and tournament tables</summary>
 
 | prompt tokens | batch | sequential ms/decision | batched ms/decision | speed-up | batched decisions/s |
 |---:|---:|---:|---:|---:|---:|
@@ -206,6 +326,8 @@ Tournament vs one full decision (1.5B; 30 problems each; one correct option):
 | 26 | 87% | 93% |
 | 40 | 47% | 100% |
 | 80 | 17% | 80% |
+
+</details>
 
 Reproduce:
 
@@ -259,11 +381,14 @@ viewer/                the Master Viewer (python -m viewer): index.html, shell.j
                         server.py; games/ holds one renderer per game demo
 runs/                  captured runs, one flat pool per game (shooter/, dungeon/); only *.pinned.jsonl
                         is committed
+fraud/                 the fraud app (separate): data, rules, baselines, model brain, eval, fine-tune,
+                        its own runs/, results/, docs/ and console (python -m fraud.viewer)
 bench/                 evaluations and benchmarks, one script each; results/<script>/ holds their output
 config/                default.toml (1.5B, default), lenovo-3b.toml (3B alternative),
                         nuc.example.toml (larger-hardware example, 7B), mock.toml (no model)
 docs/                  shooter.md, dungeon.md, grid.md (the demos), research.md (sources + Observed
-                        results), lessons-learned.md, machine.md, deep-research-report.md (JEV background)
+                        results), lessons-learned.md, machine.md, deep-research-report.md (JEV background);
+                        media/ holds the README's GIFs and figures
 tests/                 pytest suite (mock tests always; `model` tests when weights are cached)
 ```
 
@@ -294,8 +419,8 @@ tests/                 pytest suite (mock tests always; `model` tests when weigh
   accuracy. Orders that put the question or options first reuse more but lost accuracy
   (3B navigation 94% → 62–81%). The cache needs full-attention models; it turns itself off
   otherwise.
-- Not implemented: Score and yes/no question types, quantised backends, training or calibration
-  of any kind.
+- Not implemented in the engine: Score and yes/no question types, quantised backends,
+  calibration. (The fraud app fine-tunes one model with LoRA, outside the engine.)
 - The eval sets are small (58 items; 30 problems per tournament cell). Treat the accuracy
   numbers as smoke tests.
 - **Averages hide traps.** Single decisions were 97–100% correct in a move probe. But a
@@ -317,10 +442,10 @@ tests/                 pytest suite (mock tests always; `model` tests when weigh
 - The demo state text gives relative offsets and names conditions in words, because the model
   cannot do the arithmetic in one pass. That is part of the demo design, not of the engine.
 
-## Sources
+## Credits
 
-- Sean Goedecke, [Two techniques for working with System One models](https://www.seangoedecke.com/two-techniques-for-working-with-system-one-models/) (primary)
-- Sean Goedecke, [Jev means structured output is interesting again](https://www.seangoedecke.com/jev-means-structured-output-is-interesting-again/)
-- Sean Goedecke, [System One models like Jev can train their own replacements](https://www.seangoedecke.com/system-one-models-can-train-their-own-replacements/)
-- [sgoedecke/system-one](https://github.com/sgoedecke/system-one) (reference implementation linked from the primary source)
-- TypeSafe, [Introducing System One models and Jev](https://typesafe.ai/blog/introducing-system-one-models-and-jev)
+- The System One idea and Jev: the articles listed in [The idea](#the-idea).
+- Models: [Qwen2.5](https://huggingface.co/Qwen) 0.5B, 1.5B (Apache 2.0) and 3B (Qwen Research licence, non-commercial).
+- Fraud data: PaySim by E. A. Lopez-Rojas, A. Elmir and S. Axelsson, from the Kaggle dataset
+  [`sriharshaeedala/financial-fraud-detection-dataset`](https://www.kaggle.com/datasets/sriharshaeedala/financial-fraud-detection-dataset)
+  (CC BY-SA 4.0); see [`fraud/docs/data.md`](fraud/docs/data.md).
