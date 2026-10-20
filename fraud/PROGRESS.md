@@ -306,3 +306,19 @@ the `fraud/eval_d3.py` docstring, committed with this entry before the first D3 
   and hybrid-1.5b, recall, latency p50/p90.
 - Stated before running (Inferred): the gate is at logreg level, so both models may stop at dev.
   That result gets written up as a negative.
+
+## 2026-10-21: Phase 6 results, gate FAIL for both D3 models
+
+Eval `20261021-020632` (`python -m fraud.eval_d3`, ~11 min nano + ~23 min mini). Write-up:
+`fraud/docs/results-d3.md`. Observed:
+- Setup notes: llama-server answered 401 at first because the owner's user environment sets
+  `LLAMA_API_KEY` (llama-server then requires it); `fraud/d3.py` now sends it as a bearer token.
+  The smoke run showed that one order asked alone gives the same probabilities as in the pair.
+- Dev AUC (2,194 model rows, 260 fraud): d3-nano both 0.8019 / fwd 0.6886 / rev 0.8748 → rev;
+  d3-mini 0.9380 / 0.9378 / 0.9387 → rev. Debias rule: neither keeps both orders.
+- Gate (>= logreg 0.9916): **FAIL for both**. The test windows were not run.
+- d3-mini ranks better than the frozen 1.5B on dev (0.939 vs 0.903): CASH_OUT AUC 1.000 vs 0.885,
+  TRANSFER 0.936 vs 0.935. d3-nano's forward order ranks TRANSFER below chance (0.454).
+- Latency dev0 p90: both orders nano 369 / mini 631 ms; one order 143 / 327 ms.
+- Nothing changes on these results. A follow-up needs a new pre-registration and untouched windows.
+Phase 6 done.
