@@ -233,7 +233,7 @@ def markdown(out: dict) -> str:
          "Pre-registration: the `fraud/eval_d3.py` docstring. Model scores are uncalibrated.", "",
          "## Dev (dev0–dev9 model rows)", "",
          f"logreg AUC {lg['auc']:.4f} ({lg['rows']} rows, {lg['fraud']} fraud): the gate.", "",
-         "| model | AUC both | AUC fwd | AUC rev | debias gain | variant | flip rate | gate | thresholds | p90 both / single (ms) |",
+         "| model | AUC both | AUC fwd | AUC rev | debias gain | variant | flip rate | gate | thresholds | dev0 p90 both / one order (ms) |",
          "|---|---|---|---|---|---|---|---|---|---|"]
     for m in MODELS:
         if m not in out["dev"]:
