@@ -61,3 +61,14 @@ appearing at their recorded latency.
 
 **Accept:** results committed with both bars reported pass or fail (or the gate's failure),
 whatever they show.
+
+## Phase 6: the Decision 3.0 models (owner, 2026-10-21)
+- [ ] llama.cpp `llama-server` (winget) + d3-nano / d3-mini Q8_0 GGUFs, sha256 checked
+- [ ] `d3.py` (server, `D3Decider`; tested with a fake server) and `eval_d3.py` (pre-registration
+      in its docstring, committed with the PROGRESS pre-statement before any D3 run)
+- [ ] Dev: both models on dev0–dev9, both option orders; debias rule; gate vs logreg dev AUC
+- [ ] Test windows test100–test119 for models that pass the gate (bar: pooled AUC > hybrid-1.5b)
+- [ ] `fraud/docs/results-d3.md`: dev AUCs, debias decision, gate, bar (if run), labelled claims
+
+**Accept:** results committed with the gate (and bar, if reached) reported pass or fail,
+whatever they show.
