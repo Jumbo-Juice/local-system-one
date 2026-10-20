@@ -44,6 +44,7 @@ engine, the `.venv` and the pytest run with the game demos. Keep the two apart.
 .venv/Scripts/python -m fraud.eval                            # the pre-registered eval
 .venv/Scripts/python -m fraud.finetune                        # Phase 5: LoRA adapter → fraud/models/
 .venv/Scripts/python -m fraud.eval_ft --adapter <dir>         # Phase 5: its pre-registered eval
+.venv/Scripts/python -m fraud.eval_d3                         # Phase 6: Decision 3.0 via llama-server
 .venv/Scripts/python -m fraud.viewer                          # the analyst console
 ```
 Every command and flag is in the repo's `RUN-GUIDE.md` → Fraud app. Keep it current.
