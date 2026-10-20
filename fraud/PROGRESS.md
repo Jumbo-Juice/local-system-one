@@ -278,3 +278,31 @@ as the cited source (its Kaggle usability rating is 10.0). Every source referenc
 (`fraud/data.py`, `docs/data.md`, PRD, `runs/README.md`, the console footer, RUN-GUIDE); the PaySim
 authors stay credited (CC BY-SA). The local raw file was renamed to the new name; `find_csv` still
 accepts the old `PS_*.csv` name. No result changes: same bytes, same cache.
+
+## 2026-10-21: Phase 6 pre-statement, the Decision 3.0 models (owner; written before any D3 run)
+
+Question: does an off-the-shelf decision model, vLLM Semantic Router's Decision 3.0 (d3-nano 2.21B,
+d3-mini 4.54B, Apache-2.0), rank fraud better than the frozen 1.5B (dev AUC 0.9028), with no
+fine-tuning? Owner's choices from a grilling session on 2026-10-21. The full pre-registration is
+the `fraud/eval_d3.py` docstring, committed with this entry before the first D3 run.
+- Runtime (Implementation choice, owner-approved): llama.cpp `llama-server` build 11748 (winget,
+  Vulkan on the Arc 140V), native `/v1/systemone` endpoint, GGUF Q8_0 from
+  `ggml-org/vllm-d3-{nano,mini}-GGUF` (sha256 4867d306… / f9f99be4…, checked on download) in
+  `fraud/models/d3/` (git-ignored). One slot (`-np 1`), one request at a time: llama.cpp issue
+  #30402 (open) reports that a D3 answer changes when another request shares its batch.
+  vLLM itself does not run natively on Windows (Documented, docs.vllm.ai).
+- Prompt v4 unchanged: state = CONTEXT + describe(), instructions = QUESTION, criteria = OPTIONS
+  (descriptions null) as one `choice` question. Fraud score = P("yes: decline it").
+- Order debias: each transaction is asked in both option orders (two questions, one request). The
+  server reads a vllm-d3 choice in one order only, the order given (Documented, server-decision.cpp).
+  Rule: keep debias for a model only if its order-averaged dev AUC beats the better single order
+  by >= 0.005; otherwise use that single order. Flip rate between orders reported, not used.
+- Dev gate (exploratory part): dev0–dev9 model rows. A model goes on only if its frozen variant's
+  dev AUC >= logreg's dev AUC on the same rows (0.9916 in Phase 5). Each model is gated alone.
+- Thresholds on dev as in eval_ft (GRID, min dev cost), frozen before the test run.
+- Test (only for models that pass): the 20 original windows test100–test119, once. Bar: pooled AUC
+  over the model rows > hybrid-1.5b's pooled AUC on the same rows (recomputed from eval
+  20261003-052158 traces). Reported, no bar: logreg's pooled AUC, cost per window vs rules, logreg
+  and hybrid-1.5b, recall, latency p50/p90.
+- Stated before running (Inferred): the gate is at logreg level, so both models may stop at dev.
+  That result gets written up as a negative.
