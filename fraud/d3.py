@@ -114,8 +114,10 @@ class D3Server:
         self.version = subprocess.run([self.exe, "--version"], capture_output=True, text=True).stderr.strip()
 
     def post(self, body: dict) -> dict:
-        req = urllib.request.Request(self.url + "/v1/systemone", data=json.dumps(body).encode(),
-                                     headers={"Content-Type": "application/json"})
+        headers = {"Content-Type": "application/json"}
+        if os.environ.get("LLAMA_API_KEY"):  # llama-server reads the same variable and then requires it
+            headers["Authorization"] = "Bearer " + os.environ["LLAMA_API_KEY"]
+        req = urllib.request.Request(self.url + "/v1/systemone", data=json.dumps(body).encode(), headers=headers)
         with urllib.request.urlopen(req, timeout=600) as r:
             return json.loads(r.read())
 
