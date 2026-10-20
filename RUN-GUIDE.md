@@ -375,6 +375,34 @@ Its pre-registered eval (dev gate and thresholds on dev0–dev9, then 20 new tes
 Flags: `--windows` (print the new test windows, no model), `--setups hybrid-ft logreg ...`,
 `--resume <eval id>` (with `--adapter`), `--report <eval id>`.
 
+Phase 6, the Decision 3.0 models (d3-nano, d3-mini) through llama.cpp's `/v1/systemone`. Once:
+install llama.cpp (build ≥ 11572; `fraud/d3.py` also finds the winget copy when it is not on PATH)
+and download the two Q8_0 GGUFs into `fraud/models/d3/` (git-ignored; sha256 pinned in `fraud/d3.py`
+and checked at start). If `LLAMA_API_KEY` is set, llama-server requires it and `fraud/d3.py` sends it.
+
+```bash
+winget install llama.cpp
+```
+
+```bash
+.venv/Scripts/python -c "from huggingface_hub import hf_hub_download as d; [d(f'ggml-org/vllm-d3-{m}-GGUF', f'vllm-d3-{m}-Q8_0.gguf', local_dir='fraud/models/d3') for m in ('nano', 'mini')]"
+```
+
+A few dev rows through the endpoint (both orders, each order alone, timing; writes nothing):
+
+```bash
+.venv/Scripts/python -m fraud.eval_d3 --smoke d3-nano
+```
+
+The pre-registered eval (dev runs, debias rule, gate vs logreg, then test100–test119 for models
+that pass → `fraud/results/eval_d3/<eval id>.json|.md`):
+
+```bash
+.venv/Scripts/python -m fraud.eval_d3
+```
+
+Flags: `--models d3-nano d3-mini`, `--resume <eval id>`, `--report <eval id>`, `--smoke <model>`.
+
 The analyst console (replay only; start page, a run at 1×, auto-demo, the eval page), on
 http://127.0.0.1:8766:
 
