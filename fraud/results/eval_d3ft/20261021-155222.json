@@ -1,0 +1,1063 @@
+{
+ "eval": "20261021-155222",
+ "script": "fraud/eval_d3ft.py",
+ "created": "2026-10-21T16:16:00",
+ "complete": true,
+ "phase5_eval": "20261005-022333",
+ "costs": {
+  "friction_rate": 0.1,
+  "friction_min": 10.0,
+  "review_fee": 50.0,
+  "review_share": 0.05
+ },
+ "test_windows": [
+  "test200",
+  "test201",
+  "test202",
+  "test204",
+  "test208",
+  "test210",
+  "test211",
+  "test212",
+  "test213",
+  "test214",
+  "test215",
+  "test216",
+  "test217",
+  "test219",
+  "test221",
+  "test222",
+  "test224",
+  "test228",
+  "test232",
+  "test233"
+ ],
+ "dev": {
+  "logreg": {
+   "auc": 0.9915798265849972,
+   "rows": 2194,
+   "fraud": 260
+  },
+  "auc": {
+   "both": 0.9951714262986238,
+   "fwd": 0.9952987033648875,
+   "rev": 0.9949705671784266
+  },
+  "rows": 2194,
+  "fraud": 260,
+  "debias_gain": -0.00012727706626369795,
+  "variant": "fwd",
+  "flip_rate": 0.0,
+  "gate": {
+   "rule": "AUC(chosen variant) >= AUC(logreg) on dev0-dev9 model rows",
+   "pass": true
+  },
+  "thresholds": {
+   "review": 0.05,
+   "decline": 0.9
+  },
+  "grid_best": [
+   [
+    0.05,
+    0.9,
+    8700.0
+   ],
+   [
+    0.05,
+    0.95,
+    8700.0
+   ],
+   [
+    0.1,
+    0.9,
+    8700.0
+   ],
+   [
+    0.1,
+    0.95,
+    8700.0
+   ],
+   [
+    0.2,
+    0.9,
+    8700.0
+   ]
+  ]
+ },
+ "training": {
+  "steps": 1356,
+  "steps_done": 1356,
+  "stopped_early": false,
+  "train_s": 6077.290351199976,
+  "process_s": 6108.117626400024,
+  "step_s_mean": 4.476342737324434,
+  "peak_mem_gib": 4.311913967132568,
+  "loss_first100": 0.17402389999999998,
+  "loss_last100": 0.05659209999999999,
+  "adapter_sha256": "8d15cf49d888a823272f0bc4c6f626155dd6eea67c42ae49c19f43044310a32c",
+  "rows_sha256": "983ed4faa962b4300d5f7ca15d4ceb4130103820d34e6c6b43bcbdd2acf9875a",
+  "lora": {
+   "r": 16,
+   "lora_alpha": 32,
+   "lora_dropout": 0.05,
+   "target_modules": [
+    "q_proj",
+    "k_proj",
+    "v_proj",
+    "o_proj",
+    "in_proj_qkv",
+    "in_proj_z",
+    "out_proj"
+   ]
+  },
+  "smoke": {
+   "dir": "20261021-140723_lora-d3-smoke",
+   "step_s_mean": 4.86614012352862
+  },
+  "adapter": "20261021-141001_lora-d3"
+ },
+ "bars": {
+  "barA": {
+   "rule": "hybrid-d3ft cost <= logreg cost in >= 10 of 20 windows",
+   "value": 19,
+   "pass": true
+  },
+  "barB": {
+   "rule": "hybrid-d3ft p90 latency <= 250 ms",
+   "value": 183.85680000000002,
+   "pass": true
+  },
+  "barC": {
+   "rule": "hybrid-d3ft cost <= hybrid-ft cost in >= 10 of 20 windows",
+   "value": 18,
+   "pass": true
+  }
+ },
+ "paired": {
+  "hybrid-d3ft vs logreg": {
+   "windows": 20,
+   "a_cheaper": 19,
+   "b_cheaper": 1,
+   "ties": 0,
+   "sign_test_p": 4.00543212890625e-05
+  },
+  "hybrid-d3ft vs rules": {
+   "windows": 20,
+   "a_cheaper": 0,
+   "b_cheaper": 9,
+   "ties": 11,
+   "sign_test_p": 0.00390625
+  },
+  "hybrid-d3ft vs hybrid-ft": {
+   "windows": 20,
+   "a_cheaper": 0,
+   "b_cheaper": 2,
+   "ties": 18,
+   "sign_test_p": 0.5
+  },
+  "hybrid-d3ft vs hybrid-1.5b": {
+   "windows": 20,
+   "a_cheaper": 20,
+   "b_cheaper": 0,
+   "ties": 0,
+   "sign_test_p": 1.9073486328125e-06
+  },
+  "hybrid-d3ft vs random": {
+   "windows": 20,
+   "a_cheaper": 20,
+   "b_cheaper": 0,
+   "ties": 0,
+   "sign_test_p": 1.9073486328125e-06
+  }
+ },
+ "pooled_test_auc": {
+  "hybrid-d3ft": {
+   "auc": 0.9951610445031498,
+   "rows": 3862,
+   "fraud": 518
+  },
+  "hybrid-ft": {
+   "auc": 0.994915113336166,
+   "rows": 3862
+  }
+ },
+ "totals": {
+  "hybrid-d3ft": {
+   "windows": 20,
+   "cost_mean": 835.0,
+   "cost_median": 825.0,
+   "recall_mean": 1.0,
+   "precision_mean": 0.8684647440424692,
+   "alert_rate_mean": 0.06000000000000001,
+   "latency_p90_mean": 180.14802499999996,
+   "latency_ms": {
+    "p50": 164.159,
+    "p90": 183.85680000000002,
+    "decisions": 3862
+   },
+   "calibration": {
+    "decisions": 3862,
+    "ece": 0.014423271323781399,
+    "mean_top_score": 0.9866202938655446,
+    "top_right_rate": 0.9787674779906784,
+    "outside_mass_mean": null
+   }
+  },
+  "hybrid-ft": {
+   "windows": 20,
+   "cost_mean": 830.0,
+   "cost_median": 825.0,
+   "recall_mean": 0.9960769230769231,
+   "precision_mean": 0.868234858984998,
+   "alert_rate_mean": 0.059800000000000006,
+   "latency_p90_mean": 127.67458500000001
+  },
+  "hybrid-1.5b": {
+   "windows": 20,
+   "cost_mean": 5146777.1341,
+   "cost_median": 4988781.729,
+   "recall_mean": 1.0,
+   "precision_mean": 0.14332749282110735,
+   "alert_rate_mean": 0.3862,
+   "latency_p90_mean": 124.51339
+  },
+  "logreg": {
+   "windows": 20,
+   "cost_mean": 190910.09765,
+   "cost_median": 167148.494,
+   "recall_mean": 0.8861538461538461,
+   "precision_mean": 0.851644221379446,
+   "alert_rate_mean": 0.0558,
+   "latency_p90_mean": 0.0
+  },
+  "rules": {
+   "windows": 20,
+   "cost_mean": 807.5,
+   "cost_median": 800.0,
+   "recall_mean": 0.9960769230769231,
+   "precision_mean": 0.868234858984998,
+   "alert_rate_mean": 0.059800000000000006,
+   "latency_p90_mean": 0.0
+  },
+  "random": {
+   "windows": 20,
+   "cost_mean": 19605341.81845,
+   "cost_median": 14211557.180999998,
+   "recall_mean": 0.5828461538461538,
+   "precision_mean": 0.14219353074525798,
+   "alert_rate_mean": 0.22199999999999998,
+   "latency_p90_mean": 0.0
+  },
+  "approve-all": {
+   "windows": 20,
+   "cost_mean": 42190883.602,
+   "cost_median": 34751285.45999999,
+   "recall_mean": 0.0,
+   "precision_mean": 0.0,
+   "alert_rate_mean": 0.0,
+   "latency_p90_mean": 0.0
+  }
+ },
+ "windows": {
+  "test200": {
+   "n": 500,
+   "fraud": 26,
+   "cost": 800.0,
+   "fraud_amount": 43826189.660000004,
+   "fraud_amount_stopped": 43826189.660000004,
+   "recall": 1.0,
+   "precision": 0.896551724137931,
+   "alert_rate": 0.058,
+   "reviews_wanted": 16,
+   "reviews_done": 16,
+   "confusion": {
+    "legit": {
+     "approve": 471,
+     "review": 3,
+     "decline": 0
+    },
+    "fraud": {
+     "approve": 0,
+     "review": 13,
+     "decline": 13
+    }
+   },
+   "cost_natural": 2890.506329113924,
+   "precision_natural": 0.5140719049943061,
+   "setup": "hybrid-d3ft",
+   "total_ms": 37823.2,
+   "decisions_by": {
+    "filter": 272,
+    "model": 228
+   },
+   "model_decisions": 228,
+   "latency_ms": {
+    "p50": 162.775,
+    "p90": 166.2165,
+    "max": 412.829,
+    "mean": 165.88846491228074
+   },
+   "outside_mass_mean": 0.0
+  },
+  "test201": {
+   "n": 500,
+   "fraud": 26,
+   "cost": 750.0,
+   "fraud_amount": 55444212.220000006,
+   "fraud_amount_stopped": 55444212.220000006,
+   "recall": 1.0,
+   "precision": 0.9285714285714286,
+   "alert_rate": 0.056,
+   "reviews_wanted": 15,
+   "reviews_done": 15,
+   "confusion": {
+    "legit": {
+     "approve": 472,
+     "review": 2,
+     "decline": 0
+    },
+    "fraud": {
+     "approve": 0,
+     "review": 13,
+     "decline": 13
+    }
+   },
+   "cost_natural": 2585.864978902953,
+   "precision_natural": 0.4496584872248925,
+   "setup": "hybrid-d3ft",
+   "total_ms": 39293.3,
+   "decisions_by": {
+    "filter": 259,
+    "model": 241
+   },
+   "model_decisions": 241,
+   "latency_ms": {
+    "p50": 162.91,
+    "p90": 163.988,
+    "max": 174.289,
+    "mean": 163.0399253112033
+   },
+   "outside_mass_mean": 0.0
+  },
+  "test202": {
+   "n": 500,
+   "fraud": 26,
+   "cost": 950.0,
+   "fraud_amount": 28021834.8,
+   "fraud_amount_stopped": 28021834.8,
+   "recall": 1.0,
+   "precision": 0.8125,
+   "alert_rate": 0.064,
+   "reviews_wanted": 19,
+   "reviews_done": 19,
+   "confusion": {
+    "legit": {
+     "approve": 468,
+     "review": 6,
+     "decline": 0
+    },
+    "fraud": {
+     "approve": 0,
+     "review": 13,
+     "decline": 13
+    }
+   },
+   "cost_natural": 4087.974683544304,
+   "precision_natural": 0.6459119496855346,
+   "setup": "hybrid-d3ft",
+   "total_ms": 39156.3,
+   "decisions_by": {
+    "filter": 260,
+    "model": 240
+   },
+   "model_decisions": 240,
+   "latency_ms": {
+    "p50": 163.02,
+    "p90": 164.01049999999998,
+    "max": 175.063,
+    "mean": 163.1496291666667
+   },
+   "outside_mass_mean": 0.0
+  },
+  "test204": {
+   "n": 500,
+   "fraud": 26,
+   "cost": 700.0,
+   "fraud_amount": 39247218.260000005,
+   "fraud_amount_stopped": 39247218.260000005,
+   "recall": 1.0,
+   "precision": 0.9629629629629629,
+   "alert_rate": 0.054,
+   "reviews_wanted": 14,
+   "reviews_done": 14,
+   "confusion": {
+    "legit": {
+     "approve": 473,
+     "review": 1,
+     "decline": 0
+    },
+    "fraud": {
+     "approve": 0,
+     "review": 13,
+     "decline": 13
+    }
+   },
+   "cost_natural": 939.3459915611813,
+   "precision_natural": 0.9500677946118021,
+   "setup": "hybrid-d3ft",
+   "total_ms": 18438.9,
+   "decisions_by": {
+    "filter": 387,
+    "model": 113
+   },
+   "model_decisions": 113,
+   "latency_ms": {
+    "p50": 162.853,
+    "p90": 164.467,
+    "max": 184.903,
+    "mean": 163.17406194690267
+   },
+   "outside_mass_mean": 0.0
+  },
+  "test208": {
+   "n": 500,
+   "fraud": 26,
+   "cost": 800.0,
+   "fraud_amount": 34873054.599999994,
+   "fraud_amount_stopped": 34873054.599999994,
+   "recall": 1.0,
+   "precision": 0.8666666666666667,
+   "alert_rate": 0.06,
+   "reviews_wanted": 16,
+   "reviews_done": 16,
+   "confusion": {
+    "legit": {
+     "approve": 470,
+     "review": 4,
+     "decline": 0
+    },
+    "fraud": {
+     "approve": 0,
+     "review": 12,
+     "decline": 14
+    }
+   },
+   "cost_natural": 2343.2002596559555,
+   "precision_natural": 0.7110790087787531,
+   "setup": "hybrid-d3ft",
+   "total_ms": 37908.3,
+   "decisions_by": {
+    "filter": 268,
+    "model": 232
+   },
+   "model_decisions": 232,
+   "latency_ms": {
+    "p50": 163.121,
+    "p90": 164.6,
+    "max": 189.705,
+    "mean": 163.3961724137931
+   },
+   "outside_mass_mean": 0.0
+  },
+  "test210": {
+   "n": 500,
+   "fraud": 26,
+   "cost": 850.0,
+   "fraud_amount": 14586430.899999999,
+   "fraud_amount_stopped": 14586430.899999999,
+   "recall": 1.0,
+   "precision": 0.8666666666666667,
+   "alert_rate": 0.06,
+   "reviews_wanted": 17,
+   "reviews_done": 17,
+   "confusion": {
+    "legit": {
+     "approve": 470,
+     "review": 4,
+     "decline": 0
+    },
+    "fraud": {
+     "approve": 0,
+     "review": 13,
+     "decline": 13
+    }
+   },
+   "cost_natural": 950.4219409282701,
+   "precision_natural": 0.8821339950372209,
+   "setup": "hybrid-d3ft",
+   "total_ms": 28244.8,
+   "decisions_by": {
+    "filter": 357,
+    "model": 143
+   },
+   "model_decisions": 143,
+   "latency_ms": {
+    "p50": 163.772,
+    "p90": 280.15759999999995,
+    "max": 699.956,
+    "mean": 197.51444755244756
+   },
+   "outside_mass_mean": 0.0
+  },
+  "test211": {
+   "n": 500,
+   "fraud": 26,
+   "cost": 700.0,
+   "fraud_amount": 26482909.68,
+   "fraud_amount_stopped": 26482909.68,
+   "recall": 1.0,
+   "precision": 0.9629629629629629,
+   "alert_rate": 0.054,
+   "reviews_wanted": 14,
+   "reviews_done": 14,
+   "confusion": {
+    "legit": {
+     "approve": 473,
+     "review": 1,
+     "decline": 0
+    },
+    "fraud": {
+     "approve": 0,
+     "review": 13,
+     "decline": 13
+    }
+   },
+   "cost_natural": 1162.6582278481014,
+   "precision_natural": 0.8726603252531453,
+   "setup": "hybrid-d3ft",
+   "total_ms": 44118.2,
+   "decisions_by": {
+    "filter": 269,
+    "model": 231
+   },
+   "model_decisions": 231,
+   "latency_ms": {
+    "p50": 182.273,
+    "p90": 198.792,
+    "max": 674.964,
+    "mean": 190.98580086580083
+   },
+   "outside_mass_mean": 0.0
+  },
+  "test212": {
+   "n": 500,
+   "fraud": 25,
+   "cost": 550.0,
+   "fraud_amount": 77953717.85999998,
+   "fraud_amount_stopped": 77953717.85999998,
+   "recall": 1.0,
+   "precision": 1.0,
+   "alert_rate": 0.05,
+   "reviews_wanted": 11,
+   "reviews_done": 11,
+   "confusion": {
+    "legit": {
+     "approve": 475,
+     "review": 0,
+     "decline": 0
+    },
+    "fraud": {
+     "approve": 0,
+     "review": 11,
+     "decline": 14
+    }
+   },
+   "cost_natural": 880.0,
+   "precision_natural": 1.0,
+   "setup": "hybrid-d3ft",
+   "total_ms": 37479.2,
+   "decisions_by": {
+    "filter": 298,
+    "model": 202
+   },
+   "model_decisions": 202,
+   "latency_ms": {
+    "p50": 183.06349999999998,
+    "p90": 191.5901,
+    "max": 405.525,
+    "mean": 185.53849504950495
+   },
+   "outside_mass_mean": 0.0
+  },
+  "test213": {
+   "n": 500,
+   "fraud": 25,
+   "cost": 850.0,
+   "fraud_amount": 71263837.09000002,
+   "fraud_amount_stopped": 71263837.09000002,
+   "recall": 1.0,
+   "precision": 0.8333333333333334,
+   "alert_rate": 0.06,
+   "reviews_wanted": 17,
+   "reviews_done": 17,
+   "confusion": {
+    "legit": {
+     "approve": 470,
+     "review": 5,
+     "decline": 0
+    },
+    "fraud": {
+     "approve": 0,
+     "review": 12,
+     "decline": 13
+    }
+   },
+   "cost_natural": 2965.8947368421054,
+   "precision_natural": 0.7441253263707572,
+   "setup": "hybrid-d3ft",
+   "total_ms": 37796.1,
+   "decisions_by": {
+    "filter": 285,
+    "model": 215
+   },
+   "model_decisions": 215,
+   "latency_ms": {
+    "p50": 174.408,
+    "p90": 178.8192,
+    "max": 228.917,
+    "mean": 175.7936325581395
+   },
+   "outside_mass_mean": 0.0
+  },
+  "test214": {
+   "n": 500,
+   "fraud": 26,
+   "cost": 800.0,
+   "fraud_amount": 45702440.72,
+   "fraud_amount_stopped": 45702440.72,
+   "recall": 1.0,
+   "precision": 0.896551724137931,
+   "alert_rate": 0.058,
+   "reviews_wanted": 16,
+   "reviews_done": 16,
+   "confusion": {
+    "legit": {
+     "approve": 471,
+     "review": 3,
+     "decline": 0
+    },
+    "fraud": {
+     "approve": 0,
+     "review": 13,
+     "decline": 13
+    }
+   },
+   "cost_natural": 2030.0632911392404,
+   "precision_natural": 0.539556061468412,
+   "setup": "hybrid-d3ft",
+   "total_ms": 42786.8,
+   "decisions_by": {
+    "filter": 275,
+    "model": 225
+   },
+   "model_decisions": 225,
+   "latency_ms": {
+    "p50": 178.764,
+    "p90": 197.9776,
+    "max": 565.302,
+    "mean": 190.16104444444446
+   },
+   "outside_mass_mean": 0.0
+  },
+  "test215": {
+   "n": 500,
+   "fraud": 26,
+   "cost": 1000.0,
+   "fraud_amount": 69836834.0,
+   "fraud_amount_stopped": 69836834.0,
+   "recall": 1.0,
+   "precision": 0.7428571428571429,
+   "alert_rate": 0.07,
+   "reviews_wanted": 20,
+   "reviews_done": 20,
+   "confusion": {
+    "legit": {
+     "approve": 465,
+     "review": 9,
+     "decline": 0
+    },
+    "fraud": {
+     "approve": 0,
+     "review": 11,
+     "decline": 15
+    }
+   },
+   "cost_natural": 7456.329113924052,
+   "precision_natural": 0.9479635398638513,
+   "setup": "hybrid-d3ft",
+   "total_ms": 22233.7,
+   "decisions_by": {
+    "filter": 385,
+    "model": 115
+   },
+   "model_decisions": 115,
+   "latency_ms": {
+    "p50": 185.788,
+    "p90": 204.13420000000002,
+    "max": 335.327,
+    "mean": 193.3323913043478
+   },
+   "outside_mass_mean": 0.0
+  },
+  "test216": {
+   "n": 500,
+   "fraud": 26,
+   "cost": 950.0,
+   "fraud_amount": 34629516.32,
+   "fraud_amount_stopped": 34629516.32,
+   "recall": 1.0,
+   "precision": 0.8125,
+   "alert_rate": 0.064,
+   "reviews_wanted": 19,
+   "reviews_done": 19,
+   "confusion": {
+    "legit": {
+     "approve": 468,
+     "review": 6,
+     "decline": 0
+    },
+    "fraud": {
+     "approve": 0,
+     "review": 13,
+     "decline": 13
+    }
+   },
+   "cost_natural": 1215.8227848101267,
+   "precision_natural": 0.8229166666666665,
+   "setup": "hybrid-d3ft",
+   "total_ms": 20468.8,
+   "decisions_by": {
+    "filter": 383,
+    "model": 117
+   },
+   "model_decisions": 117,
+   "latency_ms": {
+    "p50": 174.509,
+    "p90": 178.0466,
+    "max": 181.257,
+    "mean": 174.94493162393167
+   },
+   "outside_mass_mean": 0.0
+  },
+  "test217": {
+   "n": 500,
+   "fraud": 26,
+   "cost": 900.0,
+   "fraud_amount": 32266194.819999997,
+   "fraud_amount_stopped": 32266194.819999997,
+   "recall": 1.0,
+   "precision": 0.8387096774193549,
+   "alert_rate": 0.062,
+   "reviews_wanted": 18,
+   "reviews_done": 18,
+   "confusion": {
+    "legit": {
+     "approve": 469,
+     "review": 5,
+     "decline": 0
+    },
+    "fraud": {
+     "approve": 0,
+     "review": 13,
+     "decline": 13
+    }
+   },
+   "cost_natural": 2826.5822784810125,
+   "precision_natural": 0.3969849246231156,
+   "setup": "hybrid-d3ft",
+   "total_ms": 29771.1,
+   "decisions_by": {
+    "filter": 333,
+    "model": 167
+   },
+   "model_decisions": 167,
+   "latency_ms": {
+    "p50": 174.433,
+    "p90": 178.8974,
+    "max": 392.406,
+    "mean": 178.26747904191618
+   },
+   "outside_mass_mean": 0.0
+  },
+  "test219": {
+   "n": 500,
+   "fraud": 26,
+   "cost": 950.0,
+   "fraud_amount": 17209558.22,
+   "fraud_amount_stopped": 17209558.22,
+   "recall": 1.0,
+   "precision": 0.8125,
+   "alert_rate": 0.064,
+   "reviews_wanted": 19,
+   "reviews_done": 19,
+   "confusion": {
+    "legit": {
+     "approve": 468,
+     "review": 6,
+     "decline": 0
+    },
+    "fraud": {
+     "approve": 0,
+     "review": 13,
+     "decline": 13
+    }
+   },
+   "cost_natural": 36443.67088607595,
+   "precision_natural": 0.03504641004641005,
+   "setup": "hybrid-d3ft",
+   "total_ms": 38440.8,
+   "decisions_by": {
+    "filter": 271,
+    "model": 229
+   },
+   "model_decisions": 229,
+   "latency_ms": {
+    "p50": 163.139,
+    "p90": 167.0634,
+    "max": 998.165,
+    "mean": 167.8609868995633
+   },
+   "outside_mass_mean": 0.0
+  },
+  "test221": {
+   "n": 500,
+   "fraud": 26,
+   "cost": 800.0,
+   "fraud_amount": 23151509.9,
+   "fraud_amount_stopped": 23151509.9,
+   "recall": 1.0,
+   "precision": 0.896551724137931,
+   "alert_rate": 0.058,
+   "reviews_wanted": 16,
+   "reviews_done": 16,
+   "confusion": {
+    "legit": {
+     "approve": 471,
+     "review": 3,
+     "decline": 0
+    },
+    "fraud": {
+     "approve": 0,
+     "review": 13,
+     "decline": 13
+    }
+   },
+   "cost_natural": 27417.08860759493,
+   "precision_natural": 0.06014061170570059,
+   "setup": "hybrid-d3ft",
+   "total_ms": 36686.2,
+   "decisions_by": {
+    "filter": 275,
+    "model": 225
+   },
+   "model_decisions": 225,
+   "latency_ms": {
+    "p50": 162.94,
+    "p90": 164.05339999999998,
+    "max": 167.288,
+    "mean": 163.04653333333334
+   },
+   "outside_mass_mean": 0.0
+  },
+  "test222": {
+   "n": 500,
+   "fraud": 26,
+   "cost": 750.0,
+   "fraud_amount": 92823081.72999999,
+   "fraud_amount_stopped": 92823081.72999999,
+   "recall": 1.0,
+   "precision": 0.8666666666666667,
+   "alert_rate": 0.06,
+   "reviews_wanted": 15,
+   "reviews_done": 15,
+   "confusion": {
+    "legit": {
+     "approve": 470,
+     "review": 4,
+     "decline": 0
+    },
+    "fraud": {
+     "approve": 0,
+     "review": 11,
+     "decline": 15
+    }
+   },
+   "cost_natural": 3103.424212917884,
+   "precision_natural": 0.4524264040992666,
+   "setup": "hybrid-d3ft",
+   "total_ms": 38659.9,
+   "decisions_by": {
+    "filter": 267,
+    "model": 233
+   },
+   "model_decisions": 233,
+   "latency_ms": {
+    "p50": 164.081,
+    "p90": 170.649,
+    "max": 205.432,
+    "mean": 165.91971244635195
+   },
+   "outside_mass_mean": 0.0
+  },
+  "test224": {
+   "n": 500,
+   "fraud": 26,
+   "cost": 850.0,
+   "fraud_amount": 17981520.0,
+   "fraud_amount_stopped": 17981520.0,
+   "recall": 1.0,
+   "precision": 0.8666666666666667,
+   "alert_rate": 0.06,
+   "reviews_wanted": 17,
+   "reviews_done": 17,
+   "confusion": {
+    "legit": {
+     "approve": 470,
+     "review": 4,
+     "decline": 0
+    },
+    "fraud": {
+     "approve": 0,
+     "review": 13,
+     "decline": 13
+    }
+   },
+   "cost_natural": 1850.632911392405,
+   "precision_natural": 0.6543948458352508,
+   "setup": "hybrid-d3ft",
+   "total_ms": 29470.0,
+   "decisions_by": {
+    "filter": 320,
+    "model": 180
+   },
+   "model_decisions": 180,
+   "latency_ms": {
+    "p50": 163.057,
+    "p90": 166.66910000000001,
+    "max": 176.797,
+    "mean": 163.71926666666667
+   },
+   "outside_mass_mean": 0.0
+  },
+  "test228": {
+   "n": 500,
+   "fraud": 26,
+   "cost": 800.0,
+   "fraud_amount": 18988477.44,
+   "fraud_amount_stopped": 18988477.44,
+   "recall": 1.0,
+   "precision": 0.896551724137931,
+   "alert_rate": 0.058,
+   "reviews_wanted": 16,
+   "reviews_done": 16,
+   "confusion": {
+    "legit": {
+     "approve": 471,
+     "review": 3,
+     "decline": 0
+    },
+    "fraud": {
+     "approve": 0,
+     "review": 13,
+     "decline": 13
+    }
+   },
+   "cost_natural": 36566.77215189874,
+   "precision_natural": 0.03756697774343385,
+   "setup": "hybrid-d3ft",
+   "total_ms": 35508.5,
+   "decisions_by": {
+    "filter": 286,
+    "model": 214
+   },
+   "model_decisions": 214,
+   "latency_ms": {
+    "p50": 165.18849999999998,
+    "p90": 170.0507,
+    "max": 177.538,
+    "mean": 165.9232056074766
+   },
+   "outside_mass_mean": 0.0
+  },
+  "test232": {
+   "n": 500,
+   "fraud": 26,
+   "cost": 1100.0,
+   "fraud_amount": 30281631.180000003,
+   "fraud_amount_stopped": 30281631.180000003,
+   "recall": 1.0,
+   "precision": 0.7428571428571429,
+   "alert_rate": 0.07,
+   "reviews_wanted": 22,
+   "reviews_done": 22,
+   "confusion": {
+    "legit": {
+     "approve": 465,
+     "review": 9,
+     "decline": 0
+    },
+    "fraud": {
+     "approve": 0,
+     "review": 13,
+     "decline": 13
+    }
+   },
+   "cost_natural": 1948.73417721519,
+   "precision_natural": 0.582086115588303,
+   "setup": "hybrid-d3ft",
+   "total_ms": 26357.2,
+   "decisions_by": {
+    "filter": 340,
+    "model": 160
+   },
+   "model_decisions": 160,
+   "latency_ms": {
+    "p50": 164.0255,
+    "p90": 168.48760000000001,
+    "max": 175.498,
+    "mean": 164.72934375
+   },
+   "outside_mass_mean": 0.0
+  },
+  "test233": {
+   "n": 500,
+   "fraud": 26,
+   "cost": 850.0,
+   "fraud_amount": 69247502.64000002,
+   "fraud_amount_stopped": 69247502.64000002,
+   "recall": 1.0,
+   "precision": 0.8666666666666667,
+   "alert_rate": 0.06,
+   "reviews_wanted": 17,
+   "reviews_done": 17,
+   "confusion": {
+    "legit": {
+     "approve": 470,
+     "review": 4,
+     "decline": 0
+    },
+    "fraud": {
+     "approve": 0,
+     "review": 13,
+     "decline": 13
+    }
+   },
+   "cost_natural": 3152.53164556962,
+   "precision_natural": 0.4247311827956989,
+   "setup": "hybrid-d3ft",
+   "total_ms": 24797.4,
+   "decisions_by": {
+    "filter": 348,
+    "model": 152
+   },
+   "model_decisions": 152,
+   "latency_ms": {
+    "p50": 162.9225,
+    "p90": 164.2906,
+    "max": 169.326,
+    "mean": 163.13705263157897
+   },
+   "outside_mass_mean": 0.0
+  }
+ }
+}

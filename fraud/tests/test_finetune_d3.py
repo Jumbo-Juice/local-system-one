@@ -131,3 +131,12 @@ def test_the_lr_schedule_is_sized_to_the_planned_batches(tmp_path):
     out = finetune_d3.train(tiny(), tiny_examples(tiny()), tmp_path, steps=2, log=lambda _: None)
     # batch 1: 2e-4 × 1/30; batch 2: 2e-4 × 2/30 × (1 − 1/2)
     assert out["lrs"] == pytest.approx([2e-4 / 30, 2e-4 / 30])
+
+
+def test_calibration_of_d3_decisions_without_outside_mass():
+    # D3's readout is masked to the option codes, so its decisions carry no outside_mass.
+    from fraud import eval as ev
+    recs = [{"type": "tx", "by": "model", "truth": 0, "scores": {"approve": 0.9, "review": 0.05, "decline": 0.05}},
+            {"type": "tx", "by": "model", "truth": 1, "scores": {"approve": 0.2, "review": 0.1, "decline": 0.7}}]
+    c = ev.model_calibration([recs])
+    assert c["decisions"] == 2 and c["top_right_rate"] == 1.0 and c["outside_mass_mean"] is None
