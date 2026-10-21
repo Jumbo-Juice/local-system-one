@@ -322,3 +322,33 @@ Eval `20261021-020632` (`python -m fraud.eval_d3`, ~11 min nano + ~23 min mini).
 - Latency dev0 p90: both orders nano 369 / mini 631 ms; one order 143 / 327 ms.
 - Nothing changes on these results. A follow-up needs a new pre-registration and untouched windows.
 Phase 6 done.
+
+## 2026-10-21: Phase 7 pre-statement, the fine-tuned d3-nano (owner; written before training)
+
+Question: fine-tuned like the Phase 5 Qwen2.5-1.5B, does d3-nano (frozen dev AUC 0.8748, rev order)
+decide as cheaply as logistic regression and as hybrid-ft? Owner's choices from a grilling session
+on 2026-10-21. The full pre-registration is the `fraud/eval_d3ft.py` docstring, committed with this
+entry before the training run.
+- Runtime: d3-nano's own wrapper refuses training (Documented, its `modeling_d3.py`), so
+  `fraud/d3torch.py` loads the plain Qwen3.5 backbone + FP32 readout of vllm-sr/d3-nano @ 462efc3662
+  (sha256 from the hub metadata, checked on download and on load) and re-implements the "d3"
+  prompt and the non-causal softmax layers of `d3_runtime.py` (read, not run). Torch on the XPU,
+  adapter merged at inference; no GGUF conversion (no new `gguf` package).
+- flash-linear-attention 0.5.2 (approved): vetted (upstream fla-org README/INSTALL.md
+  `pip install flash-linear-attention[xpu]`, PyPI 0.5.2 = latest, no attestations), installed
+  without touching torch 2.14.0+xpu, then **removed**. Observed: triton-xpu 3.8.0 needs a C
+  compiler to build its driver and the machine has none (no Visual Studio, clang, gcc or oneAPI),
+  so fla falls back to CPU device detection and its kernel fails on XPU tensors ("PyTorch was
+  compiled without CUDA support"). While installed, transformers binds it in place of its PyTorch
+  reference, so the model would crash. The DeltaNet layers run transformers' PyTorch reference.
+- Observed before writing the pre-registration: our "d3" prompt gives exactly llama-server's token
+  counts on all 257 model rows of dev0 (227 or 230 per order).
+- Data: Phase 5's exact rows and order coin (row hash 983ed4fa…, `--dry-run` reproduces it).
+- LoRA r16/alpha 32/dropout 0.05 on q/k/v/o_proj (6 softmax layers) and in_proj_qkv/in_proj_z/
+  out_proj (18 Gated DeltaNet layers), readout frozen; Phase 5's optimiser and schedule.
+- The 2-hour cap (training run only): a 20-batch smoke run measures s/step; N = min(1,510,
+  floor(6,600 s / s per step)), the LR schedule sized to N; below 755 batches nothing is trained and
+  the owner decides; the process stops stepping at 2 h minus 2 min and saves.
+- Reproduction check first (R1 tokens, R2 AUC ± 0.01, R3 median score diff <= 0.02 per order).
+- Debias rule of Phase 6 on dev; gate: dev AUC >= logreg (0.9916); then the 20 Phase 5 windows.
+  Bars: A cost <= logreg in >= 10/20, B p90 <= 250 ms, C cost <= hybrid-ft in >= 10/20.

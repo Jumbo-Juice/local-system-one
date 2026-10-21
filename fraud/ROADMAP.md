@@ -73,3 +73,17 @@ whatever they show.
 
 **Accept:** results committed with the gate (and bar, if reached) reported pass or fail,
 whatever they show.
+
+## Phase 7: the fine-tuned d3-nano (owner, 2026-10-21)
+- [x] `d3torch.py` (d3-nano's backbone, non-causal softmax layers and readout in our own torch
+      code; tested on a tiny random Qwen3.5) and `finetune_d3.py` (cap rule, hard stop; tested)
+- [x] `eval_d3ft.py` with the pre-registration in its docstring, committed with the PROGRESS
+      pre-statement before training
+- [ ] Reproduction check: the frozen model in torch matches the Phase 6 llama-server traces (R1–R3)
+- [ ] Smoke run (s/step, memory), then one training run of at most 2 h (`--plan`)
+- [ ] `python -m fraud.eval_d3ft`: dev, debias rule, gate vs logreg, then the 20 Phase 5 windows
+      (if the gate passes) with bars A, B and C
+- [ ] `fraud/docs/results-d3ft.md`: training, gate, bars, labelled claims, negatives
+
+**Accept:** results committed with the gate and bars reported pass or fail (or the reproduction
+check's or the cap rule's failure), whatever they show.

@@ -403,6 +403,46 @@ that pass → `fraud/results/eval_d3/<eval id>.json|.md`):
 
 Flags: `--models d3-nano d3-mini`, `--resume <eval id>`, `--report <eval id>`, `--smoke <model>`.
 
+Phase 7, the fine-tuned d3-nano (torch on the XPU, no llama.cpp; d3-mini was dropped after Phase 6
+and its GGUF deleted). Once: download the checkpoint (4.4 GB, BF16) at the pinned revision into
+`fraud/models/d3-nano-hf/` (git-ignored; sha256 pinned in `fraud/d3torch.py` and checked on load):
+
+```bash
+.venv/Scripts/python -c "from huggingface_hub import snapshot_download as d; d('vllm-sr/d3-nano', revision='462efc366229ea268cf4eed3738b3fc4415e4817', local_dir='fraud/models/d3-nano-hf', allow_patterns=['*.json', '*.jinja', '*.txt', '*.safetensors'])"
+```
+
+The reproduction check (the frozen model through `fraud/d3torch.py` vs the Phase 6 llama-server
+traces on dev0–dev9 → `fraud/results/eval_d3ft/<id>_repro.json|.md`):
+
+```bash
+.venv/Scripts/python -u -m fraud.eval_d3ft --repro
+```
+
+Train: a smoke run first (s/step and peak memory, saved as `<time>_lora-d3-smoke`), then the
+training run, whose batch count comes from the smoke run's s/step and which stops itself at 2 h
+(`fraud/models/<time>_lora-d3/`):
+
+```bash
+.venv/Scripts/python -u -m fraud.finetune_d3 --steps 20
+```
+
+```bash
+.venv/Scripts/python -u -m fraud.finetune_d3 --plan fraud/models/<time>_lora-d3-smoke
+```
+
+Flags: `--dry-run` (the training set only: counts and the row hash). `--plan` exits with code 2 and
+trains nothing when the rule gives fewer than 755 batches.
+
+Its pre-registered eval (dev, debias rule, gate vs logreg, then the 20 Phase 5 windows →
+`fraud/results/eval_d3ft/<eval id>.json|.md`):
+
+```bash
+.venv/Scripts/python -u -m fraud.eval_d3ft --adapter fraud/models/<time>_lora-d3
+```
+
+Flags: `--resume <eval id>` (with `--adapter` or `--repro`), `--report <eval id>` (with `--adapter`
+to refresh the training facts).
+
 The analyst console (replay only; start page, a run at 1×, auto-demo, the eval page), on
 http://127.0.0.1:8766:
 
