@@ -5,7 +5,8 @@
     python -m fraud.viewer --port 8766 --no-browser
 
 The page is fraud/viewer/index.html with console.js and console.css. This server serves those
-files, the traces fraud/runs/*.jsonl, the eval results fraud/results/eval/*.json, and two listings
+files, the traces fraud/runs/*.jsonl, the eval results fraud/results/<dir>/*.json for each dir in
+EVAL_DIRS, and two listings
 (/api/runs, /api/evals). It only reads files: nothing here runs a model. It binds to 127.0.0.1
 unless --host says otherwise. It shares no code with the game viewer (fraud/CLAUDE.md).
 """
@@ -25,7 +26,9 @@ from urllib.parse import quote, unquote, urlsplit
 from ..runs import RUNS
 
 HERE = Path(__file__).resolve().parent
-RESULTS = HERE.parent / "results" / "eval"
+RESULTS = HERE.parent / "results"
+# result folders with eval pages (fraud/results/eval_d3 has no test windows; *_repro.json is not an eval)
+EVAL_DIRS = ("eval", "eval_d3ft")
 PAGES = ("index.html", "console.js", "console.css")
 TYPES = {".html": "text/html; charset=utf-8", ".js": "text/javascript; charset=utf-8", ".css": "text/css; charset=utf-8",
          ".jsonl": "application/x-ndjson; charset=utf-8", ".json": "application/json; charset=utf-8"}
@@ -106,18 +109,19 @@ class Listing:
     def eval_list(self) -> dict:
         def read(path: Path) -> dict:
             r = json.loads(path.read_text(encoding="utf-8"))
-            return {"id": r.get("eval"), "file": path.name, "created": r.get("created"), "complete": r.get("complete"),
-                    "bars": r.get("bars")}
+            return {"id": r.get("eval"), "created": r.get("created"), "complete": r.get("complete"),
+                    "bars": r.get("bars"), "is_eval": "totals" in r}
         with self._lock:
-            files = sorted(self.results.glob("*.json")) if self.results.is_dir() else []
-            evals = [r for r in (self._cached(p, read) for p in files) if r]
+            files = [p for d in EVAL_DIRS if (self.results / d).is_dir() for p in sorted((self.results / d).glob("*.json"))]
+            evals = [dict(r, file=f"{p.parent.name}/{p.name}") for p in files
+                     if (r := self._cached(p, read)) and r["is_eval"]]
         evals.sort(key=lambda r: r["created"] or "", reverse=True)
         return {"evals": evals}
 
 
 def resolve(route: str, runs: Path = RUNS, results: Path = RESULTS) -> Path | None:
     """The file behind a route, or None. Only the console files, runs/<name>.jsonl and
-    results/eval/<name>.json are reachable; no subfolders, no '..'."""
+    results/<dir>/<name>.json for dir in EVAL_DIRS are reachable; no other folders, no '..'."""
     if route in ("", "index.html"):
         return HERE / "index.html"
     if route in PAGES:
@@ -127,8 +131,8 @@ def resolve(route: str, runs: Path = RUNS, results: Path = RESULTS) -> Path | No
         return None
     if head == "runs" and name.endswith(".jsonl"):
         path = runs / name
-    elif head == "results/eval" and name.endswith(".json"):
-        path = results / name
+    elif head.startswith("results/") and head[len("results/"):] in EVAL_DIRS and name.endswith(".json"):
+        path = results / head[len("results/"):] / name
     else:
         return None
     return path if path.is_file() else None

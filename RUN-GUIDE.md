@@ -457,6 +457,8 @@ Open one run directly:
 ```
 
 Flags: `--port N` (default 8766), `--host <addr>` (default 127.0.0.1), `--no-browser`, `--verbose`.
+Eval pages read `fraud/results/eval/` and `fraud/results/eval_d3ft/` (the d3-nano page merges in the Phase 5
+setups of the same windows); Phase 6's `fraud/results/eval_d3/` ran no test windows and has no page.
 Pages: `#/` runs, `#/run/<file>`, `#/eval` (latest) or `#/eval/<eval id>`, `#/demo`. Pin a run by
 renaming it to `*.pinned.jsonl` and listing it in `fraud/runs/README.md`.
 

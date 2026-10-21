@@ -13,30 +13,37 @@ def write(path, records):
 
 def test_only_console_files_runs_and_results_are_served(tmp_path):
     runs, results = tmp_path / "runs", tmp_path / "results"
-    runs.mkdir(), results.mkdir()
+    runs.mkdir(), (results / "eval").mkdir(parents=True), (results / "eval_d3ft").mkdir(), (results / "eval_d3").mkdir()
     write(runs / "a.jsonl", [HEADER, END])
-    (results / "e.json").write_text("{}", encoding="utf-8")
+    for d in ("eval", "eval_d3ft", "eval_d3"):
+        (results / d / "e.json").write_text("{}", encoding="utf-8")
     (tmp_path / "secret.txt").write_text("x", encoding="utf-8")
     ok = lambda route: server.resolve(route, runs, results)
     assert ok("") == server.HERE / "index.html" and ok("console.js") == server.HERE / "console.js"
-    assert ok("runs/a.jsonl") == runs / "a.jsonl" and ok("results/eval/e.json") == results / "e.json"
+    assert ok("runs/a.jsonl") == runs / "a.jsonl" and ok("results/eval/e.json") == results / "eval" / "e.json"
+    assert ok("results/eval_d3ft/e.json") == results / "eval_d3ft" / "e.json"
     for bad in ("runs/../secret.txt", "runs/..", "secret.txt", "server.py", "runs/a.json", "results/eval/../../secret.txt",
-                "runs/missing.jsonl", "../fraud/data/paysim.npz", "results/e.json"):
+                "runs/missing.jsonl", "../fraud/data/paysim.npz", "results/e.json", "results/eval_d3/e.json",
+                "results/../secret.txt", "results/eval/sub/e.json"):
         assert ok(bad) is None, bad
 
 
 def test_listing_reads_header_and_end(tmp_path):
     runs, results = tmp_path / "runs", tmp_path / "results"
-    runs.mkdir(), results.mkdir()
+    runs.mkdir(), (results / "eval").mkdir(parents=True), (results / "eval_d3ft").mkdir()
     write(runs / "20261003-052158_eval_rules_test100.jsonl", [HEADER, {"type": "tx"}, END])
     write(runs / "20261003-060000_hybrid_mock_dev0.jsonl", [dict(HEADER, setup="hybrid", window={"id": "dev0"})])
-    (results / "20261003-052158.json").write_text(json.dumps({"eval": "20261003-052158", "complete": True, "bars": {}}), encoding="utf-8")
+    ev = lambda i, t: json.dumps({"eval": i, "created": t, "complete": True, "bars": {}, "totals": {}})
+    (results / "eval" / "20261003-052158.json").write_text(ev("20261003-052158", "2026-10-03T06:00:00"), encoding="utf-8")
+    (results / "eval_d3ft" / "20261021-155222.json").write_text(ev("20261021-155222", "2026-10-21T16:16:00"), encoding="utf-8")
+    (results / "eval_d3ft" / "20261021-130745_repro.json").write_text(json.dumps({"check": "repro"}), encoding="utf-8")
     lst = server.Listing(runs, results)
     by_file = {r["file"]: r for r in lst.run_list()["runs"]}
     ev = by_file["20261003-052158_eval_rules_test100.jsonl"]
     assert ev["eval"] == "20261003-052158" and ev["finished"] and ev["cost"] == 1100.0 and ev["window"] == "test100"
     assert not by_file["20261003-060000_hybrid_mock_dev0.jsonl"]["finished"]
-    assert lst.eval_list()["evals"][0]["id"] == "20261003-052158"
+    evals = lst.eval_list()["evals"]
+    assert [e["file"] for e in evals] == ["eval_d3ft/20261021-155222.json", "eval/20261003-052158.json"]  # newest first, no repro
 
 
 def test_page_loads_its_own_files_only():

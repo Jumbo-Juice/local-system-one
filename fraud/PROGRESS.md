@@ -414,3 +414,16 @@ Observed:
   which D3 decisions do not record); fixed with a test, results rebuilt with `--resume`.
 - Negative and limits: the reproduction check failed R3 (owner-approved deviation); 90% of an epoch;
   no gain over hybrid-ft; slower (184 vs 128 ms) and twice the training time. Phase 7 done.
+
+## 2026-10-21: console shows the fine-tuned d3-nano (owner)
+
+- `fraud/viewer/server.py` serves and lists evals from `fraud/results/eval/` and
+  `fraud/results/eval_d3ft/` (`EVAL_DIRS`); files without `totals` (the repro check) are not evals.
+- `console.js`: `hybrid-d3ft` label and a fifth chart series; the d3ft eval page merges the Phase 5
+  setups of eval 20261005-022333 (same windows) and links each cost to the eval that recorded it;
+  a training card and a dev-gate panel by option order; bar C. D3 traces (Phase 6 and 7) now replay:
+  their per-order scores are objects and may hold one order, which broke the replay before.
+- Checked in the browser pane (Observed): start page, the d3ft eval page (140 of 140 per-window
+  links resolve to traces on disk), the Phase 3 and Phase 5 eval pages, a d3ft and a Phase 6 d3-nano
+  replay played to the end with the decision panel, auto-demo starts, no console errors, no sideways
+  scroll at 375 px.
