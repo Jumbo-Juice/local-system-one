@@ -1,0 +1,32 @@
+{
+ "eval": "20261021-130745",
+ "script": "fraud/eval_d3ft.py",
+ "stage": "repro",
+ "phase6_eval": "20261021-020632",
+ "created": "2026-10-21T13:54:18",
+ "rows": 2194,
+ "same_rows": true,
+ "tokens_equal": 2194,
+ "fwd": {
+  "auc": 0.6971084241508233,
+  "auc_phase6": 0.6885908042319625,
+  "median_abs_diff": 0.020663442878047777,
+  "p90_abs_diff": 0.03979626660656719,
+  "max_abs_diff": 0.07645523373572521
+ },
+ "rev": {
+  "auc": 0.8815706785458595,
+  "auc_phase6": 0.8747613555007557,
+  "median_abs_diff": 0.02034661379607665,
+  "p90_abs_diff": 0.05175060214455717,
+  "max_abs_diff": 0.10536074078525903
+ },
+ "R1": true,
+ "R2": true,
+ "R3": false,
+ "pass": false,
+ "latency_ms_both": {
+  "p50": 334.626,
+  "p90": 406.21410000000003
+ }
+}
