@@ -69,8 +69,10 @@ The same engine decides **approve / send for a check / decline** for every payme
 public simulated mobile-money dataset (CC BY-SA 4.0). We compared it with six hand-written rules
 and with logistic regression. It lives in its own folder, [`fraud/`](fraud/CLAUDE.md), with its
 own replay console.
-Write-ups: [`fraud/docs/results.md`](fraud/docs/results.md) (the model as it comes) and
-[`fraud/docs/results-ft.md`](fraud/docs/results-ft.md) (after fine-tuning).
+Write-ups: [`fraud/docs/results.md`](fraud/docs/results.md) (the model as it comes),
+[`fraud/docs/results-ft.md`](fraud/docs/results-ft.md) (after fine-tuning), and the Decision 3.0
+model d3-nano as it comes ([`fraud/docs/results-d3.md`](fraud/docs/results-d3.md)) and fine-tuned
+([`fraud/docs/results-d3ft.md`](fraud/docs/results-d3ft.md)).
 
 ![The fraud console replaying the fine-tuned model on one test window: payments arrive, each decision shows its scores, signals, cost and decision time](docs/media/fraud.gif)
 

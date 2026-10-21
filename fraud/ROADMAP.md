@@ -82,9 +82,9 @@ whatever they show.
 - [x] Reproduction check: the frozen model in torch matches the Phase 6 llama-server traces (R1–R3)
       → R3 FAIL (0.0207/0.0203 vs 0.02; Q8_0 diagnosis); the owner chose to proceed (deviation)
 - [x] Smoke run (s/step, memory), then one training run of at most 2 h (`--plan`)
-- [ ] `python -m fraud.eval_d3ft`: dev, debias rule, gate vs logreg, then the 20 Phase 5 windows
+- [x] `python -m fraud.eval_d3ft`: dev, debias rule, gate vs logreg, then the 20 Phase 5 windows
       (if the gate passes) with bars A, B and C
-- [ ] `fraud/docs/results-d3ft.md`: training, gate, bars, labelled claims, negatives
+- [x] `fraud/docs/results-d3ft.md`: training, gate, bars, labelled claims, negatives
 
 **Accept:** results committed with the gate and bars reported pass or fail (or the reproduction
 check's or the cap rule's failure), whatever they show.
