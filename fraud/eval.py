@@ -136,7 +136,8 @@ def model_calibration(traces: list[list[dict]]) -> dict:
                 top = max(r["scores"], key=r["scores"].get)
                 conf.append(r["scores"][top])
                 right.append((top == "approve") == (r["truth"] == 0))
-                outside.append(r["outside_mass"])
+                if "outside_mass" in r:  # D3 decisions have none: their readout covers the options only
+                    outside.append(r["outside_mass"])
     return {"decisions": len(conf), "ece": ece(conf, right), "mean_top_score": float(np.mean(conf)) if conf else None,
             "top_right_rate": float(np.mean(right)) if right else None,
             "outside_mass_mean": float(np.mean(outside)) if outside else None}
