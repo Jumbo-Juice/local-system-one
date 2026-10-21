@@ -389,3 +389,12 @@ loss 1.10 at batch 1, 0.03–0.36 over batches 11–20; process 2.4 min. Free RA
 during the run (the owner's other apps: a WSL/Docker VM 4.0 GB, Steam, Discord), but the step times
 stayed steady. Cap rule: N = min(1,510, floor(6,600 / 4.87)) = **1,356 batches** (90% of the
 epoch, >= 755), about 110 min of steps. The training run started at 14:11 with `--plan`.
+
+## 2026-10-21: Phase 7 training run (within the cap)
+
+`python -m fraud.finetune_d3 --plan fraud/models/20261021-140723_lora-d3-smoke` →
+`fraud/models/20261021-141001_lora-d3` (git-ignored), adapter sha256 `8d15cf49…`. Observed (manifest):
+1,356 of 1,356 planned batches, **not stopped early**; process 101.8 min (training steps 101.3 min)
+against the 120 min cap; 4.48 s/batch mean (median 4.19); peak XPU memory 4.31 GiB; loss 0.174 over
+the first 100 batches → 0.057 over the last 100 (means per 200 batches: 0.138, 0.075, 0.065, 0.085,
+0.056, 0.080, 0.065). The eval (`python -m fraud.eval_d3ft --adapter …`) started at 15:52.
