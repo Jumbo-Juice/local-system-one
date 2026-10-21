@@ -352,3 +352,27 @@ entry before the training run.
 - Reproduction check first (R1 tokens, R2 AUC ± 0.01, R3 median score diff <= 0.02 per order).
 - Debias rule of Phase 6 on dev; gate: dev AUC >= logreg (0.9916); then the 20 Phase 5 windows.
   Bars: A cost <= logreg in >= 10/20, B p90 <= 250 ms, C cost <= hybrid-ft in >= 10/20.
+
+## 2026-10-21: Phase 7 reproduction check FAIL (R3), nothing trained
+
+`python -m fraud.eval_d3ft --repro`, check `20261021-130745`
+(`fraud/results/eval_d3ft/20261021-130745_repro.md`): the frozen d3-nano through `fraud/d3torch.py`
+(BF16, XPU) against the Phase 6 llama-server Q8_0 traces, 2,194 dev model rows. Observed:
+- R1 prompt tokens equal on 2,194 of 2,194 rows: PASS.
+- R2 AUC fwd 0.6971 vs 0.6886, rev 0.8816 vs 0.8748 (|diff| <= 0.01): PASS.
+- R3 median |decline score diff| fwd 0.0207, rev 0.0203 (<= 0.02): **FAIL**. So the check fails and,
+  as pre-registered, nothing is trained until the owner has seen why.
+- Latency, both orders in one pass: p50 335 ms, p90 406 ms. The machine ran out of RAM from about
+  13:21 (0.1 of 15.6 GB free; this process 8.1 GB, a WSL/Docker `vmmem` 4.0 GB): dev8 took 1,895 s
+  instead of ~80 s, so latency is inflated there.
+Why (exploratory, not pre-registered, after the failure):
+- The differences are systematic, not noise: correlation 0.997, and our decline score is higher in
+  both orders (logit offset +0.137 fwd / +0.144 rev, sd 0.06 / 0.08). Decline is code C in one order
+  and code A in the other, so the shift follows the option, not the code position.
+- `fraud/dev/d3_q8sim.py`: our forward with every weight matrix quantized as llama.cpp Q8_0 (blocks
+  of 32, int8 + fp16 scale, back to bf16), first 150 dev0 model rows. Median |decline diff| to the
+  Phase 6 traces: **0.0030 fwd / 0.0043 rev** (BF16: 0.0204 / 0.0208). **Inferred:** our prompt,
+  masks and readout reproduce llama-server; the R3 gap is the reference's own Q8_0 quantization,
+  which lowers the decline score by about 0.02 against BF16.
+- Running vllm-sr's own BF16 runtime (`d3_runtime.D3`) as a second reference was refused by the
+  permission check (it executes downloaded code); not done.
