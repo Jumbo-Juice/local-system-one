@@ -398,3 +398,19 @@ epoch, >= 755), about 110 min of steps. The training run started at 14:11 with `
 against the 120 min cap; 4.48 s/batch mean (median 4.19); peak XPU memory 4.31 GiB; loss 0.174 over
 the first 100 batches → 0.057 over the last 100 (means per 200 batches: 0.138, 0.075, 0.065, 0.085,
 0.056, 0.080, 0.065). The eval (`python -m fraud.eval_d3ft --adapter …`) started at 15:52.
+
+## 2026-10-21: Phase 7 results, gate PASS and bars A/B/C PASS
+
+Eval `20261021-155222` (started 15:52, all traces done before 16:16). Write-up: `fraud/docs/results-d3ft.md`.
+Observed:
+- Dev AUC (2,194 model rows): fwd 0.9953, rev 0.9950, both 0.9952 → debias gain −0.0001, variant
+  fwd; argmax flip rate 0.0. Gate vs logreg 0.9916: **PASS**. Thresholds review ≥ 0.05, decline ≥ 0.9.
+- Bar A cost ≤ logreg in **19/20**: PASS. Bar B p90 **184 ms**: PASS. Bar C cost ≤ hybrid-ft in
+  **18/20**: PASS (18 ties, 2 dearer by 50, none cheaper). Mean cost 835 (hybrid-ft 830, rules 808).
+- Same wanted action as hybrid-ft on 3,860 of 3,862 model rows. The 2 differences: fraud CASH_OUTs of
+  amount 0.00 that nano-ft reviews (50 each) and hybrid-ft approves. Its 9 differences from rules are
+  hybrid-ft's: 10M fraud TRANSFERs scored 0.888–0.893, reviewed instead of declined.
+- The report step first crashed after all traces had run (`model_calibration` read `outside_mass`,
+  which D3 decisions do not record); fixed with a test, results rebuilt with `--resume`.
+- Negative and limits: the reproduction check failed R3 (owner-approved deviation); 90% of an epoch;
+  no gain over hybrid-ft; slower (184 vs 128 ms) and twice the training time. Phase 7 done.
