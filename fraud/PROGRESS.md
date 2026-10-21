@@ -376,3 +376,16 @@ Why (exploratory, not pre-registered, after the failure):
   which lowers the decline score by about 0.02 against BF16.
 - Running vllm-sr's own BF16 runtime (`d3_runtime.D3`) as a second reference was refused by the
   permission check (it executes downloaded code); not done.
+- Owner's decision (2026-10-21, after seeing the diagnosis): proceed to the smoke run, training and
+  eval exactly as pre-registered, with the R3 failure and its Q8_0 diagnosis reported as a stated
+  deviation. No tolerance, gate or bar changes.
+
+## 2026-10-21: Phase 7 smoke run and the cap rule
+
+`python -m fraud.finetune_d3 --steps 20` → `fraud/models/20261021-140723_lora-d3-smoke` (git-ignored).
+Observed: rows 12,084 (hash 983ed4fa…, as Phase 5), 6,075 reversed, prompts 228 tokens mean / 237
+max; batches 4–20 took 4.87 s mean (median 4.83; batch 1: 10.5 s); peak XPU memory 4.31 GiB;
+loss 1.10 at batch 1, 0.03–0.36 over batches 11–20; process 2.4 min. Free RAM fell to 0.4 GB
+during the run (the owner's other apps: a WSL/Docker VM 4.0 GB, Steam, Discord), but the step times
+stayed steady. Cap rule: N = min(1,510, floor(6,600 / 4.87)) = **1,356 batches** (90% of the
+epoch, >= 755), about 110 min of steps. The training run started at 14:11 with `--plan`.

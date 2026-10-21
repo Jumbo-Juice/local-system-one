@@ -79,7 +79,8 @@ whatever they show.
       code; tested on a tiny random Qwen3.5) and `finetune_d3.py` (cap rule, hard stop; tested)
 - [x] `eval_d3ft.py` with the pre-registration in its docstring, committed with the PROGRESS
       pre-statement before training
-- [ ] Reproduction check: the frozen model in torch matches the Phase 6 llama-server traces (R1–R3)
+- [x] Reproduction check: the frozen model in torch matches the Phase 6 llama-server traces (R1–R3)
+      → R3 FAIL (0.0207/0.0203 vs 0.02; Q8_0 diagnosis); the owner chose to proceed (deviation)
 - [ ] Smoke run (s/step, memory), then one training run of at most 2 h (`--plan`)
 - [ ] `python -m fraud.eval_d3ft`: dev, debias rule, gate vs logreg, then the 20 Phase 5 windows
       (if the gate passes) with bars A, B and C
