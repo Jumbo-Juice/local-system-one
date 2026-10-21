@@ -45,6 +45,9 @@ engine, the `.venv` and the pytest run with the game demos. Keep the two apart.
 .venv/Scripts/python -m fraud.finetune                        # Phase 5: LoRA adapter → fraud/models/
 .venv/Scripts/python -m fraud.eval_ft --adapter <dir>         # Phase 5: its pre-registered eval
 .venv/Scripts/python -m fraud.eval_d3                         # Phase 6: Decision 3.0 via llama-server
+.venv/Scripts/python -m fraud.eval_d3ft --repro               # Phase 7: frozen d3-nano in torch vs Phase 6
+.venv/Scripts/python -m fraud.finetune_d3 --plan <smoke dir>  # Phase 7: LoRA on d3-nano (2 h cap)
+.venv/Scripts/python -m fraud.eval_d3ft --adapter <dir>       # Phase 7: its pre-registered eval
 .venv/Scripts/python -m fraud.viewer                          # the analyst console
 ```
 Every command and flag is in the repo's `RUN-GUIDE.md` → Fraud app. Keep it current.
@@ -54,7 +57,10 @@ Every command and flag is in the repo's `RUN-GUIDE.md` → Fraud app. Keep it cu
   `viewer/shell.js`. The console is its own page.
 - Don't add scikit-learn, pandas or other packages. The baselines are numpy. Ask first if a new
   dependency seems needed. (`peft` + `accelerate` were approved by the owner on 2026-10-05 for the
-  Phase 5 fine-tune only; `peft` is imported only by `finetune.py` and `brain.load_adapter`.)
+  Phase 5 fine-tune only; `peft` is imported only by `finetune.py` and `brain.load_adapter`, and
+  in Phase 7, owner-approved, by `finetune_d3.py` and `d3torch.D3Torch.merge_adapter`.
+  `flash-linear-attention` was approved on 2026-10-21 but removed again: it does not run on this
+  XPU, see PROGRESS 2026-10-21.)
 - Don't tune prompts, rules or thresholds on test windows. If a test result prompts a change, the
   change gets new, untouched windows.
 - Don't run inference in the viewer. It only replays recorded runs.
