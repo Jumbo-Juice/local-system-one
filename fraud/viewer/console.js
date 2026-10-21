@@ -11,7 +11,7 @@ const BY = {
 };
 const SETUP_NAME = {
   hybrid: "hybrid (filter + model)", "hybrid-1.5b": "hybrid (filter + Qwen2.5-1.5B)", rules: "rules-only",
-  "hybrid-ft": "hybrid (filter + fine-tuned 1.5B)",
+  "hybrid-ft": "hybrid (filter + fine-tuned 1.5B)", "hybrid-d3ft": "hybrid (filter + fine-tuned d3-nano)",
   logreg: "filter + logistic regression", random: "filter + random", "approve-all": "approve-all",
 };
 const SIGNALS = [
@@ -62,6 +62,8 @@ async function getTrace(file) {
   const recs = (await r.text()).split("\n").filter((l) => l.trim()).map((l) => JSON.parse(l));
   const header = recs[0];
   const ticks = recs.filter((x) => x.type === "tx");
+  // D3 traces (fraud/d3.py) store each option order as {approve, review, decline} and may hold one order only
+  for (const t of ticks) if (t.orders && t.orders.length && !Array.isArray(t.orders[0])) t.orders = t.orders.map((o) => ACTIONS.map((a) => o[a]));
   const last = recs[recs.length - 1];
   return { header, ticks, end: last.type === "end" ? last : null };
 }
@@ -273,9 +275,11 @@ function card(h, r) {
       el("div", { class: "bars" }, ...opts.map((o, i) => el("div", { class: `bar-row${i === top ? " top" : ""}` },
         el("span", { class: "lab" }, o), el("span", { class: "val" }, fix(vals[i])),
         el("div", { class: "bar-track" }, el("div", { class: "bar-fill", style: `width:${(100 * vals[i]).toFixed(1)}%` }))))),
-      r.orders ? el("div", { class: "orders" },
+      r.orders && r.orders.length === 2 ? el("div", { class: "orders" },
         `Averaged over two readings. Listed order: ${r.orders[0].map((x) => fix(x)).join(" / ")}. ` +
-        `Reversed order (shown in listed order): ${r.orders[1].map((x) => fix(x)).join(" / ")}.`) : null,
+        `Reversed order (shown in listed order): ${r.orders[1].map((x) => fix(x)).join(" / ")}.`)
+        : r.orders && r.orders.length === 1 ? el("div", { class: "orders" },
+          `One reading, options ${(h.backend || {}).orders === "rev" ? "reversed (shown in listed order)" : "as listed"}.`) : null,
       el("dl", { class: "kv", style: "margin-top:6px" },
         el("dt", {}, "Mass outside the labels"), el("dd", {}, fix(r.outside_mass, 4)),
         el("dt", {}, "Prompt tokens"), el("dd", {}, r.prompt_tokens))));
@@ -394,8 +398,13 @@ function about(h, ticks, end, total) {
       fact("Fraud", h.window.fraud, `Enriched; the natural rate in these hours is ${pct(h.window.natural_fraud_rate, 3)}`)),
     factCard("Setup",
       fact("Setup", h.setup, SETUP_NAME[h.setup] || ""),
-      model.length ? fact("Model", (b.model || "").split("/").pop() || b.kind, `${b.device_name || b.device || ""}, LM head ${b.head_dtype || "?"}`) : null,
-      model.length ? fact("Order debias", h.order_debias ? "on" : "off", "Each decision is read in both option orders and averaged") : null,
+      model.length ? fact("Model", (b.model || "").split("/").pop() || b.kind, b.orders
+        ? `${b.kind === "llamacpp-systemone" ? `llama-server, ${b.gguf}` : `${b.device || ""}, ${b.dtype || ""}`}${b.adapter ? `, LoRA ${b.adapter.dir}` : ""}`
+        : `${b.device_name || b.device || ""}, LM head ${b.head_dtype || "?"}`) : null,
+      model.length ? (b.orders
+        ? fact("Option order", { both: "both, averaged", fwd: "as listed", rev: "reversed" }[b.orders] || b.orders,
+          b.orders === "both" ? "Each decision is read in both option orders and averaged" : "One option order, chosen on dev windows")
+        : fact("Order debias", h.order_debias ? "on" : "off", "Each decision is read in both option orders and averaged")) : null,
       fact("Type filter", (h.fraud_free_types || []).join(", "), "Approved without a model: no fraud in training")),
     factCard("Costs",
       fact("Wrong decline", `${pct(h.costs.friction_rate)} of amount`, `At least ${h.costs.friction_min}`),
@@ -421,7 +430,7 @@ function about(h, ticks, end, total) {
   if (model.length) {
     const wanted = new Set(model.map((r) => r.wanted));
     if (wanted.size === 1) notes.push(`The model chose “${[...wanted][0]}” for all ${model.length} transactions it judged.`);
-    const flips = model.filter((r) => r.orders && r.orders[0].indexOf(Math.max(...r.orders[0])) !== r.orders[1].indexOf(Math.max(...r.orders[1])));
+    const flips = model.filter((r) => r.orders && r.orders.length === 2 && r.orders[0].indexOf(Math.max(...r.orders[0])) !== r.orders[1].indexOf(Math.max(...r.orders[1])));
     if (flips.length) notes.push(`In ${flips.length} of ${model.length} decisions the two option orders disagreed on the top option.`);
     notes.push("Model scores are uncalibrated softmax values over the three labels, not fraud probabilities.");
   }
@@ -484,7 +493,8 @@ async function startPage() {
   fill();
   app.replaceChildren(
     el("h1", {}, "Approve, review or decline: System One on PaySim"),
-    el("p", { class: "intro" }, "A local Qwen2.5-1.5B judges each TRANSFER and CASH_OUT, and a rule filter approves the transaction types " +
+    el("p", { class: "intro" }, "A local model judges each TRANSFER and CASH_OUT (Qwen2.5-1.5B; later evals add a fine-tuned Qwen2.5-1.5B and a fine-tuned " +
+      "d3-nano), and a rule filter approves the transaction types " +
       "that had no fraud in training. The console replays recorded runs at their recorded speed and shows the pre-registered eval " +
       "against rules-only, logistic regression, random and approve-all."),
     el("div", { class: "cards" },
@@ -507,8 +517,25 @@ async function startPage() {
 }
 
 const EVAL_SERIES = [["hybrid-1.5b", "var(--series-1)"], ["rules", "var(--series-2)"], ["logreg", "var(--series-3)"],
-  ["hybrid-ft", "var(--series-4)"]];
-const BAR_TITLE = { bar1: "Bar 1: cost", bar2: "Bar 2: speed", barA: "Bar A: vs logistic regression", barB: "Bar B: speed" };
+  ["hybrid-ft", "var(--series-4)"], ["hybrid-d3ft", "var(--series-5)"]];
+const BAR_TITLE = { bar1: "Bar 1: cost", bar2: "Bar 2: speed", barA: "Bar A: vs logistic regression", barB: "Bar B: speed",
+  barC: "Bar C: vs fine-tuned 1.5B" };
+const WRITE_UP = { "fraud/eval_ft.py": "fraud/docs/results-ft.md", "fraud/eval_d3ft.py": "fraud/docs/results-d3ft.md" };
+
+// fraud/eval_d3ft.py stores only its own setup's windows (keyed by window) and points at the Phase 5
+// eval for the other setups on the same windows; merge them into the shape of the other evals.
+async function withBaselines(r) {
+  if (!r.phase5_eval) return { r, traceEval: () => r.eval };
+  const p5 = await getJSON(`results/eval/${encodeURIComponent(r.phase5_eval)}.json`);
+  const own = Object.keys(r.totals).find((s) => !p5.totals[s]);
+  const tot = r.totals[own];
+  const natural = r.test_windows.map((w) => r.windows[w] && r.windows[w].cost_natural).filter((v) => v !== undefined);
+  const merged = { ...r,
+    windows: { [own]: r.windows, ...p5.windows },
+    totals: { [own]: { ...tot, cost_natural_mean: natural.length ? natural.reduce((a, b) => a + b, 0) / natural.length : undefined },
+      ...p5.totals } };
+  return { r: merged, traceEval: (s) => (s === own ? r.eval : r.phase5_eval) };
+}
 const SPEED_BARS = new Set(["bar2", "barB"]);
 
 function evalChart(r) {
@@ -554,6 +581,7 @@ function evalChart(r) {
 }
 
 function devGate(d) {
+  if (d.variant) return devGateOrders(d);
   return el("section", { class: "panel bar-card", style: "margin-bottom:12px" }, el("h3", {}, "Dev gate (dev0–dev9)"),
     el("div", {}, chip(d.gate.pass ? "pass" : "fail", d.gate.pass ? "PASS" : "FAIL"), ` ${d.gate.rule}`),
     ...Object.entries(d.auc).map(([s, a]) => el("div", { style: "margin-top:6px" }, `${SETUP_NAME[s] || s}: AUC ${a.auc.toFixed(3)}`,
@@ -562,11 +590,37 @@ function devGate(d) {
       el("div", { class: "hint" }, "picked on dev windows by cost, before any new test window ran")));
 }
 
+function devGateOrders(d) {  // fraud/eval_d3ft.py: one model read in both option orders, gated against logreg
+  const order = { both: "both orders averaged", fwd: "options as listed", rev: "options reversed" };
+  return el("section", { class: "panel bar-card", style: "margin-bottom:12px" }, el("h3", {}, "Dev gate (dev0–dev9)"),
+    el("div", {}, chip(d.gate.pass ? "pass" : "fail", d.gate.pass ? "PASS" : "FAIL"), ` ${d.gate.rule}`),
+    el("div", { style: "margin-top:6px" }, `Model: AUC ${d.auc[d.variant].toFixed(4)} (${order[d.variant]})`,
+      el("div", { class: "hint" }, `decline score, ${d.rows} model rows, ${d.fraud} fraud`)),
+    el("div", { style: "margin-top:6px" }, `Logistic regression: AUC ${d.logreg.auc.toFixed(4)}`,
+      el("div", { class: "hint" }, "same rows; the gate")),
+    el("div", { style: "margin-top:6px" }, `Option order: ${order[d.variant]}`,
+      el("div", { class: "hint" }, `AUC both ${d.auc.both.toFixed(4)}, listed ${d.auc.fwd.toFixed(4)}, reversed ${d.auc.rev.toFixed(4)}; ` +
+        `both orders are kept only if they gain ≥ 0.005`)),
+    el("div", { style: "margin-top:6px" }, `Thresholds: review ≥ ${d.thresholds.review}, decline ≥ ${d.thresholds.decline}`,
+      el("div", { class: "hint" }, "picked on dev windows by cost, before any test window ran")));
+}
+
+function trainingCard(t) {
+  return el("section", { class: "panel bar-card", style: "margin-bottom:12px" }, el("h3", {}, "Training"),
+    el("div", {}, `${t.steps_done} of ${t.steps} batches${t.stopped_early ? " (stopped early)" : ""}`,
+      el("div", { class: "hint" }, "batches of 8; the step count was fixed from a smoke run to fit a 2-hour cap")),
+    el("div", { style: "margin-top:6px" }, `${(t.train_s / 60).toFixed(1)} min`,
+      el("div", { class: "hint" }, `${t.step_s_mean.toFixed(2)} s per batch, peak ${t.peak_mem_gib.toFixed(2)} GiB on the iGPU`)),
+    el("div", { style: "margin-top:6px" }, `Loss ${t.loss_first100.toFixed(3)} → ${t.loss_last100.toFixed(3)}`,
+      el("div", { class: "hint" }, "mean of the first and the last 100 batches")));
+}
+
 async function evalPage(id) {
   const { evals } = await getJSON("api/evals");
   const meta = id ? evals.find((e) => e.id === id) : evals[0];
-  if (!meta) { app.replaceChildren(el("p", { class: "muted" }, "No eval results in fraud/results/eval/ yet.")); return; }
-  const r = await getJSON(`results/eval/${encodeURIComponent(meta.file)}`);
+  if (!meta) { app.replaceChildren(el("p", { class: "muted" }, "No eval results in fraud/results/ yet.")); return; }
+  const raw = await getJSON(`results/${meta.file.split("/").map(encodeURIComponent).join("/")}`);
+  const { r, traceEval } = await withBaselines(raw);
   const { runs } = await getJSON("api/runs");
   const have = new Set(runs.map((x) => x.file));
   document.title = `Eval ${r.eval} · Fraud Console`;
@@ -587,7 +641,7 @@ async function evalPage(id) {
     el("thead", {}, el("tr", {}, el("th", {}, "window"), ...setups.map((s) => el("th", { class: "r" }, s)))),
     el("tbody", {}, ...r.test_windows.map((w) => el("tr", {}, el("td", {}, w), ...setups.map((s) => {
       const v = r.windows[s] && r.windows[s][w];
-      const f = `${r.eval}_eval_${s}_${w}.jsonl`;
+      const f = `${traceEval(s)}_eval_${s}_${w}.jsonl`;
       return el("td", { class: "r" }, !v ? "–" : have.has(f) ? el("a", { href: `#/run/${encodeURIComponent(f)}` }, money(v.cost)) : money(v.cost));
     })))));
   const paired = el("table", {},
@@ -600,7 +654,9 @@ async function evalPage(id) {
     el("h1", {}, `Eval ${r.eval}`),
     el("p", { class: "intro" }, `${r.test_windows.length} held-out test windows, run once per setup. Pre-registered in the docstring of ${r.script || "fraud/eval.py"} before any ` +
       `test window ran. Complete: ${r.complete ? "yes" : "no"}. Write-up with labelled claims: ` +
-      `${r.script === "fraud/eval_ft.py" ? "fraud/docs/results-ft.md" : "fraud/docs/results.md"}.`),
+      `${WRITE_UP[r.script] || "fraud/docs/results.md"}.` +
+      (r.phase5_eval ? ` The other setups are the committed results of eval ${r.phase5_eval} on the same windows.` : "")),
+    ...(r.training ? [trainingCard(r.training)] : []),
     ...(r.dev ? [devGate(r.dev)] : []),
     el("div", { class: "cards" }, ...bars),
     el("section", { class: "panel", style: "margin-top:12px" }, el("h2", {}, "Cost per window"), evalChart(r)),

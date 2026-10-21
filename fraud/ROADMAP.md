@@ -85,6 +85,8 @@ whatever they show.
 - [x] `python -m fraud.eval_d3ft`: dev, debias rule, gate vs logreg, then the 20 Phase 5 windows
       (if the gate passes) with bars A, B and C
 - [x] `fraud/docs/results-d3ft.md`: training, gate, bars, labelled claims, negatives
+- [x] Console (owner, after the eval): `hybrid-d3ft` label and eval-chart series, the eval page reads
+      `fraud/results/eval_d3ft/` (training card, dev gate by option order, bar C), D3 traces replay
 
 **Accept:** results committed with the gate and bars reported pass or fail (or the reproduction
 check's or the cap rule's failure), whatever they show.
