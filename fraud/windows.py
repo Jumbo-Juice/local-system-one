@@ -4,7 +4,7 @@ A window is a contiguous span of hours from one split. It keeps ``fraud_target``
 TRANSFER→CASH_OUT pairs where possible) and fills up to ``size`` with legit rows sampled uniformly
 from the same span, in arrival order. Natural fraud is ~0.1% in training, so a natural 500-row
 window would hold 0–1 frauds. Each row gets a weight that maps the window back to the natural
-rate of its own span (fraud/docs/data.md → Time).
+rate of its own span (fraud/DATA.md → Time).
 """
 
 from __future__ import annotations
@@ -15,7 +15,7 @@ import numpy as np
 
 from .data import TYPE_ID, Transactions
 
-TRAIN = (1, 300)  # Implementation choice (fraud/docs/data.md → Time)
+TRAIN = (1, 300)  # Implementation choice (fraud/DATA.md → Time)
 TEST = (301, 743)
 SPLITS = {"dev": TRAIN, "test": TEST}
 

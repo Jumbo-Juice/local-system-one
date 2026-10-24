@@ -69,10 +69,10 @@ The same engine decides **approve / send for a check / decline** for every payme
 public simulated mobile-money dataset (CC BY-SA 4.0). We compared it with six hand-written rules
 and with logistic regression. It lives in its own folder, [`fraud/`](fraud/CLAUDE.md), with its
 own replay console.
-Write-ups: [`fraud/docs/results.md`](fraud/docs/results.md) (the model as it comes),
-[`fraud/docs/results-ft.md`](fraud/docs/results-ft.md) (after fine-tuning), and the Decision 3.0
-model d3-nano as it comes ([`fraud/docs/results-d3.md`](fraud/docs/results-d3.md)) and fine-tuned
-([`fraud/docs/results-d3ft.md`](fraud/docs/results-d3ft.md)).
+Write-ups: [`fraud/RESULTS.md`](fraud/RESULTS.md) (the model as it comes),
+[`fraud/RESULTS-FT.md`](fraud/RESULTS-FT.md) (after fine-tuning), and the Decision 3.0
+model d3-nano as it comes ([`fraud/RESULTS-D3.md`](fraud/RESULTS-D3.md)) and fine-tuned
+([`fraud/RESULTS-D3FT.md`](fraud/RESULTS-D3FT.md)).
 
 ![The fraud console replaying the fine-tuned model on one test window: payments arrive, each decision shows its scores, signals, cost and decision time](docs/media/fraud.gif)
 
@@ -150,7 +150,7 @@ it: [`docs/lessons-learned.md`](docs/lessons-learned.md).
 | see the evidence | [`docs/research.md`](docs/research.md) (sources and Observed results), `bench/results/<benchmark>/` (raw data) |
 | learn from past runs | [`docs/lessons-learned.md`](docs/lessons-learned.md) |
 | read or change the engine | `system_one/` (see How it works below) |
-| see the fraud app (separate, serious) | [`fraud/`](fraud/CLAUDE.md): approve / review / decline on PaySim; results in [`fraud/docs/results.md`](fraud/docs/results.md) and, for the fine-tuned brain, [`fraud/docs/results-ft.md`](fraud/docs/results-ft.md); console `python -m fraud.viewer` |
+| see the fraud app (separate, serious) | [`fraud/`](fraud/CLAUDE.md): approve / review / decline on PaySim; results in [`fraud/RESULTS.md`](fraud/RESULTS.md) and, for the fine-tuned brain, [`fraud/RESULTS-FT.md`](fraud/RESULTS-FT.md); console `python -m fraud.viewer` |
 
 ## Quick start
 
@@ -384,7 +384,7 @@ viewer/                the Master Viewer (python -m viewer): index.html, shell.j
 runs/                  captured runs, one flat pool per game (shooter/, dungeon/); only *.pinned.jsonl
                         is committed
 fraud/                 the fraud app (separate): data, rules, baselines, model brain, eval, fine-tune,
-                        its own runs/, results/, docs/ and console (python -m fraud.viewer)
+                        its own runs/, results/, write-ups (uppercase .md at its root) and console (python -m fraud.viewer)
 bench/                 evaluations and benchmarks, one script each; results/<script>/ holds their output
 config/                default.toml (1.5B, default), lenovo-3b.toml (3B alternative),
                         nuc.example.toml (larger-hardware example, 7B), mock.toml (no model)
@@ -450,4 +450,4 @@ tests/                 pytest suite (mock tests always; `model` tests when weigh
 - Models: [Qwen2.5](https://huggingface.co/Qwen) 0.5B, 1.5B (Apache 2.0) and 3B (Qwen Research licence, non-commercial).
 - Fraud data: PaySim by E. A. Lopez-Rojas, A. Elmir and S. Axelsson, from the Kaggle dataset
   [`sriharshaeedala/financial-fraud-detection-dataset`](https://www.kaggle.com/datasets/sriharshaeedala/financial-fraud-detection-dataset)
-  (CC BY-SA 4.0); see [`fraud/docs/data.md`](fraud/docs/data.md).
+  (CC BY-SA 4.0); see [`fraud/DATA.md`](fraud/DATA.md).

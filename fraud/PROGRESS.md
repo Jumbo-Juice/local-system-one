@@ -25,7 +25,7 @@ choice):
 - PaySim downloaded without a login from Kaggle's public endpoint (186 MB zip, 494 MB CSV) into
   `fraud/data/raw/` (git-ignored). `python -m fraud.data` builds `fraud/data/paysim.npz` in about
   20 s; a test proves no balance column or value reaches the cache.
-- Observed facts are in `fraud/docs/data.md`. The ones that shape the build:
+- Observed facts are in `fraud/DATA.md`. The ones that shape the build:
   CASH_IN/DEBIT/PAYMENT are fraud-free; origin accounts almost never repeat (no per-account tier);
   each fraud TRANSFER is followed by a CASH_OUT of the same amount in the same hour, with unlinked
   ids; legitimate volume collapses after step ~400.
@@ -142,7 +142,7 @@ Phase 2 acceptance (Observed, `python -m fraud.capture --setup hybrid --window d
 ## 2026-10-03: Phase 3, the eval (20261003-052158)
 
 The pre-registration was committed in `47c32b1`, then `python -m fraud.eval` ran all 5 setups on
-test100–test119 once (about 9 min). Full write-up: `fraud/docs/results.md`. Observed:
+test100–test119 once (about 9 min). Full write-up: `fraud/RESULTS.md`. Observed:
 - **Bar 1 FAIL** (as stated before the run): hybrid-1.5b cheaper than rules-only in 0 of 20.
   **Bar 2 PASS**: p90 127.2 ms (p50 121, max 203; 3,800 model decisions).
 - The hybrid declined 3,800 of 3,800 model rows. Read in the listed order the model always picked
@@ -241,7 +241,7 @@ New windows share no hour with test100–test119. Training set: all fraud + 3× 
 ## 2026-10-05: Phase 5 eval and results
 
 Eval `20261005-022333` (`python -m fraud.eval_ft --adapter fraud/models/20261005-013044_lora`,
-~27 min). Write-up: `fraud/docs/results-ft.md`. Observed:
+~27 min). Write-up: `fraud/RESULTS-FT.md`. Observed:
 - Bar A PASS: hybrid-ft cost ≤ logreg in 19 of 20 new windows (sign test p = 4.0e-5).
   Bar B PASS: p90 127.9 ms. Old bar 1 (vs rules) FAIL as stated: 0 cheaper, 9 dearer, 11 ties.
 - Mean cost: hybrid-ft 830, rules 808, logreg 190,910, hybrid-1.5b 5.15M. Recall hybrid-ft 1.00.
@@ -275,7 +275,7 @@ Result (Observed; trace `fraud/runs/20261005-030728_explore_hybrid-ft_test109.js
 The owner checked that Kaggle `sriharshaeedala/financial-fraud-detection-dataset`
 (`Synthetic_Financial_datasets_log.csv`) is the same file as the PaySim CSV used so far, and chose it
 as the cited source (its Kaggle usability rating is 10.0). Every source reference now points to it
-(`fraud/data.py`, `docs/data.md`, PRD, `runs/README.md`, the console footer, RUN-GUIDE); the PaySim
+(`fraud/data.py`, `DATA.md`, PRD, `runs/README.md`, the console footer, RUN-GUIDE); the PaySim
 authors stay credited (CC BY-SA). The local raw file was renamed to the new name; `find_csv` still
 accepts the old `PS_*.csv` name. No result changes: same bytes, same cache.
 
@@ -310,7 +310,7 @@ the `fraud/eval_d3.py` docstring, committed with this entry before the first D3 
 ## 2026-10-21: Phase 6 results, gate FAIL for both D3 models
 
 Eval `20261021-020632` (`python -m fraud.eval_d3`, ~11 min nano + ~23 min mini). Write-up:
-`fraud/docs/results-d3.md`. Observed:
+`fraud/RESULTS-D3.md`. Observed:
 - Setup notes: llama-server answered 401 at first because the owner's user environment sets
   `LLAMA_API_KEY` (llama-server then requires it); `fraud/d3.py` now sends it as a bearer token.
   The smoke run showed that one order asked alone gives the same probabilities as in the pair.
@@ -401,7 +401,7 @@ the first 100 batches → 0.057 over the last 100 (means per 200 batches: 0.138,
 
 ## 2026-10-21: Phase 7 results, gate PASS and bars A/B/C PASS
 
-Eval `20261021-155222` (started 15:52, all traces done before 16:16). Write-up: `fraud/docs/results-d3ft.md`.
+Eval `20261021-155222` (started 15:52, all traces done before 16:16). Write-up: `fraud/RESULTS-D3FT.md`.
 Observed:
 - Dev AUC (2,194 model rows): fwd 0.9953, rev 0.9950, both 0.9952 → debias gain −0.0001, variant
   fwd; argmax flip rate 0.0. Gate vs logreg 0.9916: **PASS**. Thresholds review ≥ 0.05, decline ≥ 0.9.

@@ -38,7 +38,7 @@ prompt, decide as cheaply as the numpy logistic regression? Owner's choices, 202
   hybrid-1.5b and random, and logreg vs rules; dev AUCs; the chosen thresholds; ECE and
   outside_mass of the model scores (uncalibrated). Stated before the run: hybrid-ft cheaper than
   rules in >= 16 of 20 (the old bar 1) is expected to FAIL; rules-only paid only review fees in
-  19 of 20 old test windows (fraud/docs/results.md).
+  19 of 20 old test windows (fraud/RESULTS.md).
 - Known asymmetry (stated, not corrected): logreg's features include four account-count signals
   the prompt does not show (orig_out/orig_in/dest_out/dest_transfer_in before).
 """

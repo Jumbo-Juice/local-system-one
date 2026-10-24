@@ -62,10 +62,10 @@ The new windows reproduce the Phase 3 ordering of the baselines: rules cheaper t
   these costs 50 more than the rule. That is the whole gap to rules-only: 9 windows dearer by
   exactly 50, the other 11 tied.
 - **Inferred:** trained on labels only, the model rediscovered the two signals that nearly separate
-  PaySim fraud (`fraud/docs/data.md`) and the same review band as the six-row rule table in
+  PaySim fraud (`fraud/DATA.md`) and the same review band as the six-row rule table in
   `fraud/rules.py`. It never saw the rule table. Its
   cost ceiling is the rules' cost, because rules-only already pays only review fees in most windows
-  (`fraud/docs/results.md`, "Why rules-only is so hard to beat").
+  (`fraud/RESULTS.md`, "Why rules-only is so hard to beat").
 - **Checked afterwards (exploratory, owner's request, not pre-registered; PROGRESS 2026-10-05):**
   does that hesitation help in Phase 3's test109, where rules-only lost 8.0M by declining eight
   legit 10M transfers? **No.** One run of hybrid-ft on test109 with the frozen adapter and thresholds

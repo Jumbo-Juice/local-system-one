@@ -520,7 +520,7 @@ const EVAL_SERIES = [["hybrid-1.5b", "var(--series-1)"], ["rules", "var(--series
   ["hybrid-ft", "var(--series-4)"], ["hybrid-d3ft", "var(--series-5)"]];
 const BAR_TITLE = { bar1: "Bar 1: cost", bar2: "Bar 2: speed", barA: "Bar A: vs logistic regression", barB: "Bar B: speed",
   barC: "Bar C: vs fine-tuned 1.5B" };
-const WRITE_UP = { "fraud/eval_ft.py": "fraud/docs/results-ft.md", "fraud/eval_d3ft.py": "fraud/docs/results-d3ft.md" };
+const WRITE_UP = { "fraud/eval_ft.py": "fraud/RESULTS-FT.md", "fraud/eval_d3ft.py": "fraud/RESULTS-D3FT.md" };
 
 // fraud/eval_d3ft.py stores only its own setup's windows (keyed by window) and points at the Phase 5
 // eval for the other setups on the same windows; merge them into the shape of the other evals.
@@ -654,7 +654,7 @@ async function evalPage(id) {
     el("h1", {}, `Eval ${r.eval}`),
     el("p", { class: "intro" }, `${r.test_windows.length} held-out test windows, run once per setup. Pre-registered in the docstring of ${r.script || "fraud/eval.py"} before any ` +
       `test window ran. Complete: ${r.complete ? "yes" : "no"}. Write-up with labelled claims: ` +
-      `${WRITE_UP[r.script] || "fraud/docs/results.md"}.` +
+      `${WRITE_UP[r.script] || "fraud/RESULTS.md"}.` +
       (r.phase5_eval ? ` The other setups are the committed results of eval ${r.phase5_eval} on the same windows.` : "")),
     ...(r.training ? [trainingCard(r.training)] : []),
     ...(r.dev ? [devGate(r.dev)] : []),
