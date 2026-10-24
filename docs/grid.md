@@ -73,7 +73,7 @@ Details: [`research.md`](research.md) → Observed → Prefix caching.
 
 ## Results
 
-![demo window with Qwen2.5-1.5B on the Arc 140V](demo.png)
+![demo window with Qwen2.5-1.5B on the Arc 140V](media/demo.png)
 
 With the real model on the Lenovo, the demo runs at ~3 ticks/s: 300–450 ms per tick for 6–9
 decisions in one batch. Tiered goals vs flat control, 100 ticks, 4 agents, mean of 3 seeds
