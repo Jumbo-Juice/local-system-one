@@ -107,9 +107,9 @@ dearer (p = 4.0e-5); vs rules 0 cheaper, 9 dearer, 11 ties (p = 0.0039); vs hybr
   and the fraud is worth nothing, so finding it costs 50 more than missing it. That is the whole cost
   gap to hybrid-ft (835 vs 830 mean).
 - **Inferred:** two different base models, fine-tuned on the same labels, converge on the same
-  decisions; the data (two signals that nearly separate PaySim fraud, `fraud/docs/data.md`) sets the
+  decisions; the data (two signals that nearly separate PaySim fraud, `fraud/DATA.md`) sets the
   result more than the base model. The cost ceiling stays rules-only's, which pays only review fees
-  in most windows (`fraud/docs/results.md`).
+  in most windows (`fraud/RESULTS.md`).
 
 ## Limits
 

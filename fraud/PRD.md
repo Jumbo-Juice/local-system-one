@@ -41,7 +41,7 @@ licence, PaySim CC BY-SA 4.0).
 - **Done for the owner:** the console runs and replays a recorded run at 1× recorded speed.
 
 ## v2: the fine-tuned brain (added 2026-10-05, owner)
-The v1 hybrid's argmax declined every transaction (`fraud/docs/results.md`), although its scores
+The v1 hybrid's argmax declined every transaction (`fraud/RESULTS.md`), although its scores
 ranked fraud above legit. v2 asks: **can a LoRA fine-tuned 1.5B, behind the same filter and
 reading the same prompt, decide as cheaply as logistic regression?** Owner's choices:
 - Bar A: the fine-tuned hybrid costs ≤ logistic regression in **≥ 10 of 20** new test windows.

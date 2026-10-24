@@ -1,7 +1,7 @@
 """The hand-written rules: the hybrid's type filter and the rules-only baseline.
 
 Both were written from the training steps (1–300) only, before any test window ran. The numbers
-behind each line are in fraud/docs/data.md → Rule cells on the training steps.
+behind each line are in fraud/DATA.md → Rule cells on the training steps.
 """
 
 from __future__ import annotations

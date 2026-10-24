@@ -7,7 +7,7 @@ console replaying a run at 1×.
 ## Phase 0: specs and data look
 - [x] Spec files (`fraud/CLAUDE.md`, PRD, ARCHITECTURE, ROADMAP, PROGRESS); root CLAUDE.md "two applications"
 - [x] Download PaySim; `fraud/data.py` builds the cache without balance columns (tested)
-- [x] `fraud/docs/data.md`: Observed counts: rows, fraud by type, steps, origin/destination repeats,
+- [x] `fraud/DATA.md`: Observed counts: rows, fraud by type, steps, origin/destination repeats,
       the fraud pattern, `isFlaggedFraud`
 
 **Accept:** `python -m fraud.data` builds the cache; a test proves no balance column is in it;
@@ -35,7 +35,7 @@ p50/p90 latency logged.
 ## Phase 3: the pre-registered eval
 - [x] `eval.py`: test window seeds, setups, bars and the decision rule written and committed before running
 - [x] Run all setups on the 20 test windows → `fraud/results/eval/`
-- [x] `fraud/docs/results.md`: bars pass/fail, baselines, ECE/outside_mass, labelled claims
+- [x] `fraud/RESULTS.md`: bars pass/fail, baselines, ECE/outside_mass, labelled claims
 
 **Accept:** results committed; both bars reported pass or fail with numbers; negative results stated.
 
@@ -56,7 +56,7 @@ appearing at their recorded latency.
 - [x] Pre-registration in the `eval_ft.py` docstring, committed before training
 - [x] Train the adapter once (`python -m fraud.finetune`); manifest logged in PROGRESS
 - [x] `python -m fraud.eval_ft`: dev gate, thresholds, then the 20 new windows (if the gate passes)
-- [x] `fraud/docs/results-ft.md`: bars A/B, dev AUCs, paired counts, labelled claims, negatives
+- [x] `fraud/RESULTS-FT.md`: bars A/B, dev AUCs, paired counts, labelled claims, negatives
 - [x] Console: `hybrid-ft` label and eval-chart series; the new eval page renders
 
 **Accept:** results committed with both bars reported pass or fail (or the gate's failure),
@@ -69,7 +69,7 @@ whatever they show.
 - [x] Dev: both models on dev0–dev9, both option orders; debias rule; gate vs logreg dev AUC
 - [x] Test windows test100–test119 for models that pass the gate (bar: pooled AUC > hybrid-1.5b):
       not run, no model passed the gate
-- [x] `fraud/docs/results-d3.md`: dev AUCs, debias decision, gate, bar (if run), labelled claims
+- [x] `fraud/RESULTS-D3.md`: dev AUCs, debias decision, gate, bar (if run), labelled claims
 
 **Accept:** results committed with the gate (and bar, if reached) reported pass or fail,
 whatever they show.
@@ -84,7 +84,7 @@ whatever they show.
 - [x] Smoke run (s/step, memory), then one training run of at most 2 h (`--plan`)
 - [x] `python -m fraud.eval_d3ft`: dev, debias rule, gate vs logreg, then the 20 Phase 5 windows
       (if the gate passes) with bars A, B and C
-- [x] `fraud/docs/results-d3ft.md`: training, gate, bars, labelled claims, negatives
+- [x] `fraud/RESULTS-D3FT.md`: training, gate, bars, labelled claims, negatives
 - [x] Console (owner, after the eval): `hybrid-d3ft` label and eval-chart series, the eval page reads
       `fraud/results/eval_d3ft/` (training card, dev gate by option order, bar C), D3 traces replay
 

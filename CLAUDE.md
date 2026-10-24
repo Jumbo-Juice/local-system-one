@@ -8,7 +8,7 @@ Start with the "Where things are" table in `README.md`; every command is in `RUN
 | app | where | its rules |
 |---|---|---|
 | **Game demos** (playful): grid, dungeon, shooter | `demo/`, `viewer/`, `runs/`, `bench/` | the Rules below |
-| **Fraud app** (serious): approve / review / decline on PaySim | `fraud/` (its own runs, results, viewer, docs) | `fraud/CLAUDE.md` |
+| **Fraud app** (serious): approve / review / decline on PaySim | `fraud/` (its own runs, results, viewer; write-ups at its root) | `fraud/CLAUDE.md` |
 
 They share only `system_one/`, `config/`, `.venv` and the pytest run. Neither imports from or writes
 for the other. The game rules below do not apply to `fraud/`, and the fraud app never appears in the

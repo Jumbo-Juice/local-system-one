@@ -60,7 +60,7 @@ cheaper than random in 19 of 20 (p = 4.0e-5); rules cheaper than logistic regres
 - In 19 of 20 test windows rules-only cost only its review fees (650–1,150): every fraud
   caught, no legit declined. The same held in all 10 dev windows.
 - **Inferred:** two signals nearly separate PaySim fraud (a TRANSFER to a receiver that never
-  received money; a CASH_OUT of an amount already moved this hour; `fraud/docs/data.md`). Rules on
+  received money; a CASH_OUT of an amount already moved this hour; `fraud/DATA.md`). Rules on
   those two get almost everything right, and the rest costs at most a review fee of 50 per row.
   To be cheaper in a window, a decider has to clear every one of the ~15–20 reviewed transfers
   without a review and without a mistake. One wrongly declined transfer costs ~10% of ~0.5M, and

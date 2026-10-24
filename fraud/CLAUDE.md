@@ -11,7 +11,7 @@ engine, the `.venv` and the pytest run with the game demos. Keep the two apart.
 2. `fraud/ARCHITECTURE.md`: data, signals, cost model, setups, trace format, viewer
 3. `fraud/ROADMAP.md`: phases with acceptance lines; the checkboxes say where we are
 4. `fraud/PROGRESS.md`: what happened and why (append-only)
-5. `fraud/docs/data.md`: Observed facts about PaySim (written in Phase 0)
+5. `fraud/DATA.md`: Observed facts about PaySim (written in Phase 0)
 
 ## Hard rules
 - **Separate from the games.** Nothing in `demo/`, `viewer/`, `runs/` or `bench/` imports from or

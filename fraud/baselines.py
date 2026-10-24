@@ -19,7 +19,7 @@ COUNTS = [k for k in NAMES if k.endswith("_before")]
 
 BASE = ("log_amount", "night", "round_amount", *[f"log1p_{k}" for k in COUNTS])
 # Each base feature twice: once for TRANSFERs, once for CASH_OUTs (the patterns differ by type;
-# fraud/docs/data.md). Other types never reach the model (the type filter approves them).
+# fraud/DATA.md). Other types never reach the model (the type filter approves them).
 FEATURES = ("is_transfer", "is_cash_out", *[f"{f}*transfer" for f in BASE], *[f"{f}*cash_out" for f in BASE])
 
 
