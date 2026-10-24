@@ -48,3 +48,21 @@ For viewer changes, run `python -m viewer` (or the `viewer` entry of `.claude/la
 check the start page, a full run view and auto-demo. The desktop app's browser pane does not
 animate while hidden; drive the page's `frame(ts)` by hand or render with headless Edge:
 `msedge --headless=new --window-size=1600,1000 --virtual-time-budget=4000 --screenshot=<png> <url>`.
+
+## Agent skills
+
+### Issue tracker
+
+Issues live in GitHub Issues for Jumbo-Juice/local-system-one, via the `gh` CLI. See `docs/agents/issue-tracker.md`.
+
+### Triage labels
+
+The seven default labels, unchanged (bug, enhancement, needs-triage, needs-info, ready-for-agent, ready-for-human, wontfix). See `docs/agents/triage-labels.md`.
+
+### Domain docs
+
+Single-context: one root `GLOSSARY.md` and `docs/adr/`, both created when first needed. See `docs/agents/domain.md`.
+
+### External peers
+
+host-only: `code-review` and `jury` start no external peer CLI. See `docs/agents/cross-model.json`.
