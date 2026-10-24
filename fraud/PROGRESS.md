@@ -427,3 +427,16 @@ Observed:
   links resolve to traces on disk), the Phase 3 and Phase 5 eval pages, a d3ft and a Phase 6 d3-nano
   replay played to the end with the decision panel, auto-demo starts, no console errors, no sideways
   scroll at 375 px.
+
+## 2026-10-24: write-ups moved to the fraud/ root (owner)
+
+- The fraud docs were in two places: the planning docs at `fraud/` and the write-ups one level down
+  in `fraud/docs/`. Now every fraud doc sits at the `fraud/` root, in uppercase (an uppercase `.md`
+  is a doc, lowercase is code; `DATA.md` stays apart from `data.py` and `data/`):
+  `docs/data.md` → `DATA.md`, `docs/results.md` → `RESULTS.md`, `docs/results-ft.md` →
+  `RESULTS-FT.md`, `docs/results-d3.md` → `RESULTS-D3.md`, `docs/results-d3ft.md` →
+  `RESULTS-D3FT.md`. `fraud/docs/` is gone.
+- Only path text changed, including the older entries above and one path in the pre-registration
+  docstring of `fraud/eval_ft.py` (owner-approved); no wording, seed, window or rule changed. The
+  console's write-up line names the new paths. New fraud write-ups go at the `fraud/` root as
+  `RESULTS-<setup>.md`; raw eval output still goes to `fraud/results/<script>/`.
