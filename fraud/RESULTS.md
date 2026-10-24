@@ -2,8 +2,8 @@
 
 Eval `20261003-052158`, run on 2026-10-03 on the Lenovo (Arc 140V iGPU, 7.18 GiB reported).
 Pre-registration: the docstring of `fraud/eval.py`, committed in `47c32b1` before any test window
-ran. Raw results: [`fraud/results/eval/20261003-052158.json`](../results/eval/20261003-052158.json)
-and [`.md`](../results/eval/20261003-052158.md). The traces (`fraud/runs/20261003-052158_eval_*`)
+ran. Raw results: [`fraud/results/eval/20261003-052158.json`](results/eval/20261003-052158.json)
+and [`.md`](results/eval/20261003-052158.md). The traces (`fraud/runs/20261003-052158_eval_*`)
 are git-ignored. Every number below is **Observed** in that eval unless labelled otherwise.
 
 ## The bars

@@ -2,8 +2,8 @@
 
 Eval `20261005-022333`, run on 2026-10-05 on the Lenovo (Arc 140V iGPU). Pre-registration: the
 docstring of `fraud/eval_ft.py`, committed in `7d193db` before the adapter was trained. Raw results:
-[`fraud/results/eval/20261005-022333.json`](../results/eval/20261005-022333.json) and
-[`.md`](../results/eval/20261005-022333.md). The traces (`fraud/runs/20261005-022333_*`) and the
+[`fraud/results/eval/20261005-022333.json`](results/eval/20261005-022333.json) and
+[`.md`](results/eval/20261005-022333.md). The traces (`fraud/runs/20261005-022333_*`) and the
 adapter (`fraud/models/20261005-013044_lora`, sha256 `02a0c5d9…`) are git-ignored. Every number
 below is **Observed** in that eval unless labelled otherwise.
 
