@@ -443,6 +443,38 @@ Its pre-registered eval (dev, debias rule, gate vs logreg, then the 20 Phase 5 w
 Flags: `--resume <eval id>` (with `--adapter` or `--repro`), `--report <eval id>` (with `--adapter`
 to refresh the training facts).
 
+Phase 8, the LFM3 family frozen (d1-Omni-2B on `/v1/systemone`, LFM3-1.7B through the engine).
+Once: llama.cpp b11960 (Vulkan) into `fraud/models/llama-b11960/` (the zip's sha256 is pinned in
+`fraud/eval_lfm.py` and checked at start), and the two Q8_0 GGUFs into `fraud/models/lfm/`
+(git-ignored; sha256 pinned in `fraud/d3.py` / `fraud/eval_lfm.py`):
+
+```bash
+curl -L -o fraud/models/llama-b11960/llama.zip https://github.com/ggml-org/llama.cpp/releases/download/b11960/llama-b11960-bin-win-vulkan-x64.zip
+```
+
+```bash
+unzip -o fraud/models/llama-b11960/llama.zip -d fraud/models/llama-b11960
+```
+
+```bash
+.venv/Scripts/python -c "from huggingface_hub import hf_hub_download as d; [d(f'LiquidAI/{m}-GGUF', f'{m}-Q8_0.gguf', local_dir='fraud/models/lfm') for m in ('d1-Omni-2B', 'LFM3-1.7B')]"
+```
+
+A few dev rows (both orders, the forward order alone, timing; writes nothing):
+
+```bash
+.venv/Scripts/python -m fraud.eval_lfm --smoke lfm3-1.7b
+```
+
+The pre-registered eval (dev runs, debias rule, vs the frozen 1.5B, gate vs logreg, then
+test100–test119 for models that pass → `fraud/results/eval_lfm/<eval id>.json|.md`):
+
+```bash
+.venv/Scripts/python -u -m fraud.eval_lfm
+```
+
+Flags: `--models d1-omni-2b lfm3-1.7b`, `--resume <eval id>`, `--report <eval id>`, `--smoke <model>`.
+
 The analyst console (replay only; start page, a run at 1×, auto-demo, the eval page), on
 http://127.0.0.1:8766:
 

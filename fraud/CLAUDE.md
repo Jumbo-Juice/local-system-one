@@ -48,6 +48,7 @@ engine, the `.venv` and the pytest run with the game demos. Keep the two apart.
 .venv/Scripts/python -m fraud.eval_d3ft --repro               # Phase 7: frozen d3-nano in torch vs Phase 6
 .venv/Scripts/python -m fraud.finetune_d3 --plan <smoke dir>  # Phase 7: LoRA on d3-nano (2 h cap)
 .venv/Scripts/python -m fraud.eval_d3ft --adapter <dir>       # Phase 7: its pre-registered eval
+.venv/Scripts/python -m fraud.eval_lfm                        # Phase 8: LFM3-1.7B + d1-Omni-2B, frozen
 .venv/Scripts/python -m fraud.viewer                          # the analyst console
 ```
 Every command and flag is in the repo's `RUN-GUIDE.md` → Fraud app. Keep it current.
