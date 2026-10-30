@@ -97,9 +97,11 @@ check's or the cap rule's failure), whatever they show.
 - [x] `eval_lfm.py` (pre-registration in its docstring, committed with the PROGRESS pre-statement
       before any LFM run): d1-Omni-2B on `/v1/systemone` as in Phase 6, LFM3-1.7B through the engine
       (llama.cpp backend) as the 1.5B
-- [ ] Dev: both models on dev0–dev9, both option orders; debias rule; vs the frozen 1.5B; gate vs logreg
-- [ ] Test windows test100–test119 for models that pass the gate (bar: pooled AUC > hybrid-1.5b)
-- [ ] `fraud/RESULTS-LFM.md`: dev AUCs, vs the frozen 1.5B, gate, bar (if run), labelled claims
+- [x] Dev: both models on dev0–dev9, both option orders; debias rule; vs the frozen 1.5B; gate vs logreg
+      → d1-Omni-2B 0.9847 (frozen 1.5B 0.9028), gate FAIL; LFM3-1.7B dropped by the owner (too slow)
+- [x] Test windows test100–test119 for models that pass the gate (bar: pooled AUC > hybrid-1.5b):
+      not run, no model passed the gate
+- [x] `fraud/RESULTS-LFM.md`: dev AUCs, vs the frozen 1.5B, gate, bar (if run), labelled claims
 
 **Accept:** results committed with the comparison, the gate (and bar, if reached) reported pass or
 fail, whatever they show.
