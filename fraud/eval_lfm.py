@@ -21,9 +21,10 @@ the same type filter?
     prompt v4 via its own chat template, thinking off), on the engine's llama.cpp backend with the
     Hugging Face tokenizer of LiquidAI/LFM3-1.7B (transformers 5.17 has no lfm3 model class, and the
     repo's remote code is not run).
-  - Runtime: llama.cpp b11960 Vulkan x64 (the release zip, sha256 pinned below, in
-    fraud/models/llama-b11960/, git-ignored); both models need b11960 or newer (Documented, their
-    model cards). The winget b11748 used in Phase 6 stays untouched. One request at a time.
+  - Runtime: llama.cpp llama-server, Vulkan; both models need b11960 or newer (Documented, their
+    model cards). Pre-registered as a project-local b11960 zip; DEVIATION (owner's choice,
+    2026-10-30, before any LFM run): the winget install upgraded from b11748 to b11977 instead,
+    because running a downloaded binary was blocked. One request at a time.
 - Setups hybrid-d1omni2b / hybrid-lfm317b: rules.TypeFilter, then the model on prompt v4 unchanged.
   d1-omni-2b: d3.D3Decider (one "choice" question per order, decline score = P("yes: decline it")).
   lfm3-1.7b: brain.ModelDecider with engine order_debias (both orders in one batch).
@@ -51,7 +52,6 @@ the same type filter?
 from __future__ import annotations
 
 import argparse
-import hashlib
 import json
 import sys
 import time
@@ -69,8 +69,6 @@ ROOT = Path(__file__).resolve().parent
 REPO = ROOT.parent
 RESULTS = ROOT / "results" / "eval_lfm"
 REF_EVAL = "20261005-022333"   # Phase 5: the frozen 1.5B's dev traces (setup hybrid-1.5b)
-SERVER_DIR = ROOT / "models" / "llama-b11960"
-SERVER_ZIP_SHA = "bac6914b5e83523eb008c6789eaa12669f93fbc196c3b9e8237b6672323b33e9"  # llama-b11960-bin-win-vulkan-x64.zip
 LFM3 = {"gguf": "lfm/LFM3-1.7B-Q8_0.gguf", "sha256": "8f6b24182258205e9e01e21f1f24a1f208c1e8115578825d202ce39976af20b6",
         "tokenizer": "LiquidAI/LFM3-1.7B"}
 MODELS = ("d1-omni-2b", "lfm3-1.7b")
@@ -78,10 +76,8 @@ SETUPS = {"d1-omni-2b": "hybrid-d1omni2b", "lfm3-1.7b": "hybrid-lfm317b"}
 
 
 def server_exe() -> str:
-    exe = SERVER_DIR / "llama-server.exe"
-    if not exe.exists():
-        raise FileNotFoundError(f"{exe} missing: unzip llama-b11960-bin-win-vulkan-x64.zip there (RUN-GUIDE.md)")
-    return str(exe)
+    """llama-server as Phase 6 finds it (LLAMA_SERVER, PATH, winget); b11960 or newer (owner: winget b11977)."""
+    return d3.find_server()
 
 
 # ---------------------------------------------------------------- the two model kinds
@@ -349,12 +345,6 @@ def smoke(name: str, n: int = 5) -> None:
         m.close()
 
 
-def check_server_zip() -> None:
-    z = SERVER_DIR / "llama.zip"
-    if z.exists() and hashlib.sha256(z.read_bytes()).hexdigest() != SERVER_ZIP_SHA:
-        raise RuntimeError(f"{z}: sha256 differs from the pinned b11960 release zip")
-
-
 def main() -> None:
     sys.stdout.reconfigure(encoding="utf-8")
     ap = argparse.ArgumentParser(description=__doc__.split("\n")[0])
@@ -363,7 +353,6 @@ def main() -> None:
     ap.add_argument("--report", help="eval id: rebuild the results files from its traces and saved dev info")
     ap.add_argument("--smoke", choices=MODELS, help="a few dev rows through the model (no files written)")
     args = ap.parse_args()
-    check_server_zip()
     if args.smoke:
         smoke(args.smoke)
     elif args.report:

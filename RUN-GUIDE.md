@@ -444,16 +444,12 @@ Flags: `--resume <eval id>` (with `--adapter` or `--repro`), `--report <eval id>
 to refresh the training facts).
 
 Phase 8, the LFM3 family frozen (d1-Omni-2B on `/v1/systemone`, LFM3-1.7B through the engine).
-Once: llama.cpp b11960 (Vulkan) into `fraud/models/llama-b11960/` (the zip's sha256 is pinned in
-`fraud/eval_lfm.py` and checked at start), and the two Q8_0 GGUFs into `fraud/models/lfm/`
+Both need llama.cpp b11960 or newer (the owner upgraded the winget install to b11977 on 2026-10-30;
+Phase 6 ran on b11748). Once: upgrade llama.cpp, and download the two Q8_0 GGUFs into `fraud/models/lfm/`
 (git-ignored; sha256 pinned in `fraud/d3.py` / `fraud/eval_lfm.py`):
 
 ```bash
-curl -L -o fraud/models/llama-b11960/llama.zip https://github.com/ggml-org/llama.cpp/releases/download/b11960/llama-b11960-bin-win-vulkan-x64.zip
-```
-
-```bash
-unzip -o fraud/models/llama-b11960/llama.zip -d fraud/models/llama-b11960
+winget upgrade --id ggml.llamacpp
 ```
 
 ```bash

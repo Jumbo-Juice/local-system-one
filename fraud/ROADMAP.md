@@ -92,9 +92,9 @@ whatever they show.
 check's or the cap rule's failure), whatever they show.
 
 ## Phase 8: the LFM3 family, frozen (owner, 2026-10-30)
-- [ ] llama.cpp b11960 (Vulkan release zip, project-local) + d1-Omni-2B and LFM3-1.7B Q8_0 GGUFs,
+- [x] llama.cpp b11960+ (owner: winget upgraded to b11977) + d1-Omni-2B and LFM3-1.7B Q8_0 GGUFs,
       sha256 checked
-- [ ] `eval_lfm.py` (pre-registration in its docstring, committed with the PROGRESS pre-statement
+- [x] `eval_lfm.py` (pre-registration in its docstring, committed with the PROGRESS pre-statement
       before any LFM run): d1-Omni-2B on `/v1/systemone` as in Phase 6, LFM3-1.7B through the engine
       (llama.cpp backend) as the 1.5B
 - [ ] Dev: both models on dev0–dev9, both option orders; debias rule; vs the frozen 1.5B; gate vs logreg

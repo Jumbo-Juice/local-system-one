@@ -8,7 +8,7 @@ from fraud.tests.test_brain_capture import S, T, mock_engine
 def test_models_are_pinned():
     assert d3.MODELS["d1-omni-2b"][0].startswith("lfm/") and len(d3.MODELS["d1-omni-2b"][1]) == 64
     assert d3.gguf_path("d3-nano").parent.name == "d3"  # Phase 6 paths unchanged on disk
-    assert len(eval_lfm.LFM3["sha256"]) == 64 and len(eval_lfm.SERVER_ZIP_SHA) == 64
+    assert len(eval_lfm.LFM3["sha256"]) == 64
     assert set(eval_lfm.SETUPS) == set(eval_lfm.MODELS)
 
 

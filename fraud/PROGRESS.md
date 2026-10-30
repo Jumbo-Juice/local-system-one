@@ -461,3 +461,11 @@ pre-registration is the `fraud/eval_lfm.py` docstring, committed with this entry
   eval 20261005-022333 before any LFM run: 0.9028, TRANSFER 0.9354, CASH_OUT 0.8846), per-type AUCs,
   and dev cost with dev-picked thresholds for both (in-sample).
 - Stated before running (Inferred): both models may stop at the logreg gate, as both D3 models did.
+
+## 2026-10-30: Phase 8 runtime deviation (owner; before any LFM run)
+
+Running the downloaded b11960 release binary from `fraud/models/llama-b11960/` was blocked by the
+session's permission check. The owner chose to upgrade the winget llama.cpp instead: b11748 →
+**b11977** (commit 7ac5727d6). `fraud/eval_lfm.py` now finds llama-server as Phase 6 does
+(`d3.find_server`). Consequence: Phase 6 can no longer be re-run on its exact b11748 build. The
+GGUF hashes were checked after download (both match the pins). Nothing else changed.
