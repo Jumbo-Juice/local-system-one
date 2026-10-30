@@ -478,3 +478,15 @@ per transaction with both orders (5 dev0 rows, Observed), against 172–174 ms f
 both orders). No LFM3-1.7B dev trace exists, so there is no LFM3 result and nothing was seen that
 could bias the rest. The eval resumes with `--resume 20261030-122539 --models d1-omni-2b`; the
 d1-Omni-2B protocol is unchanged.
+
+## 2026-10-30: Phase 8 results, d1-Omni-2B beats the frozen 1.5B on dev, gate FAIL
+
+Eval `20261030-122539` (resumed with `--models d1-omni-2b`, about 9 min of d1-Omni runs). Write-up:
+`fraud/RESULTS-LFM.md`. Observed:
+- Dev AUC (2,194 model rows, 260 fraud): both 0.9840 / fwd 0.9830 / rev 0.9847 → rev (gain −0.0007).
+  vs frozen 1.5B 0.9028: **+0.0820, better**. TRANSFER 0.9385, CASH_OUT 1.0000.
+- Gate (>= logreg 0.9916): **FAIL**. The test windows were not run.
+- Dev cost with dev thresholds (0.5 / 0.7): 269,831 per window; frozen 1.5B 2,701,634 (0.7 / 0.9).
+- Latency dev0 p90: both orders 200 ms, one order 91 ms.
+- LFM3-1.7B: no result (dropped by the owner before any trace). Phase 8 done.
+

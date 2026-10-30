@@ -1,0 +1,113 @@
+{
+ "eval": "20261030-122539",
+ "script": "fraud/eval_lfm.py",
+ "old_eval": "20261003-052158",
+ "dev": {
+  "logreg": {
+   "auc": 0.9915798265849972,
+   "rows": 2194,
+   "fraud": 260
+  },
+  "frozen_1.5b": {
+   "eval": "20261005-022333",
+   "auc": {
+    "both": 0.9027642987829131,
+    "fwd": 0.48967663670352396,
+    "rev": 0.9021637101264816
+   },
+   "rows": 2194,
+   "type_auc": {
+    "TRANSFER": 0.9354240631163708,
+    "CASH_OUT": 0.8845755280988442
+   },
+   "thresholds": {
+    "review": 0.7,
+    "decline": 0.9
+   },
+   "dev_cost_thresholds": 2701634.2339000003,
+   "dev_cost_argmax": 5349763.8301
+  },
+  "d1-omni-2b": {
+   "auc": {
+    "both": 0.9840028637339909,
+    "fwd": 0.9829568053456368,
+    "rev": 0.9847486277941293
+   },
+   "rows": 2194,
+   "fraud": 260,
+   "debias_gain": -0.0007457640601383764,
+   "variant": "rev",
+   "flip_rate": 0.4804010938924339,
+   "type_auc": {
+    "TRANSFER": 0.9385207100591716,
+    "CASH_OUT": 1.0
+   },
+   "vs_frozen_1.5b": {
+    "rule": "AUC(chosen variant) > AUC(frozen 1.5B, both orders) on the same dev rows",
+    "delta": 0.08198432901121622,
+    "better": true
+   },
+   "gate": {
+    "rule": "AUC(chosen variant) >= AUC(logreg) on dev0-dev9 model rows",
+    "pass": false
+   },
+   "thresholds": {
+    "review": 0.5,
+    "decline": 0.7
+   },
+   "grid_best": [
+    [
+     0.5,
+     0.7,
+     2698313.678
+    ],
+    [
+     0.5,
+     0.9,
+     2702493.0940000005
+    ],
+    [
+     0.5,
+     0.95,
+     3904162.399
+    ],
+    [
+     0.5,
+     0.99,
+     3965243.4940000004
+    ],
+    [
+     0.5,
+     0.5,
+     6686942.546999998
+    ]
+   ],
+   "dev_cost_thresholds": 269831.3678,
+   "latency_both": {
+    "p50": 175.999,
+    "p90": 200.3368,
+    "max": 416.786,
+    "mean": 184.49370817120624
+   },
+   "latency_single_dev0": {
+    "p50": 87.176,
+    "p90": 90.7008,
+    "max": 113.837,
+    "mean": 88.55256809338522
+   }
+  }
+ },
+ "debias_min_gain": 0.005,
+ "grid": [
+  0.05,
+  0.1,
+  0.2,
+  0.3,
+  0.5,
+  0.7,
+  0.9,
+  0.95,
+  0.99
+ ],
+ "test": {}
+}
