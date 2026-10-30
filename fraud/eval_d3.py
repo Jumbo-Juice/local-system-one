@@ -50,6 +50,7 @@ from pathlib import Path
 import numpy as np
 
 from . import costs, d3, rules, windows
+from .brain import ACTIONS
 from .eval_ft import GRID, auc, dev_auc, dev_view, pick_thresholds, run_traces, trace_file
 from .runs import RUNS, finished, read_run, stamp
 
@@ -68,6 +69,13 @@ def setup_of(model: str) -> str:
 
 # ---------------------------------------------------------------- dev analysis
 
+def order(r: dict, k: int) -> dict:
+    """Order k's scores by action. D3 traces keep a dict per order; engine traces (brain.ModelDecider)
+    a list in OPTIONS order, the reversed order already mapped back."""
+    o = r["orders"][k]
+    return o if isinstance(o, dict) else dict(zip(ACTIONS, o))
+
+
 def variant_view(traces: list[list[dict]], variant: str) -> dict:
     """dev_view with the decline score (and fallback) of one variant: both / fwd / rev."""
     v = dev_view(traces)
@@ -77,8 +85,8 @@ def variant_view(traces: list[list[dict]], variant: str) -> dict:
     v["scores"], v["fallbacks"] = [], []
     for recs in traces:
         tx = [r for r in recs if r.get("type") == "tx"]
-        v["scores"].append(np.array([r["orders"][k]["decline"] if r["by"] == "model" else 0.0 for r in tx]))
-        v["fallbacks"].append([("approve" if r["orders"][k]["approve"] >= r["orders"][k]["decline"] else "decline")
+        v["scores"].append(np.array([order(r, k)["decline"] if r["by"] == "model" else 0.0 for r in tx]))
+        v["fallbacks"].append([("approve" if order(r, k)["approve"] >= order(r, k)["decline"] else "decline")
                                if r["by"] == "model" else r["fallback"] for r in tx])
     return v
 
@@ -86,7 +94,7 @@ def variant_view(traces: list[list[dict]], variant: str) -> dict:
 def flip_rate(traces: list[list[dict]]) -> float:
     rows = [r for recs in traces for r in recs if r.get("type") == "tx" and r["by"] == "model"]
     argmax = lambda o: max(o, key=o.get)
-    return float(np.mean([argmax(r["orders"][0]) != argmax(r["orders"][1]) for r in rows])) if rows else 0.0
+    return float(np.mean([argmax(order(r, 0)) != argmax(order(r, 1)) for r in rows])) if rows else 0.0
 
 
 def choose_variant(aucs: dict) -> tuple[str, float]:

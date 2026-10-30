@@ -33,11 +33,14 @@ from . import brain
 from .brain import ACTIONS, OPTIONS
 
 ROOT = Path(__file__).resolve().parent
-MODELS_DIR = ROOT / "models" / "d3"
-# GGUF Q8_0 from ggml-org/vllm-d3-{nano,mini}-GGUF, sha256 from the Hugging Face file metadata
+MODELS_DIR = ROOT / "models"
+# GGUF Q8_0, paths under fraud/models/, sha256 from the Hugging Face file metadata.
+# d3-*: ggml-org/vllm-d3-{nano,mini}-GGUF (Phase 6). d1-omni-2b: LiquidAI/d1-Omni-2B-GGUF (Phase 8),
+# text only (no mmproj), needs llama.cpp b11960 or newer (Documented, its model card).
 MODELS = {
-    "d3-nano": ("vllm-d3-nano-Q8_0.gguf", "4867d306fd22aec8c5ebd1851b7f1074f480702655e8000ceedf0c47c6a6f337"),
-    "d3-mini": ("vllm-d3-mini-Q8_0.gguf", "f9f99be46b7ce1e5a5f09ed620de89106447646b34f7d2993e7563b48feb2858"),
+    "d3-nano": ("d3/vllm-d3-nano-Q8_0.gguf", "4867d306fd22aec8c5ebd1851b7f1074f480702655e8000ceedf0c47c6a6f337"),
+    "d3-mini": ("d3/vllm-d3-mini-Q8_0.gguf", "f9f99be46b7ce1e5a5f09ed620de89106447646b34f7d2993e7563b48feb2858"),
+    "d1-omni-2b": ("lfm/d1-Omni-2B-Q8_0.gguf", "aedf1a7c341b4281979423dbc39e9c3d3ad1da8834156c8e75af5399ca3b0861"),
 }
 ORDERS = ("both", "fwd", "rev")
 WINGET_SERVER = (Path(os.environ.get("LOCALAPPDATA", "")) / "Microsoft" / "WinGet" / "Packages"
@@ -82,13 +85,13 @@ def request(t, s, i: int, orders: str) -> dict:
 class D3Server:
     """A llama-server process serving one D3 GGUF on 127.0.0.1."""
 
-    def __init__(self, model: str, check_sha: bool = True, startup_timeout: float = 600.0):
+    def __init__(self, model: str, check_sha: bool = True, startup_timeout: float = 600.0, server: str | None = None):
         self.model, self.gguf = model, gguf_path(model)
         if not self.gguf.exists():
             raise FileNotFoundError(f"{self.gguf} missing; download {MODELS[model][0]} (RUN-GUIDE.md)")
         if check_sha and sha256(self.gguf) != MODELS[model][1]:
             raise RuntimeError(f"{self.gguf.name}: sha256 differs from the pinned one")
-        self.exe = find_server()
+        self.exe = server or find_server()
         with socket.socket() as sk:
             sk.bind(("127.0.0.1", 0))
             port = sk.getsockname()[1]

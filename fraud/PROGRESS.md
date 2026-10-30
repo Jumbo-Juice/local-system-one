@@ -440,3 +440,24 @@ Observed:
   docstring of `fraud/eval_ft.py` (owner-approved); no wording, seed, window or rule changed. The
   console's write-up line names the new paths. New fraud write-ups go at the `fraud/` root as
   `RESULTS-<setup>.md`; raw eval output still goes to `fraud/results/<script>/`.
+
+## 2026-10-30: Phase 8 pre-statement, the LFM3 family frozen (owner; written before any LFM run)
+
+Owner's request: try LiquidAI's LFM3 family, LFM3-1.7B and d1-Omni-2B, run the same test as
+Phase 6, no fine-tuning, and say whether either beats the base Qwen 1.5B + type filter. The full
+pre-registration is the `fraud/eval_lfm.py` docstring, committed with this entry.
+- Models (Documented, Hugging Face model cards): `LiquidAI/d1-Omni-2B` is a decision model built on
+  LFM3-Omni-2B that answers typed questions on llama.cpp's `/v1/systemone` (as the D3 models);
+  `LiquidAI/LFM3-1.7B` is a chat model. Both need llama.cpp b11960 or newer. Q8_0 GGUFs from
+  `LiquidAI/*-GGUF` (sha256 aedf1a7c… / 8f6b2418…) in `fraud/models/lfm/` (git-ignored).
+- Runtime (Implementation choice): llama.cpp b11960 Vulkan x64 release zip (sha256 bac6914b…),
+  unzipped into `fraud/models/llama-b11960/`, so the winget b11748 of Phase 6 stays as it was.
+  transformers 5.17 has no `lfm3` model class and the repo's remote code is not run, so LFM3-1.7B
+  goes through the engine's llama.cpp backend (HF tokenizer, next-token label scores) instead of
+  the HF backend the 1.5B used. Q8_0 vs the 1.5B's bf16 weights is a difference in the comparison.
+- Protocol: Phase 6 unchanged (dev0–dev9, both orders, debias rule ≥ 0.005, gate ≥ logreg dev AUC,
+  thresholds on dev, test100–test119 for passers, bar pooled AUC > hybrid-1.5b). Added: the
+  headline comparison against the frozen 1.5B's dev AUC on the same rows (0.9028, recomputed from
+  eval 20261005-022333 before any LFM run: 0.9028, TRANSFER 0.9354, CASH_OUT 0.8846), per-type AUCs,
+  and dev cost with dev-picked thresholds for both (in-sample).
+- Stated before running (Inferred): both models may stop at the logreg gate, as both D3 models did.
