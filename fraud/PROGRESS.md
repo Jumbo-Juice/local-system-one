@@ -469,3 +469,12 @@ session's permission check. The owner chose to upgrade the winget llama.cpp inst
 **b11977** (commit 7ac5727d6). `fraud/eval_lfm.py` now finds llama-server as Phase 6 does
 (`d3.find_server`). Consequence: Phase 6 can no longer be re-run on its exact b11748 build. The
 GGUF hashes were checked after download (both match the pins). Nothing else changed.
+
+## 2026-10-30: Phase 8, LFM3-1.7B dropped (owner; during the dev runs, before any LFM3 trace)
+
+Eval `20261030-122539` was stopped while d1-Omni-2B was on its dev windows (logreg and the first
+d1-Omni windows finished). The owner dropped LFM3-1.7B as too slow: its smoke run took 454–1,061 ms
+per transaction with both orders (5 dev0 rows, Observed), against 172–174 ms for d1-Omni-2B (also
+both orders). No LFM3-1.7B dev trace exists, so there is no LFM3 result and nothing was seen that
+could bias the rest. The eval resumes with `--resume 20261030-122539 --models d1-omni-2b`; the
+d1-Omni-2B protocol is unchanged.
