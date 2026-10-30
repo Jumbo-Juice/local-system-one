@@ -142,13 +142,19 @@ class LlamaCppBackend(Backend):
                 self.proc.kill()
         self.proc = None
 
+    @staticmethod
+    def _headers() -> dict:
+        headers = {"Content-Type": "application/json"}
+        if os.environ.get("LLAMA_API_KEY"):  # llama-server reads the same variable and then requires it
+            headers["Authorization"] = "Bearer " + os.environ["LLAMA_API_KEY"]
+        return headers
+
     def _get(self, path: str) -> dict:
-        with urllib.request.urlopen(self.url + path, timeout=60) as r:
+        with urllib.request.urlopen(urllib.request.Request(self.url + path, headers=self._headers()), timeout=60) as r:
             return json.loads(r.read())
 
     def _post(self, path: str, body: dict):
-        req = urllib.request.Request(self.url + path, data=json.dumps(body).encode(),
-                                     headers={"Content-Type": "application/json"})
+        req = urllib.request.Request(self.url + path, data=json.dumps(body).encode(), headers=self._headers())
         with urllib.request.urlopen(req, timeout=3600) as r:
             return json.loads(r.read())
 
