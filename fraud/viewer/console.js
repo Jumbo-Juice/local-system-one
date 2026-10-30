@@ -466,6 +466,24 @@ async function openRun(file, opts) {
   return current;
 }
 
+// The runs table: sortable columns [key, label, numeric]. The sort stays while you open runs and come back.
+const RUN_COLS = [["label", "run"], ["setup", "setup"], ["window", "window"], ["model", "model"],
+  ["cost", "cost", true], ["recall", "recall", true], ["total_ms", "length at 1×", true]];
+let runSort = { key: "created", dir: -1 }; // newest first, pinned runs on top
+const byText = new Intl.Collator("en", { numeric: true }).compare; // test99 before test100
+
+function sortRuns(rows) {
+  const { key, dir } = runSort;
+  const missing = (v) => v === null || v === undefined || v === "";
+  rows.sort((a, b) => {
+    if (key === "created" && b.pinned !== a.pinned) return b.pinned - a.pinned;
+    const x = a[key], y = b[key];
+    if (missing(x) || missing(y)) return missing(x) - missing(y); // no value: last either way
+    const c = typeof x === "number" ? x - y : byText(String(x), String(y));
+    return dir * c || byText(b.created || "", a.created || "");
+  });
+}
+
 async function startPage() {
   document.title = "Fraud Console";
   const [{ runs }, { evals }] = await Promise.all([getJSON("api/runs"), getJSON("api/evals")]);
@@ -475,9 +493,21 @@ async function startPage() {
   const setupSel = el("select", { "aria-label": "Setup" }, el("option", { value: "" }, "all setups"),
     ...setups.map((s) => el("option", { value: s }, s)));
   const evalBox = el("input", { type: "checkbox", id: "with-eval" });
+  const heads = RUN_COLS.map(([key, label, right]) => {
+    const btn = el("button", { class: "sort", onclick: () => {
+      runSort = runSort.key === key ? { key, dir: -runSort.dir } : { key, dir: right ? -1 : 1 };
+      fill();
+    } }, label, el("span", { class: "arrow", "aria-hidden": "true" }));
+    return { key, th: el("th", { class: right ? "r" : "" }, btn), btn };
+  });
   const fill = () => {
     const rows = runs.filter((r) => (!setupSel.value || r.setup === setupSel.value) && (evalBox.checked || !r.eval));
-    rows.sort((a, b) => (b.pinned - a.pinned) || 0);
+    sortRuns(rows);
+    for (const h of heads) {
+      const on = h.key === runSort.key;
+      h.th.setAttribute("aria-sort", on ? (runSort.dir > 0 ? "ascending" : "descending") : "none");
+      h.btn.lastChild.textContent = on ? (runSort.dir > 0 ? " ▲" : " ▼") : "";
+    }
     body.replaceChildren(...rows.map((r) => el("tr", { class: "link", tabindex: 0,
       onclick: () => { location.hash = `#/run/${encodeURIComponent(r.file)}`; },
       onkeydown: (e) => { if (e.key === "Enter") location.hash = `#/run/${encodeURIComponent(r.file)}`; } },
@@ -509,10 +539,11 @@ async function startPage() {
         el("button", { class: "primary", onclick: () => { location.hash = "#/demo"; } }, "Start the auto-demo"))),
     el("section", { class: "panel", style: "margin-top:12px" },
       el("h2", {}, "Runs"),
-      el("div", { class: "filters" }, setupSel, el("label", { for: "with-eval" }, evalBox, " include eval runs")),
+      el("div", { class: "filters" }, setupSel, el("label", { for: "with-eval" }, evalBox, " include eval runs"),
+        el("button", { onclick: () => { runSort = { key: "created", dir: -1 }; fill(); } }, "Newest first")),
+      el("p", { class: "hint" }, "Click a column to sort by it; click again to reverse. Runs without a value (unfinished) go last."),
       el("div", { class: "scroll-x" }, el("table", {},
-        el("thead", {}, el("tr", {}, el("th", {}, "run"), el("th", {}, "setup"), el("th", {}, "window"), el("th", {}, "model"),
-          el("th", { class: "r" }, "cost"), el("th", { class: "r" }, "recall"), el("th", { class: "r" }, "length at 1×"))),
+        el("thead", {}, el("tr", {}, ...heads.map((h) => h.th))),
         body))));
 }
 
