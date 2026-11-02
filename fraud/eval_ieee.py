@@ -136,9 +136,10 @@ class Win:
     id: str
     split: str
     rows: np.ndarray
+    seed: int = SEED
 
     def header(self) -> dict:
-        return {"id": self.id, "split": self.split, "seed": SEED, "steps": [int(self.rows[0]), int(self.rows[-1])],
+        return {"id": self.id, "split": self.split, "seed": self.seed, "steps": [int(self.rows[0]), int(self.rows[-1])],
                 "size": int(len(self.rows)), "dataset": "ieee-cis", "enriched": False}
 
 
@@ -476,6 +477,47 @@ def verdict(costs_by: dict[str, np.ndarray]) -> dict:
             "reported": [compare(costs_by, s, b) for s in (FT_IEEE, FINETUNED) for b in (LOGREG_SAME, LOGREG_ALL, APPROVE_ALL)]}
 
 
+def setup_row(traces: list[list[dict]], v: dict, scored: bool = True) -> dict:
+    """One setup's line of a report, from its test traces; scored is False for a setup with no scores (approve-all)."""
+    win_cost = np.array([r[-1]["summary"]["cost"] for r in traces])
+    act_all = [x for r in traces for x in r if x.get("type") == "tx"]
+    n = len(act_all)
+    fraud = [x for x in act_all if x["truth"]]
+    alerts = [x for x in act_all if x["action"] != "approve"]
+    stopped = [x for x in fraud if x["action"] != "approve"]
+    lat = [x["ms"] for x in act_all if x["by"] == "model"]
+    return {"mean_cost": float(win_cost.mean()), "total_cost": float(win_cost.sum()),
+            "cost_ci95": boot_ci(win_cost), "auc": pooled_auc(v) if scored else None,
+            "auc_ci95": boot_auc(v) if scored else None,
+            "recall": len(stopped) / max(1, len(fraud)), "precision": len(stopped) / max(1, len(alerts)),
+            "alert_rate": len(alerts) / n, "reviews": sum(x["action"] == "review" for x in act_all),
+            "declines": sum(x["action"] == "decline" for x in act_all),
+            "reviews_wanted": sum(x["wanted"] == "review" for x in act_all),
+            "fraud_amount_stopped": float(sum(x["tx"]["amount"] for x in stopped)),
+            "windows": [float(c) for c in win_cost],
+            "latency_ms": {"p50": float(np.percentile(lat, 50)), "p90": float(np.percentile(lat, 90))} if lat else None,
+            "prompt_tokens_mean": float(np.mean([x["prompt_tokens"] for x in act_all if "prompt_tokens" in x])) if lat else None,
+            "thresholds": traces[0][0].get("thresholds")}
+
+
+def sensitivity(setups, dev_tr: dict, views: dict, variants: dict, sets: dict = SENSITIVITY) -> dict:
+    """From the same scores: thresholds re-picked on dev per cost set, test re-scored. No bar."""
+    sens = {}
+    for name, c in sets.items():
+        sens[name] = {"costs": c.as_dict(), "mean_cost": {}}
+        for s in setups:
+            if s == APPROVE_ALL:
+                tr, td = None, None
+            else:
+                vd = view(dev_tr[s], variants.get(s, "both"))
+                tr, td, _ = pick_thresholds(vd["scores"], vd["truth"], vd["amount"], c)
+            v = views[s]
+            sens[name]["mean_cost"][s] = float(np.mean([
+                costs.score(c, [act(float(x), tr, td) for x in q], ["approve"] * len(q), y, a).summary["cost"]
+                for q, y, a in zip(v["scores"], v["truth"], v["amount"])]))
+    return sens
+
+
 def report(eval_id: str, log=print) -> dict:
     t = ieee_data.load()
     dev, test = make_windows(len(t), "dev", DEV_WINDOWS), make_windows(len(t), "test", TEST_WINDOWS)
@@ -483,26 +525,7 @@ def report(eval_id: str, log=print) -> dict:
     test_tr = {s: [read_run(trace_file(eval_id, "eval", s, w.id)) for w in test] for s in SETUPS}
     views = {s: view(test_tr[s]) for s in SETUPS}
     win_cost = {s: np.array([r[-1]["summary"]["cost"] for r in test_tr[s]]) for s in SETUPS}
-    rows = {}
-    for s in SETUPS:
-        act_all = [x for r in test_tr[s] for x in r if x.get("type") == "tx"]
-        n = len(act_all)
-        fraud = [x for x in act_all if x["truth"]]
-        alerts = [x for x in act_all if x["action"] != "approve"]
-        stopped = [x for x in fraud if x["action"] != "approve"]
-        lat = [x["ms"] for x in act_all if x["by"] == "model"]
-        rows[s] = {"mean_cost": float(win_cost[s].mean()), "total_cost": float(win_cost[s].sum()),
-                   "cost_ci95": boot_ci(win_cost[s]), "auc": pooled_auc(views[s]) if s != APPROVE_ALL else None,
-                   "auc_ci95": boot_auc(views[s]) if s != APPROVE_ALL else None,
-                   "recall": len(stopped) / max(1, len(fraud)), "precision": len(stopped) / max(1, len(alerts)),
-                   "alert_rate": len(alerts) / n, "reviews": sum(x["action"] == "review" for x in act_all),
-                   "declines": sum(x["action"] == "decline" for x in act_all),
-                   "reviews_wanted": sum(x["wanted"] == "review" for x in act_all),
-                   "fraud_amount_stopped": float(sum(x["tx"]["amount"] for x in stopped)),
-                   "windows": [float(c) for c in win_cost[s]],
-                   "latency_ms": {"p50": float(np.percentile(lat, 50)), "p90": float(np.percentile(lat, 90))} if lat else None,
-                   "prompt_tokens_mean": float(np.mean([x["prompt_tokens"] for x in act_all if "prompt_tokens" in x])) if lat else None,
-                   "thresholds": test_tr[s][0][0].get("thresholds")}
+    rows = {s: setup_row(test_tr[s], views[s], s != APPROVE_ALL) for s in SETUPS}
     dev_info = {}
     for s in SETUPS:
         if s == APPROVE_ALL:
@@ -516,21 +539,7 @@ def report(eval_id: str, log=print) -> dict:
             info["argmax_share"] = {a: sum(x["wanted"] == a for x in tx) / len(tx) for a in ACTIONS}
             info["argmax_cost_mean"] = float(np.mean([r[-1]["summary"]["cost"] for r in dev_tr[s]]))
         dev_info[s] = info
-    # Sensitivity, from the same scores: thresholds re-picked on dev per cost set, test re-scored. No bar.
-    sens = {}
-    for name, c in SENSITIVITY.items():
-        sens[name] = {"costs": c.as_dict(), "mean_cost": {}}
-        for s in SETUPS:
-            if s == APPROVE_ALL:
-                tr, td = None, None
-            else:
-                variant = dev_info[s].get("variant", "both")
-                vd = view(dev_tr[s], variant)
-                tr, td, _ = pick_thresholds(vd["scores"], vd["truth"], vd["amount"], c)
-            v = views[s]
-            sens[name]["mean_cost"][s] = float(np.mean([
-                costs.score(c, [act(float(x), tr, td) for x in q], ["approve"] * len(q), y, a).summary["cost"]
-                for q, y, a in zip(v["scores"], v["truth"], v["amount"])]))
+    sens = sensitivity(SETUPS, dev_tr, views, {s: d["variant"] for s, d in dev_info.items() if "variant" in d})
     y_all = np.concatenate(views[FROZEN]["truth"])
     out = {"eval": eval_id, "script": "fraud/eval_ieee.py", "dataset": "IEEE-CIS train files, time split",
            "created": time.strftime("%Y-%m-%dT%H:%M:%S"), "costs": COSTS.as_dict(), "seed": SEED, "draw": draw(),

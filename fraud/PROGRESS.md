@@ -602,3 +602,9 @@ AUC 0.822 IEEE, 0.739 PaySim, 0.571 frozen, 0.846 logreg-all. Negative: no langu
 Latency bar PASS for all three. Training 65.0 min, adapter `20261102-210541_lora-d1-ieee`, 3,021 of the 11,988 fit frauds. Five setups scored while the fee was 5 USD were re-priced from their recorded scores.
 Three rows stalled for 48.2, 19.8 and 5.6 min; the longest ends at a Modern Standby exit in the system log (Inferred: the machine paused). Scores and p90 unaffected.
 Console: IEEE-CIS replays no longer claim enriched windows, a type filter or a natural-rate cost; the header no longer says PaySim. IEEE results are not on its Eval page.
+
+## 2026-11-03: Phase 12 pre-statement, IEEE-CIS fine-tune on every fit fraud
+
+Owner: yes to training on all the fit frauds. One run, 47,952 fit rows (11,988 fraud, rows sha256 `e6d057cc1de3…`), 5,994 batches, same base, prompt, LoRA and optimiser. Phase 11's 20 test windows have been read, so
+the eval uses 20 new test windows that share no row with them (`fraud/eval_ieee_full.py`, seed 20261103). Primary question: full adapter vs Phase 11's adapter on cost. Second: full adapter vs logistic regression on all columns.
+Stated before running (Inferred): better AUC and probably lower cost than Phase 11's, maybe not distinguishable on 20 windows; probably still not cheaper than logreg on all columns.

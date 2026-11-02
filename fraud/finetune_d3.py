@@ -65,10 +65,11 @@ def encode(model, exs) -> list[tuple[list[int], int]]:
 
 
 def train(model, enc, out_dir: Path, steps: int, deadline: float = math.inf, clock=time.perf_counter,
-          log=print, lora: dict = LORA) -> dict:
+          log=print, lora: dict = LORA, checkpoint_every: int = 0) -> dict:
     """LoRA on model.lm for ``steps`` batches of the given order; the LR schedule is sized to
     ``steps``. Before each batch, if clock() >= deadline, training stops; the adapter is saved
-    either way."""
+    either way. With checkpoint_every, the adapter so far also goes to out_dir/checkpoint, so a
+    dead process leaves something to look at. It can't be resumed: the optimiser is not saved."""
     import torch
     from peft import LoraConfig, get_peft_model
 
@@ -108,6 +109,9 @@ def train(model, enc, out_dir: Path, steps: int, deadline: float = math.inf, clo
             eta = (steps - k - 1) * float(np.median(step_s[-25:]))
             log(f"step {k + 1:5d}/{steps}  loss(25) {np.mean(losses[-25:]):.4f}  {step_s[-1]:.2f} s/step  "
                 f"eta {eta / 60:5.1f} min")
+        if checkpoint_every and (k + 1) % checkpoint_every == 0:
+            peft_model.save_pretrained(Path(out_dir) / "checkpoint")
+            (Path(out_dir) / "checkpoint" / "steps_done.txt").write_text(str(k + 1), encoding="ascii")
     lm.eval()
 
     adapter = Path(out_dir) / "adapter"

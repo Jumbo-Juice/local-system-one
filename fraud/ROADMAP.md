@@ -139,3 +139,10 @@ check's failure), whatever they show.
 - [x] The IEEE fine-tune on the same windows; `fraud/RESULTS-IEEE.md`: IEEE vs PaySim fine-tune, frozen vs PaySim, baselines, negatives
 
 **Accept:** results committed with the answers and bars reported, whatever they show.
+
+## Phase 12: IEEE-CIS fine-tune on every fit fraud (owner, 2026-11-03)
+- [x] `eval_ieee_full.py` with the pre-registration in its docstring and 20 new test windows, committed before training
+- [ ] `python -m fraud.finetune_ieee --train --full`: 11,988 fraud + 35,964 legit fit rows, 5,994 batches
+- [ ] `python -m fraud.eval_ieee_full --adapter <dir>`: new adapter vs Phase 11's and logistic regression on the new windows; results in `fraud/RESULTS-IEEE-FULL.md`
+
+**Accept:** results committed with the answers and bars reported, whatever they show.
