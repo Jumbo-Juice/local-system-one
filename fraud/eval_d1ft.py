@@ -18,24 +18,23 @@ Question: fine-tuned for one hour, does d1-Omni-2B rank better than its frozen s
 Phase 5 fine-tune?
 - Model: LiquidAI/d1-Omni-2B @ 431f1d667d (BF16 text layers; sha256 pinned in fraud/d1torch.py), run
   by fraud/d1torch.py, our own torch code, on the Arc 140V (XPU). The repo's remote code is not run.
-- Reproduction check (before any training): the frozen model through fraud/d1torch.py with both
-  option orders packed after one state, as llama-server reads them, on every model row of dev0–dev9
-  (2,194 rows), against the Phase 8 llama-server traces (eval 20261030-122539, GGUF Q8_0). It passes
-  if (R1) the prompt token count equals the trace's on every row, (R2) per order,
-  |AUC − Phase 8 AUC| <= 0.01 (0.9830 fwd, 0.9847 rev), and (R3) per order, the median
-  |decline score − Phase 8 decline score| <= 0.02. Reported, no rule: the lone forward prompt against
-  the Phase 8 one-order dev0 trace. If it fails, nothing is trained until the owner has seen why.
+- Reproduction check (before any training): the frozen model through fraud/d1torch.py, each option
+  order its own lone prompt, as llama-server reads them (corrected before the check ran: PROGRESS
+  2026-11-02), on every model row of dev0–dev9 (2,194 rows), against the Phase 8 llama-server traces
+  (eval 20261030-122539, GGUF Q8_0). It passes if (R1) the prompt token count equals the trace's on
+  every row, (R2) per order, |AUC − Phase 8 AUC| <= 0.01 (0.9830 fwd, 0.9847 rev), and (R3) per order,
+  the median |decline score − Phase 8 decline score| <= 0.02. If it fails, nothing is trained until
+  the owner has seen why.
 - Adapter: the one training run of `python -m fraud.finetune_d1 --plan <smoke dir>` with the
   configuration in its docstring (Phase 5's rows, row hash 983ed4fa…; LoRA r16 on every layer; N
   batches from the hour; hard stop inside one hour). Its sha256 and N are recorded in the results.
 - Setup hybrid-d1ft: rules.TypeFilter, then d3.D3Decider on the merged model, each order read as its
-  own lone prompt, the function trained (Phase 8 read them packed). Decline score = the softmax share
+  own lone prompt, the function trained and the one Phase 8 read. Decline score = the softmax share
   of "yes: decline it" at calibration.json's temperature, which the adapter was trained under.
 - Dev: dev0–dev9, both option orders per transaction; argmax of the average is the traced action.
   Debias rule (Phase 6, fraud.eval_d3.choose_variant): keep both orders only if their AUC beats the
   better single order by >= 0.005, else that order.
-- Reported: the chosen variant's dev AUC vs frozen d1-Omni 0.9847 (Phase 8, packed read) and frozen
-  1.5B 0.9028.
+- Reported: the chosen variant's dev AUC vs frozen d1-Omni 0.9847 (Phase 8) and frozen 1.5B 0.9028.
 - Gate: dev AUC of the chosen variant >= logreg's dev AUC on the same model rows (0.9916 in Phases
   5–8). If it fails, the eval stops, the result is reported, and the owner decides.
 - Thresholds (as fraud/eval_ft.py): review / decline on the chosen variant's decline score, from
@@ -87,35 +86,19 @@ def report(eval_id, adapter, dev_info=None, log=print):
                        script="fraud/eval_d1ft.py", title=TITLE)
 
 
-def lone_fwd_compare(model, t, s, ref: list[dict]) -> dict:
-    """The lone forward prompt against the Phase 8 one-order dev0 trace (reported, no rule)."""
-    rows = [r for r in ref if r.get("type") == "tx" and r["by"] == "model"]
-    pack, model.pack = model.pack, False
-    diffs, tokens = [], 0
-    for r in rows:
-        out = d3.D3Decider(model.post, "fwd").decide(t, s, r["row"])
-        diffs.append(abs(out["scores"]["decline"] - r["orders"][0]["decline"]))
-        tokens += out["prompt_tokens"] == r["prompt_tokens"]
-    model.pack = pack
-    return {"rows": len(rows), "tokens_equal": tokens, "median_abs_diff": float(np.median(diffs)),
-            "max_abs_diff": float(np.max(diffs))}
-
-
 def repro(eval_id: str, log=print) -> dict:
     from .capture import load_all
     from .d1torch import D1Torch
 
     t, s = load_all()
     dev = [windows.make(t, "dev", k) for k in DEV_SEEDS]
-    model = warmed(D1Torch.load(pack=True))
+    model = warmed(D1Torch.load())
     ours = run_traces(eval_id, "repro", REPRO_SETUP, dev,
                       lambda w: [rules.TypeFilter(), d3.D3Decider(model.post, "both")],
                       t, s, {**model.info(), "orders": "both"}, log)
     ref = [read_run(trace_file(PHASE8_EVAL, "dev", PHASE8_SETUP, w.id)) for w in dev]
-    fwd = read_run(trace_file(PHASE8_EVAL, "dev", PHASE8_SETUP + "-fwd", "dev0"))
     out = {"eval": eval_id, "script": "fraud/eval_d1ft.py", "stage": "repro", "phase8_eval": PHASE8_EVAL,
-           "created": time.strftime("%Y-%m-%dT%H:%M:%S"), **repro_compare(ours, ref),
-           "lone_fwd_dev0": lone_fwd_compare(model, t, s, fwd)}
+           "created": time.strftime("%Y-%m-%dT%H:%M:%S"), **repro_compare(ours, ref)}
     lat = [r["ms"] for recs in ours for r in recs if r.get("type") == "tx" and r["by"] == "model"]
     out["latency_ms_both"] = {"p50": float(np.percentile(lat, 50)), "p90": float(np.percentile(lat, 90))}
     RESULTS.mkdir(parents=True, exist_ok=True)
@@ -140,12 +123,9 @@ def repro_markdown(r: dict) -> str:
         v = r[o]
         L.append(f"| {o} | {v['auc']:.4f} | {v['auc_phase6']:.4f} | {v['median_abs_diff']:.4f} | "
                  f"{v['p90_abs_diff']:.4f} | {v['max_abs_diff']:.4f} |")
-    lone = r["lone_fwd_dev0"]
     L += ["", f"- R2 |AUC diff| <= {REPRO_AUC_TOL} per order → **{'PASS' if r['R2'] else 'FAIL'}**",
           f"- R3 median |decline score diff| <= {REPRO_MEDIAN_TOL} per order → **{'PASS' if r['R3'] else 'FAIL'}**",
-          f"- Lone forward prompt vs the one-order dev0 trace ({lone['rows']} rows, reported): tokens equal on "
-          f"{lone['tokens_equal']}, median abs diff {lone['median_abs_diff']:.4f}, max {lone['max_abs_diff']:.4f}",
-          f"- Latency (both orders, one pass): p50 {r['latency_ms_both']['p50']:.0f} ms, "
+          f"- Latency (both orders, one batch): p50 {r['latency_ms_both']['p50']:.0f} ms, "
           f"p90 {r['latency_ms_both']['p90']:.0f} ms", "",
           f"**Reproduction check: {'PASS' if r['pass'] else 'FAIL'}**"]
     return "\n".join(L) + "\n"

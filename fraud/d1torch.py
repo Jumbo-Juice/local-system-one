@@ -6,15 +6,14 @@ code, which this project does not run. So this module re-implements, from readin
 - the LFM3 text layers of modeling_lfm3.py: gated short convolution, attention with QK RMSNorm and a
   sigmoid output gate, RoPE per layer type, sandwich norm; a checkpoint's text weights load by name;
 - the prompt of prompt.py (state style json_only, no system turn, "<think></think>" lead);
-- the masks of attention.py, mode "set": on full-attention layers the state sees every token, every
-  token sees the state, a question token its own question; sliding layers stay causal within their
-  window and convolutions stay causal, so a question packed after another hears it through them;
+- the masks of attention.py for a lone question: on full-attention layers every token sees the whole
+  prompt; sliding layers stay causal within their window and convolutions stay causal;
 - the readout of prompt.py: an option scores max(logit of its code, logit of " code") at the
   question's last token, over the tied embeddings, divided by calibration.json's temperature.
 
-``D1Torch.post`` answers a /v1/systemone body, so d3.D3Decider runs on it unchanged. ``pack=True``
-packs a body's questions after one state, as llama-server does (the reproduction check);
-``pack=False`` reads each question as its own lone prompt, the row the fine-tune trains on.
+``D1Torch.post`` answers a /v1/systemone body, so d3.D3Decider runs on it unchanged. Each question is
+its own lone prompt, as llama-server reads them (Documented, server-decision.cpp, and Observed: 169
+tokens per order) and as the fine-tune trains on them.
 
 Files: fraud/models/d1-omni-hf/ (git-ignored), downloaded at REVISION, sha256 checked on load.
 """
@@ -38,13 +37,12 @@ SHA256 = {  # Hugging Face LFS metadata of REVISION
 }
 TEXT_PREFIX = "model.language_model."  # the text layers' keys in model.safetensors
 CODES = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
-HEADER = "QUESTION:\n"
 LEAD = "<think></think>"
 
 
 def prefix_text(bos: str, state: str) -> str:
     """Everything before the first question: prompt.prefix_text for a text state."""
-    return f"{bos}<|im_start|>user\n{state}\n\n\n{HEADER}"
+    return f"{bos}<|im_start|>user\n{state}\n\n\nQUESTION:\n"
 
 
 def suffix_text(instructions: str, options) -> str:
@@ -185,24 +183,20 @@ class Lfm3Text(nn.Module):
         return self.embedding_norm(hidden)
 
 
-def masks_for(cfg, state, question, real) -> dict:
-    """The attention masks per layer kind, [B, 1, T, T]: attention.Sees (mode "set") on full-attention layers,
-    causal within the window on sliding ones. state [B]: state lengths; question [B, T]: each token's question,
-    -1 on the state and on padding; real [B, T]: the tokens that are not padding."""
-    t = real.shape[1]
-    pos = torch.arange(t, device=real.device)
+def masks_for(cfg, real) -> dict:
+    """The attention masks per layer kind, [B, 1, T, T], for right-padded lone prompts: full-attention layers see
+    the row's real tokens both ways, sliding ones are causal within the window. real [B, T]: not padding."""
+    pos = torch.arange(real.shape[1], device=real.device)
     q, k = pos[None, :, None], pos[None, None, :]
-    s = state[:, None, None]
-    full = (q < s) | (k < s) | (question[:, :, None] == question[:, None, :])
-    sliding = (k <= q) & (k > q - cfg.sliding_window)
-    return {"full_attention": (full & real[:, None, :])[:, None], "sliding_attention": sliding[:, None]}
+    return {"full_attention": real[:, None, None, :].expand(-1, 1, real.shape[1], -1),
+            "sliding_attention": ((k <= q) & (k > q - cfg.sliding_window))[:, None]}
 
 
 class D1Torch:
     """The LFM3 text layers of d1-Omni-2B, its code readout, temperature and tokenizer."""
 
-    def __init__(self, lm, tokenizer, device: str, temperature: float = 1.0, pack: bool = False):
-        self.lm, self.tokenizer, self.device, self.temperature, self.pack = lm, tokenizer, device, temperature, pack
+    def __init__(self, lm, tokenizer, device: str, temperature: float = 1.0):
+        self.lm, self.tokenizer, self.device, self.temperature = lm, tokenizer, device, temperature
         self.bos = getattr(tokenizer, "bos_token", None) or ""
         self.code_ids = [self._code_tokens(code) for code in CODES[:8]]
 
@@ -213,7 +207,7 @@ class D1Torch:
         return own + ([spaced[0]] if len(spaced) == 1 and spaced != own else [])
 
     @classmethod
-    def load(cls, root: Path = D1_DIR, device: str = "xpu", check_sha: bool = True, pack: bool = False) -> "D1Torch":
+    def load(cls, root: Path = D1_DIR, device: str = "xpu", check_sha: bool = True) -> "D1Torch":
         """Text weights only, BF16 (the vision tower, audio encoder and speech head are never read)."""
         from safetensors import safe_open
         from transformers import AutoTokenizer
@@ -244,12 +238,11 @@ class D1Torch:
         for kind in set(cfg.layer_types) - {"conv"}:
             setattr(lm, f"{kind}_inv_freq", rope_frequencies(cfg, kind))
         lm = lm.to(device).eval().requires_grad_(False)
-        return cls(lm, tokenizer, device, temperature, pack)
+        return cls(lm, tokenizer, device, temperature)
 
     def info(self) -> dict:
         return {"kind": "d1-torch", "model": "d1-omni-2b", "revision": REVISION, "dtype": "bfloat16",
-                "temperature": self.temperature, "device": str(self.device), "attention": "set",
-                "pack": self.pack}
+                "temperature": self.temperature, "device": str(self.device), "attention": "lone prompt"}
 
     def merge_adapter(self, adapter_dir) -> "D1Torch":
         """Fold a fraud.finetune_d1 LoRA adapter into the text layers (inference runs at base speed)."""
@@ -263,52 +256,26 @@ class D1Torch:
         return self.tokenizer.encode(prefix_text(self.bos, state) + suffix_text(instructions, options),
                                      add_special_tokens=False)
 
-    def _state_len(self, state: str, instructions: str, options, ids: list[int]) -> int:
-        return len(ids) - len(self.tokenizer.encode(suffix_text(instructions, options), add_special_tokens=False))
-
-    def _read(self, rows, n: int):
-        """Tempered option logits, [slots, n]. rows: (ids, state length, each token's question, slot positions)."""
-        width = max(len(r[0]) for r in rows)
+    def logits(self, seqs, n: int):
+        """Tempered option scores at the last token of each lone prompt, [B, n]."""
+        width = max(len(s) for s in seqs)
         pad = self.tokenizer.pad_token_id or 0
-        ids = torch.tensor([r[0] + [pad] * (width - len(r[0])) for r in rows], device=self.device)
-        question = torch.tensor([r[2] + [-1] * (width - len(r[2])) for r in rows], device=self.device)
-        real = torch.tensor([[1] * len(r[0]) + [0] * (width - len(r[0])) for r in rows], device=self.device).bool()
-        state = torch.tensor([r[1] for r in rows], device=self.device)
-        hidden = self.lm(ids, masks_for(self.lm.cfg, state, question, real))
-        where = [(i, p) for i, r in enumerate(rows) for p in r[3]]
-        slots = hidden[torch.tensor([w[0] for w in where], device=self.device),
-                       torch.tensor([w[1] for w in where], device=self.device)].float()
+        ids = torch.tensor([s + [pad] * (width - len(s)) for s in seqs], device=self.device)
+        real = torch.tensor([[1] * len(s) + [0] * (width - len(s)) for s in seqs], device=self.device).bool()
+        hidden = self.lm(ids, masks_for(self.lm.cfg, real))
+        slots = hidden[torch.arange(len(seqs), device=self.device),
+                       torch.tensor([len(s) - 1 for s in seqs], device=self.device)].float()
         tokens = sorted({t for g in self.code_ids[:n] for t in g})
         at = {t: j for j, t in enumerate(tokens)}
-        logits = slots @ self.lm.embed_tokens.weight[torch.tensor(tokens, device=self.device)].float().T
-        scores = [logits[:, [at[t] for t in g]].max(-1).values for g in self.code_ids[:n]]
-        return torch.stack(scores, dim=-1) / self.temperature
-
-    def logits(self, seqs, n: int):
-        """Option logits at the last token of each lone prompt, [B, n]. A lone prompt reads itself whole on the
-        full-attention layers (attention.py: "a lone question reads exactly as under prompt")."""
-        return self._read([(s, len(s), [-1] * len(s), [len(s) - 1]) for s in seqs], n)
+        scores = slots @ self.lm.embed_tokens.weight[torch.tensor(tokens, device=self.device)].float().T
+        return torch.stack([scores[:, [at[t] for t in g]].max(-1).values for g in self.code_ids[:n]], dim=-1) / self.temperature
 
     def post(self, body: dict) -> dict:
         """Answer a /v1/systemone body (d3.request: choice questions with the same options, no descriptions)."""
         qs = body["questions"]
-        names = list(qs)
-        opts = [list(qs[q]["criteria"]) for q in names]
-        suffixes = [suffix_text(qs[q]["instructions"], o) for q, o in zip(names, opts)]
-        first = self.encode(body["state"], qs[names[0]]["instructions"], opts[0])
+        opts = {q: list(spec["criteria"]) for q, spec in qs.items()}
+        seqs = [self.encode(body["state"], spec["instructions"], opts[q]) for q, spec in qs.items()]
         with torch.no_grad():
-            if self.pack:
-                state = self._state_len(body["state"], qs[names[0]]["instructions"], opts[0], first)
-                ids, question, ends = list(first), [-1] * state + [1] * (len(first) - state), [len(first) - 1]
-                for k, suffix in enumerate(suffixes[1:], 2):
-                    own = self.tokenizer.encode(HEADER + suffix, add_special_tokens=False)
-                    ids, question = ids + own, question + [k] * len(own)
-                    ends.append(len(ids) - 1)
-                rows, tokens = [(ids, state, question, ends)], len(ids)
-            else:
-                seqs = [self.encode(body["state"], qs[q]["instructions"], o) for q, o in zip(names, opts)]
-                rows = [(s, len(s), [-1] * len(s), [len(s) - 1]) for s in seqs]
-                tokens = sum(len(s) for s in seqs)
-            probs = torch.softmax(self._read(rows, len(opts[0])), dim=-1).cpu().tolist()
-        answers = {q: {"type": "choice", "probabilities": dict(zip(o, p))} for q, o, p in zip(names, opts, probs)}
-        return {"answers": answers, "usage": {"input_tokens": tokens, "output_tokens": 0}}
+            probs = torch.softmax(self.logits(seqs, len(opts[next(iter(qs))])), dim=-1).cpu().tolist()
+        answers = {q: {"type": "choice", "probabilities": dict(zip(opts[q], p))} for q, p in zip(qs, probs)}
+        return {"answers": answers, "usage": {"input_tokens": sum(len(s) for s in seqs), "output_tokens": 0}}
