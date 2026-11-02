@@ -252,7 +252,7 @@ class Replay {
 function card(h, r) {
   const parts = [];
   parts.push(el("div", { class: "tx-line" }, `${r.tx.type} ${amount(r.tx.amount)}`));
-  parts.push(el("div", { class: "muted" }, `#${r.i + 1} · to a ${r.tx.to} · hour ${r.tx.hour}:00 · step ${r.step} · PaySim row ${r.row}`));
+  parts.push(el("div", { class: "muted" }, `#${r.i + 1} · to a ${r.tx.to} · hour ${r.tx.hour}:00 · step ${r.step} · ${h.dataset || "PaySim"} row ${r.row}`));
   const decided = [chip(r.action)];
   if (r.wanted !== r.action) decided.push(el("span", { class: "hint" }, ` wanted ${r.wanted}; the review budget was used up, so its fallback (${r.action}) applied`));
   const outcome = r.truth
@@ -391,22 +391,30 @@ function about(h, ticks, end, total) {
       el("div", { class: "big" }, `Cost ${money(s.cost)} · ${s.confusion.fraud.approve === 0 ? "every" : `${s.fraud - s.confusion.fraud.approve} of ${s.fraud}`} fraud stopped`
         + ` · ${wrongDecl.length} legit declined`),
       el("div", { class: "hint" }, `${SETUP_NAME[h.setup] || h.setup} on window ${h.window.id} (${h.window.split}).`));
+  const natural = h.window.enriched === false; // IEEE-CIS: contiguous rows at the natural fraud rate, no filter
   const facts = [
     factCard("Window",
-      fact("Window", h.window.id, `${h.window.split === "test" ? "Held-out test steps" : "Training-period dev window"}, seed ${h.window.seed}`),
-      fact("Steps (hours)", `${h.window.steps[0]}–${h.window.steps[1]}`),
-      fact("Transactions", h.window.size, "Sampled in arrival order from the window's hours"),
-      fact("Fraud", h.window.fraud, `Enriched; the natural rate in these hours is ${pct(h.window.natural_fraud_rate, 3)}`)),
+      natural ? fact("Window", h.window.id, `${h.window.split === "test" ? "Held-out test rows" : "Dev rows, after the fit rows"}, seed ${h.window.seed}`)
+        : fact("Window", h.window.id, `${h.window.split === "test" ? "Held-out test steps" : "Training-period dev window"}, seed ${h.window.seed}`),
+      fact(natural ? "Rows" : "Steps (hours)", `${h.window.steps[0]}–${h.window.steps[1]}`),
+      fact("Transactions", h.window.size, natural ? "Contiguous rows in arrival order" : "Sampled in arrival order from the window's hours"),
+      natural ? fact("Fraud", s ? s.fraud : "–", "Natural rate, not enriched")
+        : fact("Fraud", h.window.fraud, `Enriched; the natural rate in these hours is ${pct(h.window.natural_fraud_rate, 3)}`)),
     factCard("Setup",
       fact("Setup", h.setup, SETUP_NAME[h.setup] || ""),
-      model.length ? fact("Model", (b.model || "").split("/").pop() || b.kind, b.orders
+      model.length ? fact("Model", (b.model || "").split("/").pop() || b.kind, natural
+        ? `${b.device_name || b.device || ""}, ${b.dtype || ""}${b.adapter ? `, LoRA ${b.adapter.dir}` : ""}`
+        : b.orders
         ? `${b.kind === "llamacpp-systemone" ? `llama-server, ${b.gguf}` : `${b.device || ""}, ${b.dtype || ""}`}${b.adapter ? `, LoRA ${b.adapter.dir}` : ""}`
         : `${b.device_name || b.device || ""}, LM head ${b.head_dtype || "?"}`) : null,
-      model.length ? (b.orders
+      model.length ? (natural // these headers do not name the order; each decision records the orders it read
+        ? (model[0].orders || []).length === 1 ? fact("Option order", "one", "One option order, chosen on dev windows")
+          : fact("Option order", "both, averaged", "Each decision is read in both option orders and averaged")
+        : b.orders
         ? fact("Option order", { both: "both, averaged", fwd: "as listed", rev: "reversed" }[b.orders] || b.orders,
           b.orders === "both" ? "Each decision is read in both option orders and averaged" : "One option order, chosen on dev windows")
         : fact("Order debias", h.order_debias ? "on" : "off", "Each decision is read in both option orders and averaged")) : null,
-      fact("Type filter", (h.fraud_free_types || []).join(", "), "Approved without a model: no fraud in training")),
+      natural ? null : fact("Type filter", (h.fraud_free_types || []).join(", "), "Approved without a model: no fraud in training")),
     factCard("Costs",
       fact("Wrong decline", `${pct(h.costs.friction_rate)} of amount`, `At least ${h.costs.friction_min}`),
       fact("Review", money(h.costs.review_fee), "An analyst finds the truth"),
@@ -415,7 +423,7 @@ function about(h, ticks, end, total) {
   if (s) {
     facts.push(factCard("Result",
       fact("Cost", money(s.cost)),
-      fact("Cost at the natural rate", money(s.cost_natural), "Each row reweighted to its hours' real fraud rate"),
+      natural ? null : fact("Cost at the natural rate", money(s.cost_natural), "Each row reweighted to its hours' real fraud rate"),
       fact("Recall", fix(s.recall), "Fraud declined or caught in review"),
       fact("Precision", fix(s.precision), "Share of alerts that were fraud"),
       fact("Alert rate", pct(s.alert_rate, 1), "Share of transactions not approved"),
@@ -527,7 +535,8 @@ async function startPage() {
     el("p", { class: "intro" }, "A local model judges each TRANSFER and CASH_OUT (Qwen2.5-1.5B; later evals add fine-tuned Qwen2.5-1.5B, " +
       "d3-nano and d1-Omni-2B), and a rule filter approves the transaction types " +
       "that had no fraud in training. The console replays recorded runs at their recorded speed and shows the pre-registered eval " +
-      "against rules-only, logistic regression, random and approve-all."),
+      "against rules-only, logistic regression, random and approve-all. IEEE-CIS runs (real card payments, no filter) replay here too; " +
+      "their results are in fraud/RESULTS-IEEE.md, not on the Eval page."),
     el("div", { class: "cards" },
       el("section", { class: "panel bar-card" }, el("h3", {}, "Latest eval"),
         latest ? el("div", {},

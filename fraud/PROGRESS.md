@@ -593,3 +593,12 @@ with the IEEE-CIS fine-tune. So the "retraining is necessary" bar is withdrawn. 
 rebuilding them still matches their committed numbers, which are not re-priced. The running eval keeps 5 USD in its traces; `--reprice` re-decides them at 10 USD from the
 recorded scores. New adapter: `fraud/finetune_ieee.py`, same base, LoRA, schedule and 1,510 batches as the PaySim adapter, 12,084 rows from fit rows only. Primary question in the
 `fraud/eval_ieee.py` amendment. Stated before running (Inferred): the IEEE fine-tune beats the PaySim one on AUC and probably cost, but may still not beat logistic regression.
+
+## 2026-11-02: Phase 11 results, IEEE-CIS
+
+Eval `20261102-183431`, write-up `fraud/RESULTS-IEEE.md`. Observed at a 10 USD review: IEEE fine-tune 3,794 per window vs PaySim fine-tune 4,836, cheaper in 17 of 20, mean paired difference
+-1,042, CI -1,664 to -445: distinguishable. Frozen Qwen2.5-1.5B 4,858 vs PaySim fine-tune: not distinguishable (different bases). Logreg on the prompt's fields 4,373, on all columns 3,426, approve-all 5,295.
+AUC 0.822 IEEE, 0.739 PaySim, 0.571 frozen, 0.846 logreg-all. Negative: no language model beat logreg on all columns at any review fee, and the PaySim fine-tune is not distinguishable from approve-all.
+Latency bar PASS for all three. Training 65.0 min, adapter `20261102-210541_lora-d1-ieee`, 3,021 of the 11,988 fit frauds. Five setups scored while the fee was 5 USD were re-priced from their recorded scores.
+Three rows stalled for 48.2, 19.8 and 5.6 min; the longest ends at a Modern Standby exit in the system log (Inferred: the machine paused). Scores and p90 unaffected.
+Console: IEEE-CIS replays no longer claim enriched windows, a type filter or a natural-rate cost; the header no longer says PaySim. IEEE results are not on its Eval page.
