@@ -471,6 +471,42 @@ test100–test119 for models that pass → `fraud/results/eval_lfm/<eval id>.jso
 
 Flags: `--models d1-omni-2b lfm3-1.7b`, `--resume <eval id>`, `--report <eval id>`, `--smoke <model>`.
 
+Phase 9, d1-Omni-2B fine-tuned for one hour (torch on the XPU, no llama.cpp, no remote code). Once: the
+checkpoint's weights and tokenizer at the pinned revision into `fraud/models/d1-omni-hf/` (git-ignored; 4.3 GB;
+sha256 pinned in `fraud/d1torch.py` and checked on load):
+
+```bash
+.venv/Scripts/python -c "from huggingface_hub import snapshot_download as d; d('LiquidAI/d1-Omni-2B', revision='431f1d667de5afcc9b0c58b2d9c170a7b38b358b', local_dir='fraud/models/d1-omni-hf', allow_patterns=['model.safetensors', 'tokenizer.json', 'tokenizer_config.json', 'config.json', 'calibration.json', 'LICENSE'])"
+```
+
+The reproduction check (frozen model in torch vs the Phase 8 llama-server traces on dev0–dev9 →
+`fraud/results/eval_d1ft/<id>_repro.json|.md`):
+
+```bash
+.venv/Scripts/python -u -m fraud.eval_d1ft --repro
+```
+
+Train: a smoke run first (s/step and peak memory, saved as `<time>_lora-d1-smoke`), then the training run, whose
+batch count comes from the smoke run and which stops itself inside one hour (`fraud/models/<time>_lora-d1/`):
+
+```bash
+.venv/Scripts/python -u -m fraud.finetune_d1 --steps 20
+```
+
+```bash
+.venv/Scripts/python -u -m fraud.finetune_d1 --plan fraud/models/<time>_lora-d1-smoke
+```
+
+Its pre-registered eval (dev, debias rule, gate vs logreg, then the 20 Phase 5 windows →
+`fraud/results/eval_d1ft/<eval id>.json|.md`):
+
+```bash
+.venv/Scripts/python -u -m fraud.eval_d1ft --adapter fraud/models/<time>_lora-d1
+```
+
+Flags: `--resume <eval id>` (with `--adapter` or `--repro`), `--report <eval id>` (with `--adapter` to refresh the
+training facts).
+
 The analyst console (replay only; start page, a run at 1×, auto-demo, the eval page), on
 http://127.0.0.1:8766:
 

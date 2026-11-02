@@ -105,3 +105,17 @@ check's or the cap rule's failure), whatever they show.
 
 **Accept:** results committed with the comparison, the gate (and bar, if reached) reported pass or
 fail, whatever they show.
+
+## Phase 9: d1-Omni-2B fine-tuned for one hour (owner, 2026-11-02)
+- [x] `d1torch.py` (the LFM3 text layers, "set" masks and code readout in our own torch code; tested on
+      a tiny random model; the repo's remote code is not run) and `finetune_d1.py` (the hour's cap)
+- [x] `eval_d1ft.py` with the pre-registration in its docstring, committed with the PROGRESS
+      pre-statement before training
+- [ ] Reproduction check: the frozen model in torch matches the Phase 8 llama-server traces (R1–R3)
+- [ ] Smoke run (s/step, memory), then one training run inside one hour (`--plan`)
+- [ ] `python -m fraud.eval_d1ft`: dev, debias rule, gate vs logreg, then the 20 Phase 5 windows
+      (if the gate passes) with bars A, B and C
+- [ ] `fraud/RESULTS-D1FT.md`: training, gate, bars, labelled claims, negatives
+
+**Accept:** results committed with the gate and bars reported pass or fail (or the reproduction
+check's failure), whatever they show.

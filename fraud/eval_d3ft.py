@@ -167,7 +167,7 @@ def repro_markdown(r: dict) -> str:
 
 # ---------------------------------------------------------------- the eval
 
-def bars(mine: dict, phase5: dict, p90: float | None) -> dict:
+def bars(mine: dict, phase5: dict, p90: float | None, setup: str = SETUP) -> dict:
     """Bars A–C from per-window costs: ours, and Phase 5's committed {setup: {window: summary}}."""
     def not_worse(other):
         ws = [w for w in mine if w in phase5.get(other, {})]
@@ -177,11 +177,11 @@ def bars(mine: dict, phase5: dict, p90: float | None) -> dict:
     a, _ = not_worse("logreg")
     c, _ = not_worse("hybrid-ft")
     return {
-        "barA": {"rule": f"{SETUP} cost <= logreg cost in >= {BAR_WINDOWS} of {N_NEW} windows",
+        "barA": {"rule": f"{setup} cost <= logreg cost in >= {BAR_WINDOWS} of {N_NEW} windows",
                  "value": a if complete else None, "pass": complete and a >= BAR_WINDOWS},
-        "barB": {"rule": f"{SETUP} p90 latency <= {BAR_P90_MS:.0f} ms", "value": p90,
+        "barB": {"rule": f"{setup} p90 latency <= {BAR_P90_MS:.0f} ms", "value": p90,
                  "pass": p90 is not None and p90 <= BAR_P90_MS},
-        "barC": {"rule": f"{SETUP} cost <= hybrid-ft cost in >= {BAR_WINDOWS} of {N_NEW} windows",
+        "barC": {"rule": f"{setup} cost <= hybrid-ft cost in >= {BAR_WINDOWS} of {N_NEW} windows",
                  "value": c if complete else None, "pass": complete and c >= BAR_WINDOWS},
     }
 
@@ -228,11 +228,12 @@ def run(eval_id: str, adapter: Path, log=print) -> dict:
     return report(eval_id, adapter, dev_info, log)
 
 
-def report(eval_id: str, adapter: Path | None, dev_info: dict | None = None, log=print) -> dict:
+def report(eval_id: str, adapter: Path | None, dev_info: dict | None = None, log=print, setup: str = SETUP,
+           results: Path = RESULTS, script: str = "fraud/eval_d3ft.py", title: str = "fine-tuned d3-nano") -> dict:
     from . import eval as ev
     from .capture import load_all
 
-    path = RESULTS / f"{eval_id}.json"
+    path = results / f"{eval_id}.json"
     old = json.loads(path.read_text(encoding="utf-8")) if path.exists() else {}
     dev_info = dev_info or old.get("dev")
     training = old.get("training")
@@ -247,7 +248,7 @@ def report(eval_id: str, adapter: Path | None, dev_info: dict | None = None, log
     phase5 = json.loads((ROOT / "results" / "eval" / f"{PHASE5_EVAL}.json").read_text(encoding="utf-8"))["windows"]
     mine, traces = {}, []
     for wid in test_ids:
-        p = trace_file(eval_id, "eval", SETUP, wid)
+        p = trace_file(eval_id, "eval", setup, wid)
         if finished(p):
             recs = read_run(p)
             for r in recs:
@@ -256,7 +257,7 @@ def report(eval_id: str, adapter: Path | None, dev_info: dict | None = None, log
             traces.append(recs)
     ms = [r["ms"] for recs in traces for r in recs if r.get("type") == "tx" and r["by"] == "model"]
     p90 = float(np.percentile(ms, 90)) if ms else None
-    per = {SETUP: mine, **phase5}
+    per = {setup: mine, **phase5}
 
     def paired(a, b):
         ws = [w for w in per.get(a, {}) if w in per.get(b, {})]
@@ -278,8 +279,8 @@ def report(eval_id: str, adapter: Path | None, dev_info: dict | None = None, log
         if "latency_ms" in vals[0]:
             totals[setup]["latency_p90_mean"] = float(np.mean([v["latency_ms"]["p90"] for v in vals]))
     if ms:
-        totals[SETUP]["latency_ms"] = {"p50": float(np.percentile(ms, 50)), "p90": p90, "decisions": len(ms)}
-        totals[SETUP]["calibration"] = ev.model_calibration(traces)
+        totals[setup]["latency_ms"] = {"p50": float(np.percentile(ms, 50)), "p90": p90, "decisions": len(ms)}
+        totals[setup]["calibration"] = ev.model_calibration(traces)
     pooled = None
     ft_paths = [trace_file(PHASE5_EVAL, "eval", "hybrid-ft", w) for w in test_ids]
     if traces and all(finished(p) for p in ft_paths):
@@ -291,25 +292,26 @@ def report(eval_id: str, adapter: Path | None, dev_info: dict | None = None, log
             ft.append(recs)
         rows = {(r["window"], r["row"]) for recs in traces for r in recs if r.get("type") == "tx" and r["by"] == "model"}
         a, b = pooled_auc(traces, "model", "decline"), pooled_auc(ft, "model", "decline", rows)
-        pooled = {SETUP: {"auc": a[0], "rows": a[1], "fraud": a[2]}, "hybrid-ft": {"auc": b[0], "rows": b[1]}}
+        pooled = {setup: {"auc": a[0], "rows": a[1], "fraud": a[2]}, "hybrid-ft": {"auc": b[0], "rows": b[1]}}
     out = {
-        "eval": eval_id, "script": "fraud/eval_d3ft.py", "created": time.strftime("%Y-%m-%dT%H:%M:%S"),
+        "eval": eval_id, "script": script, "setup": setup, "title": title, "created": time.strftime("%Y-%m-%dT%H:%M:%S"),
         "complete": len(mine) == N_NEW, "phase5_eval": PHASE5_EVAL, "costs": costs.DEFAULT.as_dict(),
         "test_windows": test_ids, "dev": dev_info, "training": training,
-        "bars": bars(mine, phase5, p90),
-        "paired": {f"{SETUP} vs {o}": paired(SETUP, o) for o in ("logreg", "rules", "hybrid-ft", "hybrid-1.5b", "random")},
+        "bars": bars(mine, phase5, p90, setup),
+        "paired": {f"{setup} vs {o}": paired(setup, o) for o in ("logreg", "rules", "hybrid-ft", "hybrid-1.5b", "random")},
         "pooled_test_auc": pooled, "totals": totals, "windows": mine,
     }
-    RESULTS.mkdir(parents=True, exist_ok=True)
+    results.mkdir(parents=True, exist_ok=True)
     path.write_text(json.dumps(out, indent=1), encoding="utf-8")
-    (RESULTS / f"{eval_id}.md").write_text(markdown(out), encoding="utf-8")
+    (results / f"{eval_id}.md").write_text(markdown(out), encoding="utf-8")
     log(markdown(out))
     return out
 
 
 def markdown(r: dict) -> str:
-    L = [f"# Fraud eval {r['eval']} (fine-tuned d3-nano)", "",
-         f"Created {r['created']}. Complete: {r['complete']}. Pre-registration: the docstring of `fraud/eval_d3ft.py`. "
+    setup = r.get("setup", SETUP)
+    L = [f"# Fraud eval {r['eval']} ({r.get('title', 'fine-tuned d3-nano')})", "",
+         f"Created {r['created']}. Complete: {r['complete']}. Pre-registration: the docstring of `{r.get('script', 'fraud/eval_d3ft.py')}`. "
          f"Other setups: the committed per-window results of eval {r['phase5_eval']}. All numbers are Observed; "
          "model scores are uncalibrated.", ""]
     tr = r.get("training")
@@ -341,16 +343,16 @@ def markdown(r: dict) -> str:
         for k, v in r["totals"].items():
             L.append(f"| {k} | {v['windows']} | {v['cost_mean']:,.0f} | {v['cost_median']:,.0f} | {v['recall_mean']:.2f} | "
                      f"{v['precision_mean']:.2f} | {v['alert_rate_mean']:.3f} |")
-        lat = r["totals"][SETUP].get("latency_ms")
+        lat = r["totals"][setup].get("latency_ms")
         if lat:
-            L += ["", f"Latency of {SETUP} over {lat['decisions']} model decisions: p50 {lat['p50']:.0f} ms, p90 {lat['p90']:.0f} ms."]
+            L += ["", f"Latency of {setup} over {lat['decisions']} model decisions: p50 {lat['p50']:.0f} ms, p90 {lat['p90']:.0f} ms."]
         L += ["", "## Paired window counts (cheaper = lower cost in that window)", "",
               "| pair | windows | first cheaper | second cheaper | ties | sign test p |", "|---|---:|---:|---:|---:|---:|"]
         for k, v in r["paired"].items():
             L.append(f"| {k} | {v['windows']} | {v['a_cheaper']} | {v['b_cheaper']} | {v['ties']} | {v['sign_test_p']:.3g} |")
         if r.get("pooled_test_auc"):
             p = r["pooled_test_auc"]
-            L += ["", f"Pooled test AUC over {SETUP}'s model rows ({p[SETUP]['rows']}): {SETUP} {p[SETUP]['auc']:.4f}, "
+            L += ["", f"Pooled test AUC over {setup}'s model rows ({p[setup]['rows']}): {setup} {p[setup]['auc']:.4f}, "
                       f"hybrid-ft {p['hybrid-ft']['auc']:.4f} (same rows, reported)."]
     return "\n".join(L) + "\n"
 

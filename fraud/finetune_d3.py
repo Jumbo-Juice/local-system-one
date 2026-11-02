@@ -65,7 +65,7 @@ def encode(model, exs) -> list[tuple[list[int], int]]:
 
 
 def train(model, enc, out_dir: Path, steps: int, deadline: float = math.inf, clock=time.perf_counter,
-          log=print) -> dict:
+          log=print, lora: dict = LORA) -> dict:
     """LoRA on model.lm for ``steps`` batches of the given order; the LR schedule is sized to
     ``steps``. Before each batch, if clock() >= deadline, training stops; the adapter is saved
     either way."""
@@ -75,7 +75,7 @@ def train(model, enc, out_dir: Path, steps: int, deadline: float = math.inf, clo
     torch.manual_seed(SEED)
     lm, dev = model.lm, str(model.device)
     lm.gradient_checkpointing_enable(gradient_checkpointing_kwargs={"use_reentrant": False})
-    peft_model = get_peft_model(lm, LoraConfig(**LORA))
+    peft_model = get_peft_model(lm, LoraConfig(**lora))
     params = [p for p in peft_model.parameters() if p.requires_grad]
     opt = torch.optim.AdamW(params, lr=LR)
     sched = torch.optim.lr_scheduler.LambdaLR(opt, lambda k: lr_factor(k, steps))
@@ -88,7 +88,7 @@ def train(model, enc, out_dir: Path, steps: int, deadline: float = math.inf, clo
     for k in range(steps):
         if clock() >= deadline:
             stopped = True
-            log(f"hard stop before batch {k + 1}: the 2-hour cap")
+            log(f"hard stop before batch {k + 1}: the time cap")
             break
         e = k % (len(enc) // BATCH)
         chunk = enc[e * BATCH:(e + 1) * BATCH]
@@ -117,7 +117,7 @@ def train(model, enc, out_dir: Path, steps: int, deadline: float = math.inf, clo
     import transformers
     timed = step_s[3:] or step_s
     return {
-        "lora": LORA, "lr": LR, "warmup_steps": WARMUP_STEPS, "batch": BATCH, "seed": SEED,
+        "lora": lora, "lr": LR, "warmup_steps": WARMUP_STEPS, "batch": BATCH, "seed": SEED,
         "steps": steps, "steps_done": len(losses), "stopped_early": stopped, "examples": len(enc),
         "losses": losses, "lrs": lrs, "loss_first100": float(np.mean(losses[:100])) if losses else None,
         "loss_last100": float(np.mean(losses[-100:])) if losses else None,
