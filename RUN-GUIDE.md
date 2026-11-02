@@ -550,6 +550,26 @@ Phase 5 setups of the same windows); Phase 6's `fraud/results/eval_d3/` ran no t
 Pages: `#/` runs, `#/run/<file>`, `#/eval` (latest) or `#/eval/<eval id>`, `#/demo`. Pin a run by
 renaming it to `*.pinned.jsonl` and listing it in `fraud/runs/README.md`.
 
+### IEEE-CIS (real data, Phase 11)
+
+Put the unzipped Kaggle CSVs in `fraud/data/ieee-cis/` (git-ignored), then build the cache (`fraud/data/ieee-cis/ieee.npz`):
+
+```bash
+.venv/Scripts/python -m fraud.ieee_data
+```
+
+The eval: `--draw` prints the seeded draw and windows; `--smoke N` measures latency on N fit rows; no flag runs it (about 2.5 h);
+`--resume <eval id>` finishes an interrupted one; `--report <eval id>` rebuilds `fraud/results/eval_ieee/<eval id>.json|.md`.
+Traces: `fraud/runs/<eval id>_{dev,eval}_ieee-*.jsonl`.
+
+```bash
+.venv/Scripts/python -m fraud.eval_ieee --draw
+.venv/Scripts/python -m fraud.eval_ieee --smoke 30
+.venv/Scripts/python -m fraud.eval_ieee
+.venv/Scripts/python -m fraud.eval_ieee --resume <eval id>
+.venv/Scripts/python -m fraud.eval_ieee --report <eval id>
+```
+
 ## Where things land
 
 | what | where |
