@@ -1,0 +1,32 @@
+{
+ "eval": "20261102-152059",
+ "script": "fraud/eval_d1ft.py",
+ "stage": "repro",
+ "phase8_eval": "20261030-122539",
+ "created": "2026-11-02T15:25:53",
+ "rows": 2194,
+ "same_rows": true,
+ "tokens_equal": 2194,
+ "fwd": {
+  "auc": 0.9809223609895792,
+  "auc_phase6": 0.9829568053456368,
+  "median_abs_diff": 0.013952972037435729,
+  "p90_abs_diff": 0.021361791077516994,
+  "max_abs_diff": 0.037481398676036615
+ },
+ "rev": {
+  "auc": 0.9842653726831596,
+  "auc_phase6": 0.9847486277941293,
+  "median_abs_diff": 0.01131947425353641,
+  "p90_abs_diff": 0.02047204272415903,
+  "max_abs_diff": 0.04266415079612884
+ },
+ "R1": true,
+ "R2": true,
+ "R3": true,
+ "pass": true,
+ "latency_ms_both": {
+  "p50": 120.99799999999999,
+  "p90": 133.34
+ }
+}
