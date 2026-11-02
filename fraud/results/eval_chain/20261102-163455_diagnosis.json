@@ -1,0 +1,30 @@
+{
+ "wrong_declines": 2183,
+ "by_line": {
+  "cash-out of an amount moved this hour": 5,
+  "round transfer": 2178
+ },
+ "of_exactly_10M": 2176,
+ "top_hours": [
+  [
+   304,
+   1309
+  ],
+  [
+   305,
+   804
+  ],
+  [
+   376,
+   48
+  ],
+  [
+   348,
+   12
+  ],
+  [
+   538,
+   3
+  ]
+ ]
+}

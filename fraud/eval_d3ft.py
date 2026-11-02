@@ -267,17 +267,17 @@ def report(eval_id: str, adapter: Path | None, dev_info: dict | None = None, log
                 "sign_test_p": ev.sign_test(wn, ls)}
 
     totals = {}
-    for setup, ws in per.items():
+    for name, ws in per.items():
         vals = [ws[w] for w in test_ids if w in ws]
         if not vals:
             continue
-        totals[setup] = {"windows": len(vals), "cost_mean": float(np.mean([v["cost"] for v in vals])),
+        totals[name] = {"windows": len(vals), "cost_mean": float(np.mean([v["cost"] for v in vals])),
                          "cost_median": float(np.median([v["cost"] for v in vals])),
                          "recall_mean": float(np.mean([v["recall"] for v in vals])),
                          "precision_mean": float(np.mean([v["precision"] for v in vals])),
                          "alert_rate_mean": float(np.mean([v["alert_rate"] for v in vals]))}
         if "latency_ms" in vals[0]:
-            totals[setup]["latency_p90_mean"] = float(np.mean([v["latency_ms"]["p90"] for v in vals]))
+            totals[name]["latency_p90_mean"] = float(np.mean([v["latency_ms"]["p90"] for v in vals]))
     if ms:
         totals[setup]["latency_ms"] = {"p50": float(np.percentile(ms, 50)), "p90": p90, "decisions": len(ms)}
         totals[setup]["calibration"] = ev.model_calibration(traces)

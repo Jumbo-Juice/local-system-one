@@ -3,6 +3,7 @@
     python -m fraud.eval_chain --hours    # how many untouched hours there are; reads steps only, no outcome
     python -m fraud.eval_chain --train    # the training hours: checks the code against the exploratory numbers
     python -m fraud.eval_chain            # the pre-registered test, once → fraud/results/eval_chain/<id>.json|.md
+    python -m fraud.eval_chain --diagnose <id>   # after it: which rule line made the tight setup's wrong declines
 
 PRE-REGISTRATION (written and committed before this ran on any test-split hour; fraud/ROADMAP.md Phase 10).
 Owner's request of 2026-11-02: minimise review, forget cost, focus on F1. The rule was found on training steps
@@ -175,6 +176,19 @@ def evaluate(t, s, hours: list[int], boot: bool = True) -> dict:
     return out
 
 
+def diagnose(t, s, hours: list[int]) -> dict:
+    """The tight setup's legit declines by rule line, amount and hour. Explains a result; decides nothing."""
+    rows = np.flatnonzero(np.isin(t.step, hours))
+    lines, prior = rule_lines(t, s)[rows], prior_transfer(t)[rows]
+    y, amount, step = t.is_fraud[rows].astype(bool), t.amount[rows], t.step[rows]
+    wrong = actions("tight", lines, prior)[0] & ~y
+    h, c = np.unique(step[wrong], return_counts=True)
+    return {"wrong_declines": int(wrong.sum()),
+            "by_line": {rules.RULES[k][0]: int((wrong & (lines == k)).sum()) for k in (1, 2)},
+            "of_exactly_10M": int((wrong & (amount == 10_000_000.0)).sum()),
+            "top_hours": [[int(h[i]), int(c[i])] for i in np.argsort(-c)[:5]]}
+
+
 def markdown(r: dict, title: str) -> str:
     L = [f"# {title}", "", "Pre-registration: the `fraud/eval_chain.py` docstring. All numbers are Observed.", "",
          f"{r['hours']} hours, {r['rows']:,} rows at the natural rate, {r['fraud_rows']:,} fraud rows, {r['chains']:,} chains.", "",
@@ -196,8 +210,15 @@ def main() -> None:
     ap = argparse.ArgumentParser(description=__doc__.split("\n")[0])
     ap.add_argument("--hours", action="store_true", help="count the untouched hours (no outcome is read)")
     ap.add_argument("--train", action="store_true", help="the training hours, not a result")
+    ap.add_argument("--diagnose", metavar="EVAL_ID", help="the tight setup's wrong declines in that eval's hours")
     args = ap.parse_args()
     t, s = load_all()
+    if args.diagnose:
+        path = RESULTS / f"{args.diagnose}.json"
+        d = diagnose(t, s, json.loads(path.read_text(encoding="utf-8"))["hour_list"])
+        (RESULTS / f"{args.diagnose}_diagnosis.json").write_text(json.dumps(d, indent=1), encoding="utf-8")
+        print(json.dumps(d, indent=1))
+        return
     if args.hours:
         h = untouched_hours(t)
         print(f"{len(h)} untouched hours of {windows.TEST[1] - windows.TEST[0] + 1} in the test split: {h[0]}…{h[-1]}")
