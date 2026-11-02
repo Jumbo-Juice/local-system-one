@@ -12,6 +12,7 @@ const BY = {
 const SETUP_NAME = {
   hybrid: "hybrid (filter + model)", "hybrid-1.5b": "hybrid (filter + Qwen2.5-1.5B)", rules: "rules-only",
   "hybrid-ft": "hybrid (filter + fine-tuned 1.5B)", "hybrid-d3ft": "hybrid (filter + fine-tuned d3-nano)",
+  "hybrid-d1ft": "hybrid (filter + fine-tuned d1-Omni-2B)",
   logreg: "filter + logistic regression", random: "filter + random", "approve-all": "approve-all",
 };
 const SIGNALS = [
@@ -523,8 +524,8 @@ async function startPage() {
   fill();
   app.replaceChildren(
     el("h1", {}, "Approve, review or decline: System One on PaySim"),
-    el("p", { class: "intro" }, "A local model judges each TRANSFER and CASH_OUT (Qwen2.5-1.5B; later evals add a fine-tuned Qwen2.5-1.5B and a fine-tuned " +
-      "d3-nano), and a rule filter approves the transaction types " +
+    el("p", { class: "intro" }, "A local model judges each TRANSFER and CASH_OUT (Qwen2.5-1.5B; later evals add fine-tuned Qwen2.5-1.5B, " +
+      "d3-nano and d1-Omni-2B), and a rule filter approves the transaction types " +
       "that had no fraud in training. The console replays recorded runs at their recorded speed and shows the pre-registered eval " +
       "against rules-only, logistic regression, random and approve-all."),
     el("div", { class: "cards" },
@@ -548,12 +549,13 @@ async function startPage() {
 }
 
 const EVAL_SERIES = [["hybrid-1.5b", "var(--series-1)"], ["rules", "var(--series-2)"], ["logreg", "var(--series-3)"],
-  ["hybrid-ft", "var(--series-4)"], ["hybrid-d3ft", "var(--series-5)"]];
+  ["hybrid-ft", "var(--series-4)"], ["hybrid-d3ft", "var(--series-5)"], ["hybrid-d1ft", "var(--series-5)"]];  // one page never shows both
 const BAR_TITLE = { bar1: "Bar 1: cost", bar2: "Bar 2: speed", barA: "Bar A: vs logistic regression", barB: "Bar B: speed",
   barC: "Bar C: vs fine-tuned 1.5B" };
-const WRITE_UP = { "fraud/eval_ft.py": "fraud/RESULTS-FT.md", "fraud/eval_d3ft.py": "fraud/RESULTS-D3FT.md" };
+const WRITE_UP = { "fraud/eval_ft.py": "fraud/RESULTS-FT.md", "fraud/eval_d3ft.py": "fraud/RESULTS-D3FT.md",
+  "fraud/eval_d1ft.py": "fraud/RESULTS-D1FT.md" };
 
-// fraud/eval_d3ft.py stores only its own setup's windows (keyed by window) and points at the Phase 5
+// fraud/eval_d3ft.py and fraud/eval_d1ft.py store only their own setup's windows (keyed by window) and point at the Phase 5
 // eval for the other setups on the same windows; merge them into the shape of the other evals.
 async function withBaselines(r) {
   if (!r.phase5_eval) return { r, traceEval: () => r.eval };
@@ -621,7 +623,7 @@ function devGate(d) {
       el("div", { class: "hint" }, "picked on dev windows by cost, before any new test window ran")));
 }
 
-function devGateOrders(d) {  // fraud/eval_d3ft.py: one model read in both option orders, gated against logreg
+function devGateOrders(d) {  // fraud/eval_d3ft.py, eval_d1ft.py: one model read in both option orders, gated against logreg
   const order = { both: "both orders averaged", fwd: "options as listed", rev: "options reversed" };
   return el("section", { class: "panel bar-card", style: "margin-bottom:12px" }, el("h3", {}, "Dev gate (dev0–dev9)"),
     el("div", {}, chip(d.gate.pass ? "pass" : "fail", d.gate.pass ? "PASS" : "FAIL"), ` ${d.gate.rule}`),
@@ -639,7 +641,7 @@ function devGateOrders(d) {  // fraud/eval_d3ft.py: one model read in both optio
 function trainingCard(t) {
   return el("section", { class: "panel bar-card", style: "margin-bottom:12px" }, el("h3", {}, "Training"),
     el("div", {}, `${t.steps_done} of ${t.steps} batches${t.stopped_early ? " (stopped early)" : ""}`,
-      el("div", { class: "hint" }, "batches of 8; the step count was fixed from a smoke run to fit a 2-hour cap")),
+      el("div", { class: "hint" }, "batches of 8; the step count was fixed from a smoke run to fit a time cap")),
     el("div", { style: "margin-top:6px" }, `${(t.train_s / 60).toFixed(1)} min`,
       el("div", { class: "hint" }, `${t.step_s_mean.toFixed(2)} s per batch, peak ${t.peak_mem_gib.toFixed(2)} GiB on the iGPU`)),
     el("div", { style: "margin-top:6px" }, `Loss ${t.loss_first100.toFixed(3)} → ${t.loss_last100.toFixed(3)}`,

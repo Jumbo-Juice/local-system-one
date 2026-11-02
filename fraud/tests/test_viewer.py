@@ -13,15 +13,16 @@ def write(path, records):
 
 def test_only_console_files_runs_and_results_are_served(tmp_path):
     runs, results = tmp_path / "runs", tmp_path / "results"
-    runs.mkdir(), (results / "eval").mkdir(parents=True), (results / "eval_d3ft").mkdir(), (results / "eval_d3").mkdir()
+    runs.mkdir(), (results / "eval").mkdir(parents=True), (results / "eval_d3ft").mkdir(), (results / "eval_d1ft").mkdir(), (results / "eval_d3").mkdir()
     write(runs / "a.jsonl", [HEADER, END])
-    for d in ("eval", "eval_d3ft", "eval_d3"):
+    for d in ("eval", "eval_d3ft", "eval_d1ft", "eval_d3"):
         (results / d / "e.json").write_text("{}", encoding="utf-8")
     (tmp_path / "secret.txt").write_text("x", encoding="utf-8")
     ok = lambda route: server.resolve(route, runs, results)
     assert ok("") == server.HERE / "index.html" and ok("console.js") == server.HERE / "console.js"
     assert ok("runs/a.jsonl") == runs / "a.jsonl" and ok("results/eval/e.json") == results / "eval" / "e.json"
     assert ok("results/eval_d3ft/e.json") == results / "eval_d3ft" / "e.json"
+    assert ok("results/eval_d1ft/e.json") == results / "eval_d1ft" / "e.json"
     for bad in ("runs/../secret.txt", "runs/..", "secret.txt", "server.py", "runs/a.json", "results/eval/../../secret.txt",
                 "runs/missing.jsonl", "../fraud/data/paysim.npz", "results/e.json", "results/eval_d3/e.json",
                 "results/../secret.txt", "results/eval/sub/e.json"):
