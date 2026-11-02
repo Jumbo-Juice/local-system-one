@@ -490,3 +490,25 @@ Eval `20261030-122539` (resumed with `--models d1-omni-2b`, about 9 min of d1-Om
 - Latency dev0 p90: both orders 200 ms, one order 91 ms.
 - LFM3-1.7B: no result (dropped by the owner before any trace). Phase 8 done.
 
+## 2026-11-02: Phase 9 pre-statement, d1-Omni-2B fine-tuned for one hour (owner; before training)
+
+Owner's request: "train d1 omni for an hour". Everything else follows Phase 7 (Implementation choice):
+the full pre-registration is the `fraud/eval_d1ft.py` docstring, committed with this entry.
+- Runtime (Observed): transformers has no LFM3 class up to 5.22.1, so the only ready-made torch model is the
+  repo's remote code, which this project does not run (Phase 8). `fraud/d1torch.py` re-implements the text path
+  from reading that source at revision 431f1d667d: layers, prompt, "set" masks, code readout, temperature.
+  Only the weights, tokenizer, config and calibration files are downloaded, to `fraud/models/d1-omni-hf/`.
+- Reproduction check first, as Phase 7: frozen torch vs the Phase 8 llama-server traces on dev0–dev9, packed
+  the way the server packs both orders. R1 tokens, R2 AUC within 0.01, R3 median score within 0.02. A failure
+  stops training until the owner has seen why.
+- Training: Phase 5's rows, LoRA r16 on attention and convolution projections, lone prompts. CE on the
+  temperature-scaled scores (3.383), the function the decider reads. N from the smoke run's s/step; the process
+  takes at most one hour of wall clock. No minimum N: the hour is what was asked for. `peft` is used
+  as in Phases 5 and 7 (`finetune_d1.py` imports it through `finetune_d3.train`; `d1torch.merge_adapter`).
+- Eval: lone prompts per order, debias rule, gate vs logreg dev AUC, thresholds on dev, the 20 Phase 5 windows
+  if the gate passes, bars A (vs logreg), B (p90 <= 250 ms), C (vs hybrid-ft).
+- Noted while reading the source (Inferred): llama-server packs a body's questions after one state, so Phase 8's
+  "rev" scores were read after the forward question (token count 338 for two orders). Its fwd scores are close
+  to the lone prompt (smoke: within 0.001). Phase 8 reached no test windows, so nothing there relied on it.
+- Stated before running (Inferred): one hour is likely near half an epoch, Phase 7's run was 90%.
+

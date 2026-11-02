@@ -49,6 +49,9 @@ engine, the `.venv` and the pytest run with the game demos. Keep the two apart.
 .venv/Scripts/python -m fraud.finetune_d3 --plan <smoke dir>  # Phase 7: LoRA on d3-nano (2 h cap)
 .venv/Scripts/python -m fraud.eval_d3ft --adapter <dir>       # Phase 7: its pre-registered eval
 .venv/Scripts/python -m fraud.eval_lfm                        # Phase 8: LFM3-1.7B + d1-Omni-2B, frozen
+.venv/Scripts/python -m fraud.eval_d1ft --repro               # Phase 9: frozen d1-Omni in torch vs Phase 8
+.venv/Scripts/python -m fraud.finetune_d1 --plan <smoke dir>  # Phase 9: LoRA on d1-Omni-2B (1 h cap)
+.venv/Scripts/python -m fraud.eval_d1ft --adapter <dir>       # Phase 9: its pre-registered eval
 .venv/Scripts/python -m fraud.viewer                          # the analyst console
 ```
 Every command and flag is in the repo's `RUN-GUIDE.md` → Fraud app. Keep it current.
@@ -60,6 +63,7 @@ Every command and flag is in the repo's `RUN-GUIDE.md` → Fraud app. Keep it cu
   dependency seems needed. (`peft` + `accelerate` were approved by the owner on 2026-10-05 for the
   Phase 5 fine-tune only; `peft` is imported only by `finetune.py` and `brain.load_adapter`, and
   in Phase 7, owner-approved, by `finetune_d3.py` and `d3torch.D3Torch.merge_adapter`.
+  Phase 9 (owner: train d1-Omni) uses it the same way: through `finetune_d3.train` and `d1torch.D1Torch.merge_adapter`.
   `flash-linear-attention` was approved on 2026-10-21 but removed again: it does not run on this
   XPU, see PROGRESS 2026-10-21.)
 - Don't tune prompts, rules or thresholds on test windows. If a test result prompts a change, the
