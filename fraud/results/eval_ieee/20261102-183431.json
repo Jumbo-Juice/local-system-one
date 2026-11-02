@@ -1,0 +1,689 @@
+{
+ "eval": "20261102-183431",
+ "script": "fraud/eval_ieee.py",
+ "dataset": "IEEE-CIS train files, time split",
+ "created": "2026-11-02T23:54:35",
+ "costs": {
+  "friction_rate": 0.1,
+  "friction_min": 1.0,
+  "review_fee": 10.0,
+  "review_share": 0.05
+ },
+ "seed": 20261102,
+ "draw": [
+  "qwen2.5-1.5b",
+  "20261102-152745_lora-d1"
+ ],
+ "windows": {
+  "dev0": [
+   362341,
+   363340
+  ],
+  "dev1": [
+   373475,
+   374474
+  ],
+  "dev2": [
+   380278,
+   381277
+  ],
+  "dev3": [
+   394396,
+   395395
+  ],
+  "dev4": [
+   409365,
+   410364
+  ],
+  "dev5": [
+   422232,
+   423231
+  ],
+  "dev6": [
+   425541,
+   426540
+  ],
+  "dev7": [
+   445977,
+   446976
+  ],
+  "dev8": [
+   448845,
+   449844
+  ],
+  "dev9": [
+   464925,
+   465924
+  ],
+  "test0": [
+   473833,
+   474832
+  ],
+  "test1": [
+   481367,
+   482366
+  ],
+  "test2": [
+   485162,
+   486161
+  ],
+  "test3": [
+   494677,
+   495676
+  ],
+  "test4": [
+   496873,
+   497872
+  ],
+  "test5": [
+   503152,
+   504151
+  ],
+  "test6": [
+   512641,
+   513640
+  ],
+  "test7": [
+   515286,
+   516285
+  ],
+  "test8": [
+   522002,
+   523001
+  ],
+  "test9": [
+   525772,
+   526771
+  ],
+  "test10": [
+   533530,
+   534529
+  ],
+  "test11": [
+   541819,
+   542818
+  ],
+  "test12": [
+   543947,
+   544946
+  ],
+  "test13": [
+   549969,
+   550968
+  ],
+  "test14": [
+   558059,
+   559058
+  ],
+  "test15": [
+   563010,
+   564009
+  ],
+  "test16": [
+   568590,
+   569589
+  ],
+  "test17": [
+   577574,
+   578573
+  ],
+  "test18": [
+   582291,
+   583290
+  ],
+  "test19": [
+   585908,
+   586907
+  ]
+ },
+ "test_rows": 20000,
+ "test_fraud": 685,
+ "setups": {
+  "ieee-frozen-qwen1.5b": {
+   "mean_cost": 4857.83825,
+   "total_cost": 97156.765,
+   "cost_ci95": [
+    3987.26633625,
+    5824.93885875
+   ],
+   "auc": 0.571371518297303,
+   "auc_ci95": [
+    0.5426601044803758,
+    0.6045005811107892
+   ],
+   "recall": 0.11386861313868613,
+   "precision": 0.0821917808219178,
+   "alert_rate": 0.04745,
+   "reviews": 949,
+   "declines": 0,
+   "reviews_wanted": 1641,
+   "fraud_amount_stopped": 18239.95,
+   "windows": [
+    5604.154,
+    3843.194,
+    4274.126,
+    3108.982,
+    4197.242,
+    3496.2260000000006,
+    9784.811,
+    4195.35,
+    5053.177,
+    1721.2450000000001,
+    3594.7309999999998,
+    2362.6679999999997,
+    3022.4040000000005,
+    4010.5299999999997,
+    6081.702,
+    7137.804,
+    6651.518,
+    4586.13,
+    4762.518,
+    9668.253
+   ],
+   "latency_ms": {
+    "p50": 134.1555,
+    "p90": 172.63350000000003
+   },
+   "prompt_tokens_mean": 278.3836,
+   "thresholds": {
+    "review": 0.4945039019981933,
+    "decline": null
+   }
+  },
+  "ieee-ft-d1omni": {
+   "mean_cost": 4835.930745,
+   "total_cost": 96718.6149,
+   "cost_ci95": [
+    3923.04308275,
+    5775.357385624999
+   ],
+   "auc": 0.7389983202042208,
+   "auc_ci95": [
+    0.7174536871473276,
+    0.7627261789203544
+   ],
+   "recall": 0.5751824817518248,
+   "precision": 0.09649767327945138,
+   "alert_rate": 0.20415,
+   "reviews": 1000,
+   "declines": 3083,
+   "reviews_wanted": 3218,
+   "fraud_amount_stopped": 44695.42,
+   "windows": [
+    5744.5831,
+    2729.5498000000002,
+    3336.1942,
+    3264.7847,
+    6166.9867,
+    3639.8541999999998,
+    8296.5833,
+    5607.535699999999,
+    4971.075500000001,
+    2103.737,
+    2660.9414,
+    4622.365000000001,
+    4005.4942000000005,
+    2607.8871,
+    3666.112,
+    9150.510600000001,
+    7059.339099999999,
+    4958.8608,
+    2817.8082999999997,
+    9308.4122
+   ],
+   "latency_ms": {
+    "p50": 79.075,
+    "p90": 97.9901
+   },
+   "prompt_tokens_mean": 227.34185,
+   "thresholds": {
+    "review": 0.1358127623796463,
+    "decline": 0.24184304997324935
+   }
+  },
+  "ieee-ft-ieee-d1omni": {
+   "mean_cost": 3794.0939099999996,
+   "total_cost": 75881.87819999999,
+   "cost_ci95": [
+    3078.070643875,
+    4592.969421749999
+   ],
+   "auc": 0.822075048513787,
+   "auc_ci95": [
+    0.7955731072176662,
+    0.8468761672996262
+   ],
+   "recall": 0.545985401459854,
+   "precision": 0.1790330301579703,
+   "alert_rate": 0.10445,
+   "reviews": 966,
+   "declines": 1123,
+   "reviews_wanted": 1062,
+   "fraud_amount_stopped": 53755.03,
+   "windows": [
+    5713.974700000001,
+    2303.1029,
+    2624.2169,
+    2763.5317999999997,
+    3803.892,
+    2577.0749,
+    8803.2549,
+    5361.2527,
+    4853.195299999999,
+    1791.2903999999999,
+    1974.8117,
+    2496.2120000000004,
+    2404.8498,
+    3863.4058999999997,
+    1618.6784,
+    5613.779699999999,
+    4492.290300000001,
+    4042.9685000000004,
+    3756.6669,
+    5023.4285
+   ],
+   "latency_ms": {
+    "p50": 94.507,
+    "p90": 108.8001
+   },
+   "prompt_tokens_mean": 227.34185,
+   "thresholds": {
+    "review": 0.3879384189844132,
+    "decline": 0.5306864380836487
+   }
+  },
+  "ieee-logreg-same": {
+   "mean_cost": 4373.0787550000005,
+   "total_cost": 87461.57510000002,
+   "cost_ci95": [
+    3716.457027375,
+    5049.284155749999
+   ],
+   "auc": 0.7882181504862716,
+   "auc_ci95": [
+    0.7549933861333338,
+    0.8179323762847559
+   ],
+   "recall": 0.6014598540145986,
+   "precision": 0.13687707641196012,
+   "alert_rate": 0.1505,
+   "reviews": 928,
+   "declines": 2082,
+   "reviews_wanted": 1008,
+   "fraud_amount_stopped": 65721.34,
+   "windows": [
+    7043.2388,
+    2954.8755,
+    4195.3277,
+    2467.1564,
+    4720.4376,
+    4187.6484,
+    7392.1005000000005,
+    6418.6275000000005,
+    4615.880800000001,
+    2651.7236000000003,
+    3196.9490000000005,
+    3243.9344,
+    2780.2139,
+    5300.533600000001,
+    2826.4588000000003,
+    5415.860000000001,
+    3788.0773,
+    3284.9523,
+    4159.1536,
+    6818.4254
+   ],
+   "latency_ms": null,
+   "prompt_tokens_mean": null,
+   "thresholds": {
+    "review": 0.04940937233385766,
+    "decline": 0.0662997399964319
+   }
+  },
+  "ieee-logreg-all": {
+   "mean_cost": 3425.666165,
+   "total_cost": 68513.3233,
+   "cost_ci95": [
+    2749.2259347499994,
+    4174.637940875
+   ],
+   "auc": 0.8456131632500742,
+   "auc_ci95": [
+    0.8211057605095623,
+    0.8703553518376774
+   ],
+   "recall": 0.5897810218978102,
+   "precision": 0.20240480961923848,
+   "alert_rate": 0.0998,
+   "reviews": 944,
+   "declines": 1052,
+   "reviews_wanted": 1101,
+   "fraud_amount_stopped": 63373.87,
+   "windows": [
+    5087.0487,
+    1841.8398000000002,
+    2192.6138,
+    1992.9859999999999,
+    5224.487300000001,
+    2431.2789000000002,
+    7640.5499,
+    6191.1014000000005,
+    5425.9139000000005,
+    1704.7098,
+    2235.4096,
+    2388.891,
+    2169.1291,
+    2071.9446000000003,
+    2204.6449000000002,
+    4232.5062,
+    3419.1515,
+    4015.8628,
+    2694.4966,
+    3348.7574999999997
+   ],
+   "latency_ms": null,
+   "prompt_tokens_mean": null,
+   "thresholds": {
+    "review": 0.058568977433607096,
+    "decline": 0.11408592210662843
+   }
+  },
+  "ieee-approve-all": {
+   "mean_cost": 5295.3358499999995,
+   "total_cost": 105906.71699999999,
+   "cost_ci95": [
+    4119.853435000001,
+    6556.6819375
+   ],
+   "auc": null,
+   "auc_ci95": null,
+   "recall": 0.0,
+   "precision": 0.0,
+   "alert_rate": 0.0,
+   "reviews": 0,
+   "declines": 0,
+   "reviews_wanted": 0,
+   "fraud_amount_stopped": 0.0,
+   "windows": [
+    8814.104,
+    3767.954,
+    3891.126,
+    2758.452,
+    5583.459000000001,
+    3126.5769999999998,
+    9649.362000000001,
+    5129.488,
+    4646.177,
+    1462.123,
+    3342.165,
+    1862.6680000000001,
+    2719.762,
+    4331.874,
+    5891.608,
+    10243.693,
+    7773.938,
+    5317.416,
+    4292.518,
+    11302.252999999999
+   ],
+   "latency_ms": null,
+   "prompt_tokens_mean": null,
+   "thresholds": {
+    "review": null,
+    "decline": null
+   }
+  }
+ },
+ "dev": {
+  "ieee-frozen-qwen1.5b": {
+   "auc": 0.5823070592875054,
+   "argmax_share": {
+    "approve": 0.0141,
+    "review": 0.0,
+    "decline": 0.9859
+   },
+   "argmax_cost_mean": 13303.3224
+  },
+  "ieee-ft-d1omni": {
+   "auc": 0.7964207078648917,
+   "variant": "rev",
+   "debias_gain": 0.00038246073222159005,
+   "auc_orders": {
+    "both": 0.7964207078648917,
+    "fwd": 0.7957829201618519,
+    "rev": 0.7960382471326701
+   },
+   "argmax_share": {
+    "approve": 0.9498,
+    "review": 0.0,
+    "decline": 0.0502
+   },
+   "argmax_cost_mean": 5589.072180000001
+  },
+  "ieee-ft-ieee-d1omni": {
+   "auc": 0.8692951042112793,
+   "variant": "rev",
+   "debias_gain": -0.00045079512897594487,
+   "auc_orders": {
+    "both": 0.8692951042112793,
+    "fwd": 0.868592955041529,
+    "rev": 0.8697458993402553
+   },
+   "argmax_share": {
+    "approve": 0.9457,
+    "review": 0.0,
+    "decline": 0.0543
+   },
+   "argmax_cost_mean": 4244.71705
+  },
+  "ieee-logreg-same": {
+   "auc": 0.8616109277824614
+  },
+  "ieee-logreg-all": {
+   "auc": 0.8947390725221299
+  }
+ },
+ "sensitivity": {
+  "review $1": {
+   "costs": {
+    "friction_rate": 0.1,
+    "friction_min": 1.0,
+    "review_fee": 1.0,
+    "review_share": 0.05
+   },
+   "mean_cost": {
+    "ieee-frozen-qwen1.5b": 4421.561000000001,
+    "ieee-ft-d1omni": 4385.93035,
+    "ieee-ft-ieee-d1omni": 3359.39335,
+    "ieee-logreg-same": 3955.479600000001,
+    "ieee-logreg-all": 3000.86585,
+    "ieee-approve-all": 5295.337
+   }
+  },
+  "review $5": {
+   "costs": {
+    "friction_rate": 0.1,
+    "friction_min": 1.0,
+    "review_fee": 5.0,
+    "review_share": 0.05
+   },
+   "mean_cost": {
+    "ieee-frozen-qwen1.5b": 4621.161000000001,
+    "ieee-ft-d1omni": 4585.93035,
+    "ieee-ft-ieee-d1omni": 3552.59335,
+    "ieee-logreg-same": 4141.079600000001,
+    "ieee-logreg-all": 3189.6658500000003,
+    "ieee-approve-all": 5295.337
+   }
+  },
+  "review $20": {
+   "costs": {
+    "friction_rate": 0.1,
+    "friction_min": 1.0,
+    "review_fee": 20.0,
+    "review_share": 0.05
+   },
+   "mean_cost": {
+    "ieee-frozen-qwen1.5b": 5295.337,
+    "ieee-ft-d1omni": 4763.345349999999,
+    "ieee-ft-ieee-d1omni": 4117.53515,
+    "ieee-logreg-same": 4777.6525,
+    "ieee-logreg-all": 3803.82685,
+    "ieee-approve-all": 5295.337
+   }
+  },
+  "Phases 1-10 (review 50, friction min 10)": {
+   "costs": {
+    "friction_rate": 0.1,
+    "friction_min": 10.0,
+    "review_fee": 50.0,
+    "review_share": 0.05
+   },
+   "mean_cost": {
+    "ieee-frozen-qwen1.5b": 5295.337,
+    "ieee-ft-d1omni": 5435.066650000001,
+    "ieee-ft-ieee-d1omni": 4372.7855,
+    "ieee-logreg-same": 4269.55055,
+    "ieee-logreg-all": 4034.5433000000003,
+    "ieee-approve-all": 5295.337
+   }
+  }
+ },
+ "verdict": {
+  "ieee_vs_paysim": {
+   "a": "ieee-ft-ieee-d1omni",
+   "b": "ieee-ft-d1omni",
+   "better": "ieee-ft-ieee-d1omni",
+   "other": "ieee-ft-d1omni",
+   "cheaper": 17,
+   "dearer": 3,
+   "ties": 0,
+   "sign_p": 0.0025768280029296875,
+   "mean_diff": -1041.8368350000003,
+   "mean_diff_ci95": [
+    -1664.38872525,
+    -445.2944692500004
+   ],
+   "distinguishable": true
+  },
+  "frozen_vs_paysim": {
+   "a": "ieee-frozen-qwen1.5b",
+   "b": "ieee-ft-d1omni",
+   "better": "ieee-ft-d1omni",
+   "other": "ieee-frozen-qwen1.5b",
+   "cheaper": 9,
+   "dearer": 11,
+   "ties": 0,
+   "sign_p": 0.8238029479980469,
+   "mean_diff": -21.90750499999991,
+   "mean_diff_ci95": [
+    -591.4203056250002,
+    543.7356617500002
+   ],
+   "distinguishable": false
+  },
+  "reported": [
+   {
+    "a": "ieee-ft-ieee-d1omni",
+    "b": "ieee-logreg-same",
+    "better": "ieee-ft-ieee-d1omni",
+    "other": "ieee-logreg-same",
+    "cheaper": 14,
+    "dearer": 6,
+    "ties": 0,
+    "sign_p": 0.11531829833984375,
+    "mean_diff": -578.9848450000002,
+    "mean_diff_ci95": [
+     -950.5158103749999,
+     -176.5634487500002
+    ],
+    "distinguishable": true
+   },
+   {
+    "a": "ieee-ft-ieee-d1omni",
+    "b": "ieee-logreg-all",
+    "better": "ieee-logreg-all",
+    "other": "ieee-ft-ieee-d1omni",
+    "cheaper": 15,
+    "dearer": 5,
+    "ties": 0,
+    "sign_p": 0.04138946533203125,
+    "mean_diff": -368.42774499999985,
+    "mean_diff_ci95": [
+     -728.213079875,
+     -6.816571124999745
+    ],
+    "distinguishable": true
+   },
+   {
+    "a": "ieee-ft-ieee-d1omni",
+    "b": "ieee-approve-all",
+    "better": "ieee-ft-ieee-d1omni",
+    "other": "ieee-approve-all",
+    "cheaper": 15,
+    "dearer": 5,
+    "ties": 0,
+    "sign_p": 0.04138946533203125,
+    "mean_diff": -1501.2419399999999,
+    "mean_diff_ci95": [
+     -2355.3440233750002,
+     -752.1326177500001
+    ],
+    "distinguishable": true
+   },
+   {
+    "a": "ieee-ft-d1omni",
+    "b": "ieee-logreg-same",
+    "better": "ieee-logreg-same",
+    "other": "ieee-ft-d1omni",
+    "cheaper": 11,
+    "dearer": 9,
+    "ties": 0,
+    "sign_p": 0.8238029479980469,
+    "mean_diff": -462.85198999999994,
+    "mean_diff_ci95": [
+     -1161.9562025,
+     219.26064049999977
+    ],
+    "distinguishable": false
+   },
+   {
+    "a": "ieee-ft-d1omni",
+    "b": "ieee-logreg-all",
+    "better": "ieee-logreg-all",
+    "other": "ieee-ft-d1omni",
+    "cheaper": 18,
+    "dearer": 2,
+    "ties": 0,
+    "sign_p": 0.0004024505615234375,
+    "mean_diff": -1410.2645799999998,
+    "mean_diff_ci95": [
+     -2173.44344225,
+     -763.8212516250001
+    ],
+    "distinguishable": true
+   },
+   {
+    "a": "ieee-ft-d1omni",
+    "b": "ieee-approve-all",
+    "better": "ieee-ft-d1omni",
+    "other": "ieee-approve-all",
+    "cheaper": 12,
+    "dearer": 8,
+    "ties": 0,
+    "sign_p": 0.5034446716308594,
+    "mean_diff": -459.4051049999998,
+    "mean_diff_ci95": [
+     -1030.1284024999995,
+     141.7397483749996
+    ],
+    "distinguishable": false
+   }
+  ]
+ },
+ "bar_latency": {
+  "ieee-frozen-qwen1.5b": true,
+  "ieee-ft-d1omni": true,
+  "ieee-ft-ieee-d1omni": true
+ }
+}
