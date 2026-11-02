@@ -119,3 +119,12 @@ fail, whatever they show.
 
 **Accept:** results committed with the gate and bars reported pass or fail (or the reproduction
 check's failure), whatever they show.
+
+## Phase 10: no review, a tightened cash-out rule, by F1 (owner, 2026-11-02)
+- [x] `eval_chain.py` with the pre-registration in its docstring, committed with the PROGRESS pre-statement before it ran
+      on any test-split hour
+- [ ] `python -m fraud.eval_chain`, once, on the untouched test-split hours: bars 1 and 2, row F1 reported
+- [ ] `fraud/RESULTS-CHAIN.md`: bars, row and chain F1, labelled claims, limits
+
+**Accept:** results committed with both bars reported pass or fail, whatever they show.
+

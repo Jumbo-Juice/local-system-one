@@ -541,3 +541,14 @@ scripts transfer-then-cash-out with equal amounts) and is unlikely to be this cl
 change, not a tuning step: the no-look-ahead rule, and the cost model, which charges a fraud TRANSFER's approval as its
 full amount even though the existing cash-out rule then stops the money. Those are the owner's decisions. Nothing built.
 
+## 2026-11-02: Phase 10 pre-statement, no review by F1 (owner; before any test-split hour)
+
+Owner: minimise review, forget cost, focus on F1. Exploratory on training steps 1–300, natural rate (Observed): the
+cash-out rule needs only that an earlier TRANSFER of exactly this amount sits in the hour to keep all 1,682 fraud cash-outs it
+caught while its legit declines fall from 741 to 28. With the review queue approved that gave no reviews and chain F1 0.98
+(one theft = a transfer + its cash-out), but row F1 0.67; today's rules with a human on all 40,133 queue rows have row F1 0.90.
+These numbers are in-sample: the rule was found on these rows. The pre-registration is the `fraud/eval_chain.py` docstring:
+untouched test-split hours, once; bar 1 tight chain F1 > human chain F1; bar 2 tight chain F1 >= 0.90; row F1 reported.
+Stated before running (Inferred): it will shrink, and a pass says the rule fits PaySim, whose generator seems to cash out
+the exact amount within the hour. It says nothing about real fraud. The chain metric assumes money can be stopped at the cash-out.
+
