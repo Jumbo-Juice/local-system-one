@@ -567,3 +567,10 @@ with 17,042 reviews, floor 0.90 not met; in-sample it was 0.98. Of tight's 2,183
 2,178 from the old round-transfer line (2,176 legit transfers of exactly 10,000,000, mostly hours 304–305). That line's evidence was 39
 training rows. Nothing removed or re-run: it would be a change prompted by test hours, and no untouched hours remain.
 
+
+## 2026-11-02: console shows the fine-tuned d1-Omni-2B (owner)
+
+`fraud/viewer/server.py` lists `fraud/results/eval_d1ft/` (`EVAL_DIRS`); `console.js` has the `hybrid-d1ft` label, chart series (it shares the
+fifth color with `hybrid-d3ft`: one page never shows both) and write-up link; the training card no longer names a 2-hour cap. Phase 10 has no
+eval page: its result has no per-window setups. Checked in the browser pane (Observed): start page, the new eval page (20 of 20 trace links), the
+d3-nano eval page, a d1-Omni replay, no console errors, no sideways scroll at 375 px.
