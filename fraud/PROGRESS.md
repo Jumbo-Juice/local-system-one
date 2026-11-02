@@ -585,3 +585,11 @@ USD, sensitivity reported including PaySim's numbers as they are; retraining cou
 IEEE-fitted logistic regression in >= 10 of 20 windows and beats approve-all. All three can be re-read from the traces if the owner decides otherwise.
 Draw, seed 20261102: frozen Qwen2.5-1.5B, fine-tuned d1-Omni-2B. Different base models, so the comparison changes two things at once (stated now).
 Stated before running (Inferred): both likely lose to logistic regression.
+
+## 2026-11-02: Phase 11 amendment (owner; before any eval output was read)
+
+Owner: treat retraining as guaranteed; a review costs 10 for all from now, the default for every review; train on IEEE-CIS and compare the PaySim fine-tune
+with the IEEE-CIS fine-tune. So the "retraining is necessary" bar is withdrawn. `costs.DEFAULT` now has review 10; the Phase 1–10 evals use `costs.PHASES_1_10` (review 50), so
+rebuilding them still matches their committed numbers, which are not re-priced. The running eval keeps 5 USD in its traces; `--reprice` re-decides them at 10 USD from the
+recorded scores. New adapter: `fraud/finetune_ieee.py`, same base, LoRA, schedule and 1,510 batches as the PaySim adapter, 12,084 rows from fit rows only. Primary question in the
+`fraud/eval_ieee.py` amendment. Stated before running (Inferred): the IEEE fine-tune beats the PaySim one on AUC and probably cost, but may still not beat logistic regression.

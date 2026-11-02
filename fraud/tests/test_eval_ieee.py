@@ -3,7 +3,7 @@ import math
 
 import numpy as np
 
-from fraud import costs, eval_ieee as ev, ieee_brain, ieee_data
+from fraud import costs, eval_ieee as ev, finetune_ieee as fi, ieee_brain, ieee_data
 from fraud.ieee_data import TEXT, Ieee
 
 
@@ -100,16 +100,59 @@ def test_trace_scores_at_natural_rate_and_budget_falls_back_to_approve():
     json.dumps(recs)
 
 
-def test_verdict_needs_logreg_and_approve_all():
-    base = {ev.FROZEN: np.full(20, 100.0), ev.FINETUNED: np.full(20, 90.0), ev.LOGREG_SAME: np.full(20, 95.0),
-            ev.LOGREG_ALL: np.full(20, 80.0), ev.APPROVE_ALL: np.full(20, 500.0)}
+def test_verdict_compares_the_fine_tunes_first():
+    base = {ev.FROZEN: np.full(20, 100.0), ev.FINETUNED: np.full(20, 90.0), ev.FT_IEEE: np.arange(60.0, 80.0),
+            ev.LOGREG_SAME: np.full(20, 95.0), ev.LOGREG_ALL: np.full(20, 80.0), ev.APPROVE_ALL: np.full(20, 500.0)}
     v = ev.verdict(base)
-    assert v["better"] == ev.FINETUNED and v["bar_logreg"] and v["bar_approve_all"] and not v["retraining_necessary"]
-    v = ev.verdict({**base, ev.LOGREG_SAME: np.full(20, 50.0)})
-    assert not v["bar_logreg"] and v["retraining_necessary"]
-    v = ev.verdict({**base, ev.APPROVE_ALL: np.full(20, 10.0)})
-    assert not v["bar_approve_all"] and v["retraining_necessary"]
+    p = v["ieee_vs_paysim"]
+    assert p["better"] == ev.FT_IEEE and p["other"] == ev.FINETUNED and p["cheaper"] == 20 and p["distinguishable"]
+    assert v["frozen_vs_paysim"]["better"] == ev.FINETUNED
+    assert len(v["reported"]) == 6
 
 
-def test_costs_defaults_are_untouched():
-    assert costs.DEFAULT == costs.Costs(0.10, 10.0, 50.0, 0.05)
+def test_compare_says_when_windows_cannot_tell():
+    a, b = "a", "b"
+    x = np.array([1.0, -1.0] * 10)
+    p = ev.compare({a: 100 + x, b: 100 - x}, a, b)
+    assert p["better"] is None and not p["distinguishable"]
+
+
+def test_a_review_costs_10_from_now_and_old_phases_keep_50():
+    assert costs.DEFAULT == costs.Costs(0.10, 10.0, 10.0, 0.05)
+    assert costs.PHASES_1_10 == costs.Costs(0.10, 10.0, 50.0, 0.05)
+    assert ev.COSTS == costs.Costs(0.10, 1.0, 10.0, 0.05)
+
+
+def test_ieee_training_rows_are_fit_rows_only_at_the_paysim_size():
+    t = table(n=60000, fraud_every=4)
+    rows = fi.training_rows(t)
+    a, _ = ieee_data.split_bounds(len(t))
+    assert len(rows) == 12084 and rows.max() < a and len(set(rows.tolist())) == 12084
+    assert int(t.is_fraud[rows].sum()) == 3021
+    assert (rows == fi.training_rows(t)).all()
+    d, want = fi.examples(t, rows[:4])[0]
+    assert d.options[want] in ("no: approve it", "yes: decline it")
+
+
+def test_reprice_changes_decisions_and_keeps_scores(tmp_path, monkeypatch):
+    t = table(n=2400)
+    make = lambda n, split, count, size=40, seed=ev.SEED, real=ev.make_windows: real(n, split, count, size, seed)
+    monkeypatch.setattr(ev, "RUNS", tmp_path)
+    monkeypatch.setattr(ev, "DEV_WINDOWS", 2)
+    monkeypatch.setattr(ev, "TEST_WINDOWS", 2)
+    monkeypatch.setattr(ev, "make_windows", make)
+    monkeypatch.setattr(ev.ieee_data, "load", lambda: t)
+    monkeypatch.setattr(ev, "SETUPS", (ev.LOGREG_SAME,))
+    for stage, split in (("dev", "dev"), ("eval", "test")):
+        for w in make(len(t), split, 2):
+            outs = [{"by": "logreg", "q": float(t.is_fraud[i]), "ms": 0.0} for i in w.rows]
+            recs = ev.trace(t, w, ev.LOGREG_SAME, outs, None, {}, "e")
+            recs[0]["costs"] = {"review_fee": 5.0}
+            ev.trace_file("e", stage, ev.LOGREG_SAME, w.id).write_text(ev.to_jsonl(recs), encoding="utf-8")
+    ev.reprice("e", log=lambda m: None)
+    w = make(len(t), "test", 2)[0]
+    recs = ev.read_run(ev.trace_file("e", "eval", ev.LOGREG_SAME, w.id))
+    tx = [r for r in recs if r.get("type") == "tx"]
+    assert recs[0]["costs"]["review_fee"] == 10.0 and "repriced" in recs[0]
+    assert [r["q"] for r in tx] == [float(t.is_fraud[i]) for i in w.rows]
+    assert any(r["action"] != "approve" for r in tx)

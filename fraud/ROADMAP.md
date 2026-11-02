@@ -133,7 +133,9 @@ check's failure), whatever they show.
 - [x] `ieee_data.py` (train files → cache, time split) and `DATA-IEEE.md`
 - [x] `ieee_brain.py` (one new prompt, prompt v4's question and labels) and `eval_ieee.py` with the pre-registration in its
       docstring, committed with the PROGRESS pre-statement before any model scored a row
-- [ ] `python -m fraud.eval_ieee`: one random frozen and one random fine-tuned model as they are, dev, thresholds, 20 test windows
-- [ ] `fraud/RESULTS-IEEE.md`: which is better, whether retraining is necessary, labelled claims, negatives
+- [x] Owner's amendment, committed before any eval output was read: retraining treated as guaranteed, review 10 by default, train on IEEE-CIS
+- [ ] `python -m fraud.eval_ieee`: the frozen and PaySim fine-tuned models as they are, dev, thresholds, 20 test windows; `--reprice` at review 10
+- [ ] `python -m fraud.finetune_ieee --train`: d1-Omni-2B on IEEE fit rows, the PaySim adapter's size and configuration
+- [ ] The IEEE fine-tune on the same windows; `fraud/RESULTS-IEEE.md`: IEEE vs PaySim fine-tune, frozen vs PaySim, baselines, negatives
 
 **Accept:** results committed with the answers and bars reported, whatever they show.
