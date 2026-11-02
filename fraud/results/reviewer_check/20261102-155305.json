@@ -1,0 +1,168 @@
+{
+ "id": "20261102-155305",
+ "script": "fraud/reviewer_check.py",
+ "scorers": {
+  "logreg": {
+   "auc": 0.5623263888888889,
+   "blocks_before_wrong": 10,
+   "human_cost_per_window": 865.0,
+   "in_sample_cost_per_window": 815.0,
+   "cross_fold": {
+    "cost": 51093.10400000001,
+    "blocked": 24,
+    "frauds_blocked": 22,
+    "wrong_blocks": 2,
+    "thresholds": [
+     0.012992336818539237,
+     0.3742664159857797
+    ],
+    "cost_per_window": 5109.3104,
+    "saving_share": -4.9067172254335265
+   },
+   "natural": {
+    "human_cost_per_window": 33717.372,
+    "cost": 1020299.4010911998,
+    "blocked": 24,
+    "frauds_blocked": 22,
+    "wrong_blocks": 2,
+    "thresholds": [
+     0.012992336818539237,
+     0.3742664159857797
+    ],
+    "cost_per_window": 102029.94010911998,
+    "saving_share": -2.0260347724941306
+   }
+  },
+  "d1-omni frozen": {
+   "auc": 0.47274305555555557,
+   "blocks_before_wrong": 1,
+   "human_cost_per_window": 865.0,
+   "in_sample_cost_per_window": 860.0,
+   "cross_fold": {
+    "cost": 31167.424,
+    "blocked": 3,
+    "frauds_blocked": 2,
+    "wrong_blocks": 1,
+    "thresholds": [
+     0.677969324515107,
+     null
+    ],
+    "cost_per_window": 3116.7424,
+    "saving_share": -2.603170404624277
+   },
+   "natural": {
+    "human_cost_per_window": 33717.372,
+    "cost": 6945633.496817601,
+    "blocked": 3,
+    "frauds_blocked": 2,
+    "wrong_blocks": 1,
+    "thresholds": [
+     0.677969324515107,
+     null
+    ],
+    "cost_per_window": 694563.3496817601,
+    "saving_share": -19.59956955369357
+   }
+  },
+  "d3-mini frozen": {
+   "auc": 0.4329861111111111,
+   "blocks_before_wrong": 3,
+   "human_cost_per_window": 865.0,
+   "in_sample_cost_per_window": 850.0,
+   "cross_fold": {
+    "cost": 8650.0,
+    "blocked": 0,
+    "frauds_blocked": 0,
+    "wrong_blocks": 0,
+    "thresholds": [
+     0.6559598188694371,
+     null
+    ],
+    "cost_per_window": 865.0,
+    "saving_share": 0.0
+   },
+   "natural": {
+    "human_cost_per_window": 33717.372,
+    "cost": 337173.72,
+    "blocked": 0,
+    "frauds_blocked": 0,
+    "wrong_blocks": 0,
+    "thresholds": [
+     0.6559598188694371,
+     null
+    ],
+    "cost_per_window": 33717.371999999996,
+    "saving_share": 2.220446049250313e-16
+   }
+  },
+  "hybrid-ft (1.5B)": {
+   "auc": 0.5611111111111111,
+   "blocks_before_wrong": 18,
+   "human_cost_per_window": 865.0,
+   "in_sample_cost_per_window": 775.0,
+   "cross_fold": {
+    "cost": 240782.064,
+    "blocked": 20,
+    "frauds_blocked": 19,
+    "wrong_blocks": 1,
+    "thresholds": [
+     0.9205974015223817,
+     0.9206933580421228
+    ],
+    "cost_per_window": 24078.206400000003,
+    "saving_share": -26.83607676300578
+   },
+   "natural": {
+    "human_cost_per_window": 33717.372,
+    "cost": 11144095.874363199,
+    "blocked": 20,
+    "frauds_blocked": 19,
+    "wrong_blocks": 1,
+    "thresholds": [
+     0.9205974015223817,
+     0.9206933580421228
+    ],
+    "cost_per_window": 1114409.5874363198,
+    "saving_share": -32.05149604887118
+   }
+  },
+  "hybrid-d3ft": {
+   "auc": 0.5784722222222223,
+   "blocks_before_wrong": 16,
+   "human_cost_per_window": 865.0,
+   "in_sample_cost_per_window": 785.0,
+   "cross_fold": {
+    "cost": 62018.02300000001,
+    "blocked": 24,
+    "frauds_blocked": 21,
+    "wrong_blocks": 3,
+    "thresholds": [
+     0.8960303962230682,
+     0.8976629972457886
+    ],
+    "cost_per_window": 6201.802300000001,
+    "saving_share": -6.169713641618498
+   },
+   "natural": {
+    "human_cost_per_window": 33717.372,
+    "cost": 1191457.1921393997,
+    "blocked": 24,
+    "frauds_blocked": 21,
+    "wrong_blocks": 3,
+    "thresholds": [
+     0.8960303962230682,
+     0.8976629972457886
+    ],
+    "cost_per_window": 119145.71921393997,
+    "saving_share": -2.5336597174281543
+   }
+  }
+ },
+ "queue": {
+  "rows": 173,
+  "fraud": 128,
+  "legit": 45,
+  "human_cost_per_window": 865.0,
+  "natural_fraud_share": 0.02852915108567774
+ }
+}
