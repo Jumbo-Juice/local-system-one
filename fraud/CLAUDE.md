@@ -57,6 +57,8 @@ engine, the `.venv` and the pytest run with the game demos. Keep the two apart.
 .venv/Scripts/python -m fraud.ieee_data                       # Phase 11: build the IEEE-CIS cache
 .venv/Scripts/python -m fraud.finetune_ieee --train           # Phase 11: LoRA on d1-Omni-2B, IEEE fit rows
 .venv/Scripts/python -m fraud.eval_ieee --ieee-adapter <dir>  # Phase 11: frozen, PaySim and IEEE fine-tunes on IEEE-CIS
+.venv/Scripts/python -m fraud.finetune_ieee --train --full    # Phase 12: the same on every fit fraud
+.venv/Scripts/python -m fraud.eval_ieee_full --adapter <dir>  # Phase 12: its pre-registered eval on new test windows
 .venv/Scripts/python -m fraud.viewer                          # the analyst console
 ```
 Every command and flag is in the repo's `RUN-GUIDE.md` → Fraud app. Keep it current.

@@ -571,6 +571,20 @@ add `--resume <eval id>` to finish one; `--reprice <eval id>` re-decides its tra
 `--report <eval id>` rebuilds `fraud/results/eval_ieee/<eval id>.json|.md`. Traces: `fraud/runs/<eval id>_{dev,eval}_ieee-*.jsonl`. Write-up: `fraud/RESULTS-IEEE.md`.
 Keep the machine awake: a row can stall for as long as Windows is in standby (`fraud/RESULTS-IEEE.md`, Limits).
 
+Training on every fit fraud (Phase 12): add `--full` to `--dry-run`, `--steps N` or `--train`. Output `fraud/models/<time>_lora-d1-ieee-full/`, about 4.5 h, safety stop at 10 h.
+Every 250 batches the adapter so far goes to `checkpoint/` in that folder; it can't be resumed. The eval compares it with Phase 11's adapter on 20 new test windows (about 1.5 h):
+`--windows` prints them, `--adapter <dir>` runs it, add `--resume <eval id>` to finish one, `--report <eval id>` rebuilds `fraud/results/eval_ieee_full/<eval id>.json|.md`.
+
+```bash
+.venv/Scripts/python -m fraud.finetune_ieee --dry-run --full
+.venv/Scripts/python -m fraud.finetune_ieee --steps 20 --full
+.venv/Scripts/python -m fraud.finetune_ieee --train --full
+.venv/Scripts/python -m fraud.eval_ieee_full --windows
+.venv/Scripts/python -m fraud.eval_ieee_full --adapter fraud/models/<time>_lora-d1-ieee-full
+.venv/Scripts/python -m fraud.eval_ieee_full --adapter fraud/models/<time>_lora-d1-ieee-full --resume <eval id>
+.venv/Scripts/python -m fraud.eval_ieee_full --report <eval id>
+```
+
 ```bash
 .venv/Scripts/python -m fraud.eval_ieee --draw
 .venv/Scripts/python -m fraud.eval_ieee --smoke 30
