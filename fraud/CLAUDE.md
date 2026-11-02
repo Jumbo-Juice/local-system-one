@@ -52,6 +52,8 @@ engine, the `.venv` and the pytest run with the game demos. Keep the two apart.
 .venv/Scripts/python -m fraud.eval_d1ft --repro               # Phase 9: frozen d1-Omni in torch vs Phase 8
 .venv/Scripts/python -m fraud.finetune_d1 --plan <smoke dir>  # Phase 9: LoRA on d1-Omni-2B (1 h cap)
 .venv/Scripts/python -m fraud.eval_d1ft --adapter <dir>       # Phase 9: its pre-registered eval
+.venv/Scripts/python -m fraud.reviewer_check                 # exploratory: could a model replace review?
+.venv/Scripts/python -m fraud.eval_chain                     # Phase 10: no review, tightened cash-out rule
 .venv/Scripts/python -m fraud.viewer                          # the analyst console
 ```
 Every command and flag is in the repo's `RUN-GUIDE.md` → Fraud app. Keep it current.

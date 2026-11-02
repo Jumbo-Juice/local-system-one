@@ -516,6 +516,19 @@ The review-tier check (exploratory; recorded dev scores, no inference, no test w
 
 Flags: `--d1ft <eval id>` (adds that eval's fine-tuned d1-Omni-2B), `--probe`.
 
+Phase 10, no human review with a tightened cash-out rule, scored by F1 (no model, CPU, seconds). `--hours` counts the
+untouched test-split hours and reads no outcome, `--train` reproduces the in-sample numbers on steps 1–300 and writes nothing:
+
+```bash
+.venv/Scripts/python -m fraud.eval_chain --train
+```
+
+The pre-registered test, once (→ `fraud/results/eval_chain/<id>.json|.md`):
+
+```bash
+.venv/Scripts/python -m fraud.eval_chain
+```
+
 The analyst console (replay only; start page, a run at 1×, auto-demo, the eval page), on
 http://127.0.0.1:8766:
 
