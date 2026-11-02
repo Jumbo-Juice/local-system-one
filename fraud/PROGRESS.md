@@ -512,3 +512,13 @@ the full pre-registration is the `fraud/eval_d1ft.py` docstring, committed with 
   to the lone prompt (smoke: within 0.001). Phase 8 reached no test windows, so nothing there relied on it.
 - Stated before running (Inferred): one hour is likely near half an epoch, Phase 7's run was 90%.
 
+## 2026-11-02: Phase 9 correction, before the reproduction check ran
+
+The pre-statement above says llama-server packs both orders after one state. That Inference was wrong. Observed:
+the Phase 8 traces report 169 tokens for one order and 338 for two, and the server's source sets `no_batching` for
+LFM3 d1 and reads each question as its own prompt (Documented, server-decision.cpp at 7ac5727d6). So Phase 8's "rev"
+scores were not read after the forward question, and its rev variant needs no caveat. A 6-row check of the frozen
+model showed this (packed: 216 tokens, scores 0.08 off; lone: 338 tokens as the traces, scores about 0.01 off). The
+check used dev0 rows and only tested the prompt format. `fraud/d1torch.py` lost its packing, and the reproduction check
+in the `fraud/eval_d1ft.py` docstring now compares lone prompts. R1–R3 and their tolerances did not change.
+

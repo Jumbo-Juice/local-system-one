@@ -18,7 +18,7 @@ class FakeTokenizer:
         return [1 + ord(c) % 60 for c in text]
 
 
-def tiny(seed=0, pack=False, temperature=1.0):
+def tiny(seed=0, temperature=1.0):
     torch.manual_seed(seed)
     cfg = SimpleNamespace(vocab_size=64, hidden_size=32, intermediate_size=64, head_dim=16, num_attention_heads=2,
                           num_key_value_heads=1, norm_eps=1e-5, conv_L_cache=3, sliding_window=8,
@@ -26,7 +26,7 @@ def tiny(seed=0, pack=False, temperature=1.0):
                           rope_parameters={"full_attention": {"rope_theta": 1e6, "partial_rotary_factor": 0.5},
                                            "sliding_attention": {"rope_theta": 1e4}})
     lm = d1torch.Lfm3Text(cfg).float().eval()
-    return d1torch.D1Torch(lm, FakeTokenizer(), "cpu", temperature, pack)
+    return d1torch.D1Torch(lm, FakeTokenizer(), "cpu", temperature)
 
 
 def test_prompt_is_the_repo_format():
@@ -44,16 +44,12 @@ def test_rope_keeps_the_full_dims_progression_with_a_zero_tail():
     assert inv[1].item() == pytest.approx(1e6 ** (-2 / 128))
 
 
-def test_set_masks_state_sees_all_a_question_sees_state_and_itself():
-    cfg = SimpleNamespace(sliding_window=2)
-    question = torch.tensor([[-1, -1, 1, 1, 2, 2, -1]])
-    real = torch.tensor([[1, 1, 1, 1, 1, 1, 0]]).bool()
-    m = d1torch.masks_for(cfg, torch.tensor([2]), question, real)
+def test_masks_full_sees_the_real_tokens_both_ways_sliding_is_causal_within_its_window():
+    m = d1torch.masks_for(SimpleNamespace(sliding_window=2), torch.tensor([[1, 1, 1, 1, 0]]).bool())
     full, sliding = m["full_attention"][0, 0], m["sliding_attention"][0, 0]
-    assert full[0].tolist() == [True] * 6 + [False]                           # a state token: all but padding
-    assert full[2].tolist() == [True, True, True, True, False, False, False]  # question 1: state and itself
-    assert full[5].tolist() == [True, True, False, False, True, True, False]  # question 2: state and itself
-    assert sliding[4].tolist() == [False, False, False, True, True, False, False]  # causal within the window
+    assert full[0].tolist() == [True, True, True, True, False]
+    assert full[3].tolist() == [True, True, True, True, False]
+    assert sliding[2].tolist() == [False, True, True, False, False]
 
 
 def test_right_padding_does_not_change_a_row():
@@ -67,12 +63,11 @@ def test_right_padding_does_not_change_a_row():
     assert not torch.allclose(alone, other, atol=1e-3)
 
 
-def test_lone_full_attention_reads_later_tokens():
+def test_full_attention_reads_later_tokens():
     m = tiny()
 
     def hidden(ids):
-        return m.lm(torch.tensor([ids]), d1torch.masks_for(m.lm.cfg, torch.tensor([len(ids)]),
-                                                           torch.full((1, len(ids)), -1), torch.ones(1, len(ids)).bool()))[0]
+        return m.lm(torch.tensor([ids]), d1torch.masks_for(m.lm.cfg, torch.ones(1, len(ids)).bool()))[0]
 
     with torch.no_grad():
         a, b = hidden(list(range(3, 15))), hidden(list(range(3, 14)) + [40])
@@ -85,18 +80,18 @@ def test_temperature_divides_the_scores():
         assert torch.allclose(tiny(temperature=2.0).logits(seqs, 3), tiny().logits(seqs, 3) / 2, atol=1e-5)
 
 
-def test_post_lone_and_packed():
+def test_post_reads_each_order_as_its_own_prompt():
     body = d3.request(T, S, 1, "both")
-    lone, packed = tiny().post(body), tiny(pack=True).post(body)
-    assert list(lone["answers"]) == ["fwd", "rev"] and list(packed["answers"]) == ["fwd", "rev"]
+    both = tiny().post(body)
+    assert list(both["answers"]) == ["fwd", "rev"]
     for q, spec in body["questions"].items():
-        assert list(lone["answers"][q]["probabilities"]) == list(spec["criteria"])
-        assert sum(lone["answers"][q]["probabilities"].values()) == pytest.approx(1.0)
-    assert packed["usage"]["input_tokens"] < lone["usage"]["input_tokens"]  # the state is read once
-    one = d3.request(T, S, 1, "fwd")  # one question packed is the lone prompt
-    a = tiny().post(one)["answers"]["fwd"]["probabilities"]
-    b = tiny(pack=True).post(one)["answers"]["fwd"]["probabilities"]
-    assert all(a[o] == pytest.approx(b[o], abs=1e-5) for o in brain.OPTIONS)
+        assert list(both["answers"][q]["probabilities"]) == list(spec["criteria"])
+        assert sum(both["answers"][q]["probabilities"].values()) == pytest.approx(1.0)
+    one = d3.request(T, S, 1, "fwd")
+    alone = tiny().post(one)
+    assert all(alone["answers"]["fwd"]["probabilities"][o] == pytest.approx(both["answers"]["fwd"]["probabilities"][o], abs=1e-4)
+               for o in brain.OPTIONS)
+    assert both["usage"]["input_tokens"] > alone["usage"]["input_tokens"]
 
 
 def test_a_merged_adapter_scores_like_the_lora_model(tmp_path):
