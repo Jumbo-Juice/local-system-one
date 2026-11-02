@@ -522,3 +522,22 @@ model showed this (packed: 216 tokens, scores 0.08 off; lone: 338 tokens as the 
 check used dev0 rows and only tested the prompt format. `fraud/d1torch.py` lost its packing, and the reproduction check
 in the `fraud/eval_d1ft.py` docstring now compares lone prompts. R1–R3 and their tolerances did not change.
 
+## 2026-11-02: review-tier idea, a no-training check (owner; exploratory, dev and training steps only)
+
+Owner's idea: a second decision model reviews in place of the human, escalating when unsure, so a correct call costs
+0 instead of 50. All of `hybrid-ft`'s test cost is review fees (332 reviews, 830 per window, Observed), so this
+targets the whole remaining cost. `fraud/reviewer_check.py`, results in `fraud/results/reviewer_check/`. Observed:
+- Dev queue (the rules' review rows): 173 rows, 128 fraud, 45 legit, 2.85% fraud at the natural rate. AUC on it:
+  logreg 0.56, frozen d1-Omni 0.47, frozen d3-mini 0.43, hybrid-ft 0.56, hybrid-d3ft 0.58. These are the same models
+  whose AUC is 0.94–1.00 over all rows; the queue is what is left after their cues are used.
+- Cross-fold blocking loses money for every scorer but d3-mini, which blocks nothing: one wrong block costs more than all
+  the reviews it saves. Blocking is not viable on these signals, and approving even less (a miss costs about 1.6M).
+- Training-step queue: 40,133 rows, 1,649 fraud (4.1%). Amount alone AUC 0.505, the count signals 0.50, hour 0.37 (fraud
+  is flat over the day, legit is not). At decision time the queue's fraud barely differs from its legit.
+- After the decision: a CASH_OUT of exactly this amount follows in the same hour for 99.76% of fraud and 0.010% of legit.
+Inferred: the review queue is not hard for lack of a better model; the signal arrives after the transfer, so a reviewer
+on the same inputs cannot save much however it is trained. The follow-up cash-out is a PaySim property (its generator
+scripts transfer-then-cash-out with equal amounts) and is unlikely to be this clean on real data. Using it means a design
+change, not a tuning step: the no-look-ahead rule, and the cost model, which charges a fraud TRANSFER's approval as its
+full amount even though the existing cash-out rule then stops the money. Those are the owner's decisions. Nothing built.
+

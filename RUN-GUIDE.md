@@ -507,6 +507,15 @@ Its pre-registered eval (dev, debias rule, gate vs logreg, then the 20 Phase 5 w
 Flags: `--resume <eval id>` (with `--adapter` or `--repro`), `--report <eval id>` (with `--adapter` to refresh the
 training facts).
 
+The review-tier check (exploratory; recorded dev scores, no inference, no test window →
+`fraud/results/reviewer_check/<id>.json|.md`; `--probe` reads the queue on the training steps → `<id>_probe.json|.md`):
+
+```bash
+.venv/Scripts/python -m fraud.reviewer_check
+```
+
+Flags: `--d1ft <eval id>` (adds that eval's fine-tuned d1-Omni-2B), `--probe`.
+
 The analyst console (replay only; start page, a run at 1×, auto-demo, the eval page), on
 http://127.0.0.1:8766:
 

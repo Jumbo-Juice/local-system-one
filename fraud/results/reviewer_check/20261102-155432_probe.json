@@ -1,0 +1,20 @@
+{
+ "rows": 40133,
+ "fraud": 1649,
+ "legit": 38484,
+ "auc": {
+  "amount": 0.504838732094344,
+  "hour": 0.36923840479585635,
+  "orig_out_before": 0.500177678528038,
+  "orig_in_before": null,
+  "dest_in_before": 0.4994673110903233,
+  "dest_out_before": 0.4999134416961986,
+  "dest_transfer_in_before": 0.49984409105082633,
+  "same_amount_step_before": 0.5011566713808087,
+  "round_amount": null
+ },
+ "cash_out_after_same_hour": {
+  "fraud": 1645,
+  "legit": 4
+ }
+}
