@@ -111,11 +111,11 @@ fail, whatever they show.
       a tiny random model; the repo's remote code is not run) and `finetune_d1.py` (the hour's cap)
 - [x] `eval_d1ft.py` with the pre-registration in its docstring, committed with the PROGRESS
       pre-statement before training
-- [ ] Reproduction check: the frozen model in torch matches the Phase 8 llama-server traces (R1–R3)
-- [ ] Smoke run (s/step, memory), then one training run inside one hour (`--plan`)
-- [ ] `python -m fraud.eval_d1ft`: dev, debias rule, gate vs logreg, then the 20 Phase 5 windows
+- [x] Reproduction check: the frozen model in torch matches the Phase 8 llama-server traces (R1–R3): PASS
+- [x] Smoke run (s/step, memory), then one training run inside one hour (`--plan`): a full epoch in 56 min
+- [x] `python -m fraud.eval_d1ft`: dev, debias rule, gate vs logreg, then the 20 Phase 5 windows
       (if the gate passes) with bars A, B and C
-- [ ] `fraud/RESULTS-D1FT.md`: training, gate, bars, labelled claims, negatives
+- [x] `fraud/RESULTS-D1FT.md`: training, gate, bars, labelled claims, negatives
 
 **Accept:** results committed with the gate and bars reported pass or fail (or the reproduction
 check's failure), whatever they show.
@@ -123,8 +123,8 @@ check's failure), whatever they show.
 ## Phase 10: no review, a tightened cash-out rule, by F1 (owner, 2026-11-02)
 - [x] `eval_chain.py` with the pre-registration in its docstring, committed with the PROGRESS pre-statement before it ran
       on any test-split hour
-- [ ] `python -m fraud.eval_chain`, once, on the untouched test-split hours: bars 1 and 2, row F1 reported
-- [ ] `fraud/RESULTS-CHAIN.md`: bars, row and chain F1, labelled claims, limits
+- [x] `python -m fraud.eval_chain`, once, on the untouched test-split hours: bar 1 PASS, bar 2 FAIL, row F1 reported
+- [x] `fraud/RESULTS-CHAIN.md`: bars, row and chain F1, labelled claims, limits
 
 **Accept:** results committed with both bars reported pass or fail, whatever they show.
 

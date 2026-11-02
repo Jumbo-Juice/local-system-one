@@ -552,3 +552,18 @@ untouched test-split hours, once; bar 1 tight chain F1 > human chain F1; bar 2 t
 Stated before running (Inferred): it will shrink, and a pass says the rule fits PaySim, whose generator seems to cash out
 the exact amount within the hour. It says nothing about real fraud. The chain metric assumes money can be stopped at the cash-out.
 
+## 2026-11-02: Phase 9 results, gate and bars A/B/C PASS, no gain over the rules
+
+Eval `20261102-162345`, write-up `fraud/RESULTS-D1FT.md`. Observed: reproduction check PASS; full epoch in 56.1 min; dev AUC 0.9953 (frozen
+0.9847, frozen 1.5B 0.9028, logreg 0.9916); bars A 19/20, B 92 ms, C 20/20; mean test cost 810 (rules 808, hybrid-ft 830,
+hybrid-d3ft 835); 324 reviews, no fraud approved, no legit declined. The first report build mislabelled the setup `approve-all`
+and broke the paired table (a loop variable reused `setup` in `eval_d3ft.report` after this phase's refactor); fixed, rebuilt from the
+same traces, bar values unchanged. Review-tier check with this model (`20261102-163454`): queue AUC 0.59; blocking still loses money.
+
+## 2026-11-02: Phase 10 results, bar 1 PASS, bar 2 FAIL
+
+Eval `20261102-163455`, write-up `fraud/RESULTS-CHAIN.md`. Observed on 282 untouched hours: tight chain F1 0.578 with no reviews, human 0.558
+with 17,042 reviews, floor 0.90 not met; in-sample it was 0.98. Of tight's 2,183 wrong declines, 5 came from the tightened cash-out line and
+2,178 from the old round-transfer line (2,176 legit transfers of exactly 10,000,000, mostly hours 304–305). That line's evidence was 39
+training rows. Nothing removed or re-run: it would be a change prompted by test hours, and no untouched hours remain.
+

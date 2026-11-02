@@ -69,3 +69,12 @@ def test_bootstrap_over_all_hours_reproduces_the_chain_f1():
     reviewed = np.zeros(4, bool)
     whole = ec.chain_f1_by_hours(step, y, chain, declined, reviewed, [np.array([0, 1])])[0]
     assert whole == ec.score(y, chain, declined, reviewed)["chain"]["f1"]
+
+
+def test_diagnose_splits_wrong_declines_by_rule_line(monkeypatch):
+    t = table([(1, TR, 5, 0), (1, CO, 5, 0), (1, TR, 10_000_000, 0)])
+    monkeypatch.setattr(ec, "rule_lines", lambda t, s: np.array([3, 1, 2]))
+    d = ec.diagnose(t, {}, [1])
+    assert d["wrong_declines"] == 2 and d["of_exactly_10M"] == 1 and d["top_hours"] == [[1, 2]]
+    assert list(d["by_line"].values()) == [1, 1]
+

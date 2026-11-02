@@ -529,6 +529,8 @@ The pre-registered test, once (→ `fraud/results/eval_chain/<id>.json|.md`):
 .venv/Scripts/python -m fraud.eval_chain
 ```
 
+After it, `--diagnose <eval id>` splits the tight setup's wrong declines by rule line (→ `<eval id>_diagnosis.json`).
+
 The analyst console (replay only; start page, a run at 1×, auto-demo, the eval page), on
 http://127.0.0.1:8766:
 

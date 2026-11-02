@@ -1,0 +1,1066 @@
+{
+ "eval": "20261102-162345",
+ "script": "fraud/eval_d1ft.py",
+ "setup": "hybrid-d1ft",
+ "title": "fine-tuned d1-Omni-2B",
+ "created": "2026-11-02T16:35:31",
+ "complete": true,
+ "phase5_eval": "20261005-022333",
+ "costs": {
+  "friction_rate": 0.1,
+  "friction_min": 10.0,
+  "review_fee": 50.0,
+  "review_share": 0.05
+ },
+ "test_windows": [
+  "test200",
+  "test201",
+  "test202",
+  "test204",
+  "test208",
+  "test210",
+  "test211",
+  "test212",
+  "test213",
+  "test214",
+  "test215",
+  "test216",
+  "test217",
+  "test219",
+  "test221",
+  "test222",
+  "test224",
+  "test228",
+  "test232",
+  "test233"
+ ],
+ "dev": {
+  "logreg": {
+   "auc": 0.9915798265849972,
+   "rows": 2194,
+   "fraud": 260
+  },
+  "auc": {
+   "both": 0.995274838914963,
+   "fwd": 0.9952569405775197,
+   "rev": 0.9951664545382229
+  },
+  "rows": 2194,
+  "fraud": 260,
+  "debias_gain": 1.7898337443367218e-05,
+  "variant": "fwd",
+  "flip_rate": 0.0,
+  "frozen_d1_auc": 0.9847,
+  "frozen_15b_auc": 0.9028,
+  "gate": {
+   "rule": "AUC(chosen variant) >= AUC(logreg) on dev0-dev9 model rows",
+   "pass": true
+  },
+  "thresholds": {
+   "review": 0.05,
+   "decline": 0.95
+  },
+  "grid_best": [
+   [
+    0.05,
+    0.95,
+    8600.0
+   ],
+   [
+    0.1,
+    0.95,
+    8600.0
+   ],
+   [
+    0.2,
+    0.95,
+    8600.0
+   ],
+   [
+    0.3,
+    0.95,
+    8600.0
+   ],
+   [
+    0.5,
+    0.95,
+    8600.0
+   ]
+  ]
+ },
+ "training": {
+  "steps": 1510,
+  "steps_done": 1510,
+  "stopped_early": false,
+  "train_s": 3345.0502328,
+  "process_s": 3363.4837102,
+  "step_s_mean": 2.2124390073656373,
+  "peak_mem_gib": 3.6874465942382812,
+  "loss_first100": 0.162028,
+  "loss_last100": 0.05429430000000001,
+  "adapter_sha256": "0dcc60af42648fefff7212b4f29fd48bf81bbc35a11b55eec1c9357739ca1b47",
+  "rows_sha256": "983ed4faa962b4300d5f7ca15d4ceb4130103820d34e6c6b43bcbdd2acf9875a",
+  "lora": {
+   "r": 16,
+   "lora_alpha": 32,
+   "lora_dropout": 0.05,
+   "target_modules": [
+    "q_proj",
+    "k_proj",
+    "v_proj",
+    "o_proj",
+    "in_proj",
+    "out_proj"
+   ]
+  },
+  "smoke": {
+   "dir": "20261102-152626_lora-d1-smoke",
+   "step_s_mean": 2.3234849764705414
+  },
+  "adapter": "20261102-152745_lora-d1"
+ },
+ "bars": {
+  "barA": {
+   "rule": "hybrid-d1ft cost <= logreg cost in >= 10 of 20 windows",
+   "value": 19,
+   "pass": true
+  },
+  "barB": {
+   "rule": "hybrid-d1ft p90 latency <= 250 ms",
+   "value": 92.2449,
+   "pass": true
+  },
+  "barC": {
+   "rule": "hybrid-d1ft cost <= hybrid-ft cost in >= 10 of 20 windows",
+   "value": 20,
+   "pass": true
+  }
+ },
+ "paired": {
+  "hybrid-d1ft vs logreg": {
+   "windows": 20,
+   "a_cheaper": 19,
+   "b_cheaper": 1,
+   "ties": 0,
+   "sign_test_p": 4.00543212890625e-05
+  },
+  "hybrid-d1ft vs rules": {
+   "windows": 20,
+   "a_cheaper": 0,
+   "b_cheaper": 1,
+   "ties": 19,
+   "sign_test_p": 1.0
+  },
+  "hybrid-d1ft vs hybrid-ft": {
+   "windows": 20,
+   "a_cheaper": 8,
+   "b_cheaper": 0,
+   "ties": 12,
+   "sign_test_p": 0.0078125
+  },
+  "hybrid-d1ft vs hybrid-1.5b": {
+   "windows": 20,
+   "a_cheaper": 20,
+   "b_cheaper": 0,
+   "ties": 0,
+   "sign_test_p": 1.9073486328125e-06
+  },
+  "hybrid-d1ft vs random": {
+   "windows": 20,
+   "a_cheaper": 20,
+   "b_cheaper": 0,
+   "ties": 0,
+   "sign_test_p": 1.9073486328125e-06
+  }
+ },
+ "pooled_test_auc": {
+  "hybrid-d1ft": {
+   "auc": 0.9951581579871054,
+   "rows": 3862,
+   "fraud": 518
+  },
+  "hybrid-ft": {
+   "auc": 0.994915113336166,
+   "rows": 3862
+  }
+ },
+ "totals": {
+  "hybrid-d1ft": {
+   "windows": 20,
+   "cost_mean": 810.0,
+   "cost_median": 800.0,
+   "recall_mean": 1.0,
+   "precision_mean": 0.8684647440424692,
+   "alert_rate_mean": 0.06000000000000001,
+   "latency_p90_mean": 90.471545,
+   "latency_ms": {
+    "p50": 81.3985,
+    "p90": 92.2449,
+    "decisions": 3862
+   },
+   "calibration": {
+    "decisions": 3862,
+    "ece": 0.013505484806571502,
+    "mean_top_score": 0.9884608107518187,
+    "top_right_rate": 0.9787674779906784,
+    "outside_mass_mean": null
+   }
+  },
+  "hybrid-ft": {
+   "windows": 20,
+   "cost_mean": 830.0,
+   "cost_median": 825.0,
+   "recall_mean": 0.9960769230769231,
+   "precision_mean": 0.868234858984998,
+   "alert_rate_mean": 0.059800000000000006,
+   "latency_p90_mean": 127.67458500000001
+  },
+  "hybrid-1.5b": {
+   "windows": 20,
+   "cost_mean": 5146777.1341,
+   "cost_median": 4988781.729,
+   "recall_mean": 1.0,
+   "precision_mean": 0.14332749282110735,
+   "alert_rate_mean": 0.3862,
+   "latency_p90_mean": 124.51339
+  },
+  "logreg": {
+   "windows": 20,
+   "cost_mean": 190910.09765,
+   "cost_median": 167148.494,
+   "recall_mean": 0.8861538461538461,
+   "precision_mean": 0.851644221379446,
+   "alert_rate_mean": 0.0558,
+   "latency_p90_mean": 0.0
+  },
+  "rules": {
+   "windows": 20,
+   "cost_mean": 807.5,
+   "cost_median": 800.0,
+   "recall_mean": 0.9960769230769231,
+   "precision_mean": 0.868234858984998,
+   "alert_rate_mean": 0.059800000000000006,
+   "latency_p90_mean": 0.0
+  },
+  "random": {
+   "windows": 20,
+   "cost_mean": 19605341.81845,
+   "cost_median": 14211557.180999998,
+   "recall_mean": 0.5828461538461538,
+   "precision_mean": 0.14219353074525798,
+   "alert_rate_mean": 0.22199999999999998,
+   "latency_p90_mean": 0.0
+  },
+  "approve-all": {
+   "windows": 20,
+   "cost_mean": 42190883.602,
+   "cost_median": 34751285.45999999,
+   "recall_mean": 0.0,
+   "precision_mean": 0.0,
+   "alert_rate_mean": 0.0,
+   "latency_p90_mean": 0.0
+  }
+ },
+ "windows": {
+  "test200": {
+   "n": 500,
+   "fraud": 26,
+   "cost": 750.0,
+   "fraud_amount": 43826189.660000004,
+   "fraud_amount_stopped": 43826189.660000004,
+   "recall": 1.0,
+   "precision": 0.896551724137931,
+   "alert_rate": 0.058,
+   "reviews_wanted": 15,
+   "reviews_done": 15,
+   "confusion": {
+    "legit": {
+     "approve": 471,
+     "review": 3,
+     "decline": 0
+    },
+    "fraud": {
+     "approve": 0,
+     "review": 12,
+     "decline": 14
+    }
+   },
+   "cost_natural": 2813.5832521908474,
+   "precision_natural": 0.5140719049943061,
+   "setup": "hybrid-d1ft",
+   "total_ms": 19935.9,
+   "decisions_by": {
+    "filter": 272,
+    "model": 228
+   },
+   "model_decisions": 228,
+   "latency_ms": {
+    "p50": 85.5435,
+    "p90": 94.02170000000001,
+    "max": 152.974,
+    "mean": 87.43377631578946
+   },
+   "outside_mass_mean": 0.0
+  },
+  "test201": {
+   "n": 500,
+   "fraud": 26,
+   "cost": 700.0,
+   "fraud_amount": 55444212.220000006,
+   "fraud_amount_stopped": 55444212.220000006,
+   "recall": 1.0,
+   "precision": 0.9285714285714286,
+   "alert_rate": 0.056,
+   "reviews_wanted": 14,
+   "reviews_done": 14,
+   "confusion": {
+    "legit": {
+     "approve": 472,
+     "review": 2,
+     "decline": 0
+    },
+    "fraud": {
+     "approve": 0,
+     "review": 12,
+     "decline": 14
+    }
+   },
+   "cost_natural": 2528.1726712106456,
+   "precision_natural": 0.4496584872248925,
+   "setup": "hybrid-d1ft",
+   "total_ms": 20586.5,
+   "decisions_by": {
+    "filter": 259,
+    "model": 241
+   },
+   "model_decisions": 241,
+   "latency_ms": {
+    "p50": 84.349,
+    "p90": 90.834,
+    "max": 101.499,
+    "mean": 85.38087136929461
+   },
+   "outside_mass_mean": 0.0
+  },
+  "test202": {
+   "n": 500,
+   "fraud": 26,
+   "cost": 950.0,
+   "fraud_amount": 28021834.8,
+   "fraud_amount_stopped": 28021834.8,
+   "recall": 1.0,
+   "precision": 0.8125,
+   "alert_rate": 0.064,
+   "reviews_wanted": 19,
+   "reviews_done": 19,
+   "confusion": {
+    "legit": {
+     "approve": 468,
+     "review": 6,
+     "decline": 0
+    },
+    "fraud": {
+     "approve": 0,
+     "review": 13,
+     "decline": 13
+    }
+   },
+   "cost_natural": 4087.974683544304,
+   "precision_natural": 0.6459119496855346,
+   "setup": "hybrid-d1ft",
+   "total_ms": 20689.5,
+   "decisions_by": {
+    "filter": 260,
+    "model": 240
+   },
+   "model_decisions": 240,
+   "latency_ms": {
+    "p50": 85.152,
+    "p90": 92.3137,
+    "max": 106.868,
+    "mean": 86.2037125
+   },
+   "outside_mass_mean": 0.0
+  },
+  "test204": {
+   "n": 500,
+   "fraud": 26,
+   "cost": 650.0,
+   "fraud_amount": 39247218.260000005,
+   "fraud_amount_stopped": 39247218.260000005,
+   "recall": 1.0,
+   "precision": 0.9629629629629629,
+   "alert_rate": 0.054,
+   "reviews_wanted": 13,
+   "reviews_done": 13,
+   "confusion": {
+    "legit": {
+     "approve": 473,
+     "review": 1,
+     "decline": 0
+    },
+    "fraud": {
+     "approve": 0,
+     "review": 12,
+     "decline": 14
+    }
+   },
+   "cost_natural": 873.961376176566,
+   "precision_natural": 0.9500677946118021,
+   "setup": "hybrid-d1ft",
+   "total_ms": 9630.9,
+   "decisions_by": {
+    "filter": 387,
+    "model": 113
+   },
+   "model_decisions": 113,
+   "latency_ms": {
+    "p50": 84.152,
+    "p90": 90.242,
+    "max": 118.426,
+    "mean": 85.2245663716814
+   },
+   "outside_mass_mean": 0.0
+  },
+  "test208": {
+   "n": 500,
+   "fraud": 26,
+   "cost": 800.0,
+   "fraud_amount": 34873054.599999994,
+   "fraud_amount_stopped": 34873054.599999994,
+   "recall": 1.0,
+   "precision": 0.8666666666666667,
+   "alert_rate": 0.06,
+   "reviews_wanted": 16,
+   "reviews_done": 16,
+   "confusion": {
+    "legit": {
+     "approve": 470,
+     "review": 4,
+     "decline": 0
+    },
+    "fraud": {
+     "approve": 0,
+     "review": 12,
+     "decline": 14
+    }
+   },
+   "cost_natural": 2343.2002596559555,
+   "precision_natural": 0.7110790087787531,
+   "setup": "hybrid-d1ft",
+   "total_ms": 19847.4,
+   "decisions_by": {
+    "filter": 268,
+    "model": 232
+   },
+   "model_decisions": 232,
+   "latency_ms": {
+    "p50": 84.52199999999999,
+    "p90": 90.6308,
+    "max": 104.155,
+    "mean": 85.54659051724138
+   },
+   "outside_mass_mean": 0.0
+  },
+  "test210": {
+   "n": 500,
+   "fraud": 26,
+   "cost": 850.0,
+   "fraud_amount": 14586430.899999999,
+   "fraud_amount_stopped": 14586430.899999999,
+   "recall": 1.0,
+   "precision": 0.8666666666666667,
+   "alert_rate": 0.06,
+   "reviews_wanted": 17,
+   "reviews_done": 17,
+   "confusion": {
+    "legit": {
+     "approve": 470,
+     "review": 4,
+     "decline": 0
+    },
+    "fraud": {
+     "approve": 0,
+     "review": 13,
+     "decline": 13
+    }
+   },
+   "cost_natural": 950.4219409282701,
+   "precision_natural": 0.8821339950372209,
+   "setup": "hybrid-d1ft",
+   "total_ms": 12570.6,
+   "decisions_by": {
+    "filter": 357,
+    "model": 143
+   },
+   "model_decisions": 143,
+   "latency_ms": {
+    "p50": 84.788,
+    "p90": 94.9566,
+    "max": 151.81,
+    "mean": 87.90414685314686
+   },
+   "outside_mass_mean": 0.0
+  },
+  "test211": {
+   "n": 500,
+   "fraud": 26,
+   "cost": 700.0,
+   "fraud_amount": 26482909.68,
+   "fraud_amount_stopped": 26482909.68,
+   "recall": 1.0,
+   "precision": 0.9629629629629629,
+   "alert_rate": 0.054,
+   "reviews_wanted": 14,
+   "reviews_done": 14,
+   "confusion": {
+    "legit": {
+     "approve": 473,
+     "review": 1,
+     "decline": 0
+    },
+    "fraud": {
+     "approve": 0,
+     "review": 13,
+     "decline": 13
+    }
+   },
+   "cost_natural": 1162.6582278481014,
+   "precision_natural": 0.8726603252531453,
+   "setup": "hybrid-d1ft",
+   "total_ms": 20434.3,
+   "decisions_by": {
+    "filter": 269,
+    "model": 231
+   },
+   "model_decisions": 231,
+   "latency_ms": {
+    "p50": 85.061,
+    "p90": 103.991,
+    "max": 120.733,
+    "mean": 88.45779653679652
+   },
+   "outside_mass_mean": 0.0
+  },
+  "test212": {
+   "n": 500,
+   "fraud": 25,
+   "cost": 450.0,
+   "fraud_amount": 77953717.85999998,
+   "fraud_amount_stopped": 77953717.85999998,
+   "recall": 1.0,
+   "precision": 1.0,
+   "alert_rate": 0.05,
+   "reviews_wanted": 9,
+   "reviews_done": 9,
+   "confusion": {
+    "legit": {
+     "approve": 475,
+     "review": 0,
+     "decline": 0
+    },
+    "fraud": {
+     "approve": 0,
+     "review": 9,
+     "decline": 16
+    }
+   },
+   "cost_natural": 720.0,
+   "precision_natural": 1.0,
+   "setup": "hybrid-d1ft",
+   "total_ms": 19324.9,
+   "decisions_by": {
+    "filter": 298,
+    "model": 202
+   },
+   "model_decisions": 202,
+   "latency_ms": {
+    "p50": 88.13900000000001,
+    "p90": 117.7949,
+    "max": 217.761,
+    "mean": 95.66462871287129
+   },
+   "outside_mass_mean": 0.0
+  },
+  "test213": {
+   "n": 500,
+   "fraud": 25,
+   "cost": 800.0,
+   "fraud_amount": 71263837.09000002,
+   "fraud_amount_stopped": 71263837.09000002,
+   "recall": 1.0,
+   "precision": 0.8333333333333334,
+   "alert_rate": 0.06,
+   "reviews_wanted": 16,
+   "reviews_done": 16,
+   "confusion": {
+    "legit": {
+     "approve": 470,
+     "review": 5,
+     "decline": 0
+    },
+    "fraud": {
+     "approve": 0,
+     "review": 11,
+     "decline": 14
+    }
+   },
+   "cost_natural": 2821.894736842105,
+   "precision_natural": 0.7441253263707572,
+   "setup": "hybrid-d1ft",
+   "total_ms": 18545.8,
+   "decisions_by": {
+    "filter": 285,
+    "model": 215
+   },
+   "model_decisions": 215,
+   "latency_ms": {
+    "p50": 84.537,
+    "p90": 90.99080000000001,
+    "max": 129.495,
+    "mean": 86.25639534883722
+   },
+   "outside_mass_mean": 0.0
+  },
+  "test214": {
+   "n": 500,
+   "fraud": 26,
+   "cost": 750.0,
+   "fraud_amount": 45702440.72,
+   "fraud_amount_stopped": 45702440.72,
+   "recall": 1.0,
+   "precision": 0.896551724137931,
+   "alert_rate": 0.058,
+   "reviews_wanted": 15,
+   "reviews_done": 15,
+   "confusion": {
+    "legit": {
+     "approve": 471,
+     "review": 3,
+     "decline": 0
+    },
+    "fraud": {
+     "approve": 0,
+     "review": 12,
+     "decline": 14
+    }
+   },
+   "cost_natural": 1972.3709834469328,
+   "precision_natural": 0.539556061468412,
+   "setup": "hybrid-d1ft",
+   "total_ms": 21502.7,
+   "decisions_by": {
+    "filter": 275,
+    "model": 225
+   },
+   "model_decisions": 225,
+   "latency_ms": {
+    "p50": 86.738,
+    "p90": 123.55999999999999,
+    "max": 298.61,
+    "mean": 95.56483555555553
+   },
+   "outside_mass_mean": 0.0
+  },
+  "test215": {
+   "n": 500,
+   "fraud": 26,
+   "cost": 950.0,
+   "fraud_amount": 69836834.0,
+   "fraud_amount_stopped": 69836834.0,
+   "recall": 1.0,
+   "precision": 0.7428571428571429,
+   "alert_rate": 0.07,
+   "reviews_wanted": 19,
+   "reviews_done": 19,
+   "confusion": {
+    "legit": {
+     "approve": 465,
+     "review": 9,
+     "decline": 0
+    },
+    "fraud": {
+     "approve": 0,
+     "review": 10,
+     "decline": 16
+    }
+   },
+   "cost_natural": 6856.329113924052,
+   "precision_natural": 0.9479635398638513,
+   "setup": "hybrid-d1ft",
+   "total_ms": 9074.3,
+   "decisions_by": {
+    "filter": 385,
+    "model": 115
+   },
+   "model_decisions": 115,
+   "latency_ms": {
+    "p50": 75.578,
+    "p90": 80.856,
+    "max": 220.054,
+    "mean": 78.9035304347826
+   },
+   "outside_mass_mean": 0.0
+  },
+  "test216": {
+   "n": 500,
+   "fraud": 26,
+   "cost": 950.0,
+   "fraud_amount": 34629516.32,
+   "fraud_amount_stopped": 34629516.32,
+   "recall": 1.0,
+   "precision": 0.8125,
+   "alert_rate": 0.064,
+   "reviews_wanted": 19,
+   "reviews_done": 19,
+   "confusion": {
+    "legit": {
+     "approve": 468,
+     "review": 6,
+     "decline": 0
+    },
+    "fraud": {
+     "approve": 0,
+     "review": 13,
+     "decline": 13
+    }
+   },
+   "cost_natural": 1215.8227848101267,
+   "precision_natural": 0.8229166666666665,
+   "setup": "hybrid-d1ft",
+   "total_ms": 9220.9,
+   "decisions_by": {
+    "filter": 383,
+    "model": 117
+   },
+   "model_decisions": 117,
+   "latency_ms": {
+    "p50": 75.265,
+    "p90": 80.8724,
+    "max": 223.76,
+    "mean": 78.77407692307692
+   },
+   "outside_mass_mean": 0.0
+  },
+  "test217": {
+   "n": 500,
+   "fraud": 26,
+   "cost": 900.0,
+   "fraud_amount": 32266194.819999997,
+   "fraud_amount_stopped": 32266194.819999997,
+   "recall": 1.0,
+   "precision": 0.8387096774193549,
+   "alert_rate": 0.062,
+   "reviews_wanted": 18,
+   "reviews_done": 18,
+   "confusion": {
+    "legit": {
+     "approve": 469,
+     "review": 5,
+     "decline": 0
+    },
+    "fraud": {
+     "approve": 0,
+     "review": 13,
+     "decline": 13
+    }
+   },
+   "cost_natural": 2826.5822784810125,
+   "precision_natural": 0.3969849246231156,
+   "setup": "hybrid-d1ft",
+   "total_ms": 12499.3,
+   "decisions_by": {
+    "filter": 333,
+    "model": 167
+   },
+   "model_decisions": 167,
+   "latency_ms": {
+    "p50": 73.634,
+    "p90": 76.44839999999999,
+    "max": 133.674,
+    "mean": 74.84341916167664
+   },
+   "outside_mass_mean": 0.0
+  },
+  "test219": {
+   "n": 500,
+   "fraud": 26,
+   "cost": 950.0,
+   "fraud_amount": 17209558.22,
+   "fraud_amount_stopped": 17209558.22,
+   "recall": 1.0,
+   "precision": 0.8125,
+   "alert_rate": 0.064,
+   "reviews_wanted": 19,
+   "reviews_done": 19,
+   "confusion": {
+    "legit": {
+     "approve": 468,
+     "review": 6,
+     "decline": 0
+    },
+    "fraud": {
+     "approve": 0,
+     "review": 13,
+     "decline": 13
+    }
+   },
+   "cost_natural": 36443.67088607595,
+   "precision_natural": 0.03504641004641005,
+   "setup": "hybrid-d1ft",
+   "total_ms": 16724.0,
+   "decisions_by": {
+    "filter": 271,
+    "model": 229
+   },
+   "model_decisions": 229,
+   "latency_ms": {
+    "p50": 72.939,
+    "p90": 74.8664,
+    "max": 80.203,
+    "mean": 73.027807860262
+   },
+   "outside_mass_mean": 0.0
+  },
+  "test221": {
+   "n": 500,
+   "fraud": 26,
+   "cost": 800.0,
+   "fraud_amount": 23151509.9,
+   "fraud_amount_stopped": 23151509.9,
+   "recall": 1.0,
+   "precision": 0.896551724137931,
+   "alert_rate": 0.058,
+   "reviews_wanted": 16,
+   "reviews_done": 16,
+   "confusion": {
+    "legit": {
+     "approve": 471,
+     "review": 3,
+     "decline": 0
+    },
+    "fraud": {
+     "approve": 0,
+     "review": 13,
+     "decline": 13
+    }
+   },
+   "cost_natural": 27417.08860759493,
+   "precision_natural": 0.06014061170570059,
+   "setup": "hybrid-d1ft",
+   "total_ms": 16283.5,
+   "decisions_by": {
+    "filter": 275,
+    "model": 225
+   },
+   "model_decisions": 225,
+   "latency_ms": {
+    "p50": 72.433,
+    "p90": 73.99560000000001,
+    "max": 76.272,
+    "mean": 72.35254666666667
+   },
+   "outside_mass_mean": 0.0
+  },
+  "test222": {
+   "n": 500,
+   "fraud": 26,
+   "cost": 700.0,
+   "fraud_amount": 92823081.72999999,
+   "fraud_amount_stopped": 92823081.72999999,
+   "recall": 1.0,
+   "precision": 0.8666666666666667,
+   "alert_rate": 0.06,
+   "reviews_wanted": 14,
+   "reviews_done": 14,
+   "confusion": {
+    "legit": {
+     "approve": 470,
+     "review": 4,
+     "decline": 0
+    },
+    "fraud": {
+     "approve": 0,
+     "review": 10,
+     "decline": 16
+    }
+   },
+   "cost_natural": 3030.347289840961,
+   "precision_natural": 0.4524264040992666,
+   "setup": "hybrid-d1ft",
+   "total_ms": 16889.2,
+   "decisions_by": {
+    "filter": 267,
+    "model": 233
+   },
+   "model_decisions": 233,
+   "latency_ms": {
+    "p50": 72.442,
+    "p90": 74.16799999999999,
+    "max": 77.879,
+    "mean": 72.48390557939913
+   },
+   "outside_mass_mean": 0.0
+  },
+  "test224": {
+   "n": 500,
+   "fraud": 26,
+   "cost": 850.0,
+   "fraud_amount": 17981520.0,
+   "fraud_amount_stopped": 17981520.0,
+   "recall": 1.0,
+   "precision": 0.8666666666666667,
+   "alert_rate": 0.06,
+   "reviews_wanted": 17,
+   "reviews_done": 17,
+   "confusion": {
+    "legit": {
+     "approve": 470,
+     "review": 4,
+     "decline": 0
+    },
+    "fraud": {
+     "approve": 0,
+     "review": 13,
+     "decline": 13
+    }
+   },
+   "cost_natural": 1850.632911392405,
+   "precision_natural": 0.6543948458352508,
+   "setup": "hybrid-d1ft",
+   "total_ms": 13258.3,
+   "decisions_by": {
+    "filter": 320,
+    "model": 180
+   },
+   "model_decisions": 180,
+   "latency_ms": {
+    "p50": 73.7025,
+    "p90": 75.5469,
+    "max": 82.399,
+    "mean": 73.65456111111111
+   },
+   "outside_mass_mean": 0.0
+  },
+  "test228": {
+   "n": 500,
+   "fraud": 26,
+   "cost": 800.0,
+   "fraud_amount": 18988477.44,
+   "fraud_amount_stopped": 18988477.44,
+   "recall": 1.0,
+   "precision": 0.896551724137931,
+   "alert_rate": 0.058,
+   "reviews_wanted": 16,
+   "reviews_done": 16,
+   "confusion": {
+    "legit": {
+     "approve": 471,
+     "review": 3,
+     "decline": 0
+    },
+    "fraud": {
+     "approve": 0,
+     "review": 13,
+     "decline": 13
+    }
+   },
+   "cost_natural": 36566.77215189874,
+   "precision_natural": 0.03756697774343385,
+   "setup": "hybrid-d1ft",
+   "total_ms": 20215.6,
+   "decisions_by": {
+    "filter": 286,
+    "model": 214
+   },
+   "model_decisions": 214,
+   "latency_ms": {
+    "p50": 73.81700000000001,
+    "p90": 129.58320000000003,
+    "max": 585.876,
+    "mean": 94.44725700934578
+   },
+   "outside_mass_mean": 0.0
+  },
+  "test232": {
+   "n": 500,
+   "fraud": 26,
+   "cost": 1100.0,
+   "fraud_amount": 30281631.180000003,
+   "fraud_amount_stopped": 30281631.180000003,
+   "recall": 1.0,
+   "precision": 0.7428571428571429,
+   "alert_rate": 0.07,
+   "reviews_wanted": 22,
+   "reviews_done": 22,
+   "confusion": {
+    "legit": {
+     "approve": 465,
+     "review": 9,
+     "decline": 0
+    },
+    "fraud": {
+     "approve": 0,
+     "review": 13,
+     "decline": 13
+    }
+   },
+   "cost_natural": 1948.73417721519,
+   "precision_natural": 0.582086115588303,
+   "setup": "hybrid-d1ft",
+   "total_ms": 12168.3,
+   "decisions_by": {
+    "filter": 340,
+    "model": 160
+   },
+   "model_decisions": 160,
+   "latency_ms": {
+    "p50": 74.52000000000001,
+    "p90": 79.6832,
+    "max": 117.554,
+    "mean": 76.04860625
+   },
+   "outside_mass_mean": 0.0
+  },
+  "test233": {
+   "n": 500,
+   "fraud": 26,
+   "cost": 800.0,
+   "fraud_amount": 69247502.64000002,
+   "fraud_amount_stopped": 69247502.64000002,
+   "recall": 1.0,
+   "precision": 0.8666666666666667,
+   "alert_rate": 0.06,
+   "reviews_wanted": 16,
+   "reviews_done": 16,
+   "confusion": {
+    "legit": {
+     "approve": 470,
+     "review": 4,
+     "decline": 0
+    },
+    "fraud": {
+     "approve": 0,
+     "review": 12,
+     "decline": 14
+    }
+   },
+   "cost_natural": 3087.1470301850045,
+   "precision_natural": 0.4247311827956989,
+   "setup": "hybrid-d1ft",
+   "total_ms": 11015.1,
+   "decisions_by": {
+    "filter": 348,
+    "model": 152
+   },
+   "model_decisions": 152,
+   "latency_ms": {
+    "p50": 72.444,
+    "p90": 74.0753,
+    "max": 75.879,
+    "mean": 72.45390789473683
+   },
+   "outside_mass_mean": 0.0
+  }
+ }
+}
