@@ -574,3 +574,14 @@ training rows. Nothing removed or re-run: it would be a change prompted by test 
 fifth color with `hybrid-d3ft`: one page never shows both) and write-up link; the training card no longer names a 2-hour cap. Phase 10 has no
 eval page: its result has no per-window setups. Checked in the browser pane (Observed): start page, the new eval page (20 of 20 trace links), the
 d3-nano eval page, a d1-Omni replay, no console errors, no sideways scroll at 375 px.
+
+
+## 2026-11-02: Phase 11 pre-statement, first real data (owner; before any model scored an IEEE row)
+
+Owner: test one random frozen and one random fine-tuned model on IEEE-CIS, to see which is better and whether retraining is necessary. The owner
+placed the dataset in `fraud/data/ieee-cis/` and did not answer the handoff's three open questions, so they are Implementation choices in the
+`fraud/eval_ieee.py` docstring: the adapter runs as is (transfer, not a fine-tune on real data); costs in USD with a 5 USD review, friction 10% at least 1
+USD, sensitivity reported including PaySim's numbers as they are; retraining counts as not necessary only if the better model is no dearer than an
+IEEE-fitted logistic regression in >= 10 of 20 windows and beats approve-all. All three can be re-read from the traces if the owner decides otherwise.
+Draw, seed 20261102: frozen Qwen2.5-1.5B, fine-tuned d1-Omni-2B. Different base models, so the comparison changes two things at once (stated now).
+Stated before running (Inferred): both likely lose to logistic regression.

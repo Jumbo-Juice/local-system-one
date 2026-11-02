@@ -11,7 +11,7 @@ engine, the `.venv` and the pytest run with the game demos. Keep the two apart.
 2. `fraud/ARCHITECTURE.md`: data, signals, cost model, setups, trace format, viewer
 3. `fraud/ROADMAP.md`: phases with acceptance lines; the checkboxes say where we are
 4. `fraud/PROGRESS.md`: what happened and why (append-only)
-5. `fraud/DATA.md`: Observed facts about PaySim (written in Phase 0)
+5. `fraud/DATA.md`: Observed facts about PaySim (written in Phase 0); `fraud/DATA-IEEE.md`: the same for IEEE-CIS
 
 ## Hard rules
 - **Separate from the games.** Nothing in `demo/`, `viewer/`, `runs/` or `bench/` imports from or
@@ -54,6 +54,8 @@ engine, the `.venv` and the pytest run with the game demos. Keep the two apart.
 .venv/Scripts/python -m fraud.eval_d1ft --adapter <dir>       # Phase 9: its pre-registered eval
 .venv/Scripts/python -m fraud.reviewer_check                 # exploratory: could a model replace review?
 .venv/Scripts/python -m fraud.eval_chain                     # Phase 10: no review, tightened cash-out rule
+.venv/Scripts/python -m fraud.ieee_data                       # Phase 11: build the IEEE-CIS cache
+.venv/Scripts/python -m fraud.eval_ieee                       # Phase 11: frozen vs fine-tuned on IEEE-CIS
 .venv/Scripts/python -m fraud.viewer                          # the analyst console
 ```
 Every command and flag is in the repo's `RUN-GUIDE.md` → Fraud app. Keep it current.

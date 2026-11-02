@@ -128,3 +128,12 @@ check's failure), whatever they show.
 
 **Accept:** results committed with both bars reported pass or fail, whatever they show.
 
+
+## Phase 11: first real data, IEEE-CIS (owner, 2026-11-02)
+- [x] `ieee_data.py` (train files → cache, time split) and `DATA-IEEE.md`
+- [x] `ieee_brain.py` (one new prompt, prompt v4's question and labels) and `eval_ieee.py` with the pre-registration in its
+      docstring, committed with the PROGRESS pre-statement before any model scored a row
+- [ ] `python -m fraud.eval_ieee`: one random frozen and one random fine-tuned model as they are, dev, thresholds, 20 test windows
+- [ ] `fraud/RESULTS-IEEE.md`: which is better, whether retraining is necessary, labelled claims, negatives
+
+**Accept:** results committed with the answers and bars reported, whatever they show.
