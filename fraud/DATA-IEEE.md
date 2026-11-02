@@ -40,7 +40,7 @@ Median 70, mean 134, 99th percentile 1,092. Fraud median 77, mean 140. Amounts a
 
 - **Natural fraud is about 3.5%, so no enrichment.** A 1,000-row window holds about 35–40 frauds. All numbers here are natural-rate.
 - **Every product has fraud**, so nothing can be filtered by type. There are no account pairs and no same-amount cash-out.
-- **Amounts are small against a review.** PaySim's review fee of 50 is above the median payment here. `fraud/eval_ieee.py` records the cost choice.
+- **Amounts are small against a review.** A review costs 10 USD (owner, 2026-11-02), about 14% of the median payment. The old fee of 50 would be most of it.
 - **Most columns are anonymised.** From memory of the data page, not verified: C = counts, D = time deltas, M = match flags, V = Vesta-engineered.
   Whether all of them are known at decision time can't be checked here (limit stated in the pre-registration).
 - **No look-ahead:** prior `isFraud` labels are never an input; labels arrive later.

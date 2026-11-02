@@ -171,7 +171,7 @@ def dev_cost(view, tr, td) -> float:
     for q, y, a, f, fb in zip(view["scores"], view["truth"], view["amount"], view["filt"], view["fallbacks"]):
         wanted = ["approve" if fk else "decline" if qk >= td else "review" if qk >= tr else "approve" for qk, fk in zip(q, f)]
         fbs = ["approve" if fk else b for b, fk in zip(fb, f)]
-        total += costs.score(costs.DEFAULT, wanted, fbs, y, a).summary["cost"]
+        total += costs.score(costs.PHASES_1_10, wanted, fbs, y, a).summary["cost"]
     return total / len(view["scores"])
 
 

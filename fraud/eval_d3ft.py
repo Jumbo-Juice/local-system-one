@@ -295,7 +295,7 @@ def report(eval_id: str, adapter: Path | None, dev_info: dict | None = None, log
         pooled = {setup: {"auc": a[0], "rows": a[1], "fraud": a[2]}, "hybrid-ft": {"auc": b[0], "rows": b[1]}}
     out = {
         "eval": eval_id, "script": script, "setup": setup, "title": title, "created": time.strftime("%Y-%m-%dT%H:%M:%S"),
-        "complete": len(mine) == N_NEW, "phase5_eval": PHASE5_EVAL, "costs": costs.DEFAULT.as_dict(),
+        "complete": len(mine) == N_NEW, "phase5_eval": PHASE5_EVAL, "costs": costs.PHASES_1_10.as_dict(),
         "test_windows": test_ids, "dev": dev_info, "training": training,
         "bars": bars(mine, phase5, p90, setup),
         "paired": {f"{setup} vs {o}": paired(setup, o) for o in ("logreg", "rules", "hybrid-ft", "hybrid-1.5b", "random")},

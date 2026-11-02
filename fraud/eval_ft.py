@@ -22,7 +22,7 @@ prompt, decide as cheaply as the numpy logistic regression? Owner's choices, 202
 - Setups: hybrid-ft (type filter + the fine-tuned model, prompt v4, order debias on, LM head in
   float32, adapter merged; action from the dev thresholds below), hybrid-1.5b (the frozen Phase 3
   hybrid, argmax), logreg (fitted and thresholded exactly as in fraud/eval.py, on dev0–dev9), rules,
-  random (seed = window seed), approve-all. Costs: fraud.costs.DEFAULT.
+  random (seed = window seed), approve-all. Costs: fraud.costs.PHASES_1_10.
 - Dev gate: hybrid-1.5b and hybrid-ft (argmax) run on dev0–dev9. AUC of the order-averaged
   "decline" score over the model rows (ties count half). The test windows run only if
   AUC(hybrid-ft) > AUC(hybrid-1.5b) on those rows. Otherwise the eval stops, the result is reported,
@@ -113,7 +113,7 @@ def pick_thresholds(scores, truth, amount, filt, fallbacks=None) -> tuple[float,
                           for qk, fk in zip(q, f)]
                 fb = (["approve" if fk else b for b, fk in zip(fallbacks[k], f)] if fallbacks is not None
                       else ["approve" if fk else "decline" if qk >= 0.5 else "approve" for qk, fk in zip(q, f)])
-                total += costs.score(costs.DEFAULT, wanted, fb, y, a).summary["cost"]
+                total += costs.score(costs.PHASES_1_10, wanted, fb, y, a).summary["cost"]
             grid.append((tr, td, total))
     best = min(grid, key=lambda g: g[2])  # min keeps the first of equal costs
     return best[0], best[1], grid
@@ -183,7 +183,7 @@ def run_traces(eval_id, stage, setup, ws, chain_of, t, s, backend, log, header=N
         path = trace_file(eval_id, stage, setup, w.id)
         if not finished(path):
             t0 = time.perf_counter()
-            recs = run_window(t, s, w, chain_of(w), costs.DEFAULT, setup, backend)
+            recs = run_window(t, s, w, chain_of(w), costs.PHASES_1_10, setup, backend)
             recs[0]["eval"] = eval_id
             recs[0].update(header or {})
             RUNS.mkdir(parents=True, exist_ok=True)
@@ -310,7 +310,7 @@ def report(eval_id: str, adapter: Path | None, dev_info: dict | None = None, log
         "script": "fraud/eval_ft.py",
         "created": time.strftime("%Y-%m-%dT%H:%M:%S"),
         "complete": complete,
-        "costs": costs.DEFAULT.as_dict(),
+        "costs": costs.PHASES_1_10.as_dict(),
         "test_windows": test_ids,
         "dev": dev_info,
         "adapter": (adapter.name if adapter else old.get("adapter")),

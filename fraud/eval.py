@@ -16,7 +16,7 @@ PRE-REGISTRATION (written and committed before any test window ran; see fraud/PR
   prompt frozen on dev variant v4, action = the top option: argmax), rules, logreg, random (seed =
   the window seed), approve-all. hybrid-3b was dropped (owner, 2026-10-03): the 3B (6.2 GB) does
   not fit in the 5.36 GiB free on the Arc 140V.
-- Costs: fraud.costs.DEFAULT (friction 10% of the amount, min 10; review 50; budget 5%).
+- Costs: fraud.costs.PHASES_1_10 (friction 10% of the amount, min 10; review 50; budget 5%).
 - Logistic regression: fitted on every TRANSFER and CASH_OUT of steps 1–300. Thresholds from the
   grid below, minimising total cost over dev0–dev9 (ties: first in grid order).
 - Bar 1 (pass/fail): hybrid-1.5b cost < rules cost in >= 16 of 20 test windows. Expected to FAIL
@@ -91,7 +91,7 @@ def pick_thresholds(t, s, model: baselines.LogReg) -> tuple[float, float, list]:
                 filt = np.isin(t.type[w.rows], list(rules.FRAUD_FREE))
                 wanted = ["approve" if f else a for a, f in zip(wanted, filt)]
                 fb = ["approve" if f else a for a, f in zip(fb, filt)]
-                total += costs.score(costs.DEFAULT, wanted, fb, t.is_fraud[w.rows], t.amount[w.rows]).summary["cost"]
+                total += costs.score(costs.PHASES_1_10, wanted, fb, t.is_fraud[w.rows], t.amount[w.rows]).summary["cost"]
             grid.append((tr, td, total))
     best = min(grid, key=lambda g: g[2])  # min keeps the first of equal costs
     return best[0], best[1], grid
@@ -173,7 +173,7 @@ def run(eval_id: str, setups: list[str]) -> None:
                     brain.warm_up(engine)
             kind = "hybrid" if setup.startswith("hybrid") else setup
             t0 = time.perf_counter()
-            recs = run_window(t, s, w, chain_for(kind, engine, lr, w.seed), costs.DEFAULT, setup, backend)
+            recs = run_window(t, s, w, chain_for(kind, engine, lr, w.seed), costs.PHASES_1_10, setup, backend)
             recs[0]["eval"] = eval_id
             RUNS.mkdir(parents=True, exist_ok=True)
             path.write_text(to_jsonl(recs), encoding="utf-8")
@@ -239,7 +239,7 @@ def report(eval_id: str) -> dict:
         "eval": eval_id,
         "created": time.strftime("%Y-%m-%dT%H:%M:%S"),
         "complete": complete,
-        "costs": costs.DEFAULT.as_dict(),
+        "costs": costs.PHASES_1_10.as_dict(),
         "test_windows": [f"test{k}" for k in TEST_SEEDS],
         "bars": {
             "bar1": {"rule": f"hybrid-1.5b cheaper than rules in >= {BAR_WINDOWS} of {len(TEST_SEEDS)} windows",

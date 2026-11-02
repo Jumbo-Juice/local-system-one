@@ -46,13 +46,13 @@ SCORERS = {
 
 
 def friction(amount: np.ndarray) -> np.ndarray:
-    return np.array([costs.unit_cost(costs.DEFAULT, "decline", False, float(a)) for a in amount])
+    return np.array([costs.unit_cost(costs.PHASES_1_10, "decline", False, float(a)) for a in amount])
 
 
 def queue_cost(q, y, a, w, threshold: float) -> float:
     """Total cost of the queue when scores >= threshold are blocked and the rest go to a human."""
     block = q >= threshold
-    return float((w * np.where(block, np.where(y == 1, 0.0, friction(a)), costs.DEFAULT.review_fee)).sum())
+    return float((w * np.where(block, np.where(y == 1, 0.0, friction(a)), costs.PHASES_1_10.review_fee)).sum())
 
 
 def best_threshold(q, y, a, w) -> float:
@@ -191,7 +191,7 @@ def main() -> None:
     k = np.array([key[0] for key in keys])
     out = {"id": stamp(), "script": "fraud/reviewer_check.py", "scorers": {},
            "queue": {"rows": len(keys), "fraud": int(y.sum()), "legit": int((y == 0).sum()),
-                     "human_cost_per_window": len(keys) * costs.DEFAULT.review_fee / len(DEV_SEEDS),
+                     "human_cost_per_window": len(keys) * costs.PHASES_1_10.review_fee / len(DEV_SEEDS),
                      "natural_fraud_share": float((w * y).sum() / w.sum())}}
     for name, v in rows.items():
         out["scorers"][name] = evaluate(np.array([v[key][0] for key in keys], dtype=float), y, a, w, k)

@@ -27,11 +27,12 @@ class Costs:
         return asdict(self)
 
 
-# Implementation choice, fixed before any test window (fraud/PROGRESS.md → Phase 1). The currency
-# is PaySim's unnamed unit. Friction is 10% of a wrongly declined amount (lost business and churn),
-# at least 10. A review costs 50 analyst units. At most 5% of a window's transactions (25 of 500,
-# about its number of frauds) can be reviewed.
-DEFAULT = Costs(friction_rate=0.10, friction_min=10.0, review_fee=50.0, review_share=0.05)
+# Friction is 10% of a wrongly declined amount (lost business and churn), at least 10. At most 5% of
+# a window's transactions (25 of 500, about its number of frauds) can be reviewed. Implementation
+# choice, fixed before any test window (fraud/PROGRESS.md → Phase 1). A review costs 10 (owner, 2026-11-02).
+DEFAULT = Costs(friction_rate=0.10, friction_min=10.0, review_fee=10.0, review_share=0.05)
+# What Phases 1-10 ran under: a review cost 50. Their pre-registered evals keep it, so a rebuild matches their committed numbers.
+PHASES_1_10 = Costs(friction_rate=0.10, friction_min=10.0, review_fee=50.0, review_share=0.05)
 
 
 @dataclass

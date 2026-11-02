@@ -558,15 +558,24 @@ Put the unzipped Kaggle CSVs in `fraud/data/ieee-cis/` (git-ignored), then build
 .venv/Scripts/python -m fraud.ieee_data
 ```
 
-The eval: `--draw` prints the seeded draw and windows; `--smoke N` measures latency on N fit rows; no flag runs it (about 2.5 h);
-`--resume <eval id>` finishes an interrupted one; `--report <eval id>` rebuilds `fraud/results/eval_ieee/<eval id>.json|.md`.
-Traces: `fraud/runs/<eval id>_{dev,eval}_ieee-*.jsonl`.
+The IEEE fine-tune (`fraud/models/<time>_lora-d1-ieee/`): `--dry-run` prints the rows, `--steps N` is a smoke, `--train` is the run (about 1.5 h, safety stop at 3 h):
+
+```bash
+.venv/Scripts/python -m fraud.finetune_ieee --dry-run
+.venv/Scripts/python -m fraud.finetune_ieee --steps 20
+.venv/Scripts/python -m fraud.finetune_ieee --train
+```
+
+The eval: `--draw` prints the seeded draw and windows; `--smoke N` measures latency on N fit rows; `--ieee-adapter <dir>` runs it (about 3.5 h);
+add `--resume <eval id>` to finish one; `--reprice <eval id>` re-decides its traces at the current costs from the recorded scores, with no model;
+`--report <eval id>` rebuilds `fraud/results/eval_ieee/<eval id>.json|.md`. Traces: `fraud/runs/<eval id>_{dev,eval}_ieee-*.jsonl`.
 
 ```bash
 .venv/Scripts/python -m fraud.eval_ieee --draw
 .venv/Scripts/python -m fraud.eval_ieee --smoke 30
-.venv/Scripts/python -m fraud.eval_ieee
-.venv/Scripts/python -m fraud.eval_ieee --resume <eval id>
+.venv/Scripts/python -m fraud.eval_ieee --ieee-adapter fraud/models/<time>_lora-d1-ieee
+.venv/Scripts/python -m fraud.eval_ieee --ieee-adapter fraud/models/<time>_lora-d1-ieee --resume <eval id>
+.venv/Scripts/python -m fraud.eval_ieee --reprice <eval id>
 .venv/Scripts/python -m fraud.eval_ieee --report <eval id>
 ```
 

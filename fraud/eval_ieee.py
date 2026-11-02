@@ -2,8 +2,9 @@
 
     python -m fraud.eval_ieee --draw                  # the seeded draw and the windows; no model, no labels
     python -m fraud.eval_ieee --smoke 30              # latency and prompt size on fit rows; no scores shown
-    python -m fraud.eval_ieee                         # the eval: dev, thresholds, test windows, report
-    python -m fraud.eval_ieee --resume <eval id>      # finish an interrupted eval (finished windows are kept)
+    python -m fraud.eval_ieee --ieee-adapter <dir>    # the eval: dev, thresholds, test windows, report
+    python -m fraud.eval_ieee --ieee-adapter <dir> --resume <eval id>  # finish an interrupted eval (finished windows are kept)
+    python -m fraud.eval_ieee --reprice <eval id>     # re-decide its traces at COSTS from the recorded scores
     python -m fraud.eval_ieee --report <eval id>      # rebuild the results files from the traces
 
 Traces: fraud/runs/<eval id>_dev_<setup>_dev<k>.jsonl, <eval id>_eval_<setup>_test<k>.jsonl.
@@ -61,6 +62,22 @@ so these are Implementation choices, made to be re-read from the traces if the o
 - Stated before running (Inferred): both models likely lose to logistic regression. A prompt of a dozen fields can't show what the V
   columns carry, the frozen 1.5B never saw this data, and the adapter learned PaySim's type-and-new-account pattern, which these rows
   do not contain. Fraud amount here is about 5–7 USD per row in fit and dev, so the room to save is small against any review fee.
+
+AMENDMENT, owner, 2026-11-02, made while the eval above was running and before any of its output was read. It replaces the
+three Implementation choices above with the owner's answers:
+- Retraining is treated as guaranteed. The bar for "retraining is necessary" is withdrawn; nothing is decided by it.
+- A review costs 10 USD, the default for every review from now on (fraud.costs.DEFAULT). Friction stays 10%, at least 1 USD.
+  The running process keeps 5 USD in its traces. The fee only prices decisions, so --reprice re-picks thresholds on dev and rewrites
+  every trace at 10 USD from the recorded scores; no model is re-run. Sensitivity: review 1, 5 and 20 USD, and Phases 1–10's costs.
+- Train on IEEE-CIS and compare it with the PaySim fine-tune. Primary question now: on the same 20 test windows, which of
+  ieee-ft-ieee-d1omni and ieee-ft-d1omni has the lower total cost? Distinguishable only if the 95% bootstrap interval of the mean
+  paired difference excludes 0. Same base model, prompt, windows and training size, so unlike the frozen comparison this one changes one thing.
+- The adapter: one run of fraud/finetune_ieee.py, configured there: d1-Omni-2B from its frozen weights, the same LoRA, schedule and
+  1,510 batches as the PaySim adapter, on 3,021 fraud + 9,063 legit rows drawn from fit rows only, seed 0. Its setup follows Phase 9's rule like the
+  PaySim adapter: dev reads both orders, the debias rule picks the variant, thresholds come from dev.
+- The frozen-vs-PaySim answer stays reported. Both fine-tunes are reported against ieee-logreg-same, ieee-logreg-all and approve-all, with no bar.
+- Stated before running (Inferred): the IEEE fine-tune beats the PaySim one on AUC and probably cost, but may still not beat logistic
+  regression on the same fields: 12,084 rows is small, and text is a poor way to read counters.
 """
 
 from __future__ import annotations
@@ -90,20 +107,19 @@ MODELS = ROOT / "models"
 SEED = 20261102
 FROZEN_POOL = ("d1-omni-2b", "d3-nano", "qwen2.5-1.5b")
 FINETUNED_POOL = ("20261005-013044_lora", "20261021-141001_lora-d3", "20261102-152745_lora-d1")
-FROZEN, FINETUNED = "ieee-frozen-qwen1.5b", "ieee-ft-d1omni"
+FROZEN, FINETUNED, FT_IEEE = "ieee-frozen-qwen1.5b", "ieee-ft-d1omni", "ieee-ft-ieee-d1omni"  # FINETUNED: the PaySim adapter
 LOGREG_SAME, LOGREG_ALL, APPROVE_ALL = "ieee-logreg-same", "ieee-logreg-all", "ieee-approve-all"
-MODEL_SETUPS = (FROZEN, FINETUNED)
-SETUPS = (FROZEN, FINETUNED, LOGREG_SAME, LOGREG_ALL, APPROVE_ALL)
+MODEL_SETUPS = (FROZEN, FINETUNED, FT_IEEE)
+SETUPS = (FROZEN, FINETUNED, FT_IEEE, LOGREG_SAME, LOGREG_ALL, APPROVE_ALL)
 
 # USD (Documented: TransactionAmt, the competition's data page). Implementation choice, see the pre-registration.
-COSTS = costs.Costs(friction_rate=0.10, friction_min=1.0, review_fee=5.0, review_share=0.05)
-SENSITIVITY = {"review $1": costs.Costs(0.10, 1.0, 1.0, 0.05), "review $20": costs.Costs(0.10, 1.0, 20.0, 0.05),
-               "PaySim numbers as they are": costs.DEFAULT}
+COSTS = costs.Costs(friction_rate=0.10, friction_min=1.0, review_fee=costs.DEFAULT.review_fee, review_share=0.05)
+SENSITIVITY = {"review $1": costs.Costs(0.10, 1.0, 1.0, 0.05), "review $5": costs.Costs(0.10, 1.0, 5.0, 0.05),
+               "review $20": costs.Costs(0.10, 1.0, 20.0, 0.05), "Phases 1-10 (review 50, friction min 10)": costs.PHASES_1_10}
 
 WINDOW_SIZE = 1000
 DEV_WINDOWS, TEST_WINDOWS = 10, 20
 ALERT_SHARES = (0.0, 0.005, 0.01, 0.02, 0.03, 0.05, 0.075, 0.1, 0.15, 0.2, 0.3, 0.5)
-BAR_WINDOWS = 10
 ID_LIKE = ("card1", "card2", "addr1", "addr2")  # identifiers, not quantities
 
 
@@ -289,8 +305,8 @@ class D1Fine:
                 "prompt_tokens": int(r["usage"]["input_tokens"]), "ms": ms}
 
 
-def load_model(setup: str):
-    return Qwen15() if setup == FROZEN else D1Fine(MODELS / FINETUNED_POOL[2])
+def load_model(setup: str, ieee_adapter: Path | None = None):
+    return Qwen15() if setup == FROZEN else D1Fine(ieee_adapter if setup == FT_IEEE else MODELS / FINETUNED_POOL[2])
 
 
 def run_setup(eval_id, stage, setup, ws, t, outs_of, thresholds, backend, log, on_start=None) -> list[list[dict]]:
@@ -325,7 +341,16 @@ def pooled_auc(v: dict) -> float:
     return auc(np.concatenate(v["scores"]), np.concatenate(v["truth"]))
 
 
-def run(eval_id: str, log=print) -> dict:
+def variant_of(setup: str, traces: list[list[dict]]) -> tuple[str, float | None, dict | None]:
+    """The 1.5B reads both orders as in Phases 3-5; a d1-Omni fine-tune gets Phase 9's debias rule from its dev traces."""
+    if setup == FROZEN:
+        return "both", None, None
+    aucs = {k: pooled_auc(view(traces, k)) for k in ("both", "fwd", "rev")}
+    variant, gain = choose_variant(aucs)
+    return variant, gain, aucs
+
+
+def run(eval_id: str, ieee_adapter: Path, log=print) -> dict:
     t = ieee_data.load()
     dev, test = make_windows(len(t), "dev", DEV_WINDOWS), make_windows(len(t), "test", TEST_WINDOWS)
 
@@ -347,30 +372,22 @@ def run(eval_id: str, log=print) -> dict:
     dev_traces[APPROVE_ALL] = run_setup(eval_id, "dev", APPROVE_ALL, dev, t,
                                         lambda w: [{"by": "all", "q": 0.0, "ms": 0.0} for _ in w.rows], None, {}, log)
 
-    # Each model in its configuration as it stands: the 1.5B reads both orders; d1-Omni gets Phase 9's debias rule.
-    variants = {}
     for setup in MODEL_SETUPS:
         model = None
 
         def ensure():
             nonlocal model
             if model is None:
-                model = load_model(setup)
+                model = load_model(setup, ieee_adapter)
             return model
 
         dev_traces[setup] = run_setup(eval_id, "dev", setup, dev, t,
                                       lambda w: [ensure().score(t, int(i), "both") for i in w.rows], None,
                                       lambda: ensure().info, log)
-        if setup == FROZEN:
-            variants[setup], gain = "both", None
-        else:
-            aucs = {k: pooled_auc(view(dev_traces[setup], k)) for k in ("both", "fwd", "rev")}
-            variants[setup], gain = choose_variant(aucs)
-            log(f"{setup}: dev AUC {aucs} -> {variants[setup]} (gain {gain:+.4f})")
-        v = view(dev_traces[setup], variants[setup])
+        variant, _, _ = variant_of(setup, dev_traces[setup])
+        v = view(dev_traces[setup], variant)
         tr, td, _ = pick_thresholds(v["scores"], v["truth"], v["amount"], COSTS)
-        log(f"{setup}: thresholds review {tr}, decline {td}")
-        variant = variants[setup]
+        log(f"{setup}: variant {variant}, thresholds review {tr}, decline {td}")
         run_setup(eval_id, "eval", setup, test, t, lambda w: [ensure().score(t, int(i), variant) for i in w.rows],
                   (tr, td), lambda: ensure().info, log)
         model = None
@@ -383,6 +400,41 @@ def run(eval_id: str, log=print) -> dict:
     run_setup(eval_id, "eval", APPROVE_ALL, test, t, lambda w: [{"by": "all", "q": 0.0, "ms": 0.0} for _ in w.rows],
               (None, None), {}, log)
     return report(eval_id, log)
+
+
+def reprice(eval_id: str, log=print) -> None:
+    """Rewrite an eval's traces at COSTS from their recorded scores: new thresholds from dev, no model run."""
+    t = ieee_data.load()
+    dev, test = make_windows(len(t), "dev", DEV_WINDOWS), make_windows(len(t), "test", TEST_WINDOWS)
+
+    def again(stage, setup, w, thresholds):
+        path = trace_file(eval_id, stage, setup, w.id)
+        old = read_run(path)
+        outs = []
+        for r in old:
+            if r.get("type") != "tx":
+                continue
+            o = {k: r[k] for k in ("by", "q", "ms", "scores", "orders", "outside_mass", "prompt_tokens") if k in r}
+            if "scores" in r:
+                o["argmax"] = max(ACTIONS, key=lambda a: r["scores"][a])
+            outs.append(o)
+        recs = trace(t, w, setup, outs, thresholds, old[0]["backend"], eval_id)
+        recs[0].update(created=old[0]["created"], repriced=time.strftime("%Y-%m-%dT%H:%M:%S"))
+        path.write_text(to_jsonl(recs), encoding="utf-8")
+        return recs
+
+    for setup in SETUPS:
+        if not all(finished(trace_file(eval_id, "dev", setup, w.id)) for w in dev):
+            log(f"{setup}: no complete dev traces, skipped")
+            continue
+        traces = [again("dev", setup, w, None) for w in dev]
+        tr, td = None, None
+        if setup != APPROVE_ALL:
+            v = view(traces, variant_of(setup, traces)[0] if setup in MODEL_SETUPS else "both")
+            tr, td, _ = pick_thresholds(v["scores"], v["truth"], v["amount"], COSTS)
+        for w in test:
+            again("eval", setup, w, (tr, td))
+        log(f"{setup}: repriced at review {COSTS.review_fee:g}")
 
 
 # ---------------------------------------------------------------- the report
@@ -409,19 +461,19 @@ def paired(a: np.ndarray, b: np.ndarray) -> dict:
             "mean_diff": float((a - b).mean()), "mean_diff_ci95": boot_ci(a - b)}
 
 
+def compare(costs_by: dict[str, np.ndarray], a: str, b: str) -> dict:
+    """The lower total test cost of two setups, and whether the windows can tell them apart."""
+    first, second = (a, b) if costs_by[a].sum() <= costs_by[b].sum() else (b, a)
+    tied = costs_by[a].sum() == costs_by[b].sum()
+    p = paired(costs_by[first], costs_by[second])
+    return {"a": a, "b": b, "better": None if tied else first, "other": second, **p,
+            "distinguishable": bool(p["mean_diff_ci95"][1] < 0)}
+
+
 def verdict(costs_by: dict[str, np.ndarray]) -> dict:
-    """The two pre-registered answers, from per-window test costs."""
-    a, b = costs_by[FROZEN], costs_by[FINETUNED]
-    better = FROZEN if a.sum() < b.sum() else FINETUNED if b.sum() < a.sum() else None
-    other = FINETUNED if better == FROZEN else FROZEN
-    p = paired(costs_by[better], costs_by[other]) if better else paired(a, b)
-    best = costs_by[better] if better else a
-    lr = paired(best, costs_by[LOGREG_SAME])
-    bar_lr = lr["cheaper"] + lr["ties"] >= BAR_WINDOWS
-    bar_all = float(best.sum()) < float(costs_by[APPROVE_ALL].sum())
-    return {"better": better, "better_vs_other": p, "distinguishable": bool(p["mean_diff_ci95"][1] < 0),
-            "vs_logreg_same": lr, "bar_logreg": bar_lr, "bar_approve_all": bar_all,
-            "retraining_necessary": not (bar_lr and bar_all)}
+    """The primary comparison, then what the owner's first question and the baselines need."""
+    return {"ieee_vs_paysim": compare(costs_by, FT_IEEE, FINETUNED), "frozen_vs_paysim": compare(costs_by, FROZEN, FINETUNED),
+            "reported": [compare(costs_by, s, b) for s in (FT_IEEE, FINETUNED) for b in (LOGREG_SAME, LOGREG_ALL, APPROVE_ALL)]}
 
 
 def report(eval_id: str, log=print) -> dict:
@@ -433,7 +485,6 @@ def report(eval_id: str, log=print) -> dict:
     win_cost = {s: np.array([r[-1]["summary"]["cost"] for r in test_tr[s]]) for s in SETUPS}
     rows = {}
     for s in SETUPS:
-        sums = [r[-1]["summary"] for r in test_tr[s]]
         act_all = [x for r in test_tr[s] for x in r if x.get("type") == "tx"]
         n = len(act_all)
         fraud = [x for x in act_all if x["truth"]]
@@ -452,16 +503,14 @@ def report(eval_id: str, log=print) -> dict:
                    "latency_ms": {"p50": float(np.percentile(lat, 50)), "p90": float(np.percentile(lat, 90))} if lat else None,
                    "prompt_tokens_mean": float(np.mean([x["prompt_tokens"] for x in act_all if "prompt_tokens" in x])) if lat else None,
                    "thresholds": test_tr[s][0][0].get("thresholds")}
-        del sums
     dev_info = {}
     for s in SETUPS:
         if s == APPROVE_ALL:
             continue
         v = view(dev_tr[s])
         info = {"auc": pooled_auc(v)}
-        if s == FINETUNED:
-            info["auc_orders"] = {k: pooled_auc(view(dev_tr[s], k)) for k in ("both", "fwd", "rev")}
-            info["variant"], info["debias_gain"] = choose_variant(info["auc_orders"])
+        if s in (FINETUNED, FT_IEEE):
+            info["variant"], info["debias_gain"], info["auc_orders"] = variant_of(s, dev_tr[s])
         if s in MODEL_SETUPS:
             tx = [x for r in dev_tr[s] for x in r if x.get("type") == "tx"]
             info["argmax_share"] = {a: sum(x["wanted"] == a for x in tx) / len(tx) for a in ACTIONS}
@@ -516,15 +565,15 @@ def markdown(r: dict) -> str:
         L.append(f"| {s} | {x['mean_cost']:,.0f} | {x['cost_ci95'][0]:,.0f}–{x['cost_ci95'][1]:,.0f} | {a} | {ac} | {x['recall']:.3f} | "
                  f"{x['precision']:.3f} | {x['alert_rate']:.3f} | {x['reviews']} | {x['declines']} | {lat} | "
                  f"{_th(th.get('review'))}, {_th(th.get('decline'))} |")
-    p, lr = v["better_vs_other"], v["vs_logreg_same"]
+    def line(p):
+        return (f"**{p['better'] or 'tie'}** vs {p['other']}: {p['cheaper']} cheaper, {p['dearer']} dearer, {p['ties']} ties; sign test p "
+                f"{p['sign_p']:.3g}; mean paired difference {p['mean_diff']:,.0f} USD per window, 95% CI {p['mean_diff_ci95'][0]:,.0f} to "
+                f"{p['mean_diff_ci95'][1]:,.0f} → {'distinguishable' if p['distinguishable'] else 'not distinguishable'}")
+
     L += ["", "## Answers", "",
-          f"- Better on total test cost: **{v['better']}**. Against the other: {p['cheaper']} cheaper, {p['dearer']} dearer, {p['ties']} ties; "
-          f"sign test p {p['sign_p']:.3g}; mean paired difference {p['mean_diff']:,.0f}, 95% CI {p['mean_diff_ci95'][0]:,.0f} to "
-          f"{p['mean_diff_ci95'][1]:,.0f} → **{'distinguishable' if v['distinguishable'] else 'not distinguishable'}**.",
-          f"- Better model vs {LOGREG_SAME}: {lr['cheaper']} cheaper, {lr['dearer']} dearer, {lr['ties']} ties (bar: cheaper or tied in >= {BAR_WINDOWS}) → "
-          f"**{'PASS' if v['bar_logreg'] else 'FAIL'}**; sign test p {lr['sign_p']:.3g}.",
-          f"- Better model's total cost below approve-all → **{'PASS' if v['bar_approve_all'] else 'FAIL'}**.",
-          f"- **Retraining necessary, by the pre-registered bar: {'YES' if v['retraining_necessary'] else 'NO'}.**",
+          f"- IEEE fine-tune vs PaySim fine-tune: {line(v['ieee_vs_paysim'])}.",
+          f"- Frozen vs PaySim fine-tune (different base models): {line(v['frozen_vs_paysim'])}.",
+          *[f"- {line(p)}." for p in v["reported"]],
           "- Latency bar, p90 <= 250 ms: " + ", ".join(f"{s} {'PASS' if ok else 'FAIL'}" for s, ok in r["bar_latency"].items()) + ".",
           "", "## Dev", "", "| setup | dev AUC | detail |", "|---|---:|---|"]
     for s, d in r["dev"].items():
@@ -546,7 +595,7 @@ def markdown(r: dict) -> str:
 def smoke(n: int, log=print) -> None:
     """Prompt size and per-decision latency on the first n fit rows. Scores and labels are not read or shown."""
     t = ieee_data.load()
-    for setup in MODEL_SETUPS:
+    for setup in (FROZEN, FINETUNED):
         model = load_model(setup)
         for variant in ("both",) if setup == FROZEN else ("both", "fwd"):
             got = [model.score(t, i, variant) for i in range(n)]
@@ -565,6 +614,8 @@ def main() -> None:
     ap.add_argument("--smoke", type=int, metavar="N", help="latency and prompt size on N fit rows, then stop")
     ap.add_argument("--resume", metavar="EVAL_ID", help="continue this eval: skip its finished windows")
     ap.add_argument("--report", metavar="EVAL_ID", help="only rebuild the results files from this eval's traces")
+    ap.add_argument("--reprice", metavar="EVAL_ID", help="re-decide this eval's traces at COSTS from their scores")
+    ap.add_argument("--ieee-adapter", type=Path, help="the folder written by python -m fraud.finetune_ieee")
     args = ap.parse_args()
     log = lambda m: print(m, flush=True)
     if args.draw:
@@ -574,10 +625,14 @@ def main() -> None:
             log(f"{w.id}: rows {w.rows[0]}–{w.rows[-1]}")
     elif args.smoke:
         smoke(args.smoke, log)
+    elif args.reprice:
+        reprice(args.reprice, log)
     elif args.report:
         report(args.report, log)
     else:
-        run(args.resume or stamp(), log)
+        if args.ieee_adapter is None or not (args.ieee_adapter / "manifest.json").exists():
+            ap.error("--ieee-adapter must be a folder with manifest.json and adapter/ (python -m fraud.finetune_ieee)")
+        run(args.resume or stamp(), args.ieee_adapter.resolve(), log)
 
 
 if __name__ == "__main__":
