@@ -17,6 +17,7 @@ Owner, 2026-11-03: "stronger tabular model. A numpy-only option needs no approva
 - Primary question: tab-all against tab-logreg, both with the rule, on total cost. Distinguishable only if the 95% bootstrap CI of the mean paired difference (windows resampled, seed 20261102) excludes 0.
 - Second: tab-rich against tab-all. Third: tab-nocdv against tab-logreg-nocdv, what trees give back if the doubt is real. Fourth: tab-all-cust against tab-all, on cost and on good customers declined. Not corrected for multiple comparisons beyond the primary. All reported in customers as well as dollars.
 - Limits stated now: 10 windows, heavy tail, and these chains are the last unused rows before FINAL. These numbers don't decide what's deployed: the owner's constraint does. Trees read C, whose timing Phase 17 could not clear. Scoring speed isn't compared with a language model's here.
+- A rerun, stated before any result of this phase was read: the first run, eval 20261103-231949, stopped on seeing its held-out dev read of 2,682 for tab-all, against 1,830 in the dev look. Cause (Observed): scoring passed float64 to trees whose bin edges came from float32, so values on an edge moved bin and every row's score changed (AUC 0.934 to 0.887 on 20 chains). It wrote traces for tab-logreg and tab-all on the new windows. Nobody read them, and they were deleted. The fix is in fraud/gbdt.py with a test. Same setups, windows and questions; the fitted tab-all model is kept. This reruns on the same chains because no result prompted the change: a bug seen on dev did.
 - Stated before running (Inferred): tab-all has a lower mean than tab-logreg by less than dev's 295, and may be distinguishable on 10 windows. tab-rich about ties tab-all. tab-nocdv is lower than tab-logreg-nocdv by about 250. tab-all-cust costs a little more than tab-all and declines about a third of the good customers.
 """
 
@@ -51,12 +52,15 @@ def fit(name: str, kind: str, parts, drop: str, t, cache, log=print):
     a = ieee_data.split_bounds(len(t))[0]
     f = fs.FeatureSet(parts, drop, cache)
     t0 = time.perf_counter()
+    saved = MODELS / f"tabular_{name}.pkl"
     if kind == "logreg":
         m = LogReg().fit(f(t, np.arange(a)), t.is_fraud[:a].astype(float))
+    elif saved.exists():  # the same seed gives the same model, so a finished fit needn't run again
+        m = pickle.loads(saved.read_bytes())
     else:
         m = GBDT(PARAMS).fit(f(t, np.arange(a)).astype(np.float32), t.is_fraud[:a].astype(np.float64))
         MODELS.mkdir(parents=True, exist_ok=True)
-        (MODELS / f"tabular_{name}.pkl").write_bytes(pickle.dumps(m))
+        saved.write_bytes(pickle.dumps(m))
     log(f"{name} fitted in {time.perf_counter() - t0:.0f} s")
     return m, f
 

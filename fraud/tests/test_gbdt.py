@@ -70,3 +70,13 @@ def test_fewer_trees_can_be_read_back():
     m = GBDT(Params(trees=20, depth=3, lr=0.2, min_hessian=1.0, l2=1.0, row_sample=1.0, col_sample=1.0, threads=1)).fit(x, y)
     assert not np.array_equal(m.raw(x, 5), m.raw(x))
     assert np.array_equal(m.raw(x, 20), m.raw(x))
+
+
+def test_float64_and_float32_callers_get_the_same_score():
+    rng = np.random.default_rng(0)
+    x = np.log1p(rng.integers(0, 30, (2000, 3)).astype(np.float64))  # many values sit exactly on an edge, and aren't exact in float32
+    y = (rng.uniform(size=2000) < 0.1 + 0.2 * (x[:, 0] > 2)).astype(float)
+    p = Params(trees=20, depth=3, lr=0.2, min_hessian=1.0, l2=1.0, row_sample=1.0, col_sample=1.0, threads=1)
+    fitted_on_32, fitted_on_64 = GBDT(p).fit(x.astype(np.float32), y), GBDT(p).fit(x, y)
+    assert np.array_equal(fitted_on_32.raw(x), fitted_on_32.raw(x.astype(np.float32)))
+    assert np.array_equal(fitted_on_32.raw(x), fitted_on_64.raw(x))
