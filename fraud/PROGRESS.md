@@ -683,3 +683,7 @@ Negative: dev's gains of about -90 for paced and combined did not carry over. 3,
 Eval `20261103-212822`, write-up `fraud/RESULTS-FEATURES.md`. Observed on 10 new windows, 333 frauds, with the rule: all columns 2,776; with rich features 2,725 (-50, CI -176 to 60); with interactions and D1-keyed history 2,679 (-97, CI -338 to 164). AUC 0.8429, 0.8424, 0.8437. Without C, D, V 3,357; adding the same features 3,379 (+23, CI -333 to 553), still dearer than all columns by 604, CI 257 to 981. Dev's -196 for that row didn't carry over. Good customers declined 501 → 517.
 Inferred: a verdict on the linear model more than on the signal, since velocity means little until crossed. Two phases in a row, 18 and 19, have no distinguishable dollar saving. The stop rule also asks that what's left be unlikely to change that; a tree model may, so Phase 20 runs. Checked apart from the report code: 0 rows differ, largest gap 0.03 USD. Chains used so far: 28 of 38.
 Not run, for the owner: earlier rows' labels as features with a realistic delay. The repo's rule says no prior label is an input, and this may be the largest untested gain.
+
+## 2026-11-03: Phase 21 amendment (owner): no two-pass run
+
+Owner: skip the two-pass training, to finish about 3 hours sooner. `lm-pass2` is withdrawn before any new adapter was scored and is not trained. A second seed, the longer prompt and frozen d1-Omni-2B stay.

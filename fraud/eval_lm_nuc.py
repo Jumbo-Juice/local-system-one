@@ -2,7 +2,6 @@
 
     python -m fraud.finetune_ieee --train --full --seed 1     # one adapter per option (fraud/models/<time>_lora-d1-ieee-full-*)
     python -m fraud.finetune_ieee --train --full --rich
-    python -m fraud.finetune_ieee --train --full --passes 2
     python -m fraud.eval_lm_nuc --score <setup> [<adapter dir>]   # score the dev rows here, into fraud/data/ieee-cis/lm_scores/ (git-ignored)
     python -m fraud.eval_lm_nuc --report                          # the comparison, from the saved scores and refits
 
@@ -18,6 +17,8 @@ Owner, 2026-11-03: "language model, given this machine's hardware: more prompt c
 - The question: does any option beat the best tabular setup on held-out dev, in rule cost and in AUC? An option goes on to Phase 22 only if its rule cost is lower by the CI of the mean paired difference excluding 0, or if a blend with the best tabular setup is. Costs: friction 10%, at least 1 USD; review 10 USD; at most 5% reviewed.
 - Limits stated now: dev isn't test, and Phases 14 and 18 both found dev's ordering didn't carry over. One seed per option, except the seed comparison itself.
 - Stated before running (Inferred): no option beats the best tabular setup. The seeds differ by about 0.005 AUC. The rich prompt gains the most, about 0.01-0.02 AUC. A second pass gains little. Frozen is far behind.
+
+AMENDMENT, owner, 2026-11-03, before any new adapter was scored: skip the two-pass run, to finish about 3 hours sooner. lm-pass2 is withdrawn and was not trained. Everything else stands.
 """
 
 from __future__ import annotations
