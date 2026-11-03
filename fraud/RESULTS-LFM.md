@@ -53,3 +53,5 @@ committed with the PROGRESS pre-statement (commit 8bb8348) before any LFM run. N
 - No test windows (gate failed). Nothing tuned after seeing these results; a follow-up (for example
   test windows for d1-Omni-2B against hybrid-1.5b without the logreg gate, or a fine-tune) needs new
   pre-registration under `fraud/CLAUDE.md`.
+
+The numbers above stay at a 50 USD review, as pre-registered. At 10 USD, from the same recorded scores: `fraud/RESULTS-REPRICE.md`.

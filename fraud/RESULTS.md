@@ -98,3 +98,5 @@ cheaper than random in 19 of 20 (p = 4.0e-5); rules cheaper than logistic regres
   need data where the rules are not near-perfect (a non-goal for v1).
 - **Not tested:** the 3B (does not fit the free iGPU memory) and a score-threshold decision rule
   on the test windows (dev only).
+
+The numbers above stay at a 50 USD review, as pre-registered. At 10 USD, from the same recorded scores: `fraud/RESULTS-REPRICE.md`.

@@ -51,3 +51,5 @@ committed before training. Numbers: `fraud/results/eval_d1ft/20261102-162345.jso
 - A report bug from this phase's refactor mislabelled the setup as `approve-all` and broke the paired table on the first
   build (a loop variable reused `setup`); fixed and rebuilt from the same traces. Bar values were not affected.
 - The console does not list `fraud/results/eval_d1ft/` yet.
+
+The numbers above stay at a 50 USD review, as pre-registered. At 10 USD, from the same recorded scores: `fraud/RESULTS-REPRICE.md`.
