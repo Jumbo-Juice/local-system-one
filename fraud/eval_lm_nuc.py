@@ -5,7 +5,7 @@
     python -m fraud.eval_lm_nuc --score <setup> [<adapter dir>]   # score the dev rows here, into fraud/data/ieee-cis/lm_scores/ (git-ignored)
     python -m fraud.eval_lm_nuc --report                          # the comparison, from the saved scores and refits
 
-Results: fraud/results/eval_lm_nuc/report.json + .md, dev rows only.
+Traces: fraud/runs/<eval id>_eval_<setup>_hdev<k>.jsonl. Results: fraud/results/eval_lm_nuc/<eval id>.json + .md, dev rows only.
 
 PRE-REGISTRATION (Phase 21; committed before any new adapter was trained and before this script scored a row).
 Owner, 2026-11-03: "language model, given this machine's hardware: more prompt columns with retraining, a second pass, a second seed, frozen d1-Omni-2B on IEEE windows, larger models if they fit. Each must keep p90 <= 250 ms. Estimate the run time first and tell me if a run exceeds about 8 hours. The rule above already beats the adapter, so run these after the tabular work unless evidence says otherwise."
@@ -37,14 +37,19 @@ from pathlib import Path
 
 import numpy as np
 
-from . import eval_ieee as ev, eval_ieee_amount as am, history, ieee_brain, ieee_data, tabular as tb
+from . import eval_ieee as ev, eval_ieee_amount as am, eval_tabular as et, history, ieee_brain, ieee_data, lm_signal, tabular as tb
 from .brain import OPTIONS
-from .runs import read_run
+from .runs import read_run, stamp
 
 RESULTS = Path(__file__).resolve().parent / "results" / "eval_lm_nuc"
 SCORES = ieee_data.RAW / "lm_scores"
 BATCH = 16
 VARIANT = "rev"
+LM = ("lm-phase12", "lm-seed1", "lm-rich", "lm-signal", "lm-frozen")
+REFS = ("tab-logreg", "tab-all")
+SIGNAL = "signal-alone"
+P90_BAR_MS = 250.0
+GO_ON = 2
 PHASE12_ADAPTER = Path(__file__).resolve().parent / "models" / "20261103-091222_lora-d1-ieee-full"
 
 
@@ -141,15 +146,127 @@ def trace_check(q: np.ndarray, n: int) -> dict:
     return {"max_gap": float(np.abs(q[w.rows] - was).max()), "mean_gap": float(np.abs(q[w.rows] - was).mean())}
 
 
+def references(t, log=print) -> dict:
+    """The same rows' scores from logreg, Phase 20's trees, and the signal the language model reads."""
+    n = len(t)
+    windows = tb.dev30(n) + tb.heldout_dev(n)
+    cache = history.load()
+    out = {}
+    for name in REFS:
+        kind, parts, drop = et.SETS[name]
+        out[name] = et.score(*et.fit(name, kind, parts, drop, t, cache, log), t, windows)
+    rows = np.unique(np.concatenate([w.rows for w in windows]))
+    q = np.full(n, np.nan)
+    q[rows] = np.clip(lm_signal.load()[rows], et.TREE_SCORE_FLOOR, 1 - et.TREE_SCORE_FLOOR)
+    out[SIGNAL] = q
+    return out
+
+
+def rank_corr(a: np.ndarray, b: np.ndarray) -> float:
+    return float(np.corrcoef(np.argsort(np.argsort(a)), np.argsort(np.argsort(b)))[0, 1])
+
+
+def goes_on(setups: dict, info: dict) -> list[str]:
+    """The two language-model setups with the lowest rule cost on held-out dev, of those under the latency bar."""
+    ok = [k for k in LM if k in info and info[k]["latency_ms"]["p90"] <= P90_BAR_MS]
+    return sorted(ok, key=lambda k: setups[k + tb.RULE]["mean_cost"])[:GO_ON]
+
+
+def echo(t, held: list[ev.Win], q: np.ndarray, sig: np.ndarray, tr_a: list, tr_b: list) -> dict:
+    """How far a setup only repeats its signal: rank agreement over held-out dev, and decisions that differ under the same rule."""
+    rows = np.concatenate([w.rows for w in held])
+    acts = lambda tr: [r["action"] for recs in tr for r in recs if r.get("type") == "tx"]
+    a, b = acts(tr_a), acts(tr_b)
+    return {"rank_corr": rank_corr(q[rows], sig[rows]), "logit_corr": float(np.corrcoef(am.logit(q[rows]), am.logit(sig[rows]))[0, 1]), "decisions_differ": sum(x != y for x, y in zip(a, b)), "rows": len(a)}
+
+
+def report(log=print) -> dict:
+    t = ieee_data.load()
+    n = len(t)
+    dev, held = tb.dev30(n), tb.heldout_dev(n)
+    ft_rows = np.concatenate([w.rows for w in held])
+    scores, info = {}, {}
+    for k in LM:
+        if (SCORES / f"{k}.npz").exists():
+            scores[k], info[k] = saved(k, n)
+    if "lm-phase12" in scores:
+        info["lm-phase12"]["trace_check"] = trace_check(scores["lm-phase12"], n)
+    scores.update(references(t, log))
+    eval_id, fits = stamp(), {}
+    for k, q in scores.items():
+        pol = tb.fit_policy(q, t, dev)
+        lam30 = pol.lam
+        if k != "tab-logreg":  # as the amendment says: lambda from all 118 dev windows. Logreg keeps Phase 14's procedure, so the baseline doesn't move
+            pol.lam = et.lambda_on(pol, q, t, dev + held)
+        by = "lm" if k in LM else "logreg"
+        tb.write_setup(eval_id, t, held, k + tb.RULE, q, pol, "rule", by)
+        tb.write_setup(eval_id, t, held, k + tb.LINES, q, pol, "lines", by)
+        fits[k] = {"lambda": pol.lam, "lambda_on_30": lam30, "lines": [pol.review, pol.decline], "sum_p": float(sum(pol.p(q[w.rows]).sum() for w in held))}
+        log(f"{k}: {fits[k]}")
+    names = [k + b for k in scores for b in (tb.RULE, tb.LINES)]
+    tr = {s: tb.read_setup(eval_id, s, held) for s in names}
+    by = {s: tb.window_costs(tr[s]) for s in names}
+    setups = {s: tb.row(tr[s]) for s in names}
+    amt = lambda k: k + tb.RULE
+    have = [k for k in LM if k in scores]
+    verdict = {"against_trees": [ev.compare(by, amt(k), amt("tab-all")) for k in have], "against_logreg": [ev.compare(by, amt(k), amt("tab-logreg")) for k in have],
+               "against_signal": [ev.compare(by, amt(k), amt(SIGNAL)) for k in have if k == "lm-signal"],
+               "among_lm": [ev.compare(by, amt(a), amt(b)) for a, b in (("lm-seed1", "lm-phase12"), ("lm-rich", "lm-phase12"), ("lm-signal", "lm-rich"), ("lm-frozen", "lm-phase12")) if a in scores and b in scores],
+               "trees_vs_logreg": ev.compare(by, amt("tab-all"), amt("tab-logreg"))}
+    y = t.is_fraud[ft_rows].astype(int)
+    out = {"eval": eval_id, "script": "fraud/eval_lm_nuc.py", "created": time.strftime("%Y-%m-%dT%H:%M:%S"), "costs": ev.COSTS.as_dict(), "windows": {w.id: [int(w.rows[0]), int(w.rows[-1])] for w in held}, "rows": int(len(y)), "frauds": int(y.sum()),
+           "fits": fits, "lm": info, "setups": setups, "verdict": verdict, "goes_on": goes_on(setups, info)}
+    if "lm-signal" in scores:
+        out["echo"] = echo(t, held, scores["lm-signal"], scores[SIGNAL], tr[amt("lm-signal")], tr[amt(SIGNAL)])
+    RESULTS.mkdir(parents=True, exist_ok=True)
+    (RESULTS / f"{eval_id}.json").write_text(json.dumps(out, indent=1), encoding="utf-8")
+    md = report_md(out)
+    (RESULTS / f"{eval_id}.md").write_text(md, encoding="utf-8")
+    log(md)
+    return out
+
+
+def report_md(r: dict) -> str:
+    L = [f"# Language model on this machine, held-out dev, {r['eval']}", "", f"Pre-registration: `fraud/eval_lm_nuc.py`. {len(r['windows'])} held-out dev chains, {r['rows']:,} rows, {r['frauds']:,} frauds. Dev only. Costs: {r['costs']}. All numbers Observed. Model scores are uncalibrated. Lambda from all 118 dev windows except logreg's, so these reads are flattered.", "",
+         "| scorer | rule mean | 95% CI | AUC | frauds stopped | fraud USD stopped | good customers declined | reviews | lines mean | lambda | sum of p |", "|---|---:|---|---:|---:|---:|---:|---:|---:|---:|---:|"]
+    order = sorted(r["fits"], key=lambda k: r["setups"][k + tb.RULE]["mean_cost"])
+    for k in order:
+        x, f = r["setups"][k + tb.RULE], r["fits"][k]
+        L.append(f"| {k} | {x['mean_cost']:,.0f} | {x['cost_ci95'][0]:,.0f}–{x['cost_ci95'][1]:,.0f} | {x['auc']:.4f} | {x['frauds_stopped']} of {x['frauds']} | {x['fraud_usd_stopped']:,.0f} | {x['good_customers_declined']} | {x['reviews']} | {r['setups'][k + tb.LINES]['mean_cost']:,.0f} | {f['lambda']:g} | {f['sum_p']:,.0f} |")
+    L += ["", "## Latency here and the batch check", "", "| setup | p50 ms | p90 ms | p99 ms | under 250 ms | batch vs lone, largest gap | mean gap | AUC batch / lone, 500 rows |", "|---|---:|---:|---:|---|---:|---:|---|"]
+    for k, x in r["lm"].items():
+        m = x["latency_ms"]
+        L.append(f"| {k} | {m['p50']:.0f} | {m['p90']:.0f} | {m['p99']:.0f} | {'yes' if m['p90'] <= P90_BAR_MS else 'NO'} | {x['batch_vs_lone_max_gap']:.5f} | {x['batch_vs_lone_mean_gap']:.5f} | {x['batch_auc']:.4f} / {x['lone_auc']:.4f} |")
+
+    def line(p):
+        return f"**{p['better'] or 'tie'}** vs {p['other']}: {p['cheaper']} cheaper, {p['dearer']} dearer; mean paired difference {p['mean_diff']:,.0f} USD per window, 95% CI {p['mean_diff_ci95'][0]:,.0f} to {p['mean_diff_ci95'][1]:,.0f} → {'distinguishable' if p['distinguishable'] else 'not distinguishable'}"
+
+    L += ["", "## Paired", ""]
+    for k, v in r["verdict"].items():
+        L += [f"- {k}: {line(p)}." for p in (v if isinstance(v, list) else [v])]
+    L += ["", f"Going on to Phase 22 by the amendment's rule: {', '.join(r['goes_on']) or 'none'}."]
+    if r.get("echo"):
+        e = r["echo"]
+        L += ["", f"lm-signal against its signal: rank correlation {e['rank_corr']:.4f}, logit correlation {e['logit_corr']:.4f}, {e['decisions_differ']:,} of {e['rows']:,} decisions differ under the same rule."]
+    if "lm-phase12" in r["lm"]:
+        c = r["lm"]["lm-phase12"].get("trace_check")
+        if c:
+            L += ["", f"lm-phase12 here against its laptop trace on dev0, for the record only: largest score gap {c['max_gap']:.4f}, mean {c['mean_gap']:.4f}."]
+    return "\n".join(L) + "\n"
+
+
 def main() -> None:
     if hasattr(sys.stdout, "reconfigure"):
         sys.stdout.reconfigure(encoding="utf-8")
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--score", nargs="+", metavar=("SETUP", "ADAPTER"), help="score the dev rows with this setup; no adapter for lm-frozen")
+    ap.add_argument("--report", action="store_true", help="the comparison, from the saved scores")
     a = ap.parse_args()
     log = lambda m: print(m, flush=True)
     if a.score:
         score(a.score[0], Path(a.score[1]) if len(a.score) > 1 else None, log)
+    if a.report:
+        report(log)
 
 
 if __name__ == "__main__":

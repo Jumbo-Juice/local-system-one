@@ -73,11 +73,11 @@ def lines_cost(policy: Policy, q: np.ndarray, t, w: ev.Win, c: costs.Costs = ev.
     return costs.score(c, wanted, ["approve"] * len(wanted), t.is_fraud[w.rows].astype(bool), t.amount[w.rows])
 
 
-def write_setup(eval_id: str, t, windows: list[ev.Win], setup: str, q: np.ndarray, policy: Policy, kind: str) -> None:
+def write_setup(eval_id: str, t, windows: list[ev.Win], setup: str, q: np.ndarray, policy: Policy, kind: str, by: str = "logreg") -> None:
     """A trace per window, kind "rule" or "lines". The trace holds the score, so the decisions can be replayed from it."""
     ft.guard(len(t), np.concatenate([w.rows for w in windows]))
     for w in windows:
-        outs = [{"by": "logreg", "q": float(v), "ms": 0.0} for v in q[w.rows]]
+        outs = [{"by": by, "q": float(v), "ms": 0.0} for v in q[w.rows]]
         if kind == "rule":
             am.write_trace(eval_id, t, w, setup, outs, None, am.decide(policy.p(q[w.rows]), t.amount[w.rows], policy.lam, ev.COSTS), policy.header(), {})
         else:
