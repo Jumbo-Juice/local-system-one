@@ -613,3 +613,10 @@ Stated before running (Inferred): better AUC and probably lower cost than Phase 
 
 The first `--train --full` (`fraud/models/20261103-003747_lora-d1-ieee-full`) reached batch 1,551 of 5,994. Observed in the System log: Modern Standby from 00:45, last logged step about 01:44, and a Windows Update restart at 05:24 that killed it.
 Inferred: the stall was standby, the same pattern as Phase 11 (standby 21:17, stall 22:15). Its checkpoint at batch 1,500 is not scored. Restarted from zero as pre-registered, owner's go-ahead, with the display held awake for the run.
+
+## 2026-11-03: Phase 12 results; every fit fraud gives no distinguishable saving, and logreg on all columns keeps the lowest mean
+
+Eval `20261103-142622`, write-up `fraud/RESULTS-IEEE-FULL.md`. Observed at a 10 USD review on 20 new test windows: new adapter 3,483 per window, Phase 11's adapter 3,710, logreg all columns 3,274, logreg same fields 4,212, approve-all 5,283.
+Primary question, new vs Phase 11's adapter: 13 windows to 7, -227 USD, CI -555 to 90, not distinguishable. Second question, logreg all vs new adapter: 9 windows to 11, -209 USD, CI -607 to 182, not distinguishable. AUC 0.851 vs 0.838 vs logreg all 0.864. Latency bar PASS for both, p90 113 and 117 ms.
+Training ran 5,994 of 5,994 batches in 314.7 min. The display hold worked: no standby or restart from 09:11 to 16:11. The owner asked for a faster finish, so the training and scoring processes ran at Above Normal priority from 14:12 (not pre-registered; Inferred: timing only).
+Inferred: the saving against Phase 11's adapter is almost all fewer wrongly declined customers, and it disappears at reviews of 1 and 5 USD. Correction to Phase 11: 9 of its adapter's test windows ran in standby at p90 95 ms against 115 ms awake, so its 109 ms reads low. The pre-run statement held.
