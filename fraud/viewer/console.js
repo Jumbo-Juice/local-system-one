@@ -291,13 +291,17 @@ function card(h, r) {
   } else if (r.by === "logreg" && r.scores) {
     parts.push(el("div", { class: "section" }, el("dl", { class: "kv" },
       el("dt", {}, "Logistic regression score (uncalibrated)"), el("dd", {}, fix(r.scores.fraud, 3)))));
+  } else if (r.by === "logreg" && r.q !== undefined) {
+    parts.push(el("div", { class: "section" }, el("dl", { class: "kv" },
+      el("dt", {}, "Logistic regression score (uncalibrated)"), el("dd", {}, fix(r.q, 3)))));
   } else if (r.rule) {
     const rule = (h.rules || []).find((x) => x[0] === r.rule);
     parts.push(el("div", { class: "section" }, el("h3", {}, "Rule"), el("div", {}, r.rule),
       rule ? el("div", { class: "hint" }, `From the training steps: ${rule[3]}`) : null));
   }
-  parts.push(el("div", { class: "section" }, el("h3", {}, "Signals (earlier rows only)"),
-    el("dl", { class: "kv" }, ...SIGNALS.filter(([k]) => k in r.signals).flatMap(([k, label, f]) =>
+  const signals = SIGNALS.filter(([k]) => k in r.signals);
+  if (signals.length) parts.push(el("div", { class: "section" }, el("h3", {}, "Signals (earlier rows only)"),
+    el("dl", { class: "kv" }, ...signals.flatMap(([k, label, f]) =>
       [el("dt", {}, label), el("dd", {}, f(r.signals[k]))]))));
   return el("div", {}, ...parts);
 }
@@ -478,7 +482,7 @@ function about(h, ticks, end, total) {
     el("div", { class: "cards", style: "margin-top:12px" }, noteCard("What happened", notes),
       noteCard("How a decision is replayed", [
         "Each transaction appears when its recorded decision finished.",
-        "Signals use only earlier rows; the four balance columns are never read.",
+        natural ? "A row's score reads its own columns and earlier rows. No label is an input." : "Signals use only earlier rows; the four balance columns are never read.",
         "A review costs a fee and finds the truth until the budget runs out."]),
       h.setup === "rules" ? noteCard("The rule table (first match decides)", ruleNotes) : null)];
   if (h.example_prompt) {
@@ -564,7 +568,7 @@ async function startPage() {
     el("div", { class: "cards" },
       el("section", { class: "panel bar-card" }, el("h3", {}, "Latest eval"),
         latest ? el("div", {},
-          el("div", {}, `Eval ${latest.id}${latest.complete ? "" : " (incomplete)"}`),
+          el("div", {}, `Eval ${latest.id}${latest.complete === false ? " (incomplete)" : ""}`),
           latest.script ? el("div", { class: "hint" }, latest.script) : null,
           ...Object.entries(latest.bars || {}).map(([k, b]) => el("div", { style: "margin-top:6px" },
             chip(b.pass ? "pass" : "fail", b.pass ? "PASS" : "FAIL"), ` ${b.rule}`)),
@@ -773,8 +777,8 @@ async function ieeeEval(r) {  // IEEE-CIS evals (eval_ieee*.py and the phases af
       el("td", { class: "r" }, fix(v.recall, 3)), el("td", { class: "r" }, fix(v.precision, 3)), el("td", { class: "r" }, v.reviews), el("td", { class: "r" }, v.declines),
       el("td", { class: "r" }, v.good_customers_declined === undefined ? "–" : v.good_customers_declined), el("td", { class: "r" }, money(v.fraud_let_through))))));
   const ans = el("table", {},
-    head(["lower cost", "against", "question", "windows cheaper / dearer", "mean difference", "95% CI", "distinguishable"]),
-    el("tbody", {}, ...answers(r).map((p) => el("tr", {}, el("td", {}, name(p.better || p.a)), el("td", { class: "r" }, name(p.other)), el("td", { class: "r" }, p.q.replace(/_/g, " ")),
+    el("thead", {}, el("tr", {}, ...["lower cost", "against", "question"].map((t) => el("th", {}, t)), ...["windows cheaper / dearer", "mean difference", "95% CI", "distinguishable"].map((t) => el("th", { class: "r" }, t)))),
+    el("tbody", {}, ...answers(r).map((p) => el("tr", {}, el("td", {}, name(p.better || p.a)), el("td", {}, name(p.other)), el("td", {}, p.q.replace(/_/g, " ")),
       el("td", { class: "r" }, `${p.cheaper} / ${p.dearer}`), el("td", { class: "r" }, money(p.mean_diff)), el("td", { class: "r" }, `${money(p.mean_diff_ci95[0])} to ${money(p.mean_diff_ci95[1])}`),
       el("td", { class: "r" }, chip(p.distinguishable ? "pass" : "fail", p.distinguishable ? "yes" : "no"))))));
   const perWin = el("table", {},
@@ -794,9 +798,9 @@ async function ieeeEval(r) {  // IEEE-CIS evals (eval_ieee*.py and the phases af
       el("div", { class: "scroll-x" }, ans)),
     el("section", { class: "panel", style: "margin-top:12px" }, el("h2", {}, "Cost per window"), evalChart(chart)),
     el("section", { class: "panel", style: "margin-top:12px" }, el("h2", {}, "Setups, cheapest first"), el("div", { class: "scroll-x" }, tot)),
-    sens.length ? el("section", { class: "panel", style: "margin-top:12px" }, el("h2", {}, "Other review fees"), el("p", { class: "hint" }, "Lines or lambda re-picked on dev. No bar and no interval."),
+    ...(sens.length ? [el("section", { class: "panel", style: "margin-top:12px" }, el("h2", {}, "Other review fees"), el("p", { class: "hint" }, "Lines or lambda re-picked on dev. No bar and no interval."),
       el("div", { class: "scroll-x" }, el("table", {}, el("thead", {}, el("tr", {}, el("th", {}, "cost set"), ...set_names.map((s) => el("th", { class: "r" }, s)))),
-        el("tbody", {}, ...sens.map(([k, v]) => el("tr", {}, el("td", {}, k), ...set_names.map((s) => el("td", { class: "r" }, money(v.mean_cost[s])))))))) ) : null,
+        el("tbody", {}, ...sens.map(([k, v]) => el("tr", {}, el("td", {}, k), ...set_names.map((s) => el("td", { class: "r" }, money(v.mean_cost[s])))))))))] : []),
     el("section", { class: "panel", style: "margin-top:12px" }, el("h2", {}, "Cost per window, every setup"),
       el("p", { class: "hint" }, "A linked cost opens that window's recorded run (eval traces stay local)."), el("div", { class: "scroll-x" }, perWin)));
 }
