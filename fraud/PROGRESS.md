@@ -608,3 +608,8 @@ Console: IEEE-CIS replays no longer claim enriched windows, a type filter or a n
 Owner: yes to training on all the fit frauds. One run, 47,952 fit rows (11,988 fraud, rows sha256 `e6d057cc1de3…`), 5,994 batches, same base, prompt, LoRA and optimiser. Phase 11's 20 test windows have been read, so
 the eval uses 20 new test windows that share no row with them (`fraud/eval_ieee_full.py`, seed 20261103). Primary question: full adapter vs Phase 11's adapter on cost. Second: full adapter vs logistic regression on all columns.
 Stated before running (Inferred): better AUC and probably lower cost than Phase 11's, maybe not distinguishable on 20 windows; probably still not cheaper than logreg on all columns.
+
+## 2026-11-03: Phase 12 first training run died; restarted from zero
+
+The first `--train --full` (`fraud/models/20261103-003747_lora-d1-ieee-full`) reached batch 1,551 of 5,994. Observed in the System log: Modern Standby from 00:45, last logged step about 01:44, and a Windows Update restart at 05:24 that killed it.
+Inferred: the stall was standby, the same pattern as Phase 11 (standby 21:17, stall 22:15). Its checkpoint at batch 1,500 is not scored. Restarted from zero as pre-registered, owner's go-ahead, with the display held awake for the run.
