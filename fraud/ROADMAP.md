@@ -152,3 +152,9 @@ check's failure), whatever they show.
 - [x] `python -m fraud.reprice_paysim`: same decisions and re-picked thresholds, from the recorded scores; results in `fraud/RESULTS-REPRICE.md`
 
 **Accept:** results committed beside the originals, which stay as they are, with both views and the bars reported, whatever they show.
+
+## Phase 14: decisions that weigh the amount, IEEE-CIS (owner, 2026-11-03)
+- [x] `eval_ieee_amount.py` with the pre-registration in its docstring, 20 new test windows and 20 more dev windows, committed before any of them was scored
+- [ ] `python -m fraud.eval_ieee_amount --adapter <dir>`: amount-aware rule, more dev windows and a blend, from logreg's and Phase 12's frozen scores; results in `fraud/RESULTS-IEEE-AMOUNT.md`
+
+**Accept:** results committed with the answers reported, whatever they show.

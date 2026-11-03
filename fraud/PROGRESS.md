@@ -632,3 +632,9 @@ Stated before running (Inferred): hybrid-ft, d3ft, d1ft and rules pay almost onl
 Run `20261103-162503`, write-up `fraud/RESULTS-REPRICE.md`. Observed: every setup re-picked the same thresholds on dev, so the two views are identical, and every recorded bar would read the same. On test200-233, rules 808 → 162 per window, d1-Omni fine-tuned 810 → 162, Qwen fine-tuned 830 → 166, d3-nano fine-tuned 835 → 167; logreg 190,910 → 190,432; frozen Qwen and approve-all unchanged.
 Checked apart from the script's scoring: committed cost minus 40 per committed review matches exactly. No trace or older result changed; older write-ups only gain a pointer.
 The pre-run statement held with one miss: rules' mean on test100-119 stays near 400,000 (median 825 → 165), because test109 wrongly declines eight round 10M TRANSFERs at 1,000,000 of friction each.
+
+## 2026-11-03: Phase 14 pre-registered; decisions that weigh the amount
+
+Owner: yes to amount-aware decisions, with the goal of lower cost. Nothing is retrained. `fraud/eval_ieee_amount.py` holds the rule: from a logistic fit of the score on dev, take the lowest of the expected costs of approve, decline and review, a review priced at its fee plus a lambda picked on dev. It only uses the current row. Also tested on the same windows: thresholds from 30 dev windows instead of 10, and a blend of logreg and the adapter. 20 new test windows (seed 20261104) and 20 more dev windows.
+Observed before registering, dev only, recorded scores, two folds over Phase 11's 10 dev windows: logreg 34,011 → 22,941 USD (lower in 8 of 10), adapter 37,757 → 22,772 (8 of 10), blend 24,105.
+Stated before running (Inferred): both amount-aware setups are cheaper than their score-only versions, by less than the dev gap, probably distinguishable for at least one; the blend doesn't beat logreg's amount-aware setup; more dev windows alone change little.
