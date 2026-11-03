@@ -181,7 +181,7 @@ check's failure), whatever they show.
 **Accept:** each change reported against Phase 14's rule, whatever it shows.
 
 ## Phase 19: better logreg features (owner, 2026-11-03)
-- [ ] Per-card and per-address history, velocity, time since last payment, amount against the card's past, interactions, more categories, no look-ahead (tested); 10 new windows; `fraud/RESULTS-FEATURES.md`
+- [x] Per-card and per-address history, velocity, time since last payment, amount against the card's past, interactions, more categories, no look-ahead (tested); 10 new windows; `fraud/RESULTS-FEATURES.md`
 
 **Accept:** reported against the best logreg so far, whatever it shows.
 
