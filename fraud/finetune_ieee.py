@@ -85,6 +85,7 @@ def main() -> None:
     ap.add_argument("--seed", type=int, default=SEED, help="Phase 21: another training seed (default 0, as before)")
     ap.add_argument("--passes", type=int, default=1, help="Phase 21: passes over the rows, with the LR schedule sized to all of them")
     ap.add_argument("--rich", action="store_true", help="Phase 21: the longer prompt, ieee_brain.describe_rich")
+    ap.add_argument("--signal", action="store_true", help="Phase 21: the longer prompt and the tabular risk score (fraud.lm_signal)")
     args = ap.parse_args()
 
     t = ieee_data.load()
@@ -102,10 +103,14 @@ def main() -> None:
     steps = args.steps or (len(rows) // BATCH * args.passes if args.full else EPOCH_BATCHES)
     cap = CAP_FULL_S if args.full else CAP_S
     hist = None
-    if args.rich:
+    if args.rich or args.signal:
         from . import history
 
         hist = history.load()
+        if args.signal:
+            from .lm_signal import load
+
+            hist["signal"] = load()
     exs = examples(t, rows, args.seed, hist)
     info["reversed"] = int(sum(d.options != brain.OPTIONS for d, _ in exs))
     model = D1Torch.load()
@@ -116,13 +121,13 @@ def main() -> None:
     print(f"encoded {len(enc)} examples, {info['reversed']} reversed, {info['prompt_tokens_mean']:.0f} tokens mean / "
           f"{info['prompt_tokens_max']} max ({time.perf_counter() - t_process:.0f} s since start)", flush=True)
 
-    extra = f"{'-seed' + str(args.seed) if args.seed != SEED else ''}{'-pass' + str(args.passes) if args.passes != 1 else ''}{'-rich' if args.rich else ''}"
+    extra = f"{'-seed' + str(args.seed) if args.seed != SEED else ''}{'-pass' + str(args.passes) if args.passes != 1 else ''}{'-rich' if args.rich else ''}{'-signal' if args.signal else ''}"
     out = MODELS / f"{stamp()}_lora-d1-ieee{'-full' if args.full else ''}{extra}{'-smoke' if args.steps else ''}"
     out.mkdir(parents=True, exist_ok=True)
     deadline = t_process + cap - SAVE_MARGIN_S if args.train else math.inf
     every = (10 if args.steps else CHECKPOINT_EVERY) if args.full else 0
     info.update(train(model, enc, out, steps, deadline=deadline, log=lambda m: print(m, flush=True), lora=LORA, checkpoint_every=every, seed=args.seed))
-    info.update(passes=args.passes, rich=args.rich)
+    info.update(passes=args.passes, rich=args.rich or args.signal, signal=args.signal)
     info["process_s"] = time.perf_counter() - t_process
     info["cap_s"] = cap
     info["created"] = time.strftime("%Y-%m-%dT%H:%M:%S")

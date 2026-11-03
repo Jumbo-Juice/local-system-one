@@ -66,8 +66,14 @@ def describe_rich(t: Ieee, i: int, hist: dict) -> str:
         card = "no earlier payments."
     more = ", ".join(f"{k} {_value(float(t.col_at(k, i)))}" for k in MORE_COUNTERS)
     days = ", ".join(f"{k} {_value(float(t.col_at(k, i)))}" for k in DAYS)
-    return "\n".join([describe(t, i), f"Card history: {card}", f"Address: {count('addr_log_distinct_card')} other cards seen there before. Distance: {_value(float(t.col_at('dist1', i)))}.",
-                      f"More counters: {more}. More days: {days}."])
+    lines = [describe(t, i), f"Card history: {card}", f"Address: {count('addr_log_distinct_card')} other cards seen there before. Distance: {_value(float(t.col_at('dist1', i)))}.",
+             f"More counters: {more}. More days: {days}."]
+    if "signal" in hist:
+        risk = float(hist["signal"][i])
+        if math.isnan(risk):
+            raise ValueError(f"row {i} has no tabular score")
+        lines.append(f"Risk score from a tabular model: {risk:.3f} (uncalibrated; higher is more suspicious).")
+    return "\n".join(lines)
 
 
 def decision(t: Ieee, i: int, hist: dict | None = None) -> Decision:
