@@ -18,7 +18,8 @@ BINS = 64
 
 
 def quantile_edges(x: np.ndarray, bins: int = BINS) -> list[np.ndarray]:
-    """One sorted edge list per column, from the non-missing values."""
+    """One sorted edge list per column, from the non-missing values. Always in float32, as to_bins reads them."""
+    x = np.asarray(x, np.float32)
     out = []
     grid = np.linspace(0, 1, bins)[1:-1]
     for j in range(x.shape[1]):
@@ -29,7 +30,9 @@ def quantile_edges(x: np.ndarray, bins: int = BINS) -> list[np.ndarray]:
 
 
 def to_bins(x: np.ndarray, edges: list[np.ndarray]) -> np.ndarray:
-    """uint8 bins: 0 is missing, 1 and up are by value. Column-major, as trees read a column at a time."""
+    """uint8 bins: 0 is missing, 1 and up are by value. Column-major, as trees read a column at a time.
+    Always in float32: a value on an edge must land in the same bin whichever float type the caller holds. Without this, scoring float64 against edges from float32 moved every row (Phase 20: AUC 0.93 fell to 0.89)."""
+    x = np.asarray(x, np.float32)
     out = np.zeros(x.shape, np.uint8, order="F")
     for j, e in enumerate(edges):
         v = x[:, j]
