@@ -651,6 +651,15 @@ Better use of the rule (Phase 18): calibration, a paced review price and a custo
 .venv/Scripts/python -m fraud.dev.verify_tabular fraud/results/eval_rule/<eval id>.json
 ```
 
+History and category features for logreg (Phase 19): `fraud.history` builds the cache from the CSVs (about 12 s, no labels), then the eval runs on 10 new windows in about 3 min. `fraud/dev/explore_features.py` is the dev-only look. Write-up: `fraud/RESULTS-FEATURES.md`.
+
+```bash
+.venv/Scripts/python -m fraud.history
+.venv/Scripts/python -m fraud.eval_features
+.venv/Scripts/python -m fraud.eval_features --report <eval id>
+.venv/Scripts/python -m fraud.dev.verify_tabular fraud/results/eval_features/<eval id>.json
+```
+
 ## Where things land
 
 | what | where |

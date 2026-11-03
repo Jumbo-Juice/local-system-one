@@ -1,0 +1,803 @@
+{
+ "eval": "20261103-212822",
+ "script": "fraud/eval_features.py",
+ "created": "2026-11-03T21:31:04",
+ "costs": {
+  "friction_rate": 0.1,
+  "friction_min": 1.0,
+  "review_fee": 10.0,
+  "review_share": 0.05
+ },
+ "windows": {
+  "features0": [
+   484432,
+   486431
+  ],
+  "features1": [
+   488432,
+   494431
+  ],
+  "features2": [
+   504432,
+   506431
+  ],
+  "features3": [
+   519432,
+   521431
+  ],
+  "features4": [
+   529432,
+   531431
+  ],
+  "features5": [
+   540432,
+   546431
+  ],
+  "features6": [
+   546432,
+   548431
+  ],
+  "features7": [
+   572432,
+   574431
+  ],
+  "features8": [
+   574432,
+   576431
+  ],
+  "features9": [
+   589432,
+   590431
+  ]
+ },
+ "test_rows": 10000,
+ "test_fraud": 333,
+ "info": {
+  "feat-all": {
+   "lambda": 10,
+   "lines": [
+    0.06023510332148997,
+    0.1134321836173724
+   ],
+   "sum_p_new": 396.08469216325096
+  },
+  "feat-rich": {
+   "lambda": 10,
+   "lines": [
+    0.062331654178510394,
+    0.11929863108496278
+   ],
+   "sum_p_new": 398.2970085495822
+  },
+  "feat-uid": {
+   "lambda": 5,
+   "lines": [
+    0.06249831315659762,
+    0.11944669951230484
+   ],
+   "sum_p_new": 398.6071417678926
+  },
+  "feat-nocdv": {
+   "lambda": 10,
+   "lines": [
+    0.04300415908765638,
+    0.07724182889745475
+   ],
+   "sum_p_new": 389.9141243101853
+  },
+  "feat-nocdv-rich": {
+   "lambda": 10,
+   "lines": [
+    0.05331596458512617,
+    0.07507293536390332
+   ],
+   "sum_p_new": 406.1310223646358
+  }
+ },
+ "setups": {
+  "feat-all-amt": {
+   "mean_cost": 2775.90309,
+   "total_cost": 27759.030899999998,
+   "cost_ci95": [
+    2123.1431297500003,
+    3511.3198824999995
+   ],
+   "auc": 0.842901658252853,
+   "auc_ci95": [
+    0.8121223593688076,
+    0.8691779697400176
+   ],
+   "recall": 0.5975975975975976,
+   "precision": 0.1937682570593963,
+   "alert_rate": 0.1027,
+   "reviews": 359,
+   "declines": 668,
+   "reviews_wanted": 367,
+   "fraud_amount_stopped": 37750.36,
+   "windows": [
+    2201.0274,
+    2263.8132000000005,
+    3473.3288999999995,
+    2491.8664,
+    1682.4627,
+    2181.2742,
+    4936.4542,
+    1267.9304000000002,
+    2689.0793999999996,
+    4571.7941
+   ],
+   "latency_ms": null,
+   "prompt_tokens_mean": null,
+   "thresholds": null,
+   "fraud_let_through": 19279.72,
+   "good_declined": 4889.2,
+   "review_fees": 3590.0,
+   "reviewed_amount_median": 664.0,
+   "reviews_finding_fraud": 32,
+   "fraud_amount": 57030.08,
+   "frauds": 333,
+   "frauds_stopped": 199,
+   "fraud_usd": 57030.08,
+   "fraud_usd_stopped": 37750.36,
+   "good_customers_declined": 501,
+   "good_reviewed": 327
+  },
+  "feat-all-lines": {
+   "mean_cost": 3315.47053,
+   "total_cost": 33154.7053,
+   "cost_ci95": [
+    2598.4452282499997,
+    4077.4754574999993
+   ],
+   "auc": 0.842901658252853,
+   "auc_ci95": [
+    0.8121223593688076,
+    0.8691779697400176
+   ],
+   "recall": 0.6096096096096096,
+   "precision": 0.20735444330949948,
+   "alert_rate": 0.0979,
+   "reviews": 453,
+   "declines": 526,
+   "reviews_wanted": 504,
+   "fraud_amount_stopped": 35790.03,
+   "windows": [
+    2873.0195,
+    2888.4105000000004,
+    4601.9648,
+    2502.8995,
+    2211.7826,
+    2846.7043,
+    5604.0337,
+    1361.1145999999999,
+    3962.6212,
+    4302.1546
+   ],
+   "latency_ms": null,
+   "prompt_tokens_mean": null,
+   "thresholds": {
+    "review": 0.06023510332148997,
+    "decline": 0.1134321836173724
+   },
+   "fraud_let_through": 21240.05,
+   "good_declined": 7384.55,
+   "review_fees": 4530.0,
+   "reviewed_amount_median": 117.0,
+   "reviews_finding_fraud": 36,
+   "fraud_amount": 57030.08,
+   "frauds": 333,
+   "frauds_stopped": 203,
+   "fraud_usd": 57030.08,
+   "fraud_usd_stopped": 35790.03,
+   "good_customers_declined": 359,
+   "good_reviewed": 417
+  },
+  "feat-rich-amt": {
+   "mean_cost": 2725.4543,
+   "total_cost": 27254.542999999998,
+   "cost_ci95": [
+    2063.0802292500002,
+    3483.3896175
+   ],
+   "auc": 0.8423894050251762,
+   "auc_ci95": [
+    0.8124135158799632,
+    0.8707740650833247
+   ],
+   "recall": 0.6036036036036037,
+   "precision": 0.19197707736389685,
+   "alert_rate": 0.1047,
+   "reviews": 363,
+   "declines": 684,
+   "reviews_wanted": 375,
+   "fraud_amount_stopped": 38407.39,
+   "windows": [
+    1772.0468,
+    2338.8475000000003,
+    3635.8013,
+    2437.8706999999995,
+    1675.466,
+    2107.9202999999998,
+    4940.3217,
+    1461.2471,
+    2309.6738,
+    4575.3478000000005
+   ],
+   "latency_ms": null,
+   "prompt_tokens_mean": null,
+   "thresholds": null,
+   "fraud_let_through": 18622.69,
+   "good_declined": 5001.76,
+   "review_fees": 3630.0,
+   "reviewed_amount_median": 670.67,
+   "reviews_finding_fraud": 34,
+   "fraud_amount": 57030.08,
+   "frauds": 333,
+   "frauds_stopped": 201,
+   "fraud_usd": 57030.08,
+   "fraud_usd_stopped": 38407.39,
+   "good_customers_declined": 517,
+   "good_reviewed": 329
+  },
+  "feat-rich-lines": {
+   "mean_cost": 3310.46592,
+   "total_cost": 33104.6592,
+   "cost_ci95": [
+    2557.30528425,
+    4143.9955345
+   ],
+   "auc": 0.8423894050251762,
+   "auc_ci95": [
+    0.8124135158799632,
+    0.8707740650833247
+   ],
+   "recall": 0.6156156156156156,
+   "precision": 0.20398009950248755,
+   "alert_rate": 0.1005,
+   "reviews": 465,
+   "declines": 540,
+   "reviews_wanted": 519,
+   "fraud_amount_stopped": 35938.88,
+   "windows": [
+    2884.8596000000002,
+    2893.6403000000005,
+    4573.4643,
+    2604.6557000000003,
+    2128.1581,
+    2554.5975,
+    6034.9429,
+    1370.5862,
+    3750.3776,
+    4309.3769999999995
+   ],
+   "latency_ms": null,
+   "prompt_tokens_mean": null,
+   "thresholds": {
+    "review": 0.062331654178510394,
+    "decline": 0.11929863108496278
+   },
+   "fraud_let_through": 21091.2,
+   "good_declined": 7363.33,
+   "review_fees": 4650.0,
+   "reviewed_amount_median": 115.5,
+   "reviews_finding_fraud": 36,
+   "fraud_amount": 57030.08,
+   "frauds": 333,
+   "frauds_stopped": 205,
+   "fraud_usd": 57030.08,
+   "fraud_usd_stopped": 35938.88,
+   "good_customers_declined": 371,
+   "good_reviewed": 429
+  },
+  "feat-uid-amt": {
+   "mean_cost": 2679.0701200000003,
+   "total_cost": 26790.701200000003,
+   "cost_ci95": [
+    1973.10815675,
+    3476.82975375
+   ],
+   "auc": 0.8436993940252449,
+   "auc_ci95": [
+    0.8117876946065904,
+    0.8718505356727815
+   ],
+   "recall": 0.6156156156156156,
+   "precision": 0.18468468468468469,
+   "alert_rate": 0.111,
+   "reviews": 468,
+   "declines": 642,
+   "reviews_wanted": 506,
+   "fraud_amount_stopped": 39221.43,
+   "windows": [
+    1834.0,
+    1560.067,
+    2936.0377,
+    2228.8064,
+    1701.4874,
+    1968.9181,
+    4916.174300000001,
+    1450.4093,
+    3479.4064,
+    4715.3946
+   ],
+   "latency_ms": null,
+   "prompt_tokens_mean": null,
+   "thresholds": null,
+   "fraud_let_through": 17808.65,
+   "good_declined": 4301.94,
+   "review_fees": 4680.0,
+   "reviewed_amount_median": 527.0,
+   "reviews_finding_fraud": 40,
+   "fraud_amount": 57030.08,
+   "frauds": 333,
+   "frauds_stopped": 205,
+   "fraud_usd": 57030.08,
+   "fraud_usd_stopped": 39221.43,
+   "good_customers_declined": 477,
+   "good_reviewed": 428
+  },
+  "feat-uid-lines": {
+   "mean_cost": 3340.22336,
+   "total_cost": 33402.2336,
+   "cost_ci95": [
+    2556.9156897499997,
+    4186.19788
+   ],
+   "auc": 0.8436993940252449,
+   "auc_ci95": [
+    0.8117876946065904,
+    0.8718505356727815
+   ],
+   "recall": 0.6156156156156156,
+   "precision": 0.2047952047952048,
+   "alert_rate": 0.1001,
+   "reviews": 457,
+   "declines": 544,
+   "reviews_wanted": 494,
+   "fraud_amount_stopped": 35714.06,
+   "windows": [
+    2629.4721,
+    2832.7278,
+    4576.733499999999,
+    2415.7649,
+    2072.0586000000003,
+    2765.1196999999997,
+    5999.1429,
+    1479.7779999999998,
+    4282.382,
+    4349.0541
+   ],
+   "latency_ms": null,
+   "prompt_tokens_mean": null,
+   "thresholds": {
+    "review": 0.06249831315659762,
+    "decline": 0.11944669951230484
+   },
+   "fraud_let_through": 21316.02,
+   "good_declined": 7516.11,
+   "review_fees": 4570.0,
+   "reviewed_amount_median": 100.0,
+   "reviews_finding_fraud": 35,
+   "fraud_amount": 57030.08,
+   "frauds": 333,
+   "frauds_stopped": 205,
+   "fraud_usd": 57030.08,
+   "fraud_usd_stopped": 35714.06,
+   "good_customers_declined": 374,
+   "good_reviewed": 422
+  },
+  "feat-nocdv-amt": {
+   "mean_cost": 3356.74764,
+   "total_cost": 33567.4764,
+   "cost_ci95": [
+    2612.7283765,
+    4285.726387749999
+   ],
+   "auc": 0.77887031543802,
+   "auc_ci95": [
+    0.7429411500817014,
+    0.8115323228139371
+   ],
+   "recall": 0.45045045045045046,
+   "precision": 0.11755485893416928,
+   "alert_rate": 0.1276,
+   "reviews": 428,
+   "declines": 848,
+   "reviews_wanted": 469,
+   "fraud_amount_stopped": 32770.83,
+   "windows": [
+    2831.8284,
+    1941.0099,
+    4242.9111,
+    3077.1346,
+    1908.0397,
+    3272.3959,
+    3566.2167,
+    2360.8262999999997,
+    3412.7379,
+    6954.3759
+   ],
+   "latency_ms": null,
+   "prompt_tokens_mean": null,
+   "thresholds": null,
+   "fraud_let_through": 24259.25,
+   "good_declined": 5028.14,
+   "review_fees": 4280.0,
+   "reviewed_amount_median": 648.475,
+   "reviews_finding_fraud": 28,
+   "fraud_amount": 57030.08,
+   "frauds": 333,
+   "frauds_stopped": 150,
+   "fraud_usd": 57030.08,
+   "fraud_usd_stopped": 32770.83,
+   "good_customers_declined": 726,
+   "good_reviewed": 400
+  },
+  "feat-nocdv-lines": {
+   "mean_cost": 4258.96145,
+   "total_cost": 42589.614499999996,
+   "cost_ci95": [
+    3413.85592375,
+    5162.272019999999
+   ],
+   "auc": 0.77887031543802,
+   "auc_ci95": [
+    0.7429411500817014,
+    0.8115323228139371
+   ],
+   "recall": 0.5135135135135135,
+   "precision": 0.12214285714285714,
+   "alert_rate": 0.14,
+   "reviews": 500,
+   "declines": 900,
+   "reviews_wanted": 999,
+   "fraud_amount_stopped": 29762.81,
+   "windows": [
+    2659.3257,
+    3943.3596999999995,
+    4342.3111,
+    3624.8346,
+    3054.7358999999997,
+    4413.1142,
+    5734.2819,
+    2242.4327000000003,
+    5410.488300000001,
+    7164.7304
+   ],
+   "latency_ms": null,
+   "prompt_tokens_mean": null,
+   "thresholds": {
+    "review": 0.04300415908765638,
+    "decline": 0.07724182889745475
+   },
+   "fraud_let_through": 27267.27,
+   "good_declined": 10322.26,
+   "review_fees": 5000.0,
+   "reviewed_amount_median": 100.0,
+   "reviews_finding_fraud": 36,
+   "fraud_amount": 57030.08,
+   "frauds": 333,
+   "frauds_stopped": 171,
+   "fraud_usd": 57030.08,
+   "fraud_usd_stopped": 29762.81,
+   "good_customers_declined": 765,
+   "good_reviewed": 464
+  },
+  "feat-nocdv-rich-amt": {
+   "mean_cost": 3379.49029,
+   "total_cost": 33794.9029,
+   "cost_ci95": [
+    2532.6006279999997,
+    4356.8696085
+   ],
+   "auc": 0.7991852408941474,
+   "auc_ci95": [
+    0.7648726882743835,
+    0.8335507833507705
+   ],
+   "recall": 0.4804804804804805,
+   "precision": 0.13179571663920922,
+   "alert_rate": 0.1214,
+   "reviews": 398,
+   "declines": 816,
+   "reviews_wanted": 433,
+   "fraud_amount_stopped": 32389.87,
+   "windows": [
+    2766.5695000000005,
+    2032.8196,
+    4097.9463,
+    2411.0636999999997,
+    1858.944,
+    2972.8230000000003,
+    5740.9621,
+    2417.1305,
+    3050.911,
+    6445.733200000001
+   ],
+   "latency_ms": null,
+   "prompt_tokens_mean": null,
+   "thresholds": null,
+   "fraud_let_through": 24640.21,
+   "good_declined": 5174.64,
+   "review_fees": 3980.0,
+   "reviewed_amount_median": 658.0,
+   "reviews_finding_fraud": 28,
+   "fraud_amount": 57030.08,
+   "frauds": 333,
+   "frauds_stopped": 160,
+   "fraud_usd": 57030.08,
+   "fraud_usd_stopped": 32389.87,
+   "good_customers_declined": 684,
+   "good_reviewed": 370
+  },
+  "feat-nocdv-rich-lines": {
+   "mean_cost": 4199.854649999999,
+   "total_cost": 41998.5465,
+   "cost_ci95": [
+    3528.2026575000004,
+    4902.9996285
+   ],
+   "auc": 0.7991852408941474,
+   "auc_ci95": [
+    0.7648726882743835,
+    0.8335507833507705
+   ],
+   "recall": 0.5555555555555556,
+   "precision": 0.13009845288326302,
+   "alert_rate": 0.1422,
+   "reviews": 457,
+   "declines": 965,
+   "reviews_wanted": 499,
+   "fraud_amount_stopped": 31549.43,
+   "windows": [
+    3246.0005,
+    4292.4096,
+    4528.8463,
+    2810.3637,
+    4015.444,
+    4143.2734,
+    5874.932699999999,
+    2421.7185,
+    4543.617,
+    6121.9408
+   ],
+   "latency_ms": null,
+   "prompt_tokens_mean": null,
+   "thresholds": {
+    "review": 0.05331596458512617,
+    "decline": 0.07507293536390332
+   },
+   "fraud_let_through": 25480.65,
+   "good_declined": 11947.83,
+   "review_fees": 4570.0,
+   "reviewed_amount_median": 97.0,
+   "reviews_finding_fraud": 35,
+   "fraud_amount": 57030.08,
+   "frauds": 333,
+   "frauds_stopped": 185,
+   "fraud_usd": 57030.08,
+   "fraud_usd_stopped": 31549.43,
+   "good_customers_declined": 815,
+   "good_reviewed": 422
+  },
+  "ieee-approve-all": {
+   "mean_cost": 5703.0106000000005,
+   "total_cost": 57030.10600000001,
+   "cost_ci95": [
+    4190.1397,
+    7347.999997500001
+   ],
+   "auc": null,
+   "auc_ci95": null,
+   "recall": 0.0,
+   "precision": 0.0,
+   "alert_rate": 0.0,
+   "reviews": 0,
+   "declines": 0,
+   "reviews_wanted": 0,
+   "fraud_amount_stopped": 0.0,
+   "windows": [
+    3984.407,
+    4147.914000000001,
+    4006.0869999999995,
+    2961.429,
+    2786.0519999999997,
+    4760.888,
+    10244.704000000002,
+    6759.066000000001,
+    8222.762,
+    9156.796999999999
+   ],
+   "latency_ms": null,
+   "prompt_tokens_mean": null,
+   "thresholds": {
+    "review": null,
+    "decline": null
+   },
+   "fraud_let_through": 57030.08,
+   "good_declined": 0.0,
+   "review_fees": 0.0,
+   "reviewed_amount_median": null,
+   "reviews_finding_fraud": 0,
+   "fraud_amount": 57030.08,
+   "frauds": 333,
+   "frauds_stopped": 0,
+   "fraud_usd": 57030.08,
+   "fraud_usd_stopped": 0.0,
+   "good_customers_declined": 0,
+   "good_reviewed": 0
+  }
+ },
+ "verdict": {
+  "primary": {
+   "a": "feat-rich-amt",
+   "b": "feat-all-amt",
+   "better": "feat-rich-amt",
+   "other": "feat-all-amt",
+   "cheaper": 5,
+   "dearer": 5,
+   "ties": 0,
+   "sign_p": 1.0,
+   "mean_diff": -50.44878999999992,
+   "mean_diff_ci95": [
+    -175.63486474999985,
+    59.721180000000004
+   ],
+   "distinguishable": false
+  },
+  "second": {
+   "a": "feat-uid-amt",
+   "b": "feat-all-amt",
+   "better": "feat-uid-amt",
+   "other": "feat-all-amt",
+   "cheaper": 6,
+   "dearer": 4,
+   "ties": 0,
+   "sign_p": 0.75390625,
+   "mean_diff": -96.83296999999997,
+   "mean_diff_ci95": [
+    -337.9531134999999,
+    164.07747999999992
+   ],
+   "distinguishable": false
+  },
+  "third": {
+   "a": "feat-nocdv-rich-amt",
+   "b": "feat-nocdv-amt",
+   "better": "feat-nocdv-amt",
+   "other": "feat-nocdv-rich-amt",
+   "cheaper": 3,
+   "dearer": 7,
+   "ties": 0,
+   "sign_p": 0.34375,
+   "mean_diff": -22.742650000000094,
+   "mean_diff_ci95": [
+    -552.8858400000001,
+    332.63754449999976
+   ],
+   "distinguishable": false
+  },
+  "fourth": {
+   "a": "feat-nocdv-rich-amt",
+   "b": "feat-all-amt",
+   "better": "feat-all-amt",
+   "other": "feat-nocdv-rich-amt",
+   "cheaper": 8,
+   "dearer": 2,
+   "ties": 0,
+   "sign_p": 0.109375,
+   "mean_diff": -603.5872000000002,
+   "mean_diff_ci95": [
+    -980.7018770000003,
+    -256.91643799999997
+   ],
+   "distinguishable": true
+  },
+  "reported": [
+   {
+    "a": "feat-all-amt",
+    "b": "feat-all-lines",
+    "better": "feat-all-amt",
+    "other": "feat-all-lines",
+    "cheaper": 9,
+    "dearer": 1,
+    "ties": 0,
+    "sign_p": 0.021484375,
+    "mean_diff": -539.56744,
+    "mean_diff_ci95": [
+     -815.8962230000001,
+     -254.38999150000015
+    ],
+    "distinguishable": true
+   },
+   {
+    "a": "feat-nocdv-rich-amt",
+    "b": "ieee-approve-all",
+    "better": "feat-nocdv-rich-amt",
+    "other": "ieee-approve-all",
+    "cheaper": 9,
+    "dearer": 1,
+    "ties": 0,
+    "sign_p": 0.021484375,
+    "mean_diff": -2323.52031,
+    "mean_diff_ci95": [
+     -3401.1030305000004,
+     -1285.5141454999998
+    ],
+    "distinguishable": true
+   }
+  ]
+ },
+ "heldout": {
+  "feat-all": {
+   "rule_mean": 2125.0193886363636,
+   "lines_mean": 3085.4607147727274,
+   "auc": 0.888189740235034,
+   "diff": 0.0,
+   "diff_ci": [
+    0.0,
+    0.0
+   ],
+   "good_customers_declined": 4003,
+   "frauds_stopped": 2347,
+   "sum_p": 3672.051904177416,
+   "frauds": 3409
+  },
+  "feat-rich": {
+   "rule_mean": 2070.5888681818183,
+   "lines_mean": 3062.954915909091,
+   "auc": 0.8893368053779414,
+   "diff": -54.43052045454549,
+   "diff_ci": [
+    -116.02314196022726,
+    0.4890496590908649
+   ],
+   "good_customers_declined": 3919,
+   "frauds_stopped": 2353,
+   "sum_p": 3650.2976158291667,
+   "frauds": 3409
+  },
+  "feat-uid": {
+   "rule_mean": 2044.1247659090911,
+   "lines_mean": 3120.4366045454544,
+   "auc": 0.8903119598630261,
+   "diff": -80.89462272727269,
+   "diff_ci": [
+    -175.69379028409088,
+    7.644496505681871
+   ],
+   "good_customers_declined": 3655,
+   "frauds_stopped": 2381,
+   "sum_p": 3645.979108150408,
+   "frauds": 3409
+  },
+  "feat-nocdv": {
+   "rule_mean": 2751.502477272727,
+   "lines_mean": 4158.1096636363645,
+   "auc": 0.8288673736670192,
+   "diff": 626.4830886363635,
+   "diff_ci": [
+    475.0421873011364,
+    780.1957513352271
+   ],
+   "good_customers_declined": 7315,
+   "frauds_stopped": 2019,
+   "sum_p": 3644.3080785610564,
+   "frauds": 3409
+  },
+  "feat-nocdv-rich": {
+   "rule_mean": 2554.626452272727,
+   "lines_mean": 3856.8817625000006,
+   "auc": 0.8460260696579253,
+   "diff": 429.60706363636365,
+   "diff_ci": [
+    290.8458029545455,
+    570.1352404261362
+   ],
+   "good_customers_declined": 6320,
+   "frauds_stopped": 2065,
+   "sum_p": 3704.9093701621414,
+   "frauds": 3409
+  }
+ }
+}
