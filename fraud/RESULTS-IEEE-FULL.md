@@ -87,7 +87,7 @@ Cost sensitivity, no bar and no CI; thresholds re-picked on dev from the same sc
 ## Negative results
 
 - **The primary question has no distinguishable answer.** About five hours of training on four times the rows did not produce a saving this test can separate from zero. (Observed)
-- **No language model has beaten logistic regression on all the columns on mean cost**, at any review fee in either phase. (Observed)
+- **No language model has beaten logistic regression on all the columns on mean cost**, at any review fee in either phase. (Observed) Phase 14's new windows later gave the adapter a lower mean by 18 USD on thresholds, not distinguishable: `fraud/RESULTS-IEEE-AMOUNT.md`.
 - **The new adapter stops fewer frauds than Phase 11's** (recall 0.562 vs 0.594) and than both logregs. A reader who values stopped fraud over customer friction would not call it better. (Observed)
 - **At reviews of 1 and 5 USD the new adapter is not the cheaper fine-tune.** (Observed, no CI)
 - **The first training run died.** It reached batch 1,551 of 5,994 before standby and a Windows Update restart, so it was restarted from zero as pre-registered. Its checkpoint is not scored. (Observed)
