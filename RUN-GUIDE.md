@@ -603,7 +603,7 @@ PaySim's older results at a 10 USD review (Phase 13): `--gate` only checks that 
 .venv/Scripts/python -m fraud.reprice_paysim
 ```
 
-Decisions that weigh the amount (Phase 14): no training. `--windows` prints the 20 new dev and 20 new test windows; `--adapter <dir>`, Phase 12's folder, scores them with logistic regression and the adapter (about 75 min), derives the other setups
+Decisions that weigh the amount (Phase 14): no training. `--windows` prints the 20 new dev and 20 new test windows; `--adapter <dir>`, Phase 12's folder, scores them with logistic regression and the adapter (about 80 min), derives the other setups
 from those scores and writes `fraud/results/eval_ieee_amount/<eval id>.json|.md`. Add `--resume <eval id>` to finish one; `--report <eval id>` rebuilds the results. Keep the screen on for the run.
 
 ```bash
