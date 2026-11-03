@@ -101,7 +101,7 @@ def logit(q: np.ndarray) -> np.ndarray:
 def decide(p: np.ndarray, amount: np.ndarray, lam: float, c: costs.Costs) -> tuple[list[str], list[str]]:
     """(wanted, fallback) per row: the lowest expected cost, a review priced at its fee plus lam."""
     approve = p * amount
-    decline = (1 - p) * np.maximum(c.friction_min, c.friction_rate * amount)
+    decline = (1 - p) * c.friction(amount)
     fallback = np.where(approve <= decline, "approve", "decline")
     wanted = np.where(c.review_fee + lam < np.minimum(approve, decline), "review", fallback)
     return wanted.tolist(), fallback.tolist()
