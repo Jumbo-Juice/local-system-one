@@ -186,7 +186,7 @@ check's failure), whatever they show.
 **Accept:** reported against the best logreg so far, whatever it shows.
 
 ## Phase 20: stronger tabular model (owner, 2026-11-03)
-- [ ] A numpy-only gradient-boosted model (LightGBM or XGBoost only if the owner approves); 10 new windows; `fraud/RESULTS-TABULAR.md`
+- [x] A numpy-only gradient-boosted model (LightGBM or XGBoost only if the owner approves); 10 new windows; `fraud/RESULTS-TABULAR.md`
 
 **Accept:** reported against the best logreg so far, whatever it shows.
 
