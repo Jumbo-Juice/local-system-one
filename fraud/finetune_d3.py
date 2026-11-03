@@ -73,6 +73,8 @@ def train(model, enc, out_dir: Path, steps: int, deadline: float = math.inf, clo
     import torch
     from peft import LoraConfig, get_peft_model
 
+    from . import device
+
     torch.manual_seed(SEED)
     lm, dev = model.lm, str(model.device)
     lm.gradient_checkpointing_enable(gradient_checkpointing_kwargs={"use_reentrant": False})
@@ -80,9 +82,8 @@ def train(model, enc, out_dir: Path, steps: int, deadline: float = math.inf, clo
     params = [p for p in peft_model.parameters() if p.requires_grad]
     opt = torch.optim.AdamW(params, lr=LR)
     sched = torch.optim.lr_scheduler.LambdaLR(opt, lambda k: lr_factor(k, steps))
-    sync = torch.xpu.synchronize if dev.startswith("xpu") else (lambda: None)
-    if dev.startswith("xpu"):
-        torch.xpu.reset_peak_memory_stats()
+    sync = device.synchronizer(dev)
+    device.reset_peak_memory(dev)
 
     lm.train()
     losses, lrs, step_s, stopped, t_start = [], [], [], False, time.perf_counter()
@@ -127,7 +128,7 @@ def train(model, enc, out_dir: Path, steps: int, deadline: float = math.inf, clo
         "loss_last100": float(np.mean(losses[-100:])) if losses else None,
         "step_s_mean": float(np.mean(timed)) if timed else None,
         "step_s_p50": float(np.median(timed)) if timed else None, "train_s": time.perf_counter() - t_start,
-        "peak_mem_gib": torch.xpu.max_memory_allocated() / 2**30 if dev.startswith("xpu") else None,
+        "peak_mem_gib": device.peak_memory_gib(dev),
         "device": dev, "torch": torch.__version__, "peft": peft.__version__, "transformers": transformers.__version__,
         "adapter_sha256": hashlib.sha256(weights.read_bytes()).hexdigest(),
     }

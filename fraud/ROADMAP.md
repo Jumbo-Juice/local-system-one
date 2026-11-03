@@ -158,3 +158,54 @@ check's failure), whatever they show.
 - [x] `python -m fraud.eval_ieee_amount --adapter <dir>`: amount-aware rule, more dev windows and a blend, from logreg's and Phase 12's frozen scores; results in `fraud/RESULTS-IEEE-AMOUNT.md`
 
 **Accept:** results committed with the answers reported, whatever they show.
+
+## Phase 15: moved to the NUC, gate and FINAL windows (owner, 2026-11-03)
+- [x] Bundle checked, repo cloned, hardware recorded, venv built, `fraud/device.py`
+- [x] `fraud/final_test.py`: 20 FINAL windows and 38 later-phase chains, committed first; gate 1-5 passed (`fraud/results/gate_nuc/gate.json`)
+
+**Accept:** every gate passes here, or work stops and the owner is told.
+
+## Phase 16: cost-model stress (owner, 2026-11-03)
+- [ ] `eval_cost_stress.py` with the pre-registration in its docstring, from recorded scores; `fraud/RESULTS-COST-STRESS.md`
+
+**Accept:** where the rule stops winning is stated, for friction rate, friction minimum and a flat price per good customer declined.
+
+## Phase 17: C, D, V audit (owner, 2026-11-03)
+- [ ] Logreg without those columns and by column group, dev for choices, 8 new windows for the result; `fraud/RESULTS-COLUMN-AUDIT.md`
+
+**Accept:** a bound on what the "known at decision time" doubt could cost, in dollars and customers.
+
+## Phase 18: better use of the rule (owner, 2026-11-03)
+- [ ] Calibration, budget-aware lambda, a decline line that counts customers; 10 new windows; `fraud/RESULTS-RULE.md`
+
+**Accept:** each change reported against Phase 14's rule, whatever it shows.
+
+## Phase 19: better logreg features (owner, 2026-11-03)
+- [ ] Per-card and per-address history, velocity, time since last payment, amount against the card's past, interactions, more categories, no look-ahead (tested); 10 new windows; `fraud/RESULTS-FEATURES.md`
+
+**Accept:** reported against the best logreg so far, whatever it shows.
+
+## Phase 20: stronger tabular model (owner, 2026-11-03)
+- [ ] A numpy-only gradient-boosted model (LightGBM or XGBoost only if the owner approves); 10 new windows; `fraud/RESULTS-TABULAR.md`
+
+**Accept:** reported against the best logreg so far, whatever it shows.
+
+## Phase 21: language model on this hardware (owner, 2026-11-03)
+- [ ] Options from the owner's list, each with p90 <= 250 ms, judged on dev; run time estimated first; `fraud/RESULTS-LM-NUC.md`
+
+**Accept:** reported on dev against the best tabular setup, whatever it shows; or skipped under the owner's stop rule with the reason.
+
+## Phase 22: combinations (owner, 2026-11-03)
+- [ ] Whatever survived, on dev only; `fraud/RESULTS-COMBOS.md`
+
+**Accept:** at most 3 candidates chosen for the final test, with the reason.
+
+## Phase 23: the final test (owner, 2026-11-03)
+- [ ] Pre-register at most 3 candidates and logreg with Phase 14's rule as baseline, run the FINAL windows once; `fraud/RESULTS-FINAL.md`
+
+**Accept:** results committed whatever they show, in dollars and customers.
+
+## Phase 24: console (owner, 2026-11-03)
+- [ ] IEEE and 10 USD results on the Eval page, the amount-aware rule on the run page; checks of `fraud/CLAUDE.md` and `CLAUDE.md`
+
+**Accept:** both show correctly at desktop and 375 px with no console errors.

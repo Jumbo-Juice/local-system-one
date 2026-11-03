@@ -1,0 +1,59 @@
+{
+ "logreg": {
+  "fit_s": 24.8,
+  "features": 583,
+  "dev_max_gap": 1.3655743202889425e-14,
+  "dev_tolerance": 1e-06,
+  "pass": true,
+  "phase14_test_max_gap": 2.4091839634365897e-14,
+  "dev_gaps": {
+   "dev0": 4.440892098500626e-15,
+   "dev1": 7.049916206369744e-15,
+   "dev2": 6.994405055138486e-15,
+   "dev3": 6.328271240363392e-15,
+   "dev4": 1.3655743202889425e-14,
+   "dev5": 6.689093723366568e-15,
+   "dev6": 1.2490009027033011e-14,
+   "dev7": 8.576472865229334e-15,
+   "dev8": 6.2727600891321345e-15,
+   "dev9": 5.995204332975845e-15
+  }
+ },
+ "sha": {
+  "adapter_file": "10970d702ee9990fd9e771f36bd1f593399bf60e987b9ff6bc1e98114f7031cf",
+  "manifest": "10970d702ee9990fd9e771f36bd1f593399bf60e987b9ff6bc1e98114f7031cf",
+  "adapter_pass": true,
+  "starts_as_stated": true,
+  "base_load_s": 8.1,
+  "base_sha_check": "passed",
+  "device": "cuda"
+ },
+ "score": {
+  "window": "dev0",
+  "device": "cuda",
+  "gpu": "NVIDIA GeForce RTX 3060 Ti",
+  "platform": "Windows-11-10.0.26200-SP0",
+  "torch": "2.11.0+cu128",
+  "rev_max_gap": 0.011987835168838501,
+  "rev_mean_gap": 0.001002400729805231,
+  "fwd_max_gap": 0.010679185390472412,
+  "fwd_mean_gap": 0.0009770855084061622,
+  "rev_vs_fresh_rev_max_gap": 0.00883471965789795,
+  "auc_rev_trace": 0.8839057362075264,
+  "auc_rev_here": 0.8840579710144928,
+  "auc_fwd_trace": 0.8846060163195713,
+  "auc_fwd_here": 0.8846669102423578,
+  "thresholds": [
+   0.47158179804682754,
+   0.7642522639036121
+  ],
+  "decisions_differ_rev": 1,
+  "rows": 1000,
+  "latency_here_rev_ms": {
+   "p50": 38.07440004311502,
+   "p90": 52.5615400983952,
+   "p99": 58.067061030305915
+  },
+  "trace_backend_device": "xpu"
+ }
+}
