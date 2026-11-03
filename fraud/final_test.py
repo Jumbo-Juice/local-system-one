@@ -23,7 +23,7 @@ from . import eval_ieee as ev, eval_ieee_amount as am, eval_ieee_full as fu, iee
 
 SEED = 20261105
 FINAL_COUNT = 20
-PHASE_WINDOWS: dict[str, int] = {}  # phase name → windows, in the order they were pre-registered
+PHASE_WINDOWS: dict[str, int] = {"audit": 8}  # phase name → windows, in the order they were pre-registered
 
 
 def used_windows(n: int) -> list[ev.Win]:
