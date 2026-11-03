@@ -176,7 +176,7 @@ check's failure), whatever they show.
 **Accept:** a bound on what the "known at decision time" doubt could cost, in dollars and customers.
 
 ## Phase 18: better use of the rule (owner, 2026-11-03)
-- [ ] Calibration, budget-aware lambda, a decline line that counts customers; 10 new windows; `fraud/RESULTS-RULE.md`
+- [x] Calibration, budget-aware lambda, a decline line that counts customers; 10 new windows; `fraud/RESULTS-RULE.md`
 
 **Accept:** each change reported against Phase 14's rule, whatever it shows.
 

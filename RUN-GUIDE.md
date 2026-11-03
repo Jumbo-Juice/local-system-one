@@ -643,6 +643,14 @@ Column audit (Phase 17): logreg by column group, 8 new windows, about 5 min. `--
 .venv/Scripts/python -m fraud.dev.verify_tabular fraud/results/eval_column_audit/<eval id>.json
 ```
 
+Better use of the rule (Phase 18): calibration, a paced review price and a customer line on 10 new windows, under a minute. `fraud/dev/explore_rule.py` and `explore_rule2.py` are the dev-only looks. Write-up: `fraud/RESULTS-RULE.md`.
+
+```bash
+.venv/Scripts/python -m fraud.eval_rule
+.venv/Scripts/python -m fraud.eval_rule --report <eval id>
+.venv/Scripts/python -m fraud.dev.verify_tabular fraud/results/eval_rule/<eval id>.json
+```
+
 ## Where things land
 
 | what | where |
