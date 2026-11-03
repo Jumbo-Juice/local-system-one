@@ -230,17 +230,21 @@ def auc(score: np.ndarray, y: np.ndarray) -> float:
     return float((rank[pos].sum() - n1 * (n1 + 1) / 2) / (n1 * n0))
 
 
-def trace(t: Ieee, w: Win, setup: str, outs: list[dict], thresholds, backend: dict, eval_id: str) -> list[dict]:
-    """A fraud-console trace of one window. Before thresholds exist (dev) a model's action is its argmax."""
+def trace(t: Ieee, w: Win, setup: str, outs: list[dict], thresholds, backend: dict, eval_id: str, decided=None) -> list[dict]:
+    """A fraud-console trace of one window. Before thresholds exist (dev) a model's action is its argmax.
+    ``decided`` is (wanted, fallback) per row from a rule that is not two thresholds (fraud/eval_ieee_amount.py)."""
     wanted = [(act(o["q"], *thresholds) if thresholds else o.get("argmax", "approve")) for o in outs]
+    fallback = ["approve"] * len(outs)
+    if decided:
+        wanted, fallback = decided
     fraud, amount = t.is_fraud[w.rows].astype(bool), t.amount[w.rows]
-    scored = costs.score(COSTS, wanted, ["approve"] * len(outs), fraud, amount)
+    scored = costs.score(COSTS, wanted, fallback, fraud, amount)
     ticks = []
     for k, (i, o) in enumerate(zip(w.rows, outs)):
         tx = {"type": t.text("ProductCD", int(i)), "amount": round(float(t.amount[i]), 2), "to": "merchant",
               "hour": ieee_brain.hour(t, int(i))}
         rec = {"type": "tx", "i": k, "row": int(i), "step": int((t.dt[i] - t.dt[0]) // 3600), "tx": tx, "signals": {},
-               "by": o["by"], "wanted": wanted[k], "action": scored.final[k], "fallback": "approve", "q": o["q"],
+               "by": o["by"], "wanted": wanted[k], "action": scored.final[k], "fallback": fallback[k], "q": o["q"],
                "ms": round(o["ms"], 3), "truth": int(fraud[k]), "cost": round(float(scored.cost[k]), 2),
                "budget_left": scored.budget_left[k], "weight": 1.0}
         for key in ("scores", "orders", "outside_mass", "prompt_tokens"):

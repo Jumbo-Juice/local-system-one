@@ -60,6 +60,7 @@ engine, the `.venv` and the pytest run with the game demos. Keep the two apart.
 .venv/Scripts/python -m fraud.finetune_ieee --train --full    # Phase 12: the same on every fit fraud
 .venv/Scripts/python -m fraud.eval_ieee_full --adapter <dir>  # Phase 12: its pre-registered eval on new test windows
 .venv/Scripts/python -m fraud.reprice_paysim                  # Phase 13: older PaySim results at a 10 USD review, no model
+.venv/Scripts/python -m fraud.eval_ieee_amount --adapter <dir> # Phase 14: decisions that weigh the amount, on new test windows
 .venv/Scripts/python -m fraud.viewer                          # the analyst console
 ```
 Every command and flag is in the repo's `RUN-GUIDE.md` → Fraud app. Keep it current.
