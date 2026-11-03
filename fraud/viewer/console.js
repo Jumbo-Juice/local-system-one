@@ -14,6 +14,10 @@ const SETUP_NAME = {
   "hybrid-ft": "hybrid (filter + fine-tuned 1.5B)", "hybrid-d3ft": "hybrid (filter + fine-tuned d3-nano)",
   "hybrid-d1ft": "hybrid (filter + fine-tuned d1-Omni-2B)",
   logreg: "filter + logistic regression", random: "filter + random", "approve-all": "approve-all",
+  "ieee-approve-all": "approve-all", "ieee-logreg-all": "logistic regression, all columns, two lines", "ieee-logreg-all-amt": "logistic regression, all columns, amount-aware rule",
+  "ieee-logreg-same": "logistic regression, the prompt's fields", "ieee-ft-ieee-full": "d1-Omni-2B fine-tuned on every fit fraud, two lines", "ieee-ft-full-amt": "d1-Omni-2B fine-tuned on every fit fraud, amount-aware rule",
+  "ieee-blend-amt": "logistic regression and d1-Omni-2B blended, amount-aware rule", "ieee-ft-ieee-d1omni": "d1-Omni-2B fine-tuned on IEEE-CIS", "ieee-ft-d1omni": "d1-Omni-2B fine-tuned on PaySim", "ieee-frozen-qwen1.5b": "frozen Qwen2.5-1.5B",
+  "rule-base": "logistic regression, Phase 14's rule", "rule-customers": "logistic regression, the rule with a customer line", "rule-paced": "logistic regression, the rule with a paced review price", "rule-combined": "logistic regression, the rule with three changes", "rule-longrun": "logistic regression, the rule with a long-run prior", "rule-lines": "logistic regression, two lines",
 };
 const SIGNALS = [
   ["dest_in_before", "Receiver: received money before", (v) => (v === 0 ? "never (new account)" : times(v))],
@@ -379,6 +383,26 @@ function noteCard(title, notes) {
   return el("section", { class: "panel note-card" }, el("h3", {}, title), el("ul", {}, ...notes.map((n) => el("li", {}, n))));
 }
 
+function ruleCard(h) {  // how this run turned a score into a decision: Phase 14's amount-aware rule, or two lines on the score
+  const pol = h.policy;
+  if (pol && pol.kind === "amount-aware") {
+    return factCard("Decision rule",
+      fact("Rule", "Amount-aware", "Lowest expected cost of approve, decline and review, for this row's amount"),
+      fact("Review price", `${money(h.costs.review_fee)} + ${pol.lambda}`, pol.gamma ? `The fee plus lambda, which rises as reviews run short (gamma ${pol.gamma})` : "The fee plus lambda, the price of using up a review, picked on dev"),
+      pol.flat ? fact("Customer line", `${money(pol.flat)} per decline`, "Added to the cost of declining when deciding, never to what the run is charged") : null,
+      pol.shift ? fact("Long-run prior", `${pct(pol.shift[0], 2)} → ${pct(pol.shift[1], 2)}`, "Moves the fit's level and keeps the ranking") : null,
+      fact("Weighs the score by", (pol.fit_features || ["logit"]).length > 1 ? "A dev fit of score and amount" : "A dev fit of the score", "Used only to weigh costs. Scores are uncalibrated, not probabilities"));
+  }
+  const th = h.thresholds;
+  if (th && (th.review !== null || th.decline !== null)) {
+    return factCard("Decision rule",
+      fact("Rule", "Two lines on the score", "The same for every amount"),
+      fact("Review from", th.review === null ? "never" : fix(th.review, 4), "Scores are uncalibrated"),
+      fact("Decline from", th.decline === null ? "never" : fix(th.decline, 4), "Past the budget, a review becomes an approve"));
+  }
+  return null;
+}
+
 function about(h, ticks, end, total) {
   const s = end ? end.summary : null;
   const b = h.backend || {};
@@ -397,7 +421,7 @@ function about(h, ticks, end, total) {
       natural ? fact("Window", h.window.id, `${h.window.split === "test" ? "Held-out test rows" : "Dev rows, after the fit rows"}, seed ${h.window.seed}`)
         : fact("Window", h.window.id, `${h.window.split === "test" ? "Held-out test steps" : "Training-period dev window"}, seed ${h.window.seed}`),
       fact(natural ? "Rows" : "Steps (hours)", `${h.window.steps[0]}–${h.window.steps[1]}`),
-      fact("Transactions", h.window.size, natural ? "Contiguous rows in arrival order" : "Sampled in arrival order from the window's hours"),
+      fact("Transactions", h.window.size, natural ? (h.window.steps[1] - h.window.steps[0] + 1 === h.window.size ? "Contiguous rows in arrival order" : "Rows in arrival order, skipping rows other windows used") : "Sampled in arrival order from the window's hours"),
       natural ? fact("Fraud", s ? s.fraud : "–", "Natural rate, not enriched")
         : fact("Fraud", h.window.fraud, `Enriched; the natural rate in these hours is ${pct(h.window.natural_fraud_rate, 3)}`)),
     factCard("Setup",
@@ -415,6 +439,7 @@ function about(h, ticks, end, total) {
           b.orders === "both" ? "Each decision is read in both option orders and averaged" : "One option order, chosen on dev windows")
         : fact("Order debias", h.order_debias ? "on" : "off", "Each decision is read in both option orders and averaged")) : null,
       natural ? null : fact("Type filter", (h.fraud_free_types || []).join(", "), "Approved without a model: no fraud in training")),
+    ruleCard(h),
     factCard("Costs",
       fact("Wrong decline", `${pct(h.costs.friction_rate)} of amount`, `At least ${h.costs.friction_min}`),
       fact("Review", money(h.costs.review_fee), "An analyst finds the truth"),
@@ -535,18 +560,24 @@ async function startPage() {
     el("p", { class: "intro" }, "A local model judges each TRANSFER and CASH_OUT (Qwen2.5-1.5B; later evals add fine-tuned Qwen2.5-1.5B, " +
       "d3-nano and d1-Omni-2B), and a rule filter approves the transaction types " +
       "that had no fraud in training. The console replays recorded runs at their recorded speed and shows the pre-registered eval " +
-      "against rules-only, logistic regression, random and approve-all. IEEE-CIS runs (real card payments, no filter) replay here too; " +
-      "their results are in fraud/RESULTS-IEEE.md and fraud/RESULTS-IEEE-FULL.md, not on the Eval page."),
+      "against rules-only, logistic regression, random and approve-all. IEEE-CIS runs (real card payments, no filter, a review at 10 USD) replay here too, and their evals are listed below."),
     el("div", { class: "cards" },
       el("section", { class: "panel bar-card" }, el("h3", {}, "Latest eval"),
         latest ? el("div", {},
           el("div", {}, `Eval ${latest.id}${latest.complete ? "" : " (incomplete)"}`),
+          latest.script ? el("div", { class: "hint" }, latest.script) : null,
           ...Object.entries(latest.bars || {}).map(([k, b]) => el("div", { style: "margin-top:6px" },
             chip(b.pass ? "pass" : "fail", b.pass ? "PASS" : "FAIL"), ` ${b.rule}`)),
           el("p", {}, el("a", { href: `#/eval/${latest.id}` }, "Open the eval"))) : el("p", { class: "muted" }, "No eval results yet.")),
       el("section", { class: "panel bar-card" }, el("h3", {}, "Auto-demo"),
         el("p", {}, "Plays the model runs one after another at 1×, pinned runs first."),
         el("button", { class: "primary", onclick: () => { location.hash = "#/demo"; } }, "Start the auto-demo"))),
+    el("section", { class: "panel", style: "margin-top:12px" },
+      el("h2", {}, "Evals"),
+      el("div", { class: "scroll-x" }, el("table", {},
+        el("thead", {}, el("tr", {}, ...["eval", "data and review fee", "script"].map((t) => el("th", {}, t)))),
+        el("tbody", {}, ...evals.map((e) => el("tr", {}, el("td", {}, el("a", { href: `#/eval/${e.id}` }, e.id)),
+          el("td", {}, e.ieee ? "IEEE-CIS, 10 USD" : "PaySim, 50 USD"), el("td", {}, e.script || "fraud/eval.py"))))))),
     el("section", { class: "panel", style: "margin-top:12px" },
       el("h2", {}, "Runs"),
       el("div", { class: "filters" }, setupSel, el("label", { for: "with-eval" }, evalBox, " include eval runs"),
@@ -562,7 +593,9 @@ const EVAL_SERIES = [["hybrid-1.5b", "var(--series-1)"], ["rules", "var(--series
 const BAR_TITLE = { bar1: "Bar 1: cost", bar2: "Bar 2: speed", barA: "Bar A: vs logistic regression", barB: "Bar B: speed",
   barC: "Bar C: vs fine-tuned 1.5B" };
 const WRITE_UP = { "fraud/eval_ft.py": "fraud/RESULTS-FT.md", "fraud/eval_d3ft.py": "fraud/RESULTS-D3FT.md",
-  "fraud/eval_d1ft.py": "fraud/RESULTS-D1FT.md" };
+  "fraud/eval_d1ft.py": "fraud/RESULTS-D1FT.md", "fraud/eval_ieee.py": "fraud/RESULTS-IEEE.md", "fraud/eval_ieee_full.py": "fraud/RESULTS-IEEE-FULL.md",
+  "fraud/eval_ieee_amount.py": "fraud/RESULTS-IEEE-AMOUNT.md", "fraud/eval_column_audit.py": "fraud/RESULTS-COLUMN-AUDIT.md", "fraud/eval_rule.py": "fraud/RESULTS-RULE.md",
+  "fraud/eval_features.py": "fraud/RESULTS-FEATURES.md", "fraud/eval_tabular.py": "fraud/RESULTS-TABULAR.md", "fraud/eval_final.py": "fraud/RESULTS-FINAL.md" };
 
 // fraud/eval_d3ft.py and fraud/eval_d1ft.py store only their own setup's windows (keyed by window) and point at the Phase 5
 // eval for the other setups on the same windows; merge them into the shape of the other evals.
@@ -582,7 +615,7 @@ const SPEED_BARS = new Set(["bar2", "barB"]);
 
 function evalChart(r) {
   const ws = r.test_windows;
-  const series = EVAL_SERIES.filter(([s]) => r.windows[s]);
+  const series = r.chart_series || EVAL_SERIES.filter(([s]) => r.windows[s]);
   const vals = series.flatMap(([s]) => ws.map((w) => r.windows[s][w] && r.windows[s][w].cost)).filter((v) => v > 0);
   const lo = Math.floor(Math.log10(Math.min(...vals))), hi = Math.ceil(Math.log10(Math.max(...vals)));
   const W = 720, H = 260, L = 52, R = 10, T = 10, B = 26;
@@ -597,7 +630,7 @@ function evalChart(r) {
     svg.append(t);
   }
   ws.forEach((w, i) => {
-    if (i % 2 === 0) { const t = svgEl("text", { x: x(i), y: H - 8, "text-anchor": "middle" }); t.textContent = w.replace("test", ""); svg.append(t); }
+    if (i % 2 === 0) { const t = svgEl("text", { x: x(i), y: H - 8, "text-anchor": "middle" }); t.textContent = w.replace(/^\D+/, ""); svg.append(t); }
   });
   const dots = [];
   series.forEach(([s, color], j) => ws.forEach((w, i) => {
@@ -619,7 +652,7 @@ function evalChart(r) {
   svg.addEventListener("mouseleave", hideTip);
   return el("div", {},
     el("div", { class: "legend" }, ...series.map(([s, c]) => el("span", {}, el("i", { style: `background:${c}` }), SETUP_NAME[s] || s))),
-    svg, el("div", { class: "hint" }, "Cost per test window, log scale (window number on the x axis). Random and approve-all are in the table below."));
+    svg, el("div", { class: "hint" }, `Cost per test window, log scale (window number on the x axis). ${r.chart_series ? "The other setups are in the table below." : "Random and approve-all are in the table below."}`));
 }
 
 function devGate(d) {
@@ -662,6 +695,7 @@ async function evalPage(id) {
   const meta = id ? evals.find((e) => e.id === id) : evals[0];
   if (!meta) { app.replaceChildren(el("p", { class: "muted" }, "No eval results in fraud/results/ yet.")); return; }
   const raw = await getJSON(`results/${meta.file.split("/").map(encodeURIComponent).join("/")}`);
+  if (raw.setups) return ieeeEval(raw);
   const { r, traceEval } = await withBaselines(raw);
   const { runs } = await getJSON("api/runs");
   const have = new Set(runs.map((x) => x.file));
@@ -711,6 +745,58 @@ async function evalPage(id) {
           el("td", { class: "r" }, fix(c.mean_top_score, 3)), el("td", { class: "r" }, pct(c.top_right_rate, 1)), el("td", { class: "r" }, fix(c.ece, 3)),
           el("td", { class: "r" }, fix(c.outside_mass_mean, 4))); })))),
       el("p", { class: "hint" }, "“Right” means legit → approve, fraud → review or decline. ECE compares the top score with how often the top option was right.")) : null,
+    el("section", { class: "panel", style: "margin-top:12px" }, el("h2", {}, "Cost per window, every setup"),
+      el("p", { class: "hint" }, "A linked cost opens that window's recorded run (eval traces stay local)."), el("div", { class: "scroll-x" }, perWin)));
+}
+
+function answers(r) {  // the pre-registered questions in order, then what was only reported
+  const rows = [];
+  for (const [k, v] of Object.entries(r.verdict || {})) (Array.isArray(v) ? v : [v]).forEach((p) => rows.push({ ...p, q: k }));
+  return rows;
+}
+
+async function ieeeEval(r) {  // IEEE-CIS evals (eval_ieee*.py and the phases after them): one shape, a 10 USD review
+  const { runs } = await getJSON("api/runs");
+  const have = new Set(runs.map((x) => x.file));
+  document.title = `Eval ${r.eval} · Fraud Console`;
+  const wins = Object.keys(r.windows);
+  const order = Object.entries(r.setups).sort((a, b) => a[1].mean_cost - b[1].mean_cost);
+  const name = (s) => SETUP_NAME[s] || s;
+  const cheapest = order.filter(([s]) => s !== "ieee-approve-all").slice(0, 4).map(([s]) => s);
+  const chart = { test_windows: wins, windows: {}, chart_series: [...cheapest, "ieee-approve-all"].filter((s) => r.setups[s]).map((s, i) => [s, `var(--series-${i + 1})`]) };
+  for (const [s] of chart.chart_series) { chart.windows[s] = {}; wins.forEach((w, i) => { chart.windows[s][w] = { cost: r.setups[s].windows[i] }; }); }
+  const head = (cols) => el("thead", {}, el("tr", {}, ...cols.map((t, i) => el("th", { class: i ? "r" : "" }, t))));
+  const tot = el("table", {},
+    head(["setup", "mean cost", "95% CI", "AUC", "recall", "precision", "reviews", "declines", "good customers declined", "fraud let through"]),
+    el("tbody", {}, ...order.map(([s, v]) => el("tr", {}, el("td", {}, name(s)), el("td", { class: "r" }, money(v.mean_cost)),
+      el("td", { class: "r" }, `${money(v.cost_ci95[0])}–${money(v.cost_ci95[1])}`), el("td", { class: "r" }, v.auc === null ? "–" : fix(v.auc, 3)),
+      el("td", { class: "r" }, fix(v.recall, 3)), el("td", { class: "r" }, fix(v.precision, 3)), el("td", { class: "r" }, v.reviews), el("td", { class: "r" }, v.declines),
+      el("td", { class: "r" }, v.good_customers_declined === undefined ? "–" : v.good_customers_declined), el("td", { class: "r" }, money(v.fraud_let_through))))));
+  const ans = el("table", {},
+    head(["lower cost", "against", "question", "windows cheaper / dearer", "mean difference", "95% CI", "distinguishable"]),
+    el("tbody", {}, ...answers(r).map((p) => el("tr", {}, el("td", {}, name(p.better || p.a)), el("td", { class: "r" }, name(p.other)), el("td", { class: "r" }, p.q.replace(/_/g, " ")),
+      el("td", { class: "r" }, `${p.cheaper} / ${p.dearer}`), el("td", { class: "r" }, money(p.mean_diff)), el("td", { class: "r" }, `${money(p.mean_diff_ci95[0])} to ${money(p.mean_diff_ci95[1])}`),
+      el("td", { class: "r" }, chip(p.distinguishable ? "pass" : "fail", p.distinguishable ? "yes" : "no"))))));
+  const perWin = el("table", {},
+    el("thead", {}, el("tr", {}, el("th", {}, "window"), ...order.map(([s]) => el("th", { class: "r" }, s)))),
+    el("tbody", {}, ...wins.map((w, i) => el("tr", {}, el("td", {}, w), ...order.map(([s, v]) => {
+      const f = `${r.eval}_eval_${s}_${w}.jsonl`;
+      return el("td", { class: "r" }, have.has(f) ? el("a", { href: `#/run/${encodeURIComponent(f)}` }, money(v.windows[i])) : money(v.windows[i]));
+    })))));
+  const sens = r.sensitivity ? Object.entries(r.sensitivity) : [];
+  const set_names = sens.length ? Object.keys(sens[0][1].mean_cost) : [];
+  app.replaceChildren(
+    el("h1", {}, `Eval ${r.eval}`),
+    el("p", { class: "intro" }, `IEEE-CIS: ${money(r.test_rows)} held-out test rows, ${r.test_fraud} frauds, ${wins.length} windows, run once per setup. Pre-registered in the docstring of ${r.script}. ` +
+      `A review costs ${money(r.costs.review_fee)} USD; a wrongly declined payment ${pct(r.costs.friction_rate)} of its amount, at least ${money(r.costs.friction_min)} USD; at most ${pct(r.costs.review_share)} of a window reviewed. ` +
+      `Write-up with labelled claims: ${WRITE_UP[r.script] || "fraud/PROGRESS.md"}. Model scores are uncalibrated, and every number here is for these assumed costs. Don't compare the costs of different evals: they use different windows.`),
+    el("section", { class: "panel", style: "margin-top:12px" }, el("h2", {}, "Answers"), el("p", { class: "hint" }, "Distinguishable means the 95% window-bootstrap interval of the mean paired difference excludes 0. Only the questions named in the pre-registration are questions; “reported” is not corrected for multiple comparisons."),
+      el("div", { class: "scroll-x" }, ans)),
+    el("section", { class: "panel", style: "margin-top:12px" }, el("h2", {}, "Cost per window"), evalChart(chart)),
+    el("section", { class: "panel", style: "margin-top:12px" }, el("h2", {}, "Setups, cheapest first"), el("div", { class: "scroll-x" }, tot)),
+    sens.length ? el("section", { class: "panel", style: "margin-top:12px" }, el("h2", {}, "Other review fees"), el("p", { class: "hint" }, "Lines or lambda re-picked on dev. No bar and no interval."),
+      el("div", { class: "scroll-x" }, el("table", {}, el("thead", {}, el("tr", {}, el("th", {}, "cost set"), ...set_names.map((s) => el("th", { class: "r" }, s)))),
+        el("tbody", {}, ...sens.map(([k, v]) => el("tr", {}, el("td", {}, k), ...set_names.map((s) => el("td", { class: "r" }, money(v.mean_cost[s])))))))) ) : null,
     el("section", { class: "panel", style: "margin-top:12px" }, el("h2", {}, "Cost per window, every setup"),
       el("p", { class: "hint" }, "A linked cost opens that window's recorded run (eval traces stay local)."), el("div", { class: "scroll-x" }, perWin)));
 }

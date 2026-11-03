@@ -53,3 +53,27 @@ def test_page_loads_its_own_files_only():
     assert "shell.js" not in page and "games/" not in page
     js = (server.HERE / "console.js").read_text(encoding="utf-8")
     assert "uncalibrated" in js and "fetch(" in js
+
+
+def test_ieee_evals_are_listed_and_served_and_other_files_in_their_folders_are_not_evals(tmp_path):
+    runs, results = tmp_path / "runs", tmp_path / "results"
+    runs.mkdir(), (results / "eval_rule").mkdir(parents=True), (results / "eval_final").mkdir()
+    (results / "eval_rule" / "20261103-211736.json").write_text(json.dumps({"eval": "20261103-211736", "created": "2026-11-03T21:18:00", "setups": {}, "script": "fraud/eval_rule.py"}), encoding="utf-8")
+    (results / "eval_rule" / "dev_look.json").write_text(json.dumps({"rows": {}}), encoding="utf-8")
+    evals = server.Listing(runs, results).eval_list()["evals"]
+    assert [e["file"] for e in evals] == ["eval_rule/20261103-211736.json"] and evals[0]["ieee"] and evals[0]["script"] == "fraud/eval_rule.py"
+    assert server.resolve("results/eval_rule/20261103-211736.json", runs, results) == results / "eval_rule" / "20261103-211736.json"
+
+
+def test_a_chain_windows_trace_is_read_as_an_eval_run(tmp_path):
+    runs = tmp_path / "runs"
+    runs.mkdir()
+    write(runs / "20261103-211736_eval_rule-base_rule3.jsonl", [dict(HEADER, setup="rule-base", window={"id": "rule3", "split": "test"}), END])
+    d = server.describe(runs / "20261103-211736_eval_rule-base_rule3.jsonl")
+    assert d["eval"] == "20261103-211736" and d["window"] == "rule3" and d["finished"]
+
+
+def test_the_run_page_shows_the_rule_and_says_scores_are_uncalibrated():
+    js = (server.HERE / "console.js").read_text(encoding="utf-8")
+    assert "function ruleCard" in js and "Amount-aware" in js and "Customer line" in js and "Two lines on the score" in js
+    assert "probability" not in js.split("function ruleCard")[1].split("function about")[0].replace("not probabilities", "")

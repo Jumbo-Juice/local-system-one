@@ -65,7 +65,7 @@ def encode(model, exs) -> list[tuple[list[int], int]]:
 
 
 def train(model, enc, out_dir: Path, steps: int, deadline: float = math.inf, clock=time.perf_counter,
-          log=print, lora: dict = LORA, checkpoint_every: int = 0) -> dict:
+          log=print, lora: dict = LORA, checkpoint_every: int = 0, seed: int = SEED) -> dict:
     """LoRA on model.lm for ``steps`` batches of the given order; the LR schedule is sized to
     ``steps``. Before each batch, if clock() >= deadline, training stops; the adapter is saved
     either way. With checkpoint_every, the adapter so far also goes to out_dir/checkpoint, so a
@@ -75,7 +75,7 @@ def train(model, enc, out_dir: Path, steps: int, deadline: float = math.inf, clo
 
     from . import device
 
-    torch.manual_seed(SEED)
+    torch.manual_seed(seed)
     lm, dev = model.lm, str(model.device)
     lm.gradient_checkpointing_enable(gradient_checkpointing_kwargs={"use_reentrant": False})
     peft_model = get_peft_model(lm, LoraConfig(**lora))
@@ -122,7 +122,7 @@ def train(model, enc, out_dir: Path, steps: int, deadline: float = math.inf, clo
     import transformers
     timed = step_s[3:] or step_s
     return {
-        "lora": lora, "lr": LR, "warmup_steps": WARMUP_STEPS, "batch": BATCH, "seed": SEED,
+        "lora": lora, "lr": LR, "warmup_steps": WARMUP_STEPS, "batch": BATCH, "seed": seed,
         "steps": steps, "steps_done": len(losses), "stopped_early": stopped, "examples": len(enc),
         "losses": losses, "lrs": lrs, "loss_first100": float(np.mean(losses[:100])) if losses else None,
         "loss_last100": float(np.mean(losses[-100:])) if losses else None,
