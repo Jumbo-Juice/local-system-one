@@ -1,0 +1,139 @@
+{
+ "dev_fraud_rate": 0.0399,
+ "held_fraud_rate": 0.038738636363636364,
+ "sum_p_held": 3672.0519041774155,
+ "frauds_held": 3409,
+ "phase14_lambda": 10,
+ "rows": {
+  "phase14": {
+   "lam": 10,
+   "gamma": 0.0,
+   "flat": 0.0,
+   "mean": 2125.0193886363636,
+   "good": 4003,
+   "stopped": 2347,
+   "reviews": 2997
+  },
+  "isotonic": {
+   "lam": 5,
+   "gamma": 0.0,
+   "flat": 0.0,
+   "mean": 2104.320576136364,
+   "good": 3181,
+   "stopped": 2327,
+   "reviews": 3768
+  },
+  "logit + log amount fit": {
+   "lam": 10,
+   "gamma": 0.0,
+   "flat": 0.0,
+   "mean": 2092.125681818182,
+   "good": 3904,
+   "stopped": 2356,
+   "reviews": 3232
+  },
+  "prior shift": {
+   "lam": 10,
+   "gamma": 0.0,
+   "flat": 0.0,
+   "mean": 2268.4101181818182,
+   "good": 5218,
+   "stopped": 2352,
+   "reviews": 2979
+  },
+  "paced g=0.5": {
+   "lam": 5,
+   "gamma": 0.5,
+   "flat": 0.0,
+   "mean": 2050.1653295454544,
+   "good": 3696,
+   "stopped": 2386,
+   "reviews": 4047
+  },
+  "paced g=1.0": {
+   "lam": 5,
+   "gamma": 1.0,
+   "flat": 0.0,
+   "mean": 2032.5935375,
+   "good": 3676,
+   "stopped": 2385,
+   "reviews": 4117
+  },
+  "paced g=2.0": {
+   "lam": 2,
+   "gamma": 2.0,
+   "flat": 0.0,
+   "mean": 2057.271422727273,
+   "good": 3644,
+   "stopped": 2392,
+   "reviews": 4326
+  },
+  "paced g=4.0": {
+   "lam": 2,
+   "gamma": 4.0,
+   "flat": 0.0,
+   "mean": 2097.6015863636367,
+   "good": 3662,
+   "stopped": 2383,
+   "reviews": 4317
+  },
+  "flat f=1.0": {
+   "lam": 10,
+   "gamma": 0.0,
+   "flat": 1.0,
+   "mean": 2095.6314477272726,
+   "good": 3095,
+   "stopped": 2286,
+   "reviews": 3064
+  },
+  "flat f=2.0": {
+   "lam": 10,
+   "gamma": 0.0,
+   "flat": 2.0,
+   "mean": 2084.265521590909,
+   "good": 2539,
+   "stopped": 2225,
+   "reviews": 3128
+  },
+  "flat f=5.0": {
+   "lam": 10,
+   "gamma": 0.0,
+   "flat": 5.0,
+   "mean": 2097.3478170454546,
+   "good": 1635,
+   "stopped": 2099,
+   "reviews": 3276
+  },
+  "flat f=10.0": {
+   "lam": 10,
+   "gamma": 0.0,
+   "flat": 10.0,
+   "mean": 2127.645528409091,
+   "good": 933,
+   "stopped": 1973,
+   "reviews": 3472
+  },
+  "flat f=20.0": {
+   "lam": 10,
+   "gamma": 0.0,
+   "flat": 20.0,
+   "mean": 2257.2394090909092,
+   "good": 380,
+   "stopped": 1845,
+   "reviews": 3778
+  },
+  "flat f=40.0": {
+   "lam": 10,
+   "gamma": 0.0,
+   "flat": 40.0,
+   "mean": 2340.9042863636364,
+   "good": 187,
+   "stopped": 1750,
+   "reviews": 3943
+  }
+ },
+ "lines": {
+  "mean": 3085.4607147727274,
+  "good": 2619
+ }
+}

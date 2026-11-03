@@ -19,8 +19,12 @@ ROOT = Path(__file__).resolve().parents[1]
 
 def decide_rule(q, a, pol, c):
     q = np.clip(q, 1e-6, 1 - 1e-6)
-    z = (np.log(q / (1 - q)) - pol["fit_mean"][0]) / pol["fit_sd"][0]
-    p = 1 / (1 + np.exp(-(pol["fit_weights"][0] + pol["fit_weights"][1] * z)))
+    x = [np.log(q / (1 - q))] + ([np.log1p(a)] if "log_amount" in pol.get("fit_features", []) else [])
+    z = sum(w * (v - m) / s for w, v, m, s in zip(pol["fit_weights"][1:], x, pol["fit_mean"], pol["fit_sd"]))
+    p = 1 / (1 + np.exp(-(pol["fit_weights"][0] + z)))
+    if pol.get("shift"):
+        k = p * (pol["shift"][1] / pol["shift"][0])
+        p = k / (k + (1 - p) * ((1 - pol["shift"][1]) / (1 - pol["shift"][0])))
     appr, decl = p * a, (1 - p) * (np.maximum(c["friction_min"], c["friction_rate"] * a) + pol.get("flat", 0.0))
     fb = np.where(appr <= decl, "approve", "decline")
     if pol.get("gamma"):
