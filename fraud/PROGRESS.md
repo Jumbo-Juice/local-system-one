@@ -620,3 +620,9 @@ Eval `20261103-142622`, write-up `fraud/RESULTS-IEEE-FULL.md`. Observed at a 10 
 Primary question, new vs Phase 11's adapter: 13 windows to 7, -227 USD, CI -555 to 90, not distinguishable. Second question, logreg all vs new adapter: 9 windows to 11, -209 USD, CI -607 to 182, not distinguishable. AUC 0.851 vs 0.838 vs logreg all 0.864. Latency bar PASS for both, p90 113 and 117 ms.
 Training ran 5,994 of 5,994 batches in 314.7 min. The display hold worked: no standby or restart from 09:11 to 16:11. The owner asked for a faster finish, so the training and scoring processes ran at Above Normal priority from 14:12 (not pre-registered; Inferred: timing only).
 Inferred: the saving against Phase 11's adapter is almost all fewer wrongly declined customers, and it disappears at reviews of 1 and 5 USD. Correction to Phase 11: 9 of its adapter's test windows ran in standby at p90 95 ms against 115 ms awake, so its 109 ms reads low. The pre-run statement held.
+
+## 2026-11-03: Phase 13 pre-registered; PaySim's older results at a 10 USD review
+
+Owner: re-price the older PaySim results at 10 USD. `fraud/reprice_paysim.py` holds the rule, committed before anything was priced at 10. Only the review fee changes. The committed results stay at `costs.PHASES_1_10`; new files go beside them. Two views: same decisions, and thresholds re-picked on dev from the recorded scores. No model runs and no trace changes.
+Gate, Observed before pricing: at 50 USD the code reproduces all 260 committed test windows to 0.01 USD, every recorded action, and the committed thresholds and best dev costs. One first failure was a reading error in the gate: `eval_lfm` keeps the frozen model's dev cost as a mean per window, not a total.
+Stated before running (Inferred): hybrid-ft, d3ft, d1ft and rules pay almost only review fees, so they fall to about a fifth; logreg and hybrid-1.5b barely move; bars and order stay the same.
