@@ -166,12 +166,12 @@ check's failure), whatever they show.
 **Accept:** every gate passes here, or work stops and the owner is told.
 
 ## Phase 16: cost-model stress (owner, 2026-11-03)
-- [ ] `eval_cost_stress.py` with the pre-registration in its docstring, from recorded scores; `fraud/RESULTS-COST-STRESS.md`
+- [x] `eval_cost_stress.py` with the pre-registration in its docstring, from recorded scores; `fraud/RESULTS-COST-STRESS.md`
 
 **Accept:** where the rule stops winning is stated, for friction rate, friction minimum and a flat price per good customer declined.
 
 ## Phase 17: C, D, V audit (owner, 2026-11-03)
-- [ ] Logreg without those columns and by column group, dev for choices, 8 new windows for the result; `fraud/RESULTS-COLUMN-AUDIT.md`
+- [x] Logreg without those columns and by column group, dev for choices, 8 new windows for the result; `fraud/RESULTS-COLUMN-AUDIT.md`
 
 **Accept:** a bound on what the "known at decision time" doubt could cost, in dollars and customers.
 

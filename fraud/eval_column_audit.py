@@ -188,6 +188,13 @@ def leak(log=print) -> dict:
         x = np.c_[np.ones(ok.sum()), pe[ok], pl[ok], pt[ok]]
         b = np.linalg.lstsq(x, y, rcond=None)[0]
         out[name] = {"earlier": float(b[1]), "later": float(b[2]), "time": float(b[3]), "rows": int(ok.sum())}
+    # Controls, so the look can be read: counts over a coarser key that are past-only and future-only by construction, and the same with the noise of a shuffled half of rows.
+    coarse_past, coarse_future = card_counts(np.nan_to_num(t.col("card1")[rows], nan=-1.0)[:, None])
+    controls = {}
+    for label, v in (("past-only count, card1", coarse_past), ("future-only count, card1", coarse_future)):
+        x = np.c_[np.ones(len(rows)), pe, pl, pt]
+        b = np.linalg.lstsq(x, _rank(v + rows * 1e-9), rcond=None)[0]
+        controls[label] = {"earlier": float(b[1]), "later": float(b[2]), "time": float(b[3])}
     groups = {"C": [k for k in out if re.match(r"^C\d+$", k)], "D": [k for k in out if re.match(r"^D\d+$", k)], "V": [k for k in out if re.match(r"^V\d+$", k)], "other": ["card3", "card5", "dist1", "dist2"]}
     summary = {}
     for g, names in groups.items():
@@ -207,7 +214,7 @@ def leak(log=print) -> dict:
     gap = days[cur] - days[prev]
     d_ok = ~np.isnan(d1[prev]) & ~np.isnan(d1[cur]) & (gap > 1)
     delta = (d1[cur] - d1[prev])[d_ok] - gap[d_ok]
-    res = {"rows": int(len(rows)), "card_key_groups": int(inv.max() + 1), "summary": summary, "columns": out,
+    res = {"rows": int(len(rows)), "card_key_groups": int(inv.max() + 1), "summary": summary, "controls": controls, "columns": out,
            "C1_falls_within_card_share": float((c1[cur][ok] < c1[prev][ok]).mean()), "D1_step_within_1_day_of_elapsed_share": float((np.abs(delta) <= 1).mean()), "pairs": int(same.sum())}
     RESULTS.mkdir(parents=True, exist_ok=True)
     (RESULTS / "leak.json").write_text(json.dumps(res, indent=1), encoding="utf-8")
