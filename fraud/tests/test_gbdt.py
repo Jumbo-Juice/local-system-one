@@ -9,7 +9,7 @@ SMALL = Params(trees=60, depth=3, lr=0.2, min_hessian=1.0, l2=1.0, row_sample=1.
 def data(n=3000, seed=0):
     rng = np.random.default_rng(seed)
     x = rng.normal(size=(n, 5))
-    logit = 6 * (x[:, 0] > 0.5) * (x[:, 1] < 0) - 3  # an interaction: a linear model can't read it
+    logit = 4 * ((x[:, 0] > 0) ^ (x[:, 1] > 0)) - 2  # an interaction: a linear model can't read it
     return x, (rng.uniform(size=n) < 1 / (1 + np.exp(-logit))).astype(float)
 
 
@@ -28,7 +28,7 @@ def test_it_learns_an_interaction_a_linear_model_cannot():
 
     trees = ev.auc(GBDT(SMALL).fit(x, y).predict(xt), yt.astype(int))
     line = ev.auc(LogReg().fit(x, y).predict(xt), yt.astype(int))
-    assert trees > 0.7 and trees > line + 0.03
+    assert trees > 0.8 and line < 0.6
 
 
 def test_the_loss_falls_and_validation_is_tracked():
