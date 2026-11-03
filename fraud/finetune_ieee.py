@@ -4,6 +4,7 @@
     python -m fraud.finetune_ieee --steps 20     # smoke run: s/step and peak memory
     python -m fraud.finetune_ieee --train        # the training run
     python -m fraud.finetune_ieee --train --full # Phase 12: every fit fraud (--dry-run and --steps take --full too)
+    python -m fraud.finetune_ieee --train --full --seed 1     # Phase 21: a second seed; or --passes 2; or --rich for the longer prompt
 
 What it trains (pre-registered in fraud/eval_ieee.py, Phase 11 of fraud/ROADMAP.md). Owner, 2026-11-02: "train on ieee cis, compare
 paysim fine tune with ieee cis fine tune". Everything but the data matches the PaySim adapter 20261102-152745_lora-d1, so the
@@ -58,12 +59,12 @@ def training_rows(t: Ieee, seed: int = SEED, full: bool = False) -> np.ndarray:
     return rng.permutation(np.r_[fraud, legit]).astype(np.int64)
 
 
-def examples(t: Ieee, rows: np.ndarray, seed: int = SEED) -> list[tuple[Decision, int]]:
+def examples(t: Ieee, rows: np.ndarray, seed: int = SEED, hist: dict | None = None) -> list[tuple[Decision, int]]:
     """(decision, index of the target option) per row; options as listed or reversed by a seeded coin (as finetune.examples)."""
     flip = np.random.default_rng([seed, 1]).integers(0, 2, len(rows)).astype(bool)
     out = []
     for i, rev in zip(rows, flip):
-        d = ieee_brain.decision(t, int(i))
+        d = ieee_brain.decision(t, int(i), hist)
         if rev:
             d = Decision(d.instruction, d.options[::-1], state=d.state, context=d.context)
         want = brain.OPTIONS[brain.ACTIONS.index("decline" if t.is_fraud[i] else "approve")]
@@ -81,10 +82,13 @@ def main() -> None:
     g.add_argument("--steps", type=int, help="a smoke run: this many batches, to measure s/step and memory")
     g.add_argument("--train", action="store_true", help="the training run")
     ap.add_argument("--full", action="store_true", help="every fit fraud (Phase 12)")
+    ap.add_argument("--seed", type=int, default=SEED, help="Phase 21: another training seed (default 0, as before)")
+    ap.add_argument("--passes", type=int, default=1, help="Phase 21: passes over the rows, with the LR schedule sized to all of them")
+    ap.add_argument("--rich", action="store_true", help="Phase 21: the longer prompt, ieee_brain.describe_rich")
     args = ap.parse_args()
 
     t = ieee_data.load()
-    rows = training_rows(t, full=args.full)
+    rows = training_rows(t, seed=args.seed, full=args.full)
     n_fraud = int(t.is_fraud[rows].sum())
     info = {"dataset": "IEEE-CIS", "rows": len(rows), "fraud": n_fraud, "legit": len(rows) - n_fraud,
             "rows_sha256": finetune.rows_hash(rows)}
@@ -95,9 +99,14 @@ def main() -> None:
     from .d1torch import D1Torch
     from .runs import stamp
 
-    steps = args.steps or (len(rows) // BATCH if args.full else EPOCH_BATCHES)
+    steps = args.steps or (len(rows) // BATCH * args.passes if args.full else EPOCH_BATCHES)
     cap = CAP_FULL_S if args.full else CAP_S
-    exs = examples(t, rows)
+    hist = None
+    if args.rich:
+        from . import history
+
+        hist = history.load()
+    exs = examples(t, rows, args.seed, hist)
     info["reversed"] = int(sum(d.options != brain.OPTIONS for d, _ in exs))
     model = D1Torch.load()
     enc = encode(model, exs)
@@ -107,11 +116,13 @@ def main() -> None:
     print(f"encoded {len(enc)} examples, {info['reversed']} reversed, {info['prompt_tokens_mean']:.0f} tokens mean / "
           f"{info['prompt_tokens_max']} max ({time.perf_counter() - t_process:.0f} s since start)", flush=True)
 
-    out = MODELS / f"{stamp()}_lora-d1-ieee{'-full' if args.full else ''}{'-smoke' if args.steps else ''}"
+    extra = f"{'-seed' + str(args.seed) if args.seed != SEED else ''}{'-pass' + str(args.passes) if args.passes != 1 else ''}{'-rich' if args.rich else ''}"
+    out = MODELS / f"{stamp()}_lora-d1-ieee{'-full' if args.full else ''}{extra}{'-smoke' if args.steps else ''}"
     out.mkdir(parents=True, exist_ok=True)
     deadline = t_process + cap - SAVE_MARGIN_S if args.train else math.inf
     every = (10 if args.steps else CHECKPOINT_EVERY) if args.full else 0
-    info.update(train(model, enc, out, steps, deadline=deadline, log=lambda m: print(m, flush=True), lora=LORA, checkpoint_every=every))
+    info.update(train(model, enc, out, steps, deadline=deadline, log=lambda m: print(m, flush=True), lora=LORA, checkpoint_every=every, seed=args.seed))
+    info.update(passes=args.passes, rich=args.rich)
     info["process_s"] = time.perf_counter() - t_process
     info["cap_s"] = cap
     info["created"] = time.strftime("%Y-%m-%dT%H:%M:%S")

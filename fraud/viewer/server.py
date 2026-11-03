@@ -27,14 +27,15 @@ from ..runs import RUNS
 
 HERE = Path(__file__).resolve().parent
 RESULTS = HERE.parent / "results"
-# result folders with eval pages (fraud/results/eval_d3 has no test windows; *_repro.json is not an eval)
-EVAL_DIRS = ("eval", "eval_d3ft", "eval_d1ft")
+# result folders with eval pages (fraud/results/eval_d3 has no test windows; *_repro.json is not an eval). The second row is IEEE-CIS at a 10 USD review.
+EVAL_DIRS = ("eval", "eval_d3ft", "eval_d1ft",
+             "eval_ieee", "eval_ieee_full", "eval_ieee_amount", "eval_column_audit", "eval_rule", "eval_features", "eval_tabular", "eval_final")
 PAGES = ("index.html", "console.js", "console.css")
 TYPES = {".html": "text/html; charset=utf-8", ".js": "text/javascript; charset=utf-8", ".css": "text/css; charset=utf-8",
          ".jsonl": "application/x-ndjson; charset=utf-8", ".json": "application/json; charset=utf-8"}
 _NAME = re.compile(r"^[A-Za-z0-9._-]+$")
 _STAMP = re.compile(r"^\d{8}-\d{6}_")
-_EVAL = re.compile(r"^(\d{8}-\d{6})_eval_(.+)_(test\d+|dev\d+)$")
+_EVAL = re.compile(r"^(\d{8}-\d{6})_eval_(.+)_([a-z]+\d+)$")
 
 
 def read_ends(path: Path) -> tuple[dict, dict | None]:
@@ -110,7 +111,7 @@ class Listing:
         def read(path: Path) -> dict:
             r = json.loads(path.read_text(encoding="utf-8"))
             return {"id": r.get("eval"), "created": r.get("created"), "complete": r.get("complete"),
-                    "bars": r.get("bars"), "is_eval": "totals" in r}
+                    "bars": r.get("bars"), "is_eval": "totals" in r or "setups" in r, "ieee": "setups" in r, "script": r.get("script")}
         with self._lock:
             files = [p for d in EVAL_DIRS if (self.results / d).is_dir() for p in sorted((self.results / d).glob("*.json"))]
             evals = [dict(r, file=f"{p.parent.name}/{p.name}") for p in files

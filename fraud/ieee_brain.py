@@ -21,6 +21,8 @@ CONTEXT = (
     "and 10:00, with match code M4 = M2, with counters C4 or C8 above 0, and when D1 is 0. Most payments are legitimate."
 )
 COUNTERS = ("C1", "C4", "C8", "C13")
+MORE_COUNTERS = ("C2", "C5", "C6", "C9", "C11", "C14")
+DAYS = ("D2", "D3", "D4", "D10", "D15")
 
 
 def hour(t: Ieee, i: int) -> int:
@@ -46,13 +48,35 @@ def describe(t: Ieee, i: int) -> str:
     ])
 
 
-def decision(t: Ieee, i: int) -> Decision:
-    return Decision(QUESTION, OPTIONS, state=describe(t, i), context=CONTEXT)
+def _ago(seconds: float) -> str:
+    if seconds < 3600:
+        return f"{seconds / 60:.0f} minutes"
+    return f"{seconds / 3600:.0f} hours" if seconds < 2 * 86400 else f"{seconds / 86400:.0f} days"
 
 
-def request(t: Ieee, i: int, orders: str) -> dict:
+def describe_rich(t: Ieee, i: int, hist: dict) -> str:
+    """describe() and more of the row, plus what earlier rows say about its card and address (fraud/history.py). Phase 21. No label is read."""
+    h = hist["history"]
+    count = lambda k: int(round(math.expm1(float(h[k][i]))))
+    before = count("card_log_before")
+    if before:
+        ratio = math.exp(float(h["card_amt_vs_mean"][i]))
+        card = f"{before} earlier payments, the last one {_ago(math.expm1(float(h['card_log_since'][i])))} ago, {count('card_log_1d')} in the last day, {count('card_log_7d')} in the last 7 days; this amount is {ratio:.1f} times its usual."
+    else:
+        card = "no earlier payments."
+    more = ", ".join(f"{k} {_value(float(t.col_at(k, i)))}" for k in MORE_COUNTERS)
+    days = ", ".join(f"{k} {_value(float(t.col_at(k, i)))}" for k in DAYS)
+    return "\n".join([describe(t, i), f"Card history: {card}", f"Address: {count('addr_log_distinct_card')} other cards seen there before. Distance: {_value(float(t.col_at('dist1', i)))}.",
+                      f"More counters: {more}. More days: {days}."])
+
+
+def decision(t: Ieee, i: int, hist: dict | None = None) -> Decision:
+    return Decision(QUESTION, OPTIONS, state=describe_rich(t, i, hist) if hist else describe(t, i), context=CONTEXT)
+
+
+def request(t: Ieee, i: int, orders: str, hist: dict | None = None) -> dict:
     """The /v1/systemone body for row i, one choice question per option order (as d3.request)."""
-    d = decision(t, i)
+    d = decision(t, i, hist)
     q = lambda opts: {"type": "choice", "instructions": d.instruction, "criteria": {o: None for o in opts}}
     questions = {}
     if orders in ("both", "fwd"):
@@ -62,4 +86,4 @@ def request(t: Ieee, i: int, orders: str) -> dict:
     return {"state": f"{d.context}\n\n{d.state}", "questions": questions}
 
 
-__all__ = ["ACTIONS", "CONTEXT", "COUNTERS", "OPTIONS", "QUESTION", "decision", "describe", "hour", "request"]
+__all__ = ["ACTIONS", "CONTEXT", "COUNTERS", "OPTIONS", "QUESTION", "decision", "describe", "describe_rich", "hour", "request"]
