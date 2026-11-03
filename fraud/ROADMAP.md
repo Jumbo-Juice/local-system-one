@@ -146,3 +146,9 @@ check's failure), whatever they show.
 - [x] `python -m fraud.eval_ieee_full --adapter <dir>`: new adapter vs Phase 11's and logistic regression on the new windows; results in `fraud/RESULTS-IEEE-FULL.md`
 
 **Accept:** results committed with the answers and bars reported, whatever they show.
+
+## Phase 13: PaySim's older results at a 10 USD review (owner, 2026-11-03)
+- [x] `reprice_paysim.py` with the pre-registration in its docstring, and its gate passing at 50 USD, committed before anything is priced at 10
+- [ ] `python -m fraud.reprice_paysim`: same decisions and re-picked thresholds, from the recorded scores; results in `fraud/RESULTS-REPRICE.md`
+
+**Accept:** results committed beside the originals, which stay as they are, with both views and the bars reported, whatever they show.

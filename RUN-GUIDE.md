@@ -595,6 +595,14 @@ Write-up: `fraud/RESULTS-IEEE-FULL.md`. Keep the screen on and pause Windows upd
 .venv/Scripts/python -m fraud.eval_ieee --report <eval id>
 ```
 
+PaySim's older results at a 10 USD review (Phase 13): `--gate` only checks that the committed 50 USD numbers reproduce; with no flag it then prices both views and writes
+`fraud/results/reprice_paysim/<id>.json|.md`. It needs the older traces in `fraud/runs/`, runs no model and changes no trace or older result. About a minute.
+
+```bash
+.venv/Scripts/python -m fraud.reprice_paysim --gate
+.venv/Scripts/python -m fraud.reprice_paysim
+```
+
 ## Where things land
 
 | what | where |
