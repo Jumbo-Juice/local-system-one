@@ -65,3 +65,5 @@ The type columns are for the chosen variant (both orders for the 1.5B).
 - Nothing was tuned after seeing these results. Under `fraud/CLAUDE.md`, a follow-up (for example
   per-type thresholds, the `noul` question type, or d3-flash) would need new pre-registration and
   untouched windows.
+
+The numbers above stay at a 50 USD review, as pre-registered. At 10 USD, from the same recorded scores: `fraud/RESULTS-REPRICE.md`.

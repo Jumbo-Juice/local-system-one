@@ -132,3 +132,5 @@ review, and 184 ms at p90. It is not better than hybrid-ft: same decisions on 99
 slower, and a training run twice as long. The fine-tune fixed the frozen model's option-order bias.
 The pre-registered reproduction check failed narrowly before training, which the owner accepted as
 a deviation after a diagnosis that points to the Q8_0 reference.
+
+The numbers above stay at a 50 USD review, as pre-registered. At 10 USD, from the same recorded scores: `fraud/RESULTS-REPRICE.md`.

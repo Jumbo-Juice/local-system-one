@@ -112,3 +112,5 @@ labels in under an hour on a laptop iGPU, but here the policy it learned is the 
 write down in six rules. Its win over logistic regression is real on the pre-registered setup, but
 part of it comes from where logistic regression's scores sit relative to its threshold grid, not
 only from better ranking.
+
+The numbers above stay at a 50 USD review, as pre-registered. At 10 USD, from the same recorded scores: `fraud/RESULTS-REPRICE.md`.

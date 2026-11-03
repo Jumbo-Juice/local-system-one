@@ -111,5 +111,5 @@ Cost sensitivity, no bar and no CI; thresholds re-picked on dev from the same sc
 
 - A second pass over the fit rows, a second seed, or a different prompt.
 - Frozen d1-Omni-2B on these windows.
-- Re-pricing older PaySim results at 10 USD. They stay at 50, as committed.
+- Re-pricing older PaySim results at 10 USD. They stay at 50, as committed. Since run beside them as Phase 13: `fraud/RESULTS-REPRICE.md`.
 - Fine-tuned d1-Omni on PaySim's 10M burst hours (owner: not now).

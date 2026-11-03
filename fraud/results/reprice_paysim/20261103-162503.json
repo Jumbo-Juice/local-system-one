@@ -1,0 +1,1161 @@
+{
+ "id": "20261103-162503",
+ "script": "fraud/reprice_paysim.py",
+ "created": "2026-11-03T16:25:05",
+ "costs": {
+  "friction_rate": 0.1,
+  "friction_min": 10.0,
+  "review_fee": 10.0,
+  "review_share": 0.05
+ },
+ "costs_committed": {
+  "friction_rate": 0.1,
+  "friction_min": 10.0,
+  "review_fee": 50.0,
+  "review_share": 0.05
+ },
+ "thresholds": {
+  "hybrid-ft": {
+   "at_50": {
+    "review": 0.05,
+    "decline": 0.95
+   },
+   "at_10": {
+    "review": 0.05,
+    "decline": 0.95
+   }
+  },
+  "hybrid-d3ft": {
+   "at_50": {
+    "review": 0.05,
+    "decline": 0.9
+   },
+   "at_10": {
+    "review": 0.05,
+    "decline": 0.9
+   }
+  },
+  "hybrid-d1ft": {
+   "at_50": {
+    "review": 0.05,
+    "decline": 0.95
+   },
+   "at_10": {
+    "review": 0.05,
+    "decline": 0.95
+   }
+  },
+  "logreg": {
+   "at_50": {
+    "review": 0.01,
+    "decline": 0.2
+   },
+   "at_10": {
+    "review": 0.01,
+    "decline": 0.2
+   }
+  }
+ },
+ "test": {
+  "test100-119": {
+   "windows": [
+    "test100",
+    "test101",
+    "test102",
+    "test103",
+    "test104",
+    "test105",
+    "test106",
+    "test107",
+    "test108",
+    "test109",
+    "test110",
+    "test111",
+    "test112",
+    "test113",
+    "test114",
+    "test115",
+    "test116",
+    "test117",
+    "test118",
+    "test119"
+   ],
+   "setups": {
+    "hybrid-1.5b": {
+     "eval": "20261003-052158",
+     "at_50": {
+      "mean_cost": 6373694.18485,
+      "median_cost": 5404352.738500001,
+      "total_cost": 127473883.697,
+      "cost_natural_mean": 343756836.36362857,
+      "recall_mean": 1.0,
+      "precision_mean": 0.14718366054416418,
+      "alert_rate_mean": 0.38,
+      "reviews": 0,
+      "fraud_let_through": 0.0,
+      "good_declined": 127473883.69700001,
+      "review_fees": 0.0
+     },
+     "same": {
+      "mean_cost": 6373694.18485,
+      "median_cost": 5404352.738500001,
+      "total_cost": 127473883.697,
+      "cost_natural_mean": 343756836.36362857,
+      "recall_mean": 1.0,
+      "precision_mean": 0.14718366054416418,
+      "alert_rate_mean": 0.38,
+      "reviews": 0,
+      "fraud_let_through": 0.0,
+      "good_declined": 127473883.69700001,
+      "review_fees": 0.0
+     },
+     "repicked": {
+      "mean_cost": 6373694.18485,
+      "median_cost": 5404352.738500001,
+      "total_cost": 127473883.697,
+      "cost_natural_mean": 343756836.36362857,
+      "recall_mean": 1.0,
+      "precision_mean": 0.14718366054416418,
+      "alert_rate_mean": 0.38,
+      "reviews": 0,
+      "fraud_let_through": 0.0,
+      "good_declined": 127473883.69700001,
+      "review_fees": 0.0
+     }
+    },
+    "rules": {
+     "eval": "20261003-052158",
+     "at_50": {
+      "mean_cost": 400845.0,
+      "median_cost": 825.0,
+      "total_cost": 8016900.0,
+      "cost_natural_mean": 43914708.394,
+      "recall_mean": 1.0,
+      "precision_mean": 0.8574718173473735,
+      "alert_rate_mean": 0.06110000000000001,
+      "reviews": 338,
+      "fraud_let_through": 0.0,
+      "good_declined": 8000000.0,
+      "review_fees": 16900.0
+     },
+     "same": {
+      "mean_cost": 400169.0,
+      "median_cost": 165.0,
+      "total_cost": 8003380.0,
+      "cost_natural_mean": 43910045.6788,
+      "recall_mean": 1.0,
+      "precision_mean": 0.8574718173473735,
+      "alert_rate_mean": 0.06110000000000001,
+      "reviews": 338,
+      "fraud_let_through": 0.0,
+      "good_declined": 8000000.0,
+      "review_fees": 3380.0
+     },
+     "repicked": {
+      "mean_cost": 400169.0,
+      "median_cost": 165.0,
+      "total_cost": 8003380.0,
+      "cost_natural_mean": 43910045.6788,
+      "recall_mean": 1.0,
+      "precision_mean": 0.8574718173473735,
+      "alert_rate_mean": 0.06110000000000001,
+      "reviews": 338,
+      "fraud_let_through": 0.0,
+      "good_declined": 8000000.0,
+      "review_fees": 3380.0
+     }
+    },
+    "logreg": {
+     "eval": "20261003-052158",
+     "at_50": {
+      "mean_cost": 549246.76815,
+      "median_cost": 134043.61,
+      "total_cost": 10984935.363,
+      "cost_natural_mean": 44258836.9523852,
+      "recall_mean": 0.9134615384615381,
+      "precision_mean": 0.7974240549309675,
+      "alert_rate_mean": 0.06200000000000001,
+      "reviews": 270,
+      "fraud_let_through": 2550982.98,
+      "good_declined": 8420452.383,
+      "review_fees": 13500.0
+     },
+     "same": {
+      "mean_cost": 548706.76815,
+      "median_cost": 133583.61,
+      "total_cost": 10974135.363,
+      "cost_natural_mean": 44254658.2467852,
+      "recall_mean": 0.9134615384615381,
+      "precision_mean": 0.7974240549309675,
+      "alert_rate_mean": 0.06200000000000001,
+      "reviews": 270,
+      "fraud_let_through": 2550982.98,
+      "good_declined": 8420452.383,
+      "review_fees": 2700.0
+     },
+     "repicked": {
+      "mean_cost": 548706.76815,
+      "median_cost": 133583.61,
+      "total_cost": 10974135.363,
+      "cost_natural_mean": 44254658.2467852,
+      "recall_mean": 0.9134615384615381,
+      "precision_mean": 0.7974240549309675,
+      "alert_rate_mean": 0.06200000000000001,
+      "reviews": 270,
+      "fraud_let_through": 2550982.98,
+      "good_declined": 8420452.383,
+      "review_fees": 2700.0
+     }
+    },
+    "random": {
+     "eval": "20261003-052158",
+     "at_50": {
+      "mean_cost": 17877963.1428,
+      "median_cost": 14374361.993500002,
+      "total_cost": 357559262.856,
+      "cost_natural_mean": 163658909.4800443,
+      "recall_mean": 0.5365384615384616,
+      "precision_mean": 0.14053414831496908,
+      "alert_rate_mean": 0.20840000000000006,
+      "reviews": 500,
+      "fraud_let_through": 303936884.44,
+      "good_declined": 53597378.416,
+      "review_fees": 25000.0
+     },
+     "same": {
+      "mean_cost": 17876963.1428,
+      "median_cost": 14373361.993500002,
+      "total_cost": 357539262.856,
+      "cost_natural_mean": 163625121.02844432,
+      "recall_mean": 0.5365384615384616,
+      "precision_mean": 0.14053414831496908,
+      "alert_rate_mean": 0.20840000000000006,
+      "reviews": 500,
+      "fraud_let_through": 303936884.44,
+      "good_declined": 53597378.416,
+      "review_fees": 5000.0
+     },
+     "repicked": {
+      "mean_cost": 17876963.1428,
+      "median_cost": 14373361.993500002,
+      "total_cost": 357539262.856,
+      "cost_natural_mean": 163625121.02844432,
+      "recall_mean": 0.5365384615384616,
+      "precision_mean": 0.14053414831496908,
+      "alert_rate_mean": 0.20840000000000006,
+      "reviews": 500,
+      "fraud_let_through": 303936884.44,
+      "good_declined": 53597378.416,
+      "review_fees": 5000.0
+     }
+    },
+    "approve-all": {
+     "eval": "20261003-052158",
+     "at_50": {
+      "mean_cost": 31735047.559000004,
+      "median_cost": 27654562.68,
+      "total_cost": 634700951.1800001,
+      "cost_natural_mean": 46989967.7272077,
+      "recall_mean": 0.0,
+      "precision_mean": 0.0,
+      "alert_rate_mean": 0.0,
+      "reviews": 0,
+      "fraud_let_through": 634700951.18,
+      "good_declined": 0.0,
+      "review_fees": 0.0
+     },
+     "same": {
+      "mean_cost": 31735047.559000004,
+      "median_cost": 27654562.68,
+      "total_cost": 634700951.1800001,
+      "cost_natural_mean": 46989967.7272077,
+      "recall_mean": 0.0,
+      "precision_mean": 0.0,
+      "alert_rate_mean": 0.0,
+      "reviews": 0,
+      "fraud_let_through": 634700951.18,
+      "good_declined": 0.0,
+      "review_fees": 0.0
+     },
+     "repicked": {
+      "mean_cost": 31735047.559000004,
+      "median_cost": 27654562.68,
+      "total_cost": 634700951.1800001,
+      "cost_natural_mean": 46989967.7272077,
+      "recall_mean": 0.0,
+      "precision_mean": 0.0,
+      "alert_rate_mean": 0.0,
+      "reviews": 0,
+      "fraud_let_through": 634700951.18,
+      "good_declined": 0.0,
+      "review_fees": 0.0
+     }
+    }
+   },
+   "pairs": {
+    "same": [
+     {
+      "a": "hybrid-1.5b",
+      "b": "rules",
+      "better": "rules",
+      "other": "hybrid-1.5b",
+      "cheaper": 20,
+      "dearer": 0,
+      "ties": 0,
+      "sign_p": 1.9073486328125e-06,
+      "mean_diff": -5973525.18485,
+      "mean_diff_ci95": [
+       -7220382.919875002,
+       -4792451.8570375005
+      ],
+      "distinguishable": true
+     },
+     {
+      "a": "hybrid-1.5b",
+      "b": "logreg",
+      "better": "logreg",
+      "other": "hybrid-1.5b",
+      "cheaper": 20,
+      "dearer": 0,
+      "ties": 0,
+      "sign_p": 1.9073486328125e-06,
+      "mean_diff": -5824987.4167,
+      "mean_diff_ci95": [
+       -7065543.828018751,
+       -4660086.461072501
+      ],
+      "distinguishable": true
+     },
+     {
+      "a": "logreg",
+      "b": "rules",
+      "better": "rules",
+      "other": "logreg",
+      "cheaper": 18,
+      "dearer": 2,
+      "ties": 0,
+      "sign_p": 0.0004024505615234375,
+      "mean_diff": -148537.76815000002,
+      "mean_diff_ci95": [
+       -205558.35147250004,
+       -101882.5708725
+      ],
+      "distinguishable": true
+     }
+    ],
+    "repicked": [
+     {
+      "a": "hybrid-1.5b",
+      "b": "rules",
+      "better": "rules",
+      "other": "hybrid-1.5b",
+      "cheaper": 20,
+      "dearer": 0,
+      "ties": 0,
+      "sign_p": 1.9073486328125e-06,
+      "mean_diff": -5973525.18485,
+      "mean_diff_ci95": [
+       -7220382.919875002,
+       -4792451.8570375005
+      ],
+      "distinguishable": true
+     },
+     {
+      "a": "hybrid-1.5b",
+      "b": "logreg",
+      "better": "logreg",
+      "other": "hybrid-1.5b",
+      "cheaper": 20,
+      "dearer": 0,
+      "ties": 0,
+      "sign_p": 1.9073486328125e-06,
+      "mean_diff": -5824987.4167,
+      "mean_diff_ci95": [
+       -7065543.828018751,
+       -4660086.461072501
+      ],
+      "distinguishable": true
+     },
+     {
+      "a": "logreg",
+      "b": "rules",
+      "better": "rules",
+      "other": "logreg",
+      "cheaper": 18,
+      "dearer": 2,
+      "ties": 0,
+      "sign_p": 0.0004024505615234375,
+      "mean_diff": -148537.76815000002,
+      "mean_diff_ci95": [
+       -205558.35147250004,
+       -101882.5708725
+      ],
+      "distinguishable": true
+     }
+    ]
+   }
+  },
+  "test200-233": {
+   "windows": [
+    "test200",
+    "test201",
+    "test202",
+    "test204",
+    "test208",
+    "test210",
+    "test211",
+    "test212",
+    "test213",
+    "test214",
+    "test215",
+    "test216",
+    "test217",
+    "test219",
+    "test221",
+    "test222",
+    "test224",
+    "test228",
+    "test232",
+    "test233"
+   ],
+   "setups": {
+    "hybrid-d1ft": {
+     "eval": "20261102-162345",
+     "at_50": {
+      "mean_cost": 810.0,
+      "median_cost": 800.0,
+      "total_cost": 16200.0,
+      "cost_natural_mean": 7075.862999999999,
+      "recall_mean": 1.0,
+      "precision_mean": 0.8684647440424692,
+      "alert_rate_mean": 0.06000000000000001,
+      "reviews": 324,
+      "fraud_let_through": 0.0,
+      "good_declined": 0.0,
+      "review_fees": 16200.0
+     },
+     "same": {
+      "mean_cost": 162.0,
+      "median_cost": 160.0,
+      "total_cost": 3240.0,
+      "cost_natural_mean": 1415.1725999999999,
+      "recall_mean": 1.0,
+      "precision_mean": 0.8684647440424692,
+      "alert_rate_mean": 0.06000000000000001,
+      "reviews": 324,
+      "fraud_let_through": 0.0,
+      "good_declined": 0.0,
+      "review_fees": 3240.0
+     },
+     "repicked": {
+      "mean_cost": 162.0,
+      "median_cost": 160.0,
+      "total_cost": 3240.0,
+      "cost_natural_mean": 1415.1725999999999,
+      "recall_mean": 1.0,
+      "precision_mean": 0.8684647440424692,
+      "alert_rate_mean": 0.06000000000000001,
+      "reviews": 324,
+      "fraud_let_through": 0.0,
+      "good_declined": 0.0,
+      "review_fees": 3240.0
+     }
+    },
+    "hybrid-d3ft": {
+     "eval": "20261021-155222",
+     "at_50": {
+      "mean_cost": 835.0,
+      "median_cost": 825.0,
+      "total_cost": 16700.0,
+      "cost_natural_mean": 7140.8705,
+      "recall_mean": 1.0,
+      "precision_mean": 0.8684647440424692,
+      "alert_rate_mean": 0.06000000000000001,
+      "reviews": 334,
+      "fraud_let_through": 0.0,
+      "good_declined": 0.0,
+      "review_fees": 16700.0
+     },
+     "same": {
+      "mean_cost": 167.0,
+      "median_cost": 165.0,
+      "total_cost": 3340.0,
+      "cost_natural_mean": 1428.1740999999997,
+      "recall_mean": 1.0,
+      "precision_mean": 0.8684647440424692,
+      "alert_rate_mean": 0.06000000000000001,
+      "reviews": 334,
+      "fraud_let_through": 0.0,
+      "good_declined": 0.0,
+      "review_fees": 3340.0
+     },
+     "repicked": {
+      "mean_cost": 167.0,
+      "median_cost": 165.0,
+      "total_cost": 3340.0,
+      "cost_natural_mean": 1428.1740999999997,
+      "recall_mean": 1.0,
+      "precision_mean": 0.8684647440424692,
+      "alert_rate_mean": 0.06000000000000001,
+      "reviews": 334,
+      "fraud_let_through": 0.0,
+      "good_declined": 0.0,
+      "review_fees": 3340.0
+     }
+    },
+    "hybrid-ft": {
+     "eval": "20261005-022333",
+     "at_50": {
+      "mean_cost": 830.0,
+      "median_cost": 825.0,
+      "total_cost": 16600.0,
+      "cost_natural_mean": 7133.21675,
+      "recall_mean": 0.9960769230769231,
+      "precision_mean": 0.868234858984998,
+      "alert_rate_mean": 0.059800000000000006,
+      "reviews": 332,
+      "fraud_let_through": 0.0,
+      "good_declined": 0.0,
+      "review_fees": 16600.0
+     },
+     "same": {
+      "mean_cost": 166.0,
+      "median_cost": 165.0,
+      "total_cost": 3320.0,
+      "cost_natural_mean": 1426.6433499999998,
+      "recall_mean": 0.9960769230769231,
+      "precision_mean": 0.868234858984998,
+      "alert_rate_mean": 0.059800000000000006,
+      "reviews": 332,
+      "fraud_let_through": 0.0,
+      "good_declined": 0.0,
+      "review_fees": 3320.0
+     },
+     "repicked": {
+      "mean_cost": 166.0,
+      "median_cost": 165.0,
+      "total_cost": 3320.0,
+      "cost_natural_mean": 1426.6433499999998,
+      "recall_mean": 0.9960769230769231,
+      "precision_mean": 0.868234858984998,
+      "alert_rate_mean": 0.059800000000000006,
+      "reviews": 332,
+      "fraud_let_through": 0.0,
+      "good_declined": 0.0,
+      "review_fees": 3320.0
+     }
+    },
+    "rules": {
+     "eval": "20261005-022333",
+     "at_50": {
+      "mean_cost": 807.5,
+      "median_cost": 800.0,
+      "total_cost": 16150.0,
+      "cost_natural_mean": 7072.20925,
+      "recall_mean": 0.9960769230769231,
+      "precision_mean": 0.868234858984998,
+      "alert_rate_mean": 0.059800000000000006,
+      "reviews": 323,
+      "fraud_let_through": 0.0,
+      "good_declined": 0.0,
+      "review_fees": 16150.0
+     },
+     "same": {
+      "mean_cost": 161.5,
+      "median_cost": 160.0,
+      "total_cost": 3230.0,
+      "cost_natural_mean": 1414.4418499999997,
+      "recall_mean": 0.9960769230769231,
+      "precision_mean": 0.868234858984998,
+      "alert_rate_mean": 0.059800000000000006,
+      "reviews": 323,
+      "fraud_let_through": 0.0,
+      "good_declined": 0.0,
+      "review_fees": 3230.0
+     },
+     "repicked": {
+      "mean_cost": 161.5,
+      "median_cost": 160.0,
+      "total_cost": 3230.0,
+      "cost_natural_mean": 1414.4418499999997,
+      "recall_mean": 0.9960769230769231,
+      "precision_mean": 0.868234858984998,
+      "alert_rate_mean": 0.059800000000000006,
+      "reviews": 323,
+      "fraud_let_through": 0.0,
+      "good_declined": 0.0,
+      "review_fees": 3230.0
+     }
+    },
+    "logreg": {
+     "eval": "20261005-022333",
+     "at_50": {
+      "mean_cost": 190910.09765,
+      "median_cost": 167148.494,
+      "total_cost": 3818201.953,
+      "cost_natural_mean": 450721.07832743495,
+      "recall_mean": 0.8861538461538461,
+      "precision_mean": 0.851644221379446,
+      "alert_rate_mean": 0.0558,
+      "reviews": 239,
+      "fraud_let_through": 3299152.64,
+      "good_declined": 507099.3130000001,
+      "review_fees": 11950.0
+     },
+     "same": {
+      "mean_cost": 190432.09765,
+      "median_cost": 166688.494,
+      "total_cost": 3808641.953,
+      "cost_natural_mean": 445906.6247274351,
+      "recall_mean": 0.8861538461538461,
+      "precision_mean": 0.851644221379446,
+      "alert_rate_mean": 0.0558,
+      "reviews": 239,
+      "fraud_let_through": 3299152.64,
+      "good_declined": 507099.3130000001,
+      "review_fees": 2390.0
+     },
+     "repicked": {
+      "mean_cost": 190432.09765,
+      "median_cost": 166688.494,
+      "total_cost": 3808641.953,
+      "cost_natural_mean": 445906.6247274351,
+      "recall_mean": 0.8861538461538461,
+      "precision_mean": 0.851644221379446,
+      "alert_rate_mean": 0.0558,
+      "reviews": 239,
+      "fraud_let_through": 3299152.64,
+      "good_declined": 507099.3130000001,
+      "review_fees": 2390.0
+     }
+    },
+    "hybrid-1.5b": {
+     "eval": "20261005-022333",
+     "at_50": {
+      "mean_cost": 5146777.1341,
+      "median_cost": 4988781.729,
+      "total_cost": 102935542.68200001,
+      "cost_natural_mean": 207111353.4973882,
+      "recall_mean": 1.0,
+      "precision_mean": 0.14332749282110735,
+      "alert_rate_mean": 0.3862,
+      "reviews": 0,
+      "fraud_let_through": 0.0,
+      "good_declined": 102935542.68200001,
+      "review_fees": 0.0
+     },
+     "same": {
+      "mean_cost": 5146777.1341,
+      "median_cost": 4988781.729,
+      "total_cost": 102935542.68200001,
+      "cost_natural_mean": 207111353.4973882,
+      "recall_mean": 1.0,
+      "precision_mean": 0.14332749282110735,
+      "alert_rate_mean": 0.3862,
+      "reviews": 0,
+      "fraud_let_through": 0.0,
+      "good_declined": 102935542.68200001,
+      "review_fees": 0.0
+     },
+     "repicked": {
+      "mean_cost": 5146777.1341,
+      "median_cost": 4988781.729,
+      "total_cost": 102935542.68200001,
+      "cost_natural_mean": 207111353.4973882,
+      "recall_mean": 1.0,
+      "precision_mean": 0.14332749282110735,
+      "alert_rate_mean": 0.3862,
+      "reviews": 0,
+      "fraud_let_through": 0.0,
+      "good_declined": 102935542.68200001,
+      "review_fees": 0.0
+     }
+    },
+    "random": {
+     "eval": "20261005-022333",
+     "at_50": {
+      "mean_cost": 19605341.81845,
+      "median_cost": 14211557.180999998,
+      "total_cost": 392106836.369,
+      "cost_natural_mean": 158028916.8180365,
+      "recall_mean": 0.5828461538461538,
+      "precision_mean": 0.14219353074525798,
+      "alert_rate_mean": 0.22199999999999998,
+      "reviews": 500,
+      "fraud_let_through": 348235510.21,
+      "good_declined": 43846326.159,
+      "review_fees": 25000.0
+     },
+     "same": {
+      "mean_cost": 19604341.81845,
+      "median_cost": 14210557.180999998,
+      "total_cost": 392086836.369,
+      "cost_natural_mean": 157998771.8208365,
+      "recall_mean": 0.5828461538461538,
+      "precision_mean": 0.14219353074525798,
+      "alert_rate_mean": 0.22199999999999998,
+      "reviews": 500,
+      "fraud_let_through": 348235510.21,
+      "good_declined": 43846326.159,
+      "review_fees": 5000.0
+     },
+     "repicked": {
+      "mean_cost": 19604341.81845,
+      "median_cost": 14210557.180999998,
+      "total_cost": 392086836.369,
+      "cost_natural_mean": 157998771.8208365,
+      "recall_mean": 0.5828461538461538,
+      "precision_mean": 0.14219353074525798,
+      "alert_rate_mean": 0.22199999999999998,
+      "reviews": 500,
+      "fraud_let_through": 348235510.21,
+      "good_declined": 43846326.159,
+      "review_fees": 5000.0
+     }
+    },
+    "approve-all": {
+     "eval": "20261005-022333",
+     "at_50": {
+      "mean_cost": 42190883.602,
+      "median_cost": 34751285.45999999,
+      "total_cost": 843817672.04,
+      "cost_natural_mean": 102490105.40228634,
+      "recall_mean": 0.0,
+      "precision_mean": 0.0,
+      "alert_rate_mean": 0.0,
+      "reviews": 0,
+      "fraud_let_through": 843817672.04,
+      "good_declined": 0.0,
+      "review_fees": 0.0
+     },
+     "same": {
+      "mean_cost": 42190883.602,
+      "median_cost": 34751285.45999999,
+      "total_cost": 843817672.04,
+      "cost_natural_mean": 102490105.40228634,
+      "recall_mean": 0.0,
+      "precision_mean": 0.0,
+      "alert_rate_mean": 0.0,
+      "reviews": 0,
+      "fraud_let_through": 843817672.04,
+      "good_declined": 0.0,
+      "review_fees": 0.0
+     },
+     "repicked": {
+      "mean_cost": 42190883.602,
+      "median_cost": 34751285.45999999,
+      "total_cost": 843817672.04,
+      "cost_natural_mean": 102490105.40228634,
+      "recall_mean": 0.0,
+      "precision_mean": 0.0,
+      "alert_rate_mean": 0.0,
+      "reviews": 0,
+      "fraud_let_through": 843817672.04,
+      "good_declined": 0.0,
+      "review_fees": 0.0
+     }
+    }
+   },
+   "pairs": {
+    "same": [
+     {
+      "a": "hybrid-d1ft",
+      "b": "logreg",
+      "better": "hybrid-d1ft",
+      "other": "logreg",
+      "cheaper": 19,
+      "dearer": 1,
+      "ties": 0,
+      "sign_p": 4.00543212890625e-05,
+      "mean_diff": -190270.09765,
+      "mean_diff_ci95": [
+       -249958.88498125004,
+       -136726.83523750005
+      ],
+      "distinguishable": true
+     },
+     {
+      "a": "hybrid-d1ft",
+      "b": "rules",
+      "better": "rules",
+      "other": "hybrid-d1ft",
+      "cheaper": 1,
+      "dearer": 0,
+      "ties": 19,
+      "sign_p": 1.0,
+      "mean_diff": -0.5,
+      "mean_diff_ci95": [
+       -1.5,
+       0.0
+      ],
+      "distinguishable": false
+     },
+     {
+      "a": "hybrid-d1ft",
+      "b": "hybrid-ft",
+      "better": "hybrid-d1ft",
+      "other": "hybrid-ft",
+      "cheaper": 8,
+      "dearer": 0,
+      "ties": 12,
+      "sign_p": 0.0078125,
+      "mean_diff": -4.0,
+      "mean_diff_ci95": [
+       -6.0,
+       -2.0
+      ],
+      "distinguishable": true
+     },
+     {
+      "a": "hybrid-d3ft",
+      "b": "logreg",
+      "better": "hybrid-d3ft",
+      "other": "logreg",
+      "cheaper": 19,
+      "dearer": 1,
+      "ties": 0,
+      "sign_p": 4.00543212890625e-05,
+      "mean_diff": -190265.09765,
+      "mean_diff_ci95": [
+       -249954.39748125005,
+       -136721.87273750006
+      ],
+      "distinguishable": true
+     },
+     {
+      "a": "hybrid-d3ft",
+      "b": "hybrid-ft",
+      "better": "hybrid-ft",
+      "other": "hybrid-d3ft",
+      "cheaper": 2,
+      "dearer": 0,
+      "ties": 18,
+      "sign_p": 0.5,
+      "mean_diff": -1.0,
+      "mean_diff_ci95": [
+       -2.5,
+       0.0
+      ],
+      "distinguishable": false
+     },
+     {
+      "a": "hybrid-ft",
+      "b": "logreg",
+      "better": "hybrid-ft",
+      "other": "logreg",
+      "cheaper": 19,
+      "dearer": 1,
+      "ties": 0,
+      "sign_p": 4.00543212890625e-05,
+      "mean_diff": -190266.09765,
+      "mean_diff_ci95": [
+       -249954.89748125005,
+       -136722.37273750006
+      ],
+      "distinguishable": true
+     },
+     {
+      "a": "hybrid-ft",
+      "b": "rules",
+      "better": "rules",
+      "other": "hybrid-ft",
+      "cheaper": 9,
+      "dearer": 0,
+      "ties": 11,
+      "sign_p": 0.00390625,
+      "mean_diff": -4.5,
+      "mean_diff_ci95": [
+       -6.5,
+       -2.5
+      ],
+      "distinguishable": true
+     },
+     {
+      "a": "logreg",
+      "b": "rules",
+      "better": "rules",
+      "other": "logreg",
+      "cheaper": 19,
+      "dearer": 1,
+      "ties": 0,
+      "sign_p": 4.00543212890625e-05,
+      "mean_diff": -190270.59765,
+      "mean_diff_ci95": [
+       -249959.37248125003,
+       -136726.83523750005
+      ],
+      "distinguishable": true
+     },
+     {
+      "a": "rules",
+      "b": "approve-all",
+      "better": "rules",
+      "other": "approve-all",
+      "cheaper": 20,
+      "dearer": 0,
+      "ties": 0,
+      "sign_p": 1.9073486328125e-06,
+      "mean_diff": -42190722.102,
+      "mean_diff_ci95": [
+       -51925395.4542875,
+       -32624210.578174997
+      ],
+      "distinguishable": true
+     }
+    ],
+    "repicked": [
+     {
+      "a": "hybrid-d1ft",
+      "b": "logreg",
+      "better": "hybrid-d1ft",
+      "other": "logreg",
+      "cheaper": 19,
+      "dearer": 1,
+      "ties": 0,
+      "sign_p": 4.00543212890625e-05,
+      "mean_diff": -190270.09765,
+      "mean_diff_ci95": [
+       -249958.88498125004,
+       -136726.83523750005
+      ],
+      "distinguishable": true
+     },
+     {
+      "a": "hybrid-d1ft",
+      "b": "rules",
+      "better": "rules",
+      "other": "hybrid-d1ft",
+      "cheaper": 1,
+      "dearer": 0,
+      "ties": 19,
+      "sign_p": 1.0,
+      "mean_diff": -0.5,
+      "mean_diff_ci95": [
+       -1.5,
+       0.0
+      ],
+      "distinguishable": false
+     },
+     {
+      "a": "hybrid-d1ft",
+      "b": "hybrid-ft",
+      "better": "hybrid-d1ft",
+      "other": "hybrid-ft",
+      "cheaper": 8,
+      "dearer": 0,
+      "ties": 12,
+      "sign_p": 0.0078125,
+      "mean_diff": -4.0,
+      "mean_diff_ci95": [
+       -6.0,
+       -2.0
+      ],
+      "distinguishable": true
+     },
+     {
+      "a": "hybrid-d3ft",
+      "b": "logreg",
+      "better": "hybrid-d3ft",
+      "other": "logreg",
+      "cheaper": 19,
+      "dearer": 1,
+      "ties": 0,
+      "sign_p": 4.00543212890625e-05,
+      "mean_diff": -190265.09765,
+      "mean_diff_ci95": [
+       -249954.39748125005,
+       -136721.87273750006
+      ],
+      "distinguishable": true
+     },
+     {
+      "a": "hybrid-d3ft",
+      "b": "hybrid-ft",
+      "better": "hybrid-ft",
+      "other": "hybrid-d3ft",
+      "cheaper": 2,
+      "dearer": 0,
+      "ties": 18,
+      "sign_p": 0.5,
+      "mean_diff": -1.0,
+      "mean_diff_ci95": [
+       -2.5,
+       0.0
+      ],
+      "distinguishable": false
+     },
+     {
+      "a": "hybrid-ft",
+      "b": "logreg",
+      "better": "hybrid-ft",
+      "other": "logreg",
+      "cheaper": 19,
+      "dearer": 1,
+      "ties": 0,
+      "sign_p": 4.00543212890625e-05,
+      "mean_diff": -190266.09765,
+      "mean_diff_ci95": [
+       -249954.89748125005,
+       -136722.37273750006
+      ],
+      "distinguishable": true
+     },
+     {
+      "a": "hybrid-ft",
+      "b": "rules",
+      "better": "rules",
+      "other": "hybrid-ft",
+      "cheaper": 9,
+      "dearer": 0,
+      "ties": 11,
+      "sign_p": 0.00390625,
+      "mean_diff": -4.5,
+      "mean_diff_ci95": [
+       -6.5,
+       -2.5
+      ],
+      "distinguishable": true
+     },
+     {
+      "a": "logreg",
+      "b": "rules",
+      "better": "rules",
+      "other": "logreg",
+      "cheaper": 19,
+      "dearer": 1,
+      "ties": 0,
+      "sign_p": 4.00543212890625e-05,
+      "mean_diff": -190270.59765,
+      "mean_diff_ci95": [
+       -249959.37248125003,
+       -136726.83523750005
+      ],
+      "distinguishable": true
+     },
+     {
+      "a": "rules",
+      "b": "approve-all",
+      "better": "rules",
+      "other": "approve-all",
+      "cheaper": 20,
+      "dearer": 0,
+      "ties": 0,
+      "sign_p": 1.9073486328125e-06,
+      "mean_diff": -42190722.102,
+      "mean_diff_ci95": [
+       -51925395.4542875,
+       -32624210.578174997
+      ],
+      "distinguishable": true
+     }
+    ]
+   }
+  }
+ },
+ "bars": {
+  "Phase 4 bar 1": {
+   "rule": "hybrid-1.5b cheaper than rules in >= 16 of 20 windows",
+   "need": 16,
+   "at_50": 0,
+   "same": 0,
+   "repicked": 0
+  },
+  "Phase 5 bar A": {
+   "rule": "hybrid-ft cost <= logreg in >= 10 of 20 windows",
+   "need": 10,
+   "at_50": 19,
+   "same": 19,
+   "repicked": 19
+  },
+  "Phase 7 bar A": {
+   "rule": "hybrid-d3ft cost <= logreg in >= 10 of 20 windows",
+   "need": 10,
+   "at_50": 19,
+   "same": 19,
+   "repicked": 19
+  },
+  "Phase 7 bar C": {
+   "rule": "hybrid-d3ft cost <= hybrid-ft in >= 10 of 20 windows",
+   "need": 10,
+   "at_50": 18,
+   "same": 18,
+   "repicked": 18
+  },
+  "Phase 9 bar A": {
+   "rule": "hybrid-d1ft cost <= logreg in >= 10 of 20 windows",
+   "need": 10,
+   "at_50": 19,
+   "same": 19,
+   "repicked": 19
+  },
+  "Phase 9 bar C": {
+   "rule": "hybrid-d1ft cost <= hybrid-ft in >= 10 of 20 windows",
+   "need": 10,
+   "at_50": 20,
+   "same": 20,
+   "repicked": 20
+  }
+ },
+ "dev_only": {
+  "d3-nano": {
+   "at_50": {
+    "review": 0.2,
+    "decline": 0.7,
+    "dev_total": 5784720.206000001
+   },
+   "at_10": {
+    "review": 0.2,
+    "decline": 0.7,
+    "dev_total": 5774720.206000001
+   }
+  },
+  "d3-mini": {
+   "at_50": {
+    "review": 0.2,
+    "decline": 0.9,
+    "dev_total": 2697754.0530000003
+   },
+   "at_10": {
+    "review": 0.2,
+    "decline": 0.9,
+    "dev_total": 2688034.0530000003
+   }
+  },
+  "d1-omni-2b": {
+   "at_50": {
+    "review": 0.5,
+    "decline": 0.7,
+    "dev_total": 2698313.678
+   },
+   "at_10": {
+    "review": 0.5,
+    "decline": 0.7,
+    "dev_total": 2688553.678
+   }
+  },
+  "frozen-1.5b": {
+   "at_50": {
+    "review": 0.7,
+    "decline": 0.9,
+    "dev_total": 27016342.339
+   },
+   "at_10": {
+    "review": 0.7,
+    "decline": 0.9,
+    "dev_total": 27006342.339
+   }
+  },
+  "logreg": {
+   "at_50": {
+    "review": 0.01,
+    "decline": 0.2,
+    "dev_total": 1631627.074
+   },
+   "at_10": {
+    "review": 0.01,
+    "decline": 0.2,
+    "dev_total": 1626307.074
+   }
+  }
+ }
+}

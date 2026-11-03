@@ -116,7 +116,7 @@ Cost sensitivity, no bar and no CI; thresholds re-picked on dev from the same sc
 
 ## Not run
 
-- Re-pricing older PaySim results at 10 USD. They stay at 50, as committed.
+- Re-pricing older PaySim results at 10 USD. They stay at 50, as committed. Since run beside them as Phase 13: `fraud/RESULTS-REPRICE.md`.
 - Frozen d1-Omni-2B on these windows.
 - A larger IEEE training run on all fit frauds. Since run as Phase 12: `fraud/RESULTS-IEEE-FULL.md`.
 - Fine-tuned d1-Omni on PaySim's 10M burst hours (owner: not now).

@@ -626,3 +626,9 @@ Inferred: the saving against Phase 11's adapter is almost all fewer wrongly decl
 Owner: re-price the older PaySim results at 10 USD. `fraud/reprice_paysim.py` holds the rule, committed before anything was priced at 10. Only the review fee changes. The committed results stay at `costs.PHASES_1_10`; new files go beside them. Two views: same decisions, and thresholds re-picked on dev from the recorded scores. No model runs and no trace changes.
 Gate, Observed before pricing: at 50 USD the code reproduces all 260 committed test windows to 0.01 USD, every recorded action, and the committed thresholds and best dev costs. One first failure was a reading error in the gate: `eval_lfm` keeps the frozen model's dev cost as a mean per window, not a total.
 Stated before running (Inferred): hybrid-ft, d3ft, d1ft and rules pay almost only review fees, so they fall to about a fifth; logreg and hybrid-1.5b barely move; bars and order stay the same.
+
+## 2026-11-03: Phase 13 results; a 10 USD review changes no rank, bar or threshold on PaySim
+
+Run `20261103-162503`, write-up `fraud/RESULTS-REPRICE.md`. Observed: every setup re-picked the same thresholds on dev, so the two views are identical, and every recorded bar would read the same. On test200-233, rules 808 → 162 per window, d1-Omni fine-tuned 810 → 162, Qwen fine-tuned 830 → 166, d3-nano fine-tuned 835 → 167; logreg 190,910 → 190,432; frozen Qwen and approve-all unchanged.
+Checked apart from the script's scoring: committed cost minus 40 per committed review matches exactly. No trace or older result changed; older write-ups only gain a pointer.
+The pre-run statement held with one miss: rules' mean on test100-119 stays near 400,000 (median 825 → 165), because test109 wrongly declines eight round 10M TRANSFERs at 1,000,000 of friction each.
