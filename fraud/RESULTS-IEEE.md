@@ -112,10 +112,11 @@ Cost sensitivity, no bar and no CI; thresholds re-picked on dev from the same sc
 - **Latency on a laptop in use.** The owner was watching light video during some of the run, so latencies may read high. Three rows stalled for 48.2, 19.8 and 5.6 minutes. The longest
   ends within seconds of a Windows Modern Standby exit in the system log (23:03:39), so the machine pausing is the likely cause rather than the video. (Inferred) Scores and p90 are not affected.
   (Observed: p90 ignores three rows.) Replays of `dev2` for the IEEE fine-tune and `test3` for the frozen model keep those pauses.
+  Correction from Phase 12: the IEEE fine-tune's first 9 test windows ran in standby at p90 95 ms against 115 ms for its 11 awake windows, so its 109 ms reads low for a laptop in use rather than high (`fraud/RESULTS-IEEE-FULL.md`, Limits). (Observed)
 
 ## Not run
 
 - Re-pricing older PaySim results at 10 USD. They stay at 50, as committed.
 - Frozen d1-Omni-2B on these windows.
-- A larger IEEE training run on all fit frauds.
+- A larger IEEE training run on all fit frauds. Since run as Phase 12: `fraud/RESULTS-IEEE-FULL.md`.
 - Fine-tuned d1-Omni on PaySim's 10M burst hours (owner: not now).

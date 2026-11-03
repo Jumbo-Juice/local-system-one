@@ -536,7 +536,7 @@ async function startPage() {
       "d3-nano and d1-Omni-2B), and a rule filter approves the transaction types " +
       "that had no fraud in training. The console replays recorded runs at their recorded speed and shows the pre-registered eval " +
       "against rules-only, logistic regression, random and approve-all. IEEE-CIS runs (real card payments, no filter) replay here too; " +
-      "their results are in fraud/RESULTS-IEEE.md, not on the Eval page."),
+      "their results are in fraud/RESULTS-IEEE.md and fraud/RESULTS-IEEE-FULL.md, not on the Eval page."),
     el("div", { class: "cards" },
       el("section", { class: "panel bar-card" }, el("h3", {}, "Latest eval"),
         latest ? el("div", {},
