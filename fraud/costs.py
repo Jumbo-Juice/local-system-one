@@ -22,9 +22,17 @@ class Costs:
     friction_min: float
     review_fee: float
     review_share: float
+    decline_flat: float = 0.0  # a flat price per good customer declined, on top of friction (Phase 16's stress only)
 
     def as_dict(self) -> dict:
-        return asdict(self)
+        d = asdict(self)
+        if not self.decline_flat:  # so older results rebuild exactly as committed
+            del d["decline_flat"]
+        return d
+
+    def friction(self, amount):
+        """What wrongly declining this amount costs. Takes a number or an array."""
+        return np.maximum(self.friction_min, self.friction_rate * amount) + self.decline_flat
 
 
 # Friction is 10% of a wrongly declined amount (lost business and churn), at least 10. At most 5% of
@@ -49,7 +57,7 @@ def unit_cost(c: Costs, action: str, fraud: bool, amount: float) -> float:
     if action == "approve":
         return amount if fraud else 0.0
     if action == "decline":
-        return 0.0 if fraud else max(c.friction_min, c.friction_rate * amount)
+        return 0.0 if fraud else float(c.friction(amount))
     raise ValueError(action)
 
 
