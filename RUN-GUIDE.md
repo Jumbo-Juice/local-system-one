@@ -613,6 +613,36 @@ from those scores and writes `fraud/results/eval_ieee_amount/<eval id>.json|.md`
 .venv/Scripts/python -m fraud.eval_ieee_amount --report <eval id>
 ```
 
+On a new machine (Phase 15): install the PyTorch build for its hardware (`fraud/device.py` picks xpu, then cuda, then cpu), then run the gate. It writes `fraud/results/gate_nuc/gate.json`. `--score` needs the adapter and base model in `fraud/models/`.
+
+```bash
+.venv/Scripts/python -m fraud.dev.gate_nuc --logreg
+.venv/Scripts/python -m fraud.dev.gate_nuc --sha
+.venv/Scripts/python -m fraud.dev.gate_nuc --score
+```
+
+The FINAL windows and what is left for later phases, no model and no labels. Only the last phase may score a FINAL row:
+
+```bash
+.venv/Scripts/python -m fraud.final_test
+```
+
+Cost-model stress (Phase 16): Phase 14's recorded scores under other friction rates, minimums, flat prices, review fees and shares. No model and no new window, about 15 min. Writes `fraud/results/eval_cost_stress/<run id>.json|.md`; `fraud/dev/verify_cost_stress.py` checks it apart from the report code. Write-up: `fraud/RESULTS-COST-STRESS.md`.
+
+```bash
+.venv/Scripts/python -m fraud.eval_cost_stress
+.venv/Scripts/python -m fraud.dev.verify_cost_stress <run id>
+```
+
+Column audit (Phase 17): logreg by column group, 8 new windows, about 5 min. `--leak` looks at whether columns lean on later rows, no labels. Write-up: `fraud/RESULTS-COLUMN-AUDIT.md`. Any tabular eval is checked apart from its report code by `fraud/dev/verify_tabular.py`.
+
+```bash
+.venv/Scripts/python -m fraud.eval_column_audit --leak
+.venv/Scripts/python -m fraud.eval_column_audit
+.venv/Scripts/python -m fraud.eval_column_audit --report <eval id>
+.venv/Scripts/python -m fraud.dev.verify_tabular fraud/results/eval_column_audit/<eval id>.json
+```
+
 ## Where things land
 
 | what | where |
