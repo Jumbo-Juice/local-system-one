@@ -108,3 +108,59 @@ def window_costs(traces: list[list[dict]]) -> np.ndarray:
 
 def per_window(scored: list[costs.Scored]) -> np.ndarray:
     return np.array([s.summary["cost"] for s in scored])
+
+
+# ---------------------------------------------------------------- one eval over several scorers (Phases 19-20)
+
+RULE, LINES = "-amt", "-lines"
+
+
+def run_scores(eval_id: str, t, scorers: dict, new: list[ev.Win], log=print) -> tuple[dict, dict]:
+    """scorers: name → a function giving a score per row of t for the given windows. Each gets Phase 14's rule and two lines from dev30, traces on the new windows, and a read on held-out dev."""
+    n = len(t)
+    dev, held = dev30(n), heldout_dev(n)
+    ft.guard(n, np.concatenate([w.rows for w in new]))
+    y_held = np.concatenate([t.is_fraud[w.rows] for w in held]).astype(int)
+    info, out = {}, {}
+    for name, scorer in scorers.items():
+        q = scorer(dev + held + new)
+        pol = fit_policy(q, t, dev)
+        write_setup(eval_id, t, new, name + RULE, q, pol, "rule")
+        write_setup(eval_id, t, new, name + LINES, q, pol, "lines")
+        s = [rule_cost(pol, q, t, w) for w in held]
+        out[name] = {"rule": per_window(s), "lines": per_window([lines_cost(pol, q, t, w) for w in held]), "auc": ev.auc(np.concatenate([q[w.rows] for w in held]), y_held),
+                     "good_customers_declined": sum(x.summary["confusion"]["legit"]["decline"] for x in s), "frauds_stopped": sum(x.summary["confusion"]["fraud"]["decline"] + x.summary["confusion"]["fraud"]["review"] for x in s),
+                     "sum_p": float(sum(pol.p(q[w.rows]).sum() for w in held)), "frauds": int(y_held.sum())}
+        info[name] = {"lambda": pol.lam, "lines": [pol.review, pol.decline], "sum_p_new": float(sum(pol.p(q[w.rows]).sum() for w in new))}
+        log(f"{name}: {info[name]}, held-out rule {out[name]['rule'].mean():,.0f}, AUC {out[name]['auc']:.4f}")
+    for w in new:
+        am.write_trace(eval_id, t, w, ev.APPROVE_ALL, [{"by": "all", "q": 0.0, "ms": 0.0} for _ in w.rows], (None, None), None, None, {})
+    return info, out
+
+
+def held_table(heldout: dict, base: str) -> dict:
+    """Held-out dev per scorer, against one of them. Empty on a report rebuild, which keeps the old table."""
+    b = heldout[base]["rule"]
+    return {k: {"rule_mean": float(v["rule"].mean()), "lines_mean": float(v["lines"].mean()), "auc": v["auc"], "diff": float((v["rule"] - b).mean()), "diff_ci": list(ev.boot_ci(v["rule"] - b)),
+                "good_customers_declined": v["good_customers_declined"], "frauds_stopped": v["frauds_stopped"], "sum_p": v["sum_p"], "frauds": v["frauds"]} for k, v in heldout.items()}
+
+
+def report_table(r: dict, title: str, script: str) -> str:
+    """The results file's markdown, for run_scores' evals."""
+    L = [f"# {title} {r['eval']}", "", f"Pre-registration: `{script}`. {r['test_rows']:,} new test rows, {r['test_fraud']} fraud, {len(r['windows'])} windows. Costs: {r['costs']}. All numbers Observed. Model scores are uncalibrated.", "",
+         "| setup | mean cost | 95% CI | AUC | frauds stopped | fraud USD stopped | good declined | reviews | fraud let through | good declined USD | review fees |", "|---|---:|---|---:|---:|---:|---:|---:|---:|---:|---:|"]
+    for s, x in sorted(r["setups"].items(), key=lambda kv: kv[1]["mean_cost"]):
+        a = f"{x['auc']:.4f}" if x["auc"] is not None else "n/a"
+        L.append(f"| {s} | {x['mean_cost']:,.0f} | {x['cost_ci95'][0]:,.0f}–{x['cost_ci95'][1]:,.0f} | {a} | {x['frauds_stopped']} of {x['frauds']} | {x['fraud_usd_stopped']:,.0f} | {x['good_customers_declined']} | {x['reviews']} | {x['fraud_let_through']:,.0f} | {x['good_declined']:,.0f} | {x['review_fees']:,.0f} |")
+
+    def line(p):
+        return f"**{p['better'] or 'tie'}** vs {p['other']}: {p['cheaper']} cheaper, {p['dearer']} dearer; mean paired difference {p['mean_diff']:,.0f} USD per window, 95% CI {p['mean_diff_ci95'][0]:,.0f} to {p['mean_diff_ci95'][1]:,.0f} → {'distinguishable' if p['distinguishable'] else 'not distinguishable'}"
+
+    L += ["", "## Answers", ""]
+    for k, v in r["verdict"].items():
+        L += [f"- {k.capitalize()}: {line(p)}." for p in (v if isinstance(v, list) else [v])]
+    if r.get("heldout"):
+        L += ["", "## Held-out dev, 88 chains, no bar", "", "| scorer | rule mean | lines mean | AUC | against the base | 95% CI | good declined | frauds stopped | sum of p | frauds |", "|---|---:|---:|---:|---:|---|---:|---:|---:|---:|"]
+        for k, x in r["heldout"].items():
+            L.append(f"| {k} | {x['rule_mean']:,.0f} | {x['lines_mean']:,.0f} | {x['auc']:.4f} | {x['diff']:,.0f} | {x['diff_ci'][0]:,.0f} to {x['diff_ci'][1]:,.0f} | {x['good_customers_declined']} | {x['frauds_stopped']} | {x['sum_p']:,.0f} | {x['frauds']:,} |")
+    return "\n".join(L) + "\n"
