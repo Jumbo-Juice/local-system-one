@@ -168,9 +168,8 @@ def release() -> None:
     (two 1.5B engines do not fit the iGPU at once)."""
     gc.collect()
     try:
-        import torch
-        if hasattr(torch, "xpu") and torch.xpu.is_available():
-            torch.xpu.empty_cache()
+        from .device import empty_cache
+        empty_cache()
     except ImportError:
         pass
 

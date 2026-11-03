@@ -207,13 +207,15 @@ class D1Torch:
         return own + ([spaced[0]] if len(spaced) == 1 and spaced != own else [])
 
     @classmethod
-    def load(cls, root: Path = D1_DIR, device: str = "xpu", check_sha: bool = True) -> "D1Torch":
+    def load(cls, root: Path = D1_DIR, device: str | None = None, check_sha: bool = True) -> "D1Torch":
         """Text weights only, BF16 (the vision tower, audio encoder and speech head are never read)."""
         from safetensors import safe_open
         from transformers import AutoTokenizer
 
         from .d3 import sha256
+        from .device import default_device
 
+        device = device or default_device()
         if check_sha:
             for name, want in SHA256.items():
                 if sha256(root / name) != want:
