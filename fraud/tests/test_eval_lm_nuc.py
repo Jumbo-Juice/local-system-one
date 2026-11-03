@@ -61,3 +61,26 @@ def test_seed_changes_the_rows_and_examples_take_history():
     rich = fi.examples(t, a[:3], 0, cache)
     assert plain[0][1] == rich[0][1] and "Card history:" in rich[0][0].state and "Card history:" not in plain[0][0].state
     assert math.isclose(len(a) / 4, int(t.is_fraud[:int(len(t) * 0.6)].sum()))
+
+
+def _setups(**cost):
+    return {k.replace("_", "-") + "-amt": {"mean_cost": v} for k, v in cost.items()}
+
+
+def _info(**p90):
+    return {k.replace("_", "-"): {"latency_ms": {"p90": v}} for k, v in p90.items()}
+
+
+def test_the_two_cheapest_language_models_go_on_and_trees_never_do():
+    s = _setups(lm_phase12=2300, lm_seed1=2400, lm_rich=2100, lm_signal=1900, lm_frozen=5000, tab_all=1000)
+    assert lm.goes_on(s, _info(lm_phase12=60, lm_seed1=60, lm_rich=60, lm_signal=60, lm_frozen=60)) == ["lm-signal", "lm-rich"]
+
+
+def test_a_setup_over_the_latency_bar_does_not_go_on():
+    s = _setups(lm_rich=2100, lm_signal=1900, lm_phase12=2300)
+    assert lm.goes_on(s, _info(lm_rich=60, lm_signal=251, lm_phase12=250)) == ["lm-rich", "lm-phase12"]
+
+
+def test_rank_correlation_reads_order_only():
+    a = np.array([0.1, 0.2, 0.3, 0.4])
+    assert lm.rank_corr(a, a ** 3) == 1.0 and lm.rank_corr(a, -a) == -1.0
