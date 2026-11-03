@@ -660,6 +660,25 @@ History and category features for logreg (Phase 19): `fraud.history` builds the 
 .venv/Scripts/python -m fraud.dev.verify_tabular fraud/results/eval_features/<eval id>.json
 ```
 
+Boosted trees (Phase 20): `fraud/gbdt.py`, numpy only, on the last 10 chains, about an hour on 16 threads. Saves `fraud/models/tabular_<name>.pkl` (git-ignored) and reuses a saved model. `fraud/dev/explore_gbdt.py` is the dev-only look. Write-up: `fraud/RESULTS-TABULAR.md`.
+
+```bash
+.venv/Scripts/python -m fraud.eval_tabular
+.venv/Scripts/python -m fraud.eval_tabular --report <eval id>
+.venv/Scripts/python -m fraud.dev.verify_tabular fraud/results/eval_tabular/<eval id>.json
+```
+
+The language model on this machine (Phase 21): the score it reads as a signal, then one adapter per option, then dev scores. `--final` adds FINAL rows, and only the last phase runs it. About 85 min per adapter on the RTX 3060 Ti.
+
+```bash
+.venv/Scripts/python -m fraud.lm_signal --build
+.venv/Scripts/python -m fraud.finetune_ieee --train --full --seed 1
+.venv/Scripts/python -m fraud.finetune_ieee --train --full --rich
+.venv/Scripts/python -m fraud.finetune_ieee --train --full --signal
+.venv/Scripts/python -m fraud.eval_lm_nuc --score lm-seed1 fraud/models/<time>_lora-d1-ieee-full-seed1
+.venv/Scripts/python -m fraud.eval_lm_nuc --score lm-frozen
+```
+
 ## Where things land
 
 | what | where |
