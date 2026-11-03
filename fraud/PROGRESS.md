@@ -687,3 +687,7 @@ Not run, for the owner: earlier rows' labels as features with a realistic delay.
 ## 2026-11-03: Phase 21 amendment (owner): no two-pass run
 
 Owner: skip the two-pass training, to finish about 3 hours sooner. `lm-pass2` is withdrawn before any new adapter was scored and is not trained. A second seed, the longer prompt and frozen d1-Omni-2B stay.
+
+## 2026-11-03: owner: the final setup must be a language decision model; it may read a tabular score
+
+Owner, while Phase 20 was being prepared: the project's main point is the decision model, so the final setup must be an LLM-based decision model at heart, while still optimising for IEEE-CIS. And yes, its prompt may include a tabular risk score as a signal. So the boosted trees become a reference that prices the choice and a signal, not a candidate to deploy alone. New setup `lm-signal` in `fraud/eval_lm_nuc.py`, score from `fraud/lm_signal.py`, out of fold on training rows. Reported whatever it shows: what the language model adds on top of its signal.

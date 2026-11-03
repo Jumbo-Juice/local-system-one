@@ -19,6 +19,12 @@ Owner, 2026-11-03: "language model, given this machine's hardware: more prompt c
 - Stated before running (Inferred): no option beats the best tabular setup. The seeds differ by about 0.005 AUC. The rich prompt gains the most, about 0.01-0.02 AUC. A second pass gains little. Frozen is far behind.
 
 AMENDMENT, owner, 2026-11-03, before any new adapter was scored: skip the two-pass run, to finish about 3 hours sooner. lm-pass2 is withdrawn and was not trained. Everything else stands.
+
+AMENDMENT, owner, 2026-11-03, before any new adapter was scored: the final setup must be a language decision model at heart, and yes, it may read a tabular risk score as a signal. So:
+- New setup lm-signal: the rows and recipe of lm-rich, with one more prompt line, the tabular score from fraud/lm_signal.py (Phase 20's trees on all columns at 400 trees, out of fold on training rows). The language model still decides. One prompt, written before any model read it.
+- The question changes. No language model now needs to beat the trees to reach the final test. The two best language-model setups on held-out dev go on, chosen by rule cost with lambda from all 118 dev windows as for trees, and each stays subject to p90 <= 250 ms.
+- What the language model adds is reported, whatever it shows: lm-signal against its signal alone, on the same rows and the same rule, in cost, AUC and customers. A setup that only echoes the score must be reported as that, not as a language-model win.
+- Stated before running (Inferred): lm-signal is the cheapest language-model setup, close to the trees, and adds little or nothing on top of its signal. lm-rich gains on lm-phase12 but stays dearer than the trees. Trained on its own signal, the model may lean on that line almost entirely.
 """
 
 from __future__ import annotations
@@ -40,6 +46,10 @@ SCORES = ieee_data.RAW / "lm_scores"
 BATCH = 16
 VARIANT = "rev"
 PHASE12_ADAPTER = Path(__file__).resolve().parent / "models" / "20261103-091222_lora-d1-ieee-full"
+
+
+def needs_history(setup: str) -> bool:
+    return setup in ("lm-rich", "lm-signal")
 
 
 def order_of(variant: str) -> tuple[str, ...]:
@@ -86,7 +96,11 @@ def score(setup: str, adapter: Path | None, log=print) -> dict:
     n = len(t)
     windows = tb.dev30(n) + tb.heldout_dev(n)
     rows = np.unique(np.concatenate([w.rows for w in windows]))
-    hist = history.load() if setup == "lm-rich" else None
+    hist = history.load() if needs_history(setup) else None
+    if setup == "lm-signal":
+        from .lm_signal import load as load_signal
+
+        hist["signal"] = load_signal()
     model = load_model(adapter)
     t0 = time.perf_counter()
     q = score_rows(model, t, rows, hist=hist, log=log)
