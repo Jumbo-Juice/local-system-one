@@ -211,6 +211,6 @@ check's failure), whatever they show.
 **Accept:** both show correctly at desktop and 375 px with no console errors.
 
 ## Phase 25: train the language model on cost (owner, 2026-11-04)
-- [ ] d1-Omni-2B with no tabular score, each row's loss counting by what a mistake on it costs, against `lm-rich` on held-out dev; `fraud/RESULTS-LM-COST.md`
+- [x] d1-Omni-2B with no tabular score, each row's loss counting by what a mistake on it costs, against `lm-rich` on held-out dev; `fraud/RESULTS-LM-COST.md`
 
 **Accept:** reported on dev in dollars and customers, whatever it shows. No test row is used.
