@@ -7,7 +7,7 @@ const app = document.getElementById("app");
 const ACTIONS = ["approve", "review", "decline"];
 const BY = {
   model: "the model", filter: "type filter (rule)", rules: "rules-only table",
-  logreg: "logistic regression", random: "random", all: "approve-all",
+  logreg: "logistic regression", random: "random", all: "approve-all", trees: "boosted trees", lm: "the language model, scored in a batch",
 };
 const SETUP_NAME = {
   hybrid: "hybrid (filter + model)", "hybrid-1.5b": "hybrid (filter + Qwen2.5-1.5B)", rules: "rules-only",
@@ -24,6 +24,11 @@ const SETUP_NAME = {
   "lm-phase12-amt": "d1-Omni-2B fine-tuned, Phase 12's adapter, amount-aware rule", "lm-phase12-lines": "d1-Omni-2B fine-tuned, Phase 12's adapter, two lines", "lm-seed1-amt": "d1-Omni-2B fine-tuned, seed 1, amount-aware rule", "lm-seed1-lines": "d1-Omni-2B fine-tuned, seed 1, two lines",
   "lm-rich-amt": "d1-Omni-2B fine-tuned, more prompt columns, amount-aware rule", "lm-rich-lines": "d1-Omni-2B fine-tuned, more prompt columns, two lines", "lm-signal-amt": "d1-Omni-2B fine-tuned, reads a tabular score, amount-aware rule", "lm-signal-lines": "d1-Omni-2B fine-tuned, reads a tabular score, two lines",
   "lm-frozen-amt": "frozen d1-Omni-2B, amount-aware rule", "lm-frozen-lines": "frozen d1-Omni-2B, two lines",
+  "lm-rich-cust": "d1-Omni-2B fine-tuned, more prompt columns, the rule with a customer line", "lm-signal-cust": "d1-Omni-2B fine-tuned, reads a tabular score, the rule with a customer line",
+  "lm-two-seeds-amt": "two seeds of d1-Omni-2B averaged, amount-aware rule", "lm-two-seeds-cust": "two seeds of d1-Omni-2B averaged, the rule with a customer line", "lm-three-amt": "three d1-Omni-2B adapters averaged, amount-aware rule", "lm-three-cust": "three d1-Omni-2B adapters averaged, the rule with a customer line",
+  "lm-rich-signal-amt": "d1-Omni-2B, more columns and tabular score averaged, amount-aware rule", "lm-rich-signal-cust": "d1-Omni-2B, more columns and tabular score averaged, the rule with a customer line",
+  "lm-rich+trees-amt": "d1-Omni-2B, more columns, fitted with the tabular score, amount-aware rule", "lm-rich+trees-cust": "d1-Omni-2B, more columns, fitted with the tabular score, the rule with a customer line", "lm-signal+trees-amt": "d1-Omni-2B reading the score, fitted with it again, amount-aware rule", "lm-signal+trees-cust": "d1-Omni-2B reading the score, fitted with it again, the rule with a customer line",
+  "final-logreg-amt": "logistic regression, all columns, Phase 14's rule (the baseline)", "final-signal-amt": "d1-Omni-2B reading a tabular score, amount-aware rule", "final-signal-cust": "d1-Omni-2B reading a tabular score, the rule with a customer line", "final-rich-amt": "d1-Omni-2B with more prompt columns, no tabular score, amount-aware rule",
 };
 const SIGNALS = [
   ["dest_in_before", "Receiver: received money before", (v) => (v === 0 ? "never (new account)" : times(v))],
@@ -73,6 +78,7 @@ async function getTrace(file) {
   const recs = (await r.text()).split("\n").filter((l) => l.trim()).map((l) => JSON.parse(l));
   const header = recs[0];
   const ticks = recs.filter((x) => x.type === "tx");
+  if (/^(tab-(all|rich|nocdv)|signal-alone)/.test(header.setup)) for (const r of ticks) r.by = "trees"; // Phase 20 and 21 record trees' scores under the "logreg" kind
   // D3 traces (fraud/d3.py) store each option order as {approve, review, decline} and may hold one order only
   for (const t of ticks) if (t.orders && t.orders.length && !Array.isArray(t.orders[0])) t.orders = t.orders.map((o) => ACTIONS.map((a) => o[a]));
   const last = recs[recs.length - 1];
@@ -297,9 +303,10 @@ function card(h, r) {
   } else if (r.by === "logreg" && r.scores) {
     parts.push(el("div", { class: "section" }, el("dl", { class: "kv" },
       el("dt", {}, "Logistic regression score (uncalibrated)"), el("dd", {}, fix(r.scores.fraud, 3)))));
-  } else if (r.by === "logreg" && r.q !== undefined) {
+  } else if (["logreg", "trees", "lm"].includes(r.by) && r.q !== undefined) {
+    const kind = { logreg: "Logistic regression", trees: "Boosted trees", lm: "Language model" }[r.by];
     parts.push(el("div", { class: "section" }, el("dl", { class: "kv" },
-      el("dt", {}, "Logistic regression score (uncalibrated)"), el("dd", {}, fix(r.q, 3)))));
+      el("dt", {}, `${kind} score (uncalibrated)`), el("dd", {}, fix(r.q, 3)))));
   } else if (r.rule) {
     const rule = (h.rules || []).find((x) => x[0] === r.rule);
     parts.push(el("div", { class: "section" }, el("h3", {}, "Rule"), el("div", {}, r.rule),
@@ -605,7 +612,7 @@ const BAR_TITLE = { bar1: "Bar 1: cost", bar2: "Bar 2: speed", barA: "Bar A: vs 
 const WRITE_UP = { "fraud/eval_ft.py": "fraud/RESULTS-FT.md", "fraud/eval_d3ft.py": "fraud/RESULTS-D3FT.md",
   "fraud/eval_d1ft.py": "fraud/RESULTS-D1FT.md", "fraud/eval_ieee.py": "fraud/RESULTS-IEEE.md", "fraud/eval_ieee_full.py": "fraud/RESULTS-IEEE-FULL.md",
   "fraud/eval_ieee_amount.py": "fraud/RESULTS-IEEE-AMOUNT.md", "fraud/eval_column_audit.py": "fraud/RESULTS-COLUMN-AUDIT.md", "fraud/eval_rule.py": "fraud/RESULTS-RULE.md",
-  "fraud/eval_features.py": "fraud/RESULTS-FEATURES.md", "fraud/eval_tabular.py": "fraud/RESULTS-TABULAR.md", "fraud/eval_final.py": "fraud/RESULTS-FINAL.md" };
+  "fraud/eval_features.py": "fraud/RESULTS-FEATURES.md", "fraud/eval_tabular.py": "fraud/RESULTS-TABULAR.md", "fraud/eval_lm_nuc.py": "fraud/RESULTS-LM-NUC.md", "fraud/eval_combos.py": "fraud/RESULTS-COMBOS.md", "fraud/eval_final.py": "fraud/RESULTS-FINAL.md" };
 
 // fraud/eval_d3ft.py and fraud/eval_d1ft.py store only their own setup's windows (keyed by window) and point at the Phase 5
 // eval for the other setups on the same windows; merge them into the shape of the other evals.
@@ -797,9 +804,10 @@ async function ieeeEval(r) {  // IEEE-CIS evals (eval_ieee*.py and the phases af
   const set_names = sens.length ? Object.keys(sens[0][1].mean_cost) : [];
   app.replaceChildren(
     el("h1", {}, `Eval ${r.eval}`),
-    el("p", { class: "intro" }, `IEEE-CIS: ${money(r.test_rows)} held-out test rows, ${r.test_fraud} frauds, ${wins.length} windows, run once per setup. Pre-registered in the docstring of ${r.script}. ` +
+    el("p", { class: "intro" }, (r.test_rows === undefined ? `IEEE-CIS: ${wins.length} held-out dev chains, no test row. Reads here are flattered: lambda was picked with these rows in. Stated in the docstring of ${r.script}. ` : `IEEE-CIS: ${money(r.test_rows)} held-out test rows, ${r.test_fraud} frauds, ${wins.length} windows, run once per setup. Pre-registered in the docstring of ${r.script}. `) +
       `A review costs ${money(r.costs.review_fee)} USD; a wrongly declined payment ${pct(r.costs.friction_rate)} of its amount, at least ${money(r.costs.friction_min)} USD; at most ${pct(r.costs.review_share)} of a window reviewed. ` +
       `Write-up with labelled claims: ${WRITE_UP[r.script] || "fraud/PROGRESS.md"}. Model scores are uncalibrated, and every number here is for these assumed costs. Don't compare the costs of different evals: they use different windows.`),
+    r.recommended ? el("section", { class: "panel", style: "margin-top:12px" }, el("h2", {}, "Recommended by the rule fixed before the run"), el("p", {}, name(r.recommended)), el("p", { class: "hint" }, "Chosen for customers and the owner's constraint. Its dollars are not shown to differ from the baseline's; see Answers.")) : null,
     el("section", { class: "panel", style: "margin-top:12px" }, el("h2", {}, "Answers"), el("p", { class: "hint" }, "Distinguishable means the 95% window-bootstrap interval of the mean paired difference excludes 0. Only the questions named in the pre-registration are questions; “reported” is not corrected for multiple comparisons."),
       el("div", { class: "scroll-x" }, ans)),
     el("section", { class: "panel", style: "margin-top:12px" }, el("h2", {}, "Cost per window"), evalChart(chart)),

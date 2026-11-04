@@ -1,3 +1,4 @@
+from pathlib import Path
 import json
 
 from fraud.viewer import server
@@ -77,3 +78,15 @@ def test_the_run_page_shows_the_rule_and_says_scores_are_uncalibrated():
     js = (server.HERE / "console.js").read_text(encoding="utf-8")
     assert "function ruleCard" in js and "Amount-aware" in js and "Customer line" in js and "Two lines on the score" in js
     assert "probability" not in js.split("function ruleCard")[1].split("function about")[0].replace("not probabilities", "")
+
+
+def test_every_final_and_dev_setup_has_a_console_name():
+    js = (Path(__file__).resolve().parents[1] / "viewer" / "console.js").read_text(encoding="utf-8")
+    for setup in ("final-logreg-amt", "final-signal-amt", "final-signal-cust", "final-rich-amt", "lm-signal-cust", "lm-rich+trees-amt"):
+        assert f'"{setup}"' in js
+
+
+def test_the_dev_evals_and_the_final_test_are_listed():
+    from fraud.viewer.server import EVAL_DIRS
+
+    assert {"eval_lm_nuc", "eval_combos", "eval_final"} <= set(EVAL_DIRS)

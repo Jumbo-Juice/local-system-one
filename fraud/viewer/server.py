@@ -29,7 +29,7 @@ HERE = Path(__file__).resolve().parent
 RESULTS = HERE.parent / "results"
 # result folders with eval pages (fraud/results/eval_d3 has no test windows; *_repro.json is not an eval). The second row is IEEE-CIS at a 10 USD review.
 EVAL_DIRS = ("eval", "eval_d3ft", "eval_d1ft",
-             "eval_ieee", "eval_ieee_full", "eval_ieee_amount", "eval_column_audit", "eval_rule", "eval_features", "eval_tabular", "eval_final")
+             "eval_ieee", "eval_ieee_full", "eval_ieee_amount", "eval_column_audit", "eval_rule", "eval_features", "eval_tabular", "eval_lm_nuc", "eval_combos", "eval_final")
 PAGES = ("index.html", "console.js", "console.css")
 TYPES = {".html": "text/html; charset=utf-8", ".js": "text/javascript; charset=utf-8", ".css": "text/css; charset=utf-8",
          ".jsonl": "application/x-ndjson; charset=utf-8", ".json": "application/json; charset=utf-8"}
