@@ -716,3 +716,7 @@ Read-outs beyond the registration, chose nothing: rank correlation with the sign
 ## 2026-11-04: Phase 24, the console
 
 The Eval page now lists Phases 21 and 22 as dev evals and shows the final test with its recommendation. Names added for tabular, language-model and final setups. Boosted trees' traces, recorded under the logreg kind, now read as boosted trees, and dev language-model traces as scored in a batch. The run page shows the amount-aware rule and customer line. Checked in Edge at desktop and at a true 375 px viewport over the debugging protocol: start, eval, combos, dev report, run pages with replay playing, auto-demo. No sideways scroll, 0 console errors. Headless iframes at 375 px proved unreliable for hash pages that fetch the runs list, so that's how to check from now on.
+
+## 2026-11-04: owner's verdict on the recommended setup, and a read-out of d1-Omni-2B with no tabular score
+
+Owner, after the final test: final-signal-cust is "really not a decision model doing its grunt work". The setup that meets the constraint is d1-Omni-2B with no tabular score. A read-out after every FINAL result was seen, not a test, from final-rich-amt's recorded scores: with the customer line 2,417 per window, against 2,427 without it and the baseline's 2,106; good customers declined 444 (1,081; 1,051); frauds stopped 311 (375; 384). Against the baseline +311, CI -75 to 746. Replayed with separate arithmetic: 0 rows differ, largest gap 0.02 USD. `fraud/RESULTS-FINAL.md` and `fraud/SUMMARY.md` updated, with the registered result left as it came out.

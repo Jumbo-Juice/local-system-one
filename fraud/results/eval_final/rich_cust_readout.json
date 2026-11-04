@@ -1,0 +1,186 @@
+{
+ "note": "A read-out after every FINAL result was seen, not a registered answer.",
+ "eval": "20261104-090649",
+ "table": {
+  "final-rich-cust": {
+   "mean_cost": 2416.6733499999996,
+   "cost_ci95": [
+    2029.895261875,
+    2867.46712725
+   ],
+   "frauds": 630,
+   "frauds_stopped": 311,
+   "fraud_usd_stopped": 71143.70300000001,
+   "fraud_usd_let_through": 33507.629,
+   "good_customers_declined": 444,
+   "good_declined_or_reviewed": 1327,
+   "reviews": 974
+  },
+  "final-rich-amt": {
+   "mean_cost": 2426.7515,
+   "cost_ci95": [
+    2023.4645962500003,
+    2895.9941796250005
+   ],
+   "frauds": 630,
+   "frauds_stopped": 375,
+   "fraud_usd_stopped": 74490.403,
+   "fraud_usd_let_through": 30160.929000000004,
+   "good_customers_declined": 1081,
+   "good_declined_or_reviewed": 1899,
+   "reviews": 895
+  },
+  "final-logreg-amt": {
+   "mean_cost": 2106.1117700000004,
+   "cost_ci95": [
+    1945.72538875,
+    2292.4579145000002
+   ],
+   "frauds": 630,
+   "frauds_stopped": 384,
+   "fraud_usd_stopped": 78546.801,
+   "fraud_usd_let_through": 26104.531,
+   "good_customers_declined": 1051,
+   "good_declined_or_reviewed": 1703,
+   "reviews": 729
+  },
+  "final-signal-cust": {
+   "mean_cost": 1991.5674299999998,
+   "cost_ci95": [
+    1682.6703475000002,
+    2382.881472875
+   ],
+   "frauds": 630,
+   "frauds_stopped": 335,
+   "fraud_usd_stopped": 75313.664,
+   "fraud_usd_let_through": 29337.668,
+   "good_customers_declined": 247,
+   "good_declined_or_reviewed": 962,
+   "reviews": 804
+  }
+ },
+ "against": [
+  {
+   "a": "final-rich-cust",
+   "b": "final-logreg-amt",
+   "better": "final-logreg-amt",
+   "other": "final-rich-cust",
+   "cheaper": 12,
+   "dearer": 8,
+   "ties": 0,
+   "sign_p": 0.5034446716308594,
+   "mean_diff": -310.5615799999999,
+   "mean_diff_ci95": [
+    -745.5376613749999,
+    75.01426750000005
+   ],
+   "distinguishable": false
+  },
+  {
+   "a": "final-rich-cust",
+   "b": "final-rich-amt",
+   "better": "final-rich-cust",
+   "other": "final-rich-amt",
+   "cheaper": 15,
+   "dearer": 5,
+   "ties": 0,
+   "sign_p": 0.04138946533203125,
+   "mean_diff": -10.078150000000068,
+   "mean_diff_ci95": [
+    -90.7549005000001,
+    86.79963575000001
+   ],
+   "distinguishable": false
+  },
+  {
+   "a": "final-rich-cust",
+   "b": "final-signal-cust",
+   "better": "final-signal-cust",
+   "other": "final-rich-cust",
+   "cheaper": 16,
+   "dearer": 4,
+   "ties": 0,
+   "sign_p": 0.01181793212890625,
+   "mean_diff": -425.10591999999997,
+   "mean_diff_ci95": [
+    -831.0481644999999,
+    -79.71407400000008
+   ],
+   "distinguishable": true
+  },
+  {
+   "a": "final-rich-cust",
+   "b": "ieee-approve-all",
+   "better": "final-rich-cust",
+   "other": "ieee-approve-all",
+   "cheaper": 18,
+   "dearer": 2,
+   "ties": 0,
+   "sign_p": 0.0004024505615234375,
+   "mean_diff": -2815.8932499999996,
+   "mean_diff_ci95": [
+    -3631.119137624999,
+    -1985.6176990000001
+   ],
+   "distinguishable": true
+  },
+  {
+   "a": "final-rich-amt",
+   "b": "ieee-approve-all",
+   "better": "final-rich-amt",
+   "other": "ieee-approve-all",
+   "cheaper": 18,
+   "dearer": 2,
+   "ties": 0,
+   "sign_p": 0.0004024505615234375,
+   "mean_diff": -2805.8151,
+   "mean_diff_ci95": [
+    -3631.4844917500004,
+    -1970.360403125001
+   ],
+   "distinguishable": true
+  }
+ ],
+ "windows": [
+  2575.1571999999996,
+  2070.351,
+  2298.9437,
+  3152.5671,
+  2018.0359999999998,
+  833.4407,
+  1715.3946,
+  1573.4085,
+  1718.0911999999998,
+  2433.4309,
+  5144.494699999999,
+  2726.125,
+  4067.2928,
+  3246.2857999999997,
+  2398.3572,
+  2306.6207999999997,
+  2845.844,
+  1181.494,
+  1661.7126,
+  2366.4192000000003
+ ],
+ "told_10_usd": {
+  "mean": {
+   "final-rich-cust": 2638.6733499999996,
+   "final-logreg-amt": 2631.6117700000004
+  },
+  "against_baseline": 7.061579999999845,
+  "ci": [
+   -404.7983416250001,
+   481.0050732499996
+  ]
+ },
+ "dearest_window": {
+  "window": "final10",
+  "cost": 5144.494699999999,
+  "baseline": 2459.3026
+ },
+ "replay": {
+  "rows_decided_differently": 0,
+  "largest_cost_gap": 0.020200000000386353
+ }
+}

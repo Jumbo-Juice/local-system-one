@@ -55,6 +55,28 @@ Checked apart from the report code: `fraud/dev/verify_tabular.py` replays all 5 
 - **If a declined good customer truly costs 10 USD more,** Phase 18's told cost, the recommended setup costs 2,115 against the baseline's 2,632: -517, CI -796 to -130, which excludes 0. It's also 292 below `final-signal-amt`, CI -388 to -191. The dollars favour the customer line more the more a wrongly declined customer costs. The 10 USD is an assumption, not a measurement.
 - **One window carries much of the uncertainty.** In final12 the recommended setup costs 4,936 against the baseline's 2,066. Two frauds of 1,504.47 USD each were let through. Without that window the difference is -272, CI -435 to -100. Removing a bad window after seeing it isn't evidence, and such windows will happen. It says the risk is in large single frauds.
 
+## After the test: the owner's verdict, and d1-Omni-2B with no tabular score
+
+Owner, 2026-11-04, after seeing these results: `final-signal-cust` is "really not a decision model doing its grunt work". So **the setup that meets the owner's constraint is d1-Omni-2B with no tabular score**, not the one the registered rule recommended. The rule's result stands above as it came out.
+
+The customer line on that setup was asked for after every FINAL result was seen, so this is a read-out and not a test (`fraud/dev/final_rich_cust.py`, `fraud/results/eval_final/rich_cust_readout.json`). No model ran. It uses `final-rich-amt`'s recorded scores, fit and lambda. Replayed with separate arithmetic: 0 rows differ, largest gap 0.02 USD. CIs are for scale. (Observed)
+
+| 20 windows, 630 frauds | d1, rule | d1, rule and customer line | logreg baseline |
+|---|---:|---:|---:|
+| mean cost per window | 2,427 | 2,417 | 2,106 |
+| 95% CI | 2,023–2,896 | 2,030–2,867 | 1,946–2,292 |
+| good customers declined | 1,081 | 444 | 1,051 |
+| good customers declined or reviewed | 1,899 | 1,327 | 1,703 |
+| frauds stopped | 375 | 311 | 384 |
+| fraud USD let through, of 104,651 | 30,161 | 33,508 | 26,105 |
+| reviews, a budget of 1,000 | 895 | 974 | 729 |
+
+- Against the baseline, the customer line setup is +311 per window, CI -75 to 746, logreg cheaper in 12 windows of 20. Against d1 with the rule alone: -10, CI -91 to 87.
+- At a true 10 USD per declined customer, an assumption, it ties the baseline: 2,639 against 2,632, +7, CI -405 to 481.
+- The prediction: about 300 good customers declined, actually 444, a miss. About 320 frauds stopped, 311, held. Cost within about 150 of 2,427, probably up: within, but down by 10.
+
+So on these windows the customer line gives up 64 frauds and 3,347 USD of fraud stopped, for 637 fewer good customers declined, at about the same cost. (Observed; the reading is Inferred)
+
 ## What it means (Inferred)
 
 - **The language model at heart costs nothing shown against logreg, and gains nothing shown in dollars.** The gain that holds up is to customers, and it comes from the customer line, which could also be put on logreg. Phase 18 found that it cut logreg's good customers declined by 68%.
