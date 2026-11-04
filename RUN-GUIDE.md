@@ -679,6 +679,17 @@ The language model on this machine (Phase 21): the score it reads as a signal, t
 .venv/Scripts/python -m fraud.eval_lm_nuc --score lm-frozen
 ```
 
+Then Phase 21's comparison, Phase 22's combinations, and the final test. The final test refuses to run a second time; `--resume` continues the same eval, and `fraud/final_test.py` holds its windows. About 45 min on this GPU. Write-ups: `fraud/RESULTS-LM-NUC.md`, `fraud/RESULTS-COMBOS.md`, `fraud/RESULTS-FINAL.md`.
+
+```bash
+.venv/Scripts/python -m fraud.eval_lm_nuc --report
+.venv/Scripts/python -m fraud.eval_combos
+.venv/Scripts/python -m fraud.eval_final
+.venv/Scripts/python -m fraud.eval_final --report <eval id>
+.venv/Scripts/python -m fraud.dev.verify_tabular fraud/results/eval_final/<eval id>.json
+.venv/Scripts/python -m fraud.dev.final_extras <eval id>
+```
+
 ## Where things land
 
 | what | where |

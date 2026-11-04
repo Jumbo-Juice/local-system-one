@@ -1,0 +1,498 @@
+{
+ "eval": "20261104-090649",
+ "script": "fraud/eval_final.py",
+ "created": "2026-11-04T09:44:28",
+ "complete": true,
+ "costs": {
+  "friction_rate": 0.1,
+  "friction_min": 1.0,
+  "review_fee": 10.0,
+  "review_share": 0.05
+ },
+ "windows": {
+  "final0": [
+   472752,
+   473751
+  ],
+  "final1": [
+   482973,
+   483972
+  ],
+  "final2": [
+   489742,
+   490741
+  ],
+  "final3": [
+   492355,
+   493354
+  ],
+  "final4": [
+   498948,
+   499947
+  ],
+  "final5": [
+   502141,
+   503140
+  ],
+  "final6": [
+   509607,
+   510606
+  ],
+  "final7": [
+   514028,
+   515027
+  ],
+  "final8": [
+   523003,
+   524002
+  ],
+  "final9": [
+   526783,
+   527782
+  ],
+  "final10": [
+   534565,
+   535564
+  ],
+  "final11": [
+   539368,
+   540367
+  ],
+  "final12": [
+   542838,
+   543837
+  ],
+  "final13": [
+   548871,
+   549870
+  ],
+  "final14": [
+   552509,
+   553508
+  ],
+  "final15": [
+   556970,
+   557969
+  ],
+  "final16": [
+   566087,
+   567086
+  ],
+  "final17": [
+   567087,
+   568086
+  ],
+  "final18": [
+   581157,
+   582156
+  ],
+  "final19": [
+   584622,
+   585621
+  ]
+ },
+ "test_rows": 20000,
+ "test_fraud": 630,
+ "setups": {
+  "final-logreg-amt": {
+   "mean_cost": 2106.1117700000004,
+   "total_cost": 42122.235400000005,
+   "cost_ci95": [
+    1945.72538875,
+    2292.4579145000002
+   ],
+   "auc": 0.8533126418696888,
+   "auc_ci95": [
+    0.8206098172310691,
+    0.8796353831349353
+   ],
+   "recall": 0.6095238095238096,
+   "precision": 0.1839961667465261,
+   "alert_rate": 0.10435,
+   "reviews": 729,
+   "declines": 1358,
+   "reviews_wanted": 739,
+   "fraud_amount_stopped": 78546.92,
+   "windows": [
+    3402.5281999999997,
+    2023.4798,
+    1967.7592000000002,
+    2175.5469000000003,
+    2301.0648,
+    2058.4072,
+    1749.7358000000002,
+    1864.5401000000002,
+    1672.9225000000001,
+    2499.0293,
+    2459.3026,
+    1421.9598,
+    2066.2210999999998,
+    2146.5716,
+    1832.3554,
+    2246.4215999999997,
+    2021.2874,
+    1867.2897000000003,
+    2309.1164,
+    2036.696
+   ],
+   "latency_ms": null,
+   "prompt_tokens_mean": null,
+   "thresholds": null,
+   "fraud_let_through": 26104.55,
+   "good_declined": 8727.76,
+   "review_fees": 7290.0,
+   "reviewed_amount_median": 606.0,
+   "reviews_finding_fraud": 77,
+   "fraud_amount": 104651.47,
+   "frauds": 630,
+   "frauds_stopped": 384,
+   "fraud_usd": 104651.47,
+   "fraud_usd_stopped": 78546.92,
+   "good_customers_declined": 1051,
+   "good_reviewed": 652
+  },
+  "final-signal-amt": {
+   "mean_cost": 1942.89091,
+   "total_cost": 38857.8182,
+   "cost_ci95": [
+    1651.364831875,
+    2337.6087728749994
+   ],
+   "auc": 0.8831814047250289,
+   "auc_ci95": [
+    0.8601584844547407,
+    0.9035656802309739
+   ],
+   "recall": 0.6412698412698413,
+   "precision": 0.2064384261624936,
+   "alert_rate": 0.09785,
+   "reviews": 702,
+   "declines": 1255,
+   "reviews_wanted": 705,
+   "fraud_amount_stopped": 81089.52,
+   "windows": [
+    2293.8676,
+    2021.0264000000002,
+    2048.392,
+    2095.1868,
+    1865.4619,
+    2062.3401000000003,
+    1573.9778000000001,
+    1231.0853000000002,
+    1315.3154,
+    1894.0517999999997,
+    1372.4822000000001,
+    1275.3171,
+    5017.6176,
+    1695.951,
+    1659.1002,
+    2270.9221000000002,
+    2509.055,
+    987.6819,
+    1780.0242,
+    1888.9618
+   ],
+   "latency_ms": {
+    "p50": 52.956,
+    "p90": 55.722100000000005
+   },
+   "prompt_tokens_mean": 369.4606,
+   "thresholds": null,
+   "fraud_let_through": 23561.95,
+   "good_declined": 8275.88,
+   "review_fees": 7020.0,
+   "reviewed_amount_median": 554.0,
+   "reviews_finding_fraud": 77,
+   "fraud_amount": 104651.47,
+   "frauds": 630,
+   "frauds_stopped": 404,
+   "fraud_usd": 104651.47,
+   "fraud_usd_stopped": 81089.52,
+   "good_customers_declined": 928,
+   "good_reviewed": 625
+  },
+  "final-signal-cust": {
+   "mean_cost": 1991.5674299999998,
+   "total_cost": 39831.3486,
+   "cost_ci95": [
+    1682.6703475000002,
+    2382.881472875
+   ],
+   "auc": 0.8831814047250289,
+   "auc_ci95": [
+    0.8601584844547407,
+    0.9035656802309739
+   ],
+   "recall": 0.5317460317460317,
+   "precision": 0.2582883577486507,
+   "alert_rate": 0.06485,
+   "reviews": 804,
+   "declines": 493,
+   "reviews_wanted": 816,
+   "fraud_amount_stopped": 75313.75,
+   "windows": [
+    2569.8127,
+    1865.483,
+    1813.5279,
+    2398.7196,
+    1867.4209999999998,
+    1961.0000000000002,
+    1326.3312,
+    1286.081,
+    1468.3904,
+    1718.838,
+    2108.1984,
+    1200.82,
+    4936.1018,
+    2049.9484,
+    1710.1362,
+    2315.1975999999995,
+    2726.0968,
+    903.594,
+    1931.1267999999998,
+    1674.5238
+   ],
+   "latency_ms": {
+    "p50": 52.956,
+    "p90": 55.722100000000005
+   },
+   "prompt_tokens_mean": 369.4606,
+   "thresholds": null,
+   "fraud_let_through": 29337.72,
+   "good_declined": 2453.67,
+   "review_fees": 8040.0,
+   "reviewed_amount_median": 500.0,
+   "reviews_finding_fraud": 89,
+   "fraud_amount": 104651.47,
+   "frauds": 630,
+   "frauds_stopped": 335,
+   "fraud_usd": 104651.47,
+   "fraud_usd_stopped": 75313.75,
+   "good_customers_declined": 247,
+   "good_reviewed": 715
+  },
+  "final-rich-amt": {
+   "mean_cost": 2426.7515,
+   "total_cost": 48535.03,
+   "cost_ci95": [
+    2023.4645962500003,
+    2895.9941796250005
+   ],
+   "auc": 0.8592569101293933,
+   "auc_ci95": [
+    0.8308839271534385,
+    0.884566038364583
+   ],
+   "recall": 0.5952380952380952,
+   "precision": 0.16490765171503957,
+   "alert_rate": 0.1137,
+   "reviews": 895,
+   "declines": 1379,
+   "reviews_wanted": 990,
+   "fraud_amount_stopped": 74490.51,
+   "windows": [
+    2659.8489,
+    2174.315,
+    2346.328,
+    2756.5379999999996,
+    1541.0582,
+    870.7823000000001,
+    1798.5268,
+    1611.5863000000002,
+    1583.4812000000002,
+    2583.8428,
+    5264.5823,
+    2772.6402000000003,
+    4320.6003,
+    3280.9545,
+    2253.4122,
+    2512.7811,
+    3056.8593999999994,
+    1355.9587000000001,
+    1802.192,
+    1988.7417999999998
+   ],
+   "latency_ms": {
+    "p50": 53.083,
+    "p90": 55.8081
+   },
+   "prompt_tokens_mean": 345.4606,
+   "thresholds": null,
+   "fraud_let_through": 30160.96,
+   "good_declined": 9424.09,
+   "review_fees": 8950.0,
+   "reviewed_amount_median": 554.0,
+   "reviews_finding_fraud": 77,
+   "fraud_amount": 104651.47,
+   "frauds": 630,
+   "frauds_stopped": 375,
+   "fraud_usd": 104651.47,
+   "fraud_usd_stopped": 74490.51,
+   "good_customers_declined": 1081,
+   "good_reviewed": 818
+  },
+  "ieee-approve-all": {
+   "mean_cost": 5232.5666,
+   "total_cost": 104651.332,
+   "cost_ci95": [
+    4312.1116525,
+    6121.323685
+   ],
+   "auc": null,
+   "auc_ci95": null,
+   "recall": 0.0,
+   "precision": 0.0,
+   "alert_rate": 0.0,
+   "reviews": 0,
+   "declines": 0,
+   "reviews_wanted": 0,
+   "fraud_amount_stopped": 0.0,
+   "windows": [
+    6129.451,
+    3126.6189999999997,
+    2200.045,
+    5356.831,
+    4243.437,
+    2511.0,
+    1327.969,
+    6305.0109999999995,
+    4584.674999999999,
+    6731.638,
+    6142.57,
+    3961.9269999999997,
+    8495.969,
+    7224.224,
+    3779.45,
+    3890.678,
+    7847.655000000001,
+    4528.602,
+    7127.95,
+    9135.631000000001
+   ],
+   "latency_ms": null,
+   "prompt_tokens_mean": null,
+   "thresholds": {
+    "review": null,
+    "decline": null
+   },
+   "fraud_let_through": 104651.47,
+   "good_declined": 0.0,
+   "review_fees": 0.0,
+   "reviewed_amount_median": null,
+   "reviews_finding_fraud": 0,
+   "fraud_amount": 104651.47,
+   "frauds": 630,
+   "frauds_stopped": 0,
+   "fraud_usd": 104651.47,
+   "fraud_usd_stopped": 0.0,
+   "good_customers_declined": 0,
+   "good_reviewed": 0
+  }
+ },
+ "verdict": {
+  "primary": {
+   "a": "final-signal-amt",
+   "b": "final-logreg-amt",
+   "better": "final-signal-amt",
+   "other": "final-logreg-amt",
+   "cheaper": 15,
+   "dearer": 5,
+   "ties": 0,
+   "sign_p": 0.04138946533203125,
+   "mean_diff": -163.22086000000004,
+   "mean_diff_ci95": [
+    -462.0924905,
+    237.89309599999964
+   ],
+   "distinguishable": false
+  },
+  "second": {
+   "a": "final-signal-cust",
+   "b": "final-signal-amt",
+   "better": "final-signal-amt",
+   "other": "final-signal-cust",
+   "cheaper": 11,
+   "dearer": 9,
+   "ties": 0,
+   "sign_p": 0.8238029479980469,
+   "mean_diff": -48.67651999999996,
+   "mean_diff_ci95": [
+    -159.86207362499988,
+    46.97838175000004
+   ],
+   "distinguishable": false
+  },
+  "third": {
+   "a": "final-rich-amt",
+   "b": "final-logreg-amt",
+   "better": "final-logreg-amt",
+   "other": "final-rich-amt",
+   "cheaper": 12,
+   "dearer": 8,
+   "ties": 0,
+   "sign_p": 0.5034446716308594,
+   "mean_diff": -320.63973,
+   "mean_diff_ci95": [
+    -773.8453504999998,
+    73.73948924999989
+   ],
+   "distinguishable": false
+  },
+  "reported": [
+   {
+    "a": "final-signal-cust",
+    "b": "final-logreg-amt",
+    "better": "final-signal-cust",
+    "other": "final-logreg-amt",
+    "cheaper": 16,
+    "dearer": 4,
+    "ties": 0,
+    "sign_p": 0.01181793212890625,
+    "mean_diff": -114.54434000000008,
+    "mean_diff_ci95": [
+     -390.5650105000001,
+     273.17298312500003
+    ],
+    "distinguishable": false
+   },
+   {
+    "a": "final-rich-amt",
+    "b": "final-signal-amt",
+    "better": "final-signal-amt",
+    "other": "final-rich-amt",
+    "cheaper": 17,
+    "dearer": 3,
+    "ties": 0,
+    "sign_p": 0.0025768280029296875,
+    "mean_diff": -483.8605899999999,
+    "mean_diff_ci95": [
+     -972.0767089999999,
+     -103.35652862499998
+    ],
+    "distinguishable": true
+   },
+   {
+    "a": "final-signal-amt",
+    "b": "ieee-approve-all",
+    "better": "final-signal-amt",
+    "other": "ieee-approve-all",
+    "cheaper": 19,
+    "dearer": 1,
+    "ties": 0,
+    "sign_p": 4.00543212890625e-05,
+    "mean_diff": -3289.67569,
+    "mean_diff_ci95": [
+     -4126.772145625,
+     -2422.3101493749996
+    ],
+    "distinguishable": true
+   }
+  ]
+ },
+ "recommended": "final-signal-cust",
+ "latency_bar_ms": 250.0,
+ "latency_pass": {
+  "final-signal-amt": true,
+  "final-rich-amt": true
+ }
+}

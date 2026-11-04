@@ -1,0 +1,64 @@
+{
+ "signal_rank_corr": 0.9844786909376967,
+ "told_mean": {
+  "final-logreg-amt": 2631.6117700000004,
+  "final-signal-amt": 2406.89091,
+  "final-signal-cust": 2115.06743,
+  "final-rich-amt": 2967.2515
+ },
+ "told_vs_baseline": {
+  "final-signal-amt": {
+   "mean": -224.72086000000004,
+   "ci": [
+    -533.01863,
+    182.6505113749999
+   ]
+  },
+  "final-signal-cust": {
+   "mean": -516.5443400000001,
+   "ci": [
+    -795.5969612499999,
+    -130.3114083749999
+   ]
+  },
+  "final-rich-amt": {
+   "mean": 335.6397299999999,
+   "ci": [
+    -115.16097050000008,
+    861.91995775
+   ]
+  }
+ },
+ "told_cust_vs_amt": {
+  "mean": -291.82348,
+  "ci": [
+   -388.29878400000007,
+   -191.1554698750001
+  ]
+ },
+ "good_touched": {
+  "final-logreg-amt": 1703,
+  "final-signal-amt": 1553,
+  "final-signal-cust": 962,
+  "final-rich-amt": 1899
+ },
+ "dearest_window": {
+  "window": "final12",
+  "cost": 4936.1018,
+  "baseline": 2066.2210999999998,
+  "largest_frauds_let_through": [
+   1504.47,
+   1504.47,
+   200.0,
+   200.0,
+   112.0
+  ]
+ },
+ "cust_vs_baseline_without_that_window": {
+  "mean": -271.61934210526323,
+  "ci": [
+   -435.41856618421065,
+   -100.28674026315798
+  ]
+ }
+}

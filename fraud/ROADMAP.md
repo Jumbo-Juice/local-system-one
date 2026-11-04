@@ -191,21 +191,21 @@ check's failure), whatever they show.
 **Accept:** reported against the best logreg so far, whatever it shows.
 
 ## Phase 21: language model on this hardware (owner, 2026-11-03)
-- [ ] Options from the owner's list, each with p90 <= 250 ms, judged on dev; run time estimated first; `fraud/RESULTS-LM-NUC.md`
+- [x] Options from the owner's list, each with p90 <= 250 ms, judged on dev; run time estimated first; `fraud/RESULTS-LM-NUC.md`
 
 **Accept:** reported on dev against the best tabular setup, whatever it shows; or skipped under the owner's stop rule with the reason.
 
 ## Phase 22: combinations (owner, 2026-11-03)
-- [ ] Whatever survived, on dev only; `fraud/RESULTS-COMBOS.md`
+- [x] Whatever survived, on dev only; `fraud/RESULTS-COMBOS.md`
 
 **Accept:** at most 3 candidates chosen for the final test, with the reason.
 
 ## Phase 23: the final test (owner, 2026-11-03)
-- [ ] Pre-register at most 3 candidates and logreg with Phase 14's rule as baseline, run the FINAL windows once; `fraud/RESULTS-FINAL.md`
+- [x] Pre-register at most 3 candidates and logreg with Phase 14's rule as baseline, run the FINAL windows once; `fraud/RESULTS-FINAL.md`
 
 **Accept:** results committed whatever they show, in dollars and customers.
 
 ## Phase 24: console (owner, 2026-11-03)
-- [ ] IEEE and 10 USD results on the Eval page, the amount-aware rule on the run page; checks of `fraud/CLAUDE.md` and `CLAUDE.md`
+- [x] IEEE and 10 USD results on the Eval page, the amount-aware rule on the run page; checks of `fraud/CLAUDE.md` and `CLAUDE.md`
 
 **Accept:** both show correctly at desktop and 375 px with no console errors.
