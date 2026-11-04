@@ -209,3 +209,8 @@ check's failure), whatever they show.
 - [x] IEEE and 10 USD results on the Eval page, the amount-aware rule on the run page; checks of `fraud/CLAUDE.md` and `CLAUDE.md`
 
 **Accept:** both show correctly at desktop and 375 px with no console errors.
+
+## Phase 25: train the language model on cost (owner, 2026-11-04)
+- [ ] d1-Omni-2B with no tabular score, each row's loss counting by what a mistake on it costs, against `lm-rich` on held-out dev; `fraud/RESULTS-LM-COST.md`
+
+**Accept:** reported on dev in dollars and customers, whatever it shows. No test row is used.

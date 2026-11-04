@@ -54,7 +54,7 @@ PHASE12_ADAPTER = Path(__file__).resolve().parent / "models" / "20261103-091222_
 
 
 def needs_history(setup: str) -> bool:
-    return setup in ("lm-rich", "lm-signal")
+    return setup in ("lm-rich", "lm-signal", "lm-weighted")
 
 
 def order_of(variant: str) -> tuple[str, ...]:
