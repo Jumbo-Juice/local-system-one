@@ -1,0 +1,55 @@
+{
+  "_note": "Numbers that exist only in prose or in traces that aren't committed. Each block names its source. Everything else in data.js is read from committed JSON by build_data.py.",
+  "split": {
+    "_source": "slides-handoff.md, Data and recipe; fraud/final_test.py",
+    "rows": 590540,
+    "fit": 354324,
+    "dev": 118108,
+    "test": 118108,
+    "fraud_share": "about 3.5%"
+  },
+  "paysim": {
+    "_source": "README.md, docs/media/fraud-rule-book.png. Simulated data and a different cost setup from IEEE-CIS.",
+    "matched": 3853,
+    "decisions": 3862,
+    "mean_rules": 808,
+    "mean_trained": 830,
+    "mean_logreg": 190910,
+    "mean_untrained_millions": 5.1
+  },
+  "phase14": {
+    "_source": "fraud/RESULTS-IEEE-AMOUNT.md, Good customers declined. Logreg with two lines, then with the rule.",
+    "good_declined_lines": 655,
+    "good_declined_rule": 982
+  },
+  "training": {
+    "_source": "fraud/eval_lm_cost.py docstring, Phase 25 pre-registration",
+    "top10_share": 41,
+    "largest_weight": 7.3,
+    "fit_rows": 47952,
+    "fit_frauds": 11988,
+    "fit_legit": 35964
+  },
+  "bands": {
+    "_source": "fraud/RESULTS-LM-COST.md, Frauds stopped by size. Counted from traces, not in the JSON.",
+    "rows": [
+      {"label": "under 50", "frauds": 1181, "rich": 823, "weighted": 780},
+      {"label": "50 to 100", "frauds": 817, "rich": 507, "weighted": 472},
+      {"label": "100 to 250", "frauds": 794, "rich": 466, "weighted": 419},
+      {"label": "250 to 500", "frauds": 342, "rich": 270, "weighted": 264},
+      {"label": "500 or more", "frauds": 275, "rich": 258, "weighted": 259}
+    ]
+  },
+  "predictions": {
+    "_source": "fraud/eval_lm_cost.py docstring (stated before running); fraud/RESULTS-LM-COST.md, Predictions against what happened",
+    "rows": [
+      {"said": "Cost lower than lm-rich by about 100, not distinguishable", "got": "+53, not distinguishable", "verdict": "no", "tag": "direction wrong"},
+      {"said": "AUC falls by up to 0.01", "got": "Falls 0.0131", "verdict": "partly", "tag": "right way, larger"},
+      {"said": "Fraud dollars stopped rise", "got": "Fall 10,953", "verdict": "no", "tag": "wrong"},
+      {"said": "Frauds of 500 USD or more stopped rise", "got": "258 to 259", "verdict": "partly", "tag": "one fraud, no real change"},
+      {"said": "Frauds stopped overall fall a little", "got": "Fall 130, 6%", "verdict": "yes", "tag": "right"},
+      {"said": "Beats logreg by about 100, not distinguishable", "got": "+40, not distinguishable", "verdict": "no", "tag": "direction wrong"},
+      {"said": "Stays dearer than the trees", "got": "+335, distinguishable", "verdict": "yes", "tag": "right"}
+    ]
+  }
+}

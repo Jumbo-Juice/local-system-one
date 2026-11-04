@@ -1,0 +1,17 @@
+{
+  "detector": {
+    "ignoreRules": [],
+    "ignoreFiles": [],
+    "ignoreValues": [
+      {
+        "rule": "oversized-h1",
+        "value": "*",
+        "files": [
+          "slides/index.html"
+        ],
+        "createdAt": "2026-11-04T08:03:38.434Z",
+        "reason": "Claude's triage: detector measured 8960px, but these are 68px takeaway headlines on reveal's fixed 1920x1080 canvas, one or two lines in the rendered PDF, same convention as the midterm deck"
+      }
+    ]
+  }
+}

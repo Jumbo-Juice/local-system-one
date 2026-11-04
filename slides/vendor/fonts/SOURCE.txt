@@ -1,0 +1,2 @@
+Archivo (variable: weight 100-900, width 62-125%), roman and italic, from google/fonts
+(ofl/archivo) at commit e7db6ca603fd4862010383ff17ffd6cc4ffac1c0. SIL OFL 1.1, licence in archivo/OFL.txt.

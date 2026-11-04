@@ -151,6 +151,7 @@ it: [`docs/lessons-learned.md`](docs/lessons-learned.md).
 | learn from past runs | [`docs/lessons-learned.md`](docs/lessons-learned.md) |
 | read or change the engine | `system_one/` (see How it works below) |
 | see the fraud app (separate, serious) | [`fraud/`](fraud/CLAUDE.md): approve / review / decline on PaySim; results in [`fraud/RESULTS.md`](fraud/RESULTS.md) and, for the fine-tuned brain, [`fraud/RESULTS-FT.md`](fraud/RESULTS-FT.md); console `python -m fraud.viewer` |
+| see the final presentation | [`slides/`](slides/README.md): the reveal.js deck on the fraud results, with its PDF export |
 
 ## Quick start
 

@@ -1,0 +1,177 @@
+"""The final deck (slides/): data.js rebuilds from the committed files and says what the handoff's tables say,
+every binding on a slide resolves, nothing reaches the network, and the talk fits 15 minutes."""
+
+import importlib.util
+import json
+import re
+from pathlib import Path
+
+import pytest
+
+SLIDES = Path(__file__).resolve().parent.parent / "slides"
+spec = importlib.util.spec_from_file_location("build_data", SLIDES / "build_data.py")
+build_data = importlib.util.module_from_spec(spec)
+spec.loader.exec_module(build_data)
+
+MAX_TALK_S = 12 * 60  # 15 minutes everything included (owner, 2026-11-04), so 3:00 is left for questions
+
+
+@pytest.fixture(scope="module")
+def data():
+    return build_data.build()
+
+
+@pytest.fixture(scope="module")
+def html():
+    return (SLIDES / "index.html").read_text(encoding="utf-8")
+
+
+def sections(html):
+    return re.findall(r"<section\b[^>]*>.*?</section>", html, flags=re.S)
+
+
+def test_data_js_is_what_the_build_writes():
+    assert (SLIDES / "data.js").read_text(encoding="utf-8") == build_data.render()
+
+
+@pytest.mark.parametrize("key,mean,low,high,auc,stopped,through,declined,reviews", [
+    ("signal_amt", 1943, 1651, 2338, .883, 404, 23562, 928, 702),
+    ("signal_cust", 1992, 1683, 2383, .883, 335, 29338, 247, 804),
+    ("baseline", 2106, 1946, 2292, .853, 384, 26105, 1051, 729),
+    ("rich_amt", 2427, 2023, 2896, .859, 375, 30161, 1081, 895),
+    ("approve_all", 5233, 4312, 6121, None, 0, 104651, 0, 0),
+])
+def test_final_setups_match_the_handoff(data, key, mean, low, high, auc, stopped, through, declined, reviews):
+    s = data["final"]["setups"][key]
+    assert round(s["mean"]) == mean and [round(v) for v in s["ci"]] == [low, high]
+    assert s["auc"] is None if auc is None else round(s["auc"], 3) == auc
+    assert (s["frauds_stopped"], round(s["fraud_let_through"]), s["good_declined"], s["reviews"]) == (stopped, through, declined, reviews)
+    assert len(s["windows"]) == 20
+
+
+def test_readout_matches_the_handoff(data):
+    s = data["final"]["setups"]["rich_cust"]
+    assert (round(s["mean"]), s["good_declined"], s["good_touched"], s["frauds_stopped"], round(s["fraud_let_through"]), s["reviews"]) == (2417, 444, 1327, 311, 33508, 974)
+    told = data["final"]["told"]
+    assert (round(told["rich_cust"]), round(told["baseline"]), round(told["diff"]), [round(v) for v in told["ci"]]) == (2639, 2632, 7, [-405, 481])
+
+
+@pytest.mark.parametrize("key,mean,low,high,distinguishable", [
+    ("rich_amt_baseline", 321, -74, 774, False),
+    ("signal_amt_baseline", -163, -462, 238, False),
+    ("signal_cust_baseline", -115, -391, 273, False),
+    ("signal_amt_rich_amt", -484, -972, -103, True),
+    ("signal_amt_approve", -3290, -4127, -2422, True),
+    ("rich_cust_baseline", 311, -75, 746, False),
+    ("rich_cust_rich_amt", -10, -91, 87, False),
+    ("rich_cust_approve", -2816, -3631, -1986, True),
+    ("rich_amt_approve", -2806, -3631, -1970, True),
+])
+def test_final_differences_are_first_minus_second(data, key, mean, low, high, distinguishable):
+    d = data["final"]["diffs"][key]
+    assert round(d["mean"]) == mean and [round(v) for v in d["ci"]] == [low, high] and d["distinguishable"] is distinguishable
+    assert d["ci"][0] < d["mean"] < d["ci"][1]
+
+
+@pytest.mark.parametrize("key,mean,auc,declined,stopped", [
+    ("frozen", 3697, .7540, 9586, 1808), ("phase12", 2288, .8795, 3644, 2169), ("seed1", 2186, .8815, 3253, 2194),
+    ("rich", 2112, .8932, 3459, 2324), ("logreg", 2125, .8882, 4003, 2347), ("signal", 1920, .9102, 3241, 2410),
+    ("signal_alone", 1853, .9108, 3052, 2452), ("trees", 1830, .9139, 3003, 2445),
+])
+def test_ladder_matches_the_handoff(data, key, mean, auc, declined, stopped):
+    s = data["dev"]["setups"][key]
+    assert (round(s["mean"]), round(s["auc"], 4), s["good_declined"], s["frauds_stopped"]) == (mean, auc, declined, stopped)
+
+
+@pytest.mark.parametrize("key,mean,low,high,distinguishable", [
+    ("phase12_frozen", -1409, -1641, -1188, True), ("rich_phase12", -176, -281, -58, True), ("rich_logreg", -13, -142, 125, False),
+    ("signal_signal_alone", 67, -33, 166, False), ("rich_trees", 282, 151, 423, True), ("seed1_phase12", -102, -205, 6, False),
+])
+def test_dev_differences_are_first_minus_second(data, key, mean, low, high, distinguishable):
+    d = data["dev"]["diffs"][key]
+    assert round(d["mean"]) == mean and [round(v) for v in d["ci"]] == [low, high] and d["distinguishable"] is distinguishable
+
+
+def test_training_on_cost_matches_the_handoff(data):
+    c = data["cost"]
+    assert c["lambda"] == 5
+    d = c["diffs"]["weighted_rich"]
+    assert (round(d["mean"]), [round(v) for v in d["ci"]], d["first_cheaper"], d["distinguishable"]) == (53, [-39, 142], 46, False)
+    assert round(c["diffs"]["weighted_logreg"]["mean"]) == 40 and round(c["diffs"]["weighted_trees"]["mean"]) == 335
+    w = c["waterfall"]
+    assert (round(w["start"]), round(w["fraud"]), round(w["declines"]), round(w["reviews"]), round(w["end"])) == (2112, 124, -61, -10, 2165)
+    assert w["start"] + w["fraud"] + w["declines"] + w["reviews"] == pytest.approx(w["end"], abs=.02)
+    assert (c["setups"]["rich"]["big_stopped"], c["setups"]["weighted"]["big_stopped"], c["big_frauds"]) == (258, 259, 275)
+
+
+def test_bands_add_up_to_the_setups(data):
+    rows = data["manual"]["bands"]["rows"]
+    assert sum(r["frauds"] for r in rows) == data["cost"]["frauds"]
+    assert sum(r["rich"] for r in rows) == data["cost"]["setups"]["rich"]["frauds_stopped"]
+    assert sum(r["weighted"] for r in rows) == data["cost"]["setups"]["weighted"]["frauds_stopped"]
+
+
+def test_earlier_phases_and_latency(data):
+    p14, p18 = data["rule"]["phase14"], data["rule"]["phase18"]
+    assert (round(p14["lines"]), round(p14["rule"]), round(p14["diff"]["mean"]), [round(v) for v in p14["diff"]["ci"]]) == (2752, 1926, -825, [-1307, -464])
+    assert (p18["base"], p18["customers"], round(p18["diff"]["mean"])) == (476, 153, 119)
+    assert round(data["final"]["latency"]["p90"]) == 56 and data["final"]["latency"]["bar"] == 250
+    assert round(data["final"]["rank_corr"], 3) == .984 and round(data["dev"]["echo"]["rank_corr"], 3) == .984  # no double rounding
+    assert round(p14["latency"]["p90"]) == 128
+
+
+def test_only_paysim_rows_reach_the_deck(data):
+    assert data["paysim"]["model_n"] == data["paysim"]["model_declined"] == 257
+    # window-level IEEE-CIS only: row ranges and per-window costs, never a row's amount
+    assert not re.search(r"TransactionAmt|TransactionID|card1", json.dumps(data))
+    assert {r["type"] for r in data["paysim"]["replay"]} <= {"CASH_IN", "CASH_OUT", "DEBIT", "PAYMENT", "TRANSFER"}
+    assert not re.search(r"oldbalance|newbalance", json.dumps(data))
+
+
+def test_every_binding_resolves(data, html):
+    paths = re.findall(r"\{\{\s*([\w.]+)", html)
+    assert paths
+    for path in paths:
+        node = data
+        for part in path.split("."):
+            node = node[int(part)] if isinstance(node, list) else node[part]
+        assert node is not None, path
+
+
+def test_no_network_at_show_time(html):
+    files = [SLIDES / "index.html", SLIDES / "deck.css", *SLIDES.glob("js/*.js")]
+    for f in files:
+        text = f.read_text(encoding="utf-8")
+        text = re.sub(r"<aside class=\"notes\">.*?</aside>", "", text, flags=re.S)
+        assert not re.search(r"(?:src|href)=\"https?:|url\(\s*[\"']?https?:|@import|fetch\(", text), f
+    for ref in re.findall(r"(?:src|href)=\"([^\"#]+)\"", html):
+        assert ref.startswith("data:") or (SLIDES / ref).exists(), ref
+
+
+def test_reveal_is_pinned_and_licensed():
+    assert (SLIDES / "vendor/reveal/LICENSE").exists() and (SLIDES / "vendor/fonts/archivo/OFL.txt").exists()
+    assert "6.0.2" in (SLIDES / "README.md").read_text(encoding="utf-8")
+
+
+def test_every_slide_has_notes_and_the_talk_fits(html):
+    total = 0
+    leaves = [s for s in sections(html) if 'class="page' in s]
+    assert len(leaves) >= 19
+    for s in leaves:
+        assert '<aside class="notes">' in s, s[:120]
+        m = re.search(r"\[(\w+) · (\d+):(\d\d)\]", s)
+        if m:
+            total += int(m[2]) * 60 + int(m[3])
+    assert 0 < total <= MAX_TALK_S, total
+
+
+def test_every_result_slide_has_a_status_badge(html):
+    for s in sections(html):
+        if "data-result" in s:
+            assert re.search(r'class="badge\b', s), s[:120]
+
+
+@pytest.mark.parametrize("banned", [r"slightly (?:cheaper|better)", r"beats? (?:logistic regression|logreg)", r"\d+ ?% probability", r"probability of fraud"])
+def test_the_words_the_handoff_rules_out(html, banned):
+    visible = re.sub(r"<aside class=\"notes\">.*?</aside>", "", html, flags=re.S)
+    assert not re.search(banned, visible, flags=re.I)
