@@ -24,6 +24,7 @@ const SETUP_NAME = {
   "lm-phase12-amt": "d1-Omni-2B fine-tuned, Phase 12's adapter, amount-aware rule", "lm-phase12-lines": "d1-Omni-2B fine-tuned, Phase 12's adapter, two lines", "lm-seed1-amt": "d1-Omni-2B fine-tuned, seed 1, amount-aware rule", "lm-seed1-lines": "d1-Omni-2B fine-tuned, seed 1, two lines",
   "lm-rich-amt": "d1-Omni-2B fine-tuned, more prompt columns, amount-aware rule", "lm-rich-lines": "d1-Omni-2B fine-tuned, more prompt columns, two lines", "lm-signal-amt": "d1-Omni-2B fine-tuned, reads a tabular score, amount-aware rule", "lm-signal-lines": "d1-Omni-2B fine-tuned, reads a tabular score, two lines",
   "lm-frozen-amt": "frozen d1-Omni-2B, amount-aware rule", "lm-frozen-lines": "frozen d1-Omni-2B, two lines",
+  "lm-weighted-amt": "d1-Omni-2B trained on cost, more prompt columns, amount-aware rule", "lm-weighted-lines": "d1-Omni-2B trained on cost, more prompt columns, two lines", "lm-weighted-cust": "d1-Omni-2B trained on cost, more prompt columns, the rule with a customer line",
   "lm-rich-cust": "d1-Omni-2B fine-tuned, more prompt columns, the rule with a customer line", "lm-signal-cust": "d1-Omni-2B fine-tuned, reads a tabular score, the rule with a customer line",
   "lm-two-seeds-amt": "two seeds of d1-Omni-2B averaged, amount-aware rule", "lm-two-seeds-cust": "two seeds of d1-Omni-2B averaged, the rule with a customer line", "lm-three-amt": "three d1-Omni-2B adapters averaged, amount-aware rule", "lm-three-cust": "three d1-Omni-2B adapters averaged, the rule with a customer line",
   "lm-rich-signal-amt": "d1-Omni-2B, more columns and tabular score averaged, amount-aware rule", "lm-rich-signal-cust": "d1-Omni-2B, more columns and tabular score averaged, the rule with a customer line",
@@ -612,7 +613,7 @@ const BAR_TITLE = { bar1: "Bar 1: cost", bar2: "Bar 2: speed", barA: "Bar A: vs 
 const WRITE_UP = { "fraud/eval_ft.py": "fraud/RESULTS-FT.md", "fraud/eval_d3ft.py": "fraud/RESULTS-D3FT.md",
   "fraud/eval_d1ft.py": "fraud/RESULTS-D1FT.md", "fraud/eval_ieee.py": "fraud/RESULTS-IEEE.md", "fraud/eval_ieee_full.py": "fraud/RESULTS-IEEE-FULL.md",
   "fraud/eval_ieee_amount.py": "fraud/RESULTS-IEEE-AMOUNT.md", "fraud/eval_column_audit.py": "fraud/RESULTS-COLUMN-AUDIT.md", "fraud/eval_rule.py": "fraud/RESULTS-RULE.md",
-  "fraud/eval_features.py": "fraud/RESULTS-FEATURES.md", "fraud/eval_tabular.py": "fraud/RESULTS-TABULAR.md", "fraud/eval_lm_nuc.py": "fraud/RESULTS-LM-NUC.md", "fraud/eval_combos.py": "fraud/RESULTS-COMBOS.md", "fraud/eval_final.py": "fraud/RESULTS-FINAL.md" };
+  "fraud/eval_features.py": "fraud/RESULTS-FEATURES.md", "fraud/eval_tabular.py": "fraud/RESULTS-TABULAR.md", "fraud/eval_lm_nuc.py": "fraud/RESULTS-LM-NUC.md", "fraud/eval_combos.py": "fraud/RESULTS-COMBOS.md", "fraud/eval_lm_cost.py": "fraud/RESULTS-LM-COST.md", "fraud/eval_final.py": "fraud/RESULTS-FINAL.md" };
 
 // fraud/eval_d3ft.py and fraud/eval_d1ft.py store only their own setup's windows (keyed by window) and point at the Phase 5
 // eval for the other setups on the same windows; merge them into the shape of the other evals.

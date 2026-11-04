@@ -64,8 +64,17 @@ def encode(model, exs) -> list[tuple[list[int], int]]:
     return [(model.encode(f"{d.context}\n\n{d.state}", d.instruction, list(d.options)), target) for d, target in exs]
 
 
+def batch_loss(logits, targets, weights=None):
+    """Cross-entropy over a batch. With weights (Phase 25), each example's loss counts by its weight; without, it's the plain mean."""
+    import torch
+
+    if weights is None:
+        return torch.nn.functional.cross_entropy(logits, targets)
+    return (torch.nn.functional.cross_entropy(logits, targets, reduction="none") * weights).mean()
+
+
 def train(model, enc, out_dir: Path, steps: int, deadline: float = math.inf, clock=time.perf_counter,
-          log=print, lora: dict = LORA, checkpoint_every: int = 0, seed: int = SEED) -> dict:
+          log=print, lora: dict = LORA, checkpoint_every: int = 0, seed: int = SEED, weights=None) -> dict:
     """LoRA on model.lm for ``steps`` batches of the given order; the LR schedule is sized to
     ``steps``. Before each batch, if clock() >= deadline, training stops; the adapter is saved
     either way. With checkpoint_every, the adapter so far also goes to out_dir/checkpoint, so a
@@ -97,7 +106,8 @@ def train(model, enc, out_dir: Path, steps: int, deadline: float = math.inf, clo
         sync()
         t0 = time.perf_counter()
         logits = model.logits([c[0] for c in chunk], N_OPTIONS)
-        loss = torch.nn.functional.cross_entropy(logits, torch.tensor([c[1] for c in chunk], device=dev))
+        w = None if weights is None else torch.tensor(weights[e * BATCH:(e + 1) * BATCH], device=dev, dtype=logits.dtype)
+        loss = batch_loss(logits, torch.tensor([c[1] for c in chunk], device=dev), w)
         loss.backward()
         lrs.append(opt.param_groups[0]["lr"])
         opt.step()

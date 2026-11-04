@@ -5,6 +5,7 @@
     python -m fraud.finetune_ieee --train        # the training run
     python -m fraud.finetune_ieee --train --full # Phase 12: every fit fraud (--dry-run and --steps take --full too)
     python -m fraud.finetune_ieee --train --full --seed 1     # Phase 21: a second seed; or --passes 2; or --rich for the longer prompt
+    python -m fraud.finetune_ieee --train --full --rich --weighted   # Phase 25: each row's loss counts by what a mistake on it costs
 
 What it trains (pre-registered in fraud/eval_ieee.py, Phase 11 of fraud/ROADMAP.md). Owner, 2026-11-02: "train on ieee cis, compare
 paysim fine tune with ieee cis fine tune". Everything but the data matches the PaySim adapter 20261102-152745_lora-d1, so the
@@ -44,6 +45,7 @@ LEGIT_PER_FRAUD = 3
 CAP_S, CAP_FULL_S = 3 * 3600.0, 10 * 3600.0
 SAVE_MARGIN_S = 60.0
 CHECKPOINT_EVERY = 250  # --full only: about 10 min of work at risk if the process dies
+WEIGHT_CAP_PCT = 99.0
 
 
 def training_rows(t: Ieee, seed: int = SEED, full: bool = False) -> np.ndarray:
@@ -57,6 +59,17 @@ def training_rows(t: Ieee, seed: int = SEED, full: bool = False) -> np.ndarray:
     fraud = rng.choice(np.flatnonzero(y == 1), n_fraud, replace=False)
     legit = rng.choice(np.flatnonzero(y == 0), n_legit, replace=False)
     return rng.permutation(np.r_[fraud, legit]).astype(np.int64)
+
+
+def cost_weights(amount: np.ndarray, fraud: np.ndarray, c, cap_pct: float = WEIGHT_CAP_PCT) -> np.ndarray:
+    """Phase 25 (fraud/eval_lm_cost.py): what a mistake on each row costs. A fraud approved costs its amount, a legit row declined its friction. Capped at the class's percentile and scaled to mean 1 within each class, so the class balance doesn't move."""
+    fraud = np.asarray(fraud, bool)
+    v = np.where(fraud, amount, c.friction(amount)).astype(np.float64)
+    w = np.empty(len(v))
+    for part in (fraud, ~fraud):
+        capped = np.minimum(v[part], np.percentile(v[part], cap_pct))
+        w[part] = capped / capped.mean()
+    return w
 
 
 def examples(t: Ieee, rows: np.ndarray, seed: int = SEED, hist: dict | None = None) -> list[tuple[Decision, int]]:
@@ -86,6 +99,7 @@ def main() -> None:
     ap.add_argument("--passes", type=int, default=1, help="Phase 21: passes over the rows, with the LR schedule sized to all of them")
     ap.add_argument("--rich", action="store_true", help="Phase 21: the longer prompt, ieee_brain.describe_rich")
     ap.add_argument("--signal", action="store_true", help="Phase 21: the longer prompt and the tabular risk score (fraud.lm_signal)")
+    ap.add_argument("--weighted", action="store_true", help="Phase 25: each row's loss counts by what a mistake on it costs")
     args = ap.parse_args()
 
     t = ieee_data.load()
@@ -121,13 +135,20 @@ def main() -> None:
     print(f"encoded {len(enc)} examples, {info['reversed']} reversed, {info['prompt_tokens_mean']:.0f} tokens mean / "
           f"{info['prompt_tokens_max']} max ({time.perf_counter() - t_process:.0f} s since start)", flush=True)
 
-    extra = f"{'-seed' + str(args.seed) if args.seed != SEED else ''}{'-pass' + str(args.passes) if args.passes != 1 else ''}{'-rich' if args.rich else ''}{'-signal' if args.signal else ''}"
+    extra = f"{'-seed' + str(args.seed) if args.seed != SEED else ''}{'-pass' + str(args.passes) if args.passes != 1 else ''}{'-rich' if args.rich else ''}{'-signal' if args.signal else ''}{'-weighted' if args.weighted else ''}"
     out = MODELS / f"{stamp()}_lora-d1-ieee{'-full' if args.full else ''}{extra}{'-smoke' if args.steps else ''}"
     out.mkdir(parents=True, exist_ok=True)
     deadline = t_process + cap - SAVE_MARGIN_S if args.train else math.inf
     every = (10 if args.steps else CHECKPOINT_EVERY) if args.full else 0
-    info.update(train(model, enc, out, steps, deadline=deadline, log=lambda m: print(m, flush=True), lora=LORA, checkpoint_every=every, seed=args.seed))
-    info.update(passes=args.passes, rich=args.rich or args.signal, signal=args.signal)
+    weights = None
+    if args.weighted:
+        from .eval_ieee import COSTS
+
+        weights = cost_weights(t.amount[rows], t.is_fraud[rows], COSTS)
+        info["weights"] = {"cap_pct": WEIGHT_CAP_PCT, "max": float(weights.max()), "effective_share": float(weights.sum() ** 2 / (weights ** 2).sum() / len(weights))}
+        print(json.dumps(info["weights"]), flush=True)
+    info.update(train(model, enc, out, steps, deadline=deadline, log=lambda m: print(m, flush=True), lora=LORA, checkpoint_every=every, seed=args.seed, weights=weights))
+    info.update(passes=args.passes, rich=args.rich or args.signal, signal=args.signal, weighted=args.weighted)
     info["process_s"] = time.perf_counter() - t_process
     info["cap_s"] = cap
     info["created"] = time.strftime("%Y-%m-%dT%H:%M:%S")

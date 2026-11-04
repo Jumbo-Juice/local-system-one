@@ -690,6 +690,15 @@ Then Phase 21's comparison, Phase 22's combinations, and the final test. The fin
 .venv/Scripts/python -m fraud.dev.final_extras <eval id>
 ```
 
+Training on cost (Phase 25): one adapter, then its dev scores, then the comparison. About 3.5 hours on this GPU. Dev only. Write-up: `fraud/RESULTS-LM-COST.md`.
+
+```bash
+.venv/Scripts/python -m fraud.finetune_ieee --train --full --rich --weighted
+.venv/Scripts/python -m fraud.eval_lm_nuc --score lm-weighted fraud/models/<time>_lora-d1-ieee-full-rich-weighted
+.venv/Scripts/python -m fraud.eval_lm_cost
+.venv/Scripts/python -m fraud.dev.verify_tabular fraud/results/eval_lm_cost/<eval id>.json
+```
+
 ## Where things land
 
 | what | where |
