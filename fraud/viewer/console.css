@@ -289,3 +289,40 @@ details.more[open] > summary { margin-bottom: 8px; }
 .cost-ticks span.base { color: var(--ink-2); font-weight: 650; }
 .cost-ticks span.on { color: var(--ink); font-weight: 650; }
 @media (max-width: 640px) { .cost-ticks span.odd:not(.base):not(.on) { display: none; } }
+
+/* ---- the interactive per-window scatter: toggles, soft dotted mean lines, short motion */
+.chart-controls { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: flex-start; gap: 8px 16px; margin: 6px 0 4px; }
+.toggles { display: flex; flex-wrap: wrap; gap: 6px; }
+.legend.toggles { margin: 0; }
+.toggles button {
+  display: inline-flex; align-items: center; gap: 6px; padding: 3px 10px; border-radius: 999px; font-size: 12px;
+  color: var(--ink-2); transition: opacity 0.2s ease, background-color 0.2s ease, border-color 0.2s ease;
+}
+.toggles button i { display: inline-block; width: 9px; height: 9px; border-radius: 50%; margin: 0; }
+.toggles button[aria-pressed=false] { opacity: 0.5; background: transparent; text-decoration: line-through; }
+.toggles button[aria-pressed=false] i { background: transparent !important; box-shadow: inset 0 0 0 1.5px var(--muted); }
+.toggles button:disabled { opacity: 0.4; cursor: default; }
+.dotline { display: inline-block; width: 18px; height: 0; border-top: 2px dotted var(--ink-2); }
+.s-means[aria-pressed=false] .dotline { border-top-color: var(--muted); }
+
+svg.evalchart .s-group, svg.evalchart .s-mean, svg.evalchart .s-lab, svg.evalchart .s-lead { transition: opacity 0.3s ease; }
+svg.evalchart .s-dot { transition: cy 0.45s cubic-bezier(0.3, 0.7, 0.3, 1); }
+svg.evalchart .s-mean, svg.evalchart .s-lab { transition: transform 0.45s cubic-bezier(0.3, 0.7, 0.3, 1), opacity 0.3s ease; }
+svg.evalchart .mean-line { opacity: 0.7; transform-box: fill-box; transform-origin: left center; }
+svg.evalchart .is-off { opacity: 0; pointer-events: none; }
+svg.evalchart .s-lead.moving { opacity: 0; transition: none; }
+svg.evalchart.no-means .means { opacity: 0; }
+svg.evalchart .means { transition: opacity 0.3s ease; }
+svg.evalchart.dim .s-group:not(.hot):not(.is-off), svg.evalchart.dim .s-mean:not(.hot):not(.is-off),
+svg.evalchart.dim .s-lab:not(.hot):not(.is-off), svg.evalchart.dim .s-lead:not(.hot):not(.is-off) { opacity: 0.18; }
+svg.evalchart.dim .s-mean.hot .mean-line { opacity: 1; }
+svg.evalchart.draw .s-group { animation: dots-in 0.5s ease-out backwards; }
+svg.evalchart.draw .mean-line, svg.evalchart.redraw .mean-line { animation: line-in 0.7s 0.15s cubic-bezier(0.3, 0.7, 0.3, 1) backwards; }
+svg.evalchart.draw .s-lab, svg.evalchart.redraw .s-lab { animation: fade-in 0.4s 0.5s ease-out backwards; }
+svg.evalchart .fade-in { animation: fade-in 0.35s ease-out both; }
+@keyframes dots-in { from { opacity: 0; } to { opacity: 1; } }
+@keyframes line-in { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+@keyframes fade-in { from { opacity: 0; } to { opacity: 1; } }
+@media (prefers-reduced-motion: reduce) {
+  svg.evalchart *, .toggles button { transition: none !important; animation: none !important; }
+}

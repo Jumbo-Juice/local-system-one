@@ -703,79 +703,148 @@ async function withBaselines(r) {
 }
 const SPEED_BARS = new Set(["bar2", "barB"]);
 
-// One dot per setup per window, and a line at each setup's mean (r.means, the mean the table shows) labelled at the right edge.
+// A scatter: one small dot per setup per window, and a soft dotted line at each setup's mean (r.means, the mean the table shows), labelled at the right edge.
 // r.linear: a linear axis from 0 (IEEE-CIS, where the setups sit close together); otherwise log (PaySim, whose costs span orders of magnitude).
+// Interactive: the legend's buttons hide or show a setup (the axis rescales to what is shown), hovering one picks it out, and a button
+// hides or shows the mean lines. Motion is short and is off under prefers-reduced-motion (console.css).
 function evalChart(r) {
   const ws = r.test_windows;
   const series = r.chart_series || EVAL_SERIES.filter(([s]) => r.windows[s]);
   const label = r.label || setupName;
   const means = r.means || {};
-  const vals = series.flatMap(([s]) => ws.map((w) => r.windows[s][w] && r.windows[s][w].cost)).filter((v) => v > 0);
   const W = 720, H = 280, L = 52, R = 70, T = 12, B = 26;
   const plotH = H - T - B;
-  let y, ticks;
-  if (r.linear) {
-    const step = niceStep(Math.max(...vals), 5), top = Math.ceil(Math.max(...vals) / step) * step;
-    ticks = []; for (let t = 0; t <= top + 1e-9; t += step) ticks.push(t);
-    y = (v) => T + plotH * (1 - v / top);
-  } else {
-    const lo = Math.floor(Math.log10(Math.min(...vals))), hi = Math.ceil(Math.log10(Math.max(...vals)));
-    ticks = []; for (let p = lo; p <= hi; p++) ticks.push(10 ** p);
-    y = (v) => T + plotH * (1 - (Math.log10(Math.max(v, 10 ** lo)) - lo) / (hi - lo));
-  }
   const x = (i) => L + ((W - L - R) * (i + 0.5)) / ws.length;
   const scale = r.linear ? "linear scale from 0" : "log scale";
-  const svg = svgEl("svg", { class: "chart", viewBox: `0 0 ${W} ${H}`, role: "img",
-    "aria-label": `Cost per ${r.unit || "test window"} in USD for ${series.map(([s]) => label(s)).join(", ")}, ${scale}, with each setup's mean as a line` });
-  for (const t of ticks) {
-    svg.append(svgEl("line", { x1: L, x2: W - R, y1: y(t), y2: y(t), stroke: "var(--grid)", "stroke-width": 1 }));
-    const tx = svgEl("text", { x: L - 6, y: y(t) + 4, "text-anchor": "end" });
-    tx.textContent = t >= 1e6 ? `${t / 1e6}M` : kUSD(t);
-    svg.append(tx);
-  }
+  const dense = ws.length > 30;  // the 88-chain dev pages: no side-by-side offset, smaller dots
+  const state = { on: new Set(series.map(([s]) => s)), meansOn: true, hot: null };
+  const svg = svgEl("svg", { class: "chart evalchart", viewBox: `0 0 ${W} ${H}`, role: "img",
+    "aria-label": `Cost per ${r.unit || "test window"} in USD for ${series.map(([s]) => label(s)).join(", ")}, ${scale}, with each setup's mean as a dotted line` });
+  const gTicks = svgEl("g", {}), gDots = svgEl("g", {}), gMeans = svgEl("g", { class: "means" }), gLabs = svgEl("g", { class: "means" });
+  svg.append(gTicks);
   const every = Math.max(2, Math.ceil(ws.length / 20));
   ws.forEach((w, i) => {
     if (i % every === 0) { const t = svgEl("text", { x: x(i), y: H - 8, "text-anchor": "middle" }); t.textContent = w.replace(/^\D+/, ""); svg.append(t); }
   });
-  const dense = ws.length > 30;  // the 88-chain dev pages: no side-by-side offset, smaller dots
-  const dots = [];
-  series.forEach(([s, color], j) => ws.forEach((w, i) => {
-    const v = r.windows[s][w] && r.windows[s][w].cost;
-    if (v === undefined) return;
-    const dx = dense ? 0 : (j - (series.length - 1) / 2) * 6;
-    svg.append(svgEl("circle", { cx: x(i) + dx, cy: y(v), r: dense ? 3 : 4.5, fill: color, stroke: "var(--surface)", "stroke-width": dense ? 1 : 2, opacity: dense ? 0.75 : 1 }));
-    dots.push({ cx: x(i) + dx, cy: y(v), s, w, v });
-  }));
-  // Mean lines over the dots, a halo under each so it reads on top of them; labels sorted and pushed 13 px apart.
-  const lines = series.filter(([s]) => means[s] !== undefined && means[s] !== null).map(([s, color]) => ({ s, color, m: means[s], y: y(means[s]) }));
-  for (const ln of lines) {
-    svg.append(svgEl("line", { x1: L, x2: W - R, y1: ln.y, y2: ln.y, stroke: "var(--surface)", "stroke-width": 4, opacity: 0.8 }));
-    svg.append(svgEl("line", { x1: L, x2: W - R, y1: ln.y, y2: ln.y, stroke: ln.color, "stroke-width": 2 }));
+  svg.append(gDots, gMeans, gLabs);
+  // Per setup: a group of dots, a mean line (drawn at y 0 and moved by a transform, so it can glide) and a label with its leader.
+  const parts = series.map(([s, color], j) => {
+    const g = svgEl("g", { class: "s-group" });
+    const dots = [];
+    ws.forEach((w, i) => {
+      const v = r.windows[s][w] && r.windows[s][w].cost;
+      if (v === undefined) return;
+      const dx = dense ? 0 : (j - (series.length - 1) / 2) * 3.5;
+      const c = svgEl("circle", { class: "s-dot", cx: x(i) + dx, cy: T + plotH, r: dense ? 2 : 2.6, fill: color, stroke: "var(--surface)", "stroke-width": 0.6, "fill-opacity": dense ? 0.7 : 0.85 });
+      g.append(c);
+      dots.push({ el: c, cx: x(i) + dx, v, w, s });
+    });
+    gDots.append(g);
+    const m = means[s];
+    const has = m !== undefined && m !== null;
+    const mg = svgEl("g", { class: "s-mean" }), lg = svgEl("g", { class: "s-lab" });
+    if (has) {
+      mg.append(svgEl("line", { class: "mean-line", x1: L, x2: W - R, y1: 0, y2: 0, stroke: color, "stroke-width": 1.5, "stroke-dasharray": "1.5 4", "stroke-linecap": "round" }));
+      gMeans.append(mg);
+      const t = svgEl("text", { x: W - R + 10, y: 4, style: `fill:${color};font-weight:600` }); t.textContent = money(m);
+      lg.append(t);
+      gLabs.append(lg);
+    }
+    const lead = svgEl("polyline", { class: "s-lead", fill: "none", stroke: color, "stroke-width": 1, "stroke-opacity": 0.6 });
+    if (has) gLabs.append(lead);
+    return { s, color, g, dots, m: has ? m : null, mg, lg, lead };
+  });
+  const place = (el, y) => { el.style.transform = `translate(0px, ${y.toFixed(1)}px)`; };
+  let leadTimer = null;
+  function layout(first) {
+    const shown = parts.filter((p) => state.on.has(p.s));
+    const vals = shown.flatMap((p) => p.dots.map((d) => d.v)).filter((v) => v > 0);
+    let y, ticks;
+    if (r.linear) {
+      const max = Math.max(...vals, ...shown.map((p) => p.m || 0), 1);
+      const step = niceStep(max, 5), top = Math.ceil(max / step) * step;
+      ticks = []; for (let t = 0; t <= top + 1e-9; t += step) ticks.push(t);
+      y = (v) => T + plotH * (1 - v / top);
+    } else {
+      const lo = Math.floor(Math.log10(Math.min(...vals))), hi = Math.max(lo + 1, Math.ceil(Math.log10(Math.max(...vals))));
+      ticks = []; for (let p = lo; p <= hi; p++) ticks.push(10 ** p);
+      y = (v) => T + plotH * (1 - (Math.log10(Math.max(v, 10 ** lo)) - lo) / (hi - lo));
+    }
+    gTicks.replaceChildren(...ticks.flatMap((t) => {
+      const tx = svgEl("text", { x: L - 6, y: y(t) + 4, "text-anchor": "end", class: first ? "" : "fade-in" });
+      tx.textContent = t >= 1e6 ? `${t / 1e6}M` : kUSD(t);
+      return [svgEl("line", { x1: L, x2: W - R, y1: y(t), y2: y(t), stroke: "var(--grid)", "stroke-width": 1 }), tx];
+    }));
+    for (const p of parts) {
+      const on = state.on.has(p.s);
+      p.g.classList.toggle("is-off", !on);
+      p.mg.classList.toggle("is-off", !on);
+      p.lg.classList.toggle("is-off", !on);
+      p.lead.classList.toggle("is-off", !on);
+      for (const d of p.dots) { d.cy = y(d.v); d.el.style.cy = `${d.cy.toFixed(1)}px`; }
+      if (p.m !== null) { p.my = y(p.m); place(p.mg, p.my); }
+    }
+    // Labels of the shown means, sorted and pushed 13 px apart; leaders are redrawn once the lines have moved.
+    const labs = shown.filter((p) => p.m !== null).sort((a, b) => a.my - b.my);
+    const GAP = 13;
+    labs.forEach((p, i) => { p.ly = i ? Math.max(p.my, labs[i - 1].ly + GAP) : p.my; });
+    if (labs.length) labs[labs.length - 1].ly = Math.min(labs[labs.length - 1].ly, H - B);
+    for (let i = labs.length - 2; i >= 0; i--) labs[i].ly = Math.min(labs[i].ly, labs[i + 1].ly - GAP);
+    for (const p of labs) place(p.lg, p.ly);
+    clearTimeout(leadTimer);
+    const drawLeads = () => { for (const p of labs) { p.lead.setAttribute("points", `${W - R},${p.my} ${W - R + 5},${p.ly} ${W - R + 8},${p.ly}`); p.lead.classList.remove("moving"); } };
+    if (first) drawLeads();
+    else { for (const p of labs) p.lead.classList.add("moving"); leadTimer = setTimeout(drawLeads, 460); }
   }
-  const labs = [...lines].sort((a, b) => a.y - b.y).map((ln) => ({ ...ln, ly: ln.y }));
-  const GAP = 13;
-  for (let i = 1; i < labs.length; i++) labs[i].ly = Math.max(labs[i].ly, labs[i - 1].ly + GAP);
-  if (labs.length) labs[labs.length - 1].ly = Math.min(labs[labs.length - 1].ly, H - B);
-  for (let i = labs.length - 2; i >= 0; i--) labs[i].ly = Math.min(labs[i].ly, labs[i + 1].ly - GAP);
-  for (const lb of labs) {
-    svg.append(svgEl("polyline", { points: `${W - R},${lb.y} ${W - R + 5},${lb.ly} ${W - R + 8},${lb.ly}`, fill: "none", stroke: lb.color, "stroke-width": 1 }));
-    const t = svgEl("text", { x: W - R + 10, y: lb.ly + 4, style: `fill:${lb.color};font-weight:600` });
-    t.textContent = money(lb.m);
-    svg.append(t);
+  function focus(s) {
+    state.hot = s;
+    svg.classList.toggle("dim", s !== null);
+    for (const p of parts) for (const el of [p.g, p.mg, p.lg, p.lead]) el.classList.toggle("hot", p.s === s);
   }
+  // Controls: one toggle per setup (at least one stays on), and the mean lines.
+  const buttons = parts.map((p) => {
+    const b = el("button", { class: "s-toggle", "aria-pressed": "true", title: `${setupName(p.s)}. Click to hide or show it.`,
+      onclick: () => {
+        if (state.on.has(p.s)) { if (state.on.size === 1) return; state.on.delete(p.s); } else state.on.add(p.s);
+        b.setAttribute("aria-pressed", String(state.on.has(p.s)));
+        allBtn.disabled = state.on.size === parts.length;
+        layout(false);
+      },
+      onmouseenter: () => { if (state.on.has(p.s)) focus(p.s); }, onmouseleave: () => focus(null),
+      onfocus: () => { if (state.on.has(p.s)) focus(p.s); }, onblur: () => focus(null) },
+    el("i", { style: `background:${p.color}` }), label(p.s));
+    return b;
+  });
+  const allBtn = el("button", { class: "s-all", disabled: true, onclick: () => {
+    state.on = new Set(parts.map((p) => p.s));
+    for (const b of buttons) b.setAttribute("aria-pressed", "true");
+    allBtn.disabled = true;
+    layout(false);
+  } }, "Show all");
+  const anyMean = parts.some((p) => p.m !== null);
+  const meanBtn = !anyMean ? null : el("button", { class: "s-means", "aria-pressed": "true", onclick: () => {
+    state.meansOn = !state.meansOn;
+    meanBtn.setAttribute("aria-pressed", String(state.meansOn));
+    svg.classList.toggle("no-means", !state.meansOn);
+    if (state.meansOn) { svg.classList.remove("draw", "redraw"); void svg.getBoundingClientRect(); svg.classList.add("redraw"); }  // replay the lines' draw-in
+  } }, el("span", { class: "dotline", "aria-hidden": "true" }), "Mean lines");
   svg.addEventListener("mousemove", (e) => {
     const box = svg.getBoundingClientRect();
     const px = ((e.clientX - box.left) / box.width) * W, py = ((e.clientY - box.top) / box.height) * H;
     let best = null, bd = 1e9;
-    for (const d of dots) { const dd = Math.hypot(d.cx - px, d.cy - py); if (dd < bd) { bd = dd; best = d; } }
+    for (const p of parts) if (state.on.has(p.s)) for (const d of p.dots) { const dd = Math.hypot(d.cx - px, d.cy - py); if (dd < bd) { bd = dd; best = d; } }
     if (!best || bd > 18) return hideTip();
     showTip(e, [`${best.w} · ${label(best.s)}`, `cost ${money(best.v)}`, means[best.s] !== undefined ? `mean ${money(means[best.s])}` : ""].filter(Boolean));
   });
   svg.addEventListener("mouseleave", hideTip);
+  layout(true);
+  svg.classList.add("draw");  // the first draw: dots fade up and the mean lines draw in from the left
   return el("div", {},
-    el("div", { class: "legend" }, ...series.map(([s, c]) => el("span", { title: setupName(s) }, el("i", { style: `background:${c}` }), label(s)))),
+    el("div", { class: "chart-controls" }, el("div", { class: "legend toggles", role: "group", "aria-label": "Setups on the chart" }, ...buttons),
+      el("div", { class: "toggles" }, meanBtn, allBtn)),
     svg, el("div", { class: "hint" }, `Cost per ${r.unit || "test window"} in USD, ${scale} (${r.unit ? "its" : "window"} number on the x axis). ` +
-      `${lines.length ? "Each line is that setup's mean over all of them, the number in the table, written at the right edge. " : ""}` +
+      `${anyMean ? "Each dotted line is that setup's mean over all of them, the number in the table, written at the right edge. " : ""}` +
+      `Click a setup to hide or show it; the axis rescales to what is shown. Hover one to pick it out. ` +
       `${r.chart_series ? "The other setups are in the table below." : "Random and approve-all are in the table below."}`));
 }
 
