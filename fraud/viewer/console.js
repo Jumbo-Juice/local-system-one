@@ -981,23 +981,26 @@ function answers(r) {  // the pre-registered questions in order, then what was o
   return rows;
 }
 
-// Each answer as a point with its 95% interval and a zero line, like the deck's slide 11. rows: {label, sub, tag, mean, lo, hi, dist}.
-function forest(rows) {
+// Each answer as a column: its mean paired difference as a point, its 95% interval as a vertical bar, USD on the y axis and a dashed
+// zero line across. rows: {label, sub, tag, mean, lo, hi, dist}. title names the panel; each panel has its own scale.
+function forest(rows, title) {
   const lo = Math.min(0, ...rows.map((r) => r.lo)), hi = Math.max(0, ...rows.map((r) => r.hi));
   const step = niceStep(hi - lo, 4);
   const a = Math.floor(lo / step) * step, b = Math.ceil(hi / step) * step;
-  const x = (v) => ((v - a) / (b - a)) * 100;
+  const pos = (v) => `calc(8px + ${((b - v) / (b - a)).toFixed(4)} * (100% - 16px))`;  // top offset inside a plot, 8 px clear at each end
   const ticks = []; for (let t = a; t <= b + 1e-9; t += step) ticks.push(Math.round(t));
-  const tick = (t) => el("span", { style: `left:${x(t)}%;transform:translateX(${x(t) < 4 ? "0" : x(t) > 96 ? "-100%" : "-50%"})` }, signed(t));
-  return el("div", { class: "forest" },
-    ...rows.map((r) => el("div", { class: `frow${r.dist ? " yes" : ""}` },
-      el("div", { class: "fname" }, r.label, r.sub ? el("span", { class: "hint" }, r.sub) : null),
-      el("div", { class: "fplot", title: `${signed(r.mean)} USD, 95% CI ${signed(r.lo)} to ${signed(r.hi)}` },
-        el("span", { class: "fzero", style: `left:${x(0)}%` }),
-        el("span", { class: "fci", style: `left:${x(r.lo)}%;width:${Math.max(0.3, x(r.hi) - x(r.lo))}%` }),
-        el("span", { class: "fdot", style: `left:${x(r.mean)}%` })),
-      el("div", { class: "fval" }, signed(r.mean), el("span", { class: "hint" }, r.dist ? "excludes 0" : "includes 0"), r.tag ? el("span", { class: "hint" }, r.tag) : null))),
-    el("div", { class: "frow faxis-row" }, el("div"), el("div", { class: "faxis" }, ...ticks.map(tick)), el("div")));
+  const lines = () => ticks.map((t) => el("span", { class: t === 0 ? "vf-zero" : "vf-gridline", style: `top:${pos(t)}` }));
+  return el("div", { class: "vf", style: `flex:${rows.length} 1 ${56 + rows.length * 96}px` },
+    title ? el("h3", {}, title) : null,
+    el("div", { class: "scroll-x" }, el("div", { class: "vf-grid", style: `grid-template-columns:56px repeat(${rows.length}, minmax(96px, 1fr))` },
+      el("div", { class: "vf-axis", "aria-hidden": "true" }, ...ticks.map((t) => el("span", { style: `top:${pos(t)}` }, signed(t)))),
+      ...rows.map((r) => el("div", { class: `vf-col${r.dist ? " yes" : ""}` },
+        el("div", { class: "vf-plot", title: `${r.label} ${r.sub}: ${signed(r.mean)} USD, 95% CI ${signed(r.lo)} to ${signed(r.hi)}` },
+          ...lines(),
+          el("span", { class: "vf-ci", style: `top:${pos(r.hi)};height:calc(${((r.hi - r.lo) / (b - a)).toFixed(4)} * (100% - 16px))` }),
+          el("span", { class: "vf-dot", style: `top:${pos(r.mean)}` })),
+        el("div", { class: "vf-val" }, signed(r.mean), el("span", { class: "hint" }, r.dist ? "excludes 0" : "includes 0")),
+        el("div", { class: "vf-name" }, r.label, el("span", { class: "hint" }, r.sub), r.tag ? el("span", { class: "vf-tag" }, r.tag) : null))))));
 }
 
 function verdictBanner(p, n, unit) {  // the first registered question, from the data
@@ -1112,10 +1115,9 @@ async function ieeeEval(r) {  // IEEE-CIS evals (eval_ieee*.py and the phases af
     qs.length ? verdictBanner(qs[0], wins.length, unit) : null,
     el("div", { class: "cards", style: "margin-top:12px" }, ...facts, notes),
     el("section", { class: "panel", style: "margin-top:12px" }, el("h2", {}, "Answers"),
-      el("p", { class: "hint" }, `Mean paired difference in USD per ${unit}, the first setup minus the second, with its 95% window-bootstrap interval. Left of 0: the first is cheaper. Filled: the interval excludes 0.`),
-      main.length ? forest(main) : null,
-      vsAll.length ? el("h3", { style: "margin-top:14px" }, "Against approving everything (its own scale)") : null,
-      vsAll.length ? forest(vsAll) : null,
+      el("p", { class: "hint" }, `Mean paired difference in USD per ${unit}, the first setup minus the second, with its 95% window-bootstrap interval. Below the dashed 0 line: the first is cheaper. Filled: the interval excludes 0.`),
+      el("div", { class: "vf-row" }, main.length ? forest(main, vsAll.length ? "Between setups" : null) : null,
+        vsAll.length ? forest(vsAll, "Against approving everything (own scale)") : null),
       el("details", { class: "more", style: "margin-top:10px" }, el("summary", {}, "The answers as a table"), el("div", { class: "scroll-x" }, ans))),
     ...afterPanel,
     el("section", { class: "panel", style: "margin-top:12px" }, el("h2", {}, dev ? "Cost per dev chain" : "Cost per window"), evalChart(chart)),

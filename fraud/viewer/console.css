@@ -256,34 +256,38 @@ details.more[open] > summary { margin-bottom: 8px; }
 .banner { margin-top: 4px; }
 .banner > div + div { margin-top: 4px; }
 
-/* ---- the answers as intervals (like the deck's slide 11) */
-.forest { margin-top: 6px; }
-.frow {
-  display: grid; grid-template-columns: minmax(0, 15em) minmax(0, 1fr) 7.5em; gap: 2px 14px;
-  align-items: center; padding: 6px 0; border-bottom: 1px solid var(--grid);
+/* ---- the answers as intervals: one column per answer, USD on the y axis */
+.vf-row { display: flex; flex-wrap: wrap; gap: 12px 28px; align-items: flex-start; margin-top: 10px; }
+.vf { min-width: 0; max-width: 100%; }
+.vf h3 { margin-bottom: 6px; }
+/* two panels side by side: titles take the same height, so the plots line up */
+.vf-row > .vf:has(+ .vf) h3, .vf-row > .vf + .vf h3 { min-height: 2.6em; display: flex; align-items: flex-end; }
+.vf-grid { display: grid; }
+.vf-axis, .vf-plot { position: relative; height: 230px; }
+/* many answers scroll sideways inside the panel; the axis stays put */
+.vf-axis { position: sticky; left: 0; z-index: 1; background: var(--surface); }
+.vf-axis span {
+  position: absolute; right: 8px; transform: translateY(-50%); font-size: 11px; color: var(--muted);
+  font-variant-numeric: tabular-nums; white-space: nowrap;
 }
-.fname { font-size: 14px; overflow-wrap: anywhere; }
-.fname .hint { display: block; }
-.fplot { position: relative; height: 24px; }
-.fzero { position: absolute; top: -7px; bottom: -7px; width: 0; border-left: 1px dashed var(--ink-2); }
-.fci { position: absolute; top: 50%; height: 2px; margin-top: -1px; background: var(--muted); border-radius: 1px; }
-.fdot {
-  position: absolute; top: 50%; width: 11px; height: 11px; margin: -5.5px 0 0 -5.5px; border-radius: 50%;
+.vf-col { min-width: 0; display: flex; flex-direction: column; border-radius: 6px; transition: background-color 0.15s ease; }
+.vf-col:hover { background: var(--surface-2); }
+.vf-gridline, .vf-zero { position: absolute; left: 0; right: 0; height: 0; }
+.vf-gridline { border-top: 1px solid var(--grid); }
+.vf-zero { border-top: 1px dashed var(--ink-2); }
+.vf-ci { position: absolute; left: 50%; width: 2px; margin-left: -1px; background: var(--muted); border-radius: 1px; }
+.vf-dot {
+  position: absolute; left: 50%; width: 11px; height: 11px; margin: -5.5px 0 0 -5.5px; border-radius: 50%;
   background: var(--surface); border: 2px solid var(--muted);
 }
-.frow.yes .fci { background: var(--accent); height: 3px; margin-top: -1.5px; }
-.frow.yes .fdot { background: var(--accent); border-color: var(--accent); }
-.fval { text-align: right; font-variant-numeric: tabular-nums; font-weight: 650; font-size: 15px; }
-.fval .hint { display: block; font-weight: 400; }
-.faxis-row { border-bottom: 0; padding-top: 2px; }
-.faxis { position: relative; height: 16px; font-size: 11px; color: var(--muted); }
-.faxis span { position: absolute; white-space: nowrap; font-variant-numeric: tabular-nums; }
-@media (max-width: 640px) {
-  .frow { grid-template-columns: minmax(0, 1fr) auto; }
-  .fplot { grid-column: 1 / 3; grid-row: 2; }
-  .faxis-row > div:first-child, .faxis-row > div:last-child { display: none; }
-  .faxis { grid-column: 1 / 3; }
-}
+.vf-col.yes .vf-ci { background: var(--accent); width: 3px; margin-left: -1.5px; }
+.vf-col.yes .vf-dot { background: var(--accent); border-color: var(--accent); }
+.vf-val { text-align: center; font-weight: 650; font-size: 15px; font-variant-numeric: tabular-nums; margin-top: 6px; }
+.vf-val .hint { display: block; font-weight: 400; }
+.vf-name { text-align: center; font-size: 13px; padding: 6px 6px 8px; overflow-wrap: anywhere; line-height: 1.3; }
+.vf-name .hint { display: block; margin-top: 2px; }
+.vf-tag { display: inline-block; margin-top: 4px; font-size: 11px; color: var(--ink-2); background: var(--surface-2); border-radius: 999px; padding: 0 7px; }
+.vf-col:hover .vf-tag { background: var(--surface); }
 
 /* ---- the cost map */
 .cards.two { grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); }
