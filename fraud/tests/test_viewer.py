@@ -130,3 +130,31 @@ def test_the_final_test_page_shows_the_owners_verdict_and_the_readout_as_a_reado
     final = json.loads((results / "eval_final" / "20261104-090649.json").read_text(encoding="utf-8"))
     assert readout["eval"] == final["eval"] and set(readout["table"]) >= {"final-rich-cust", "final-rich-amt", "final-logreg-amt"}
     assert server.resolve("results/eval_final/rich_cust_readout.json") and server.resolve("results/eval_final/extras.json")
+
+
+def test_the_cost_map_is_served_and_listed_for_its_page_but_not_as_an_eval(tmp_path):
+    """Phase 16's cost-stress file has no totals or setups: the #/costs page finds it through /api/costs, the eval list leaves it out."""
+    runs, results = tmp_path / "runs", tmp_path / "results"
+    runs.mkdir(), (results / "eval_cost_stress").mkdir(parents=True)
+    (results / "eval_cost_stress" / "20261103-210247.json").write_text(json.dumps({"run": "20261103-210247", "created": "2026-11-03T21:02:49", "families": {}, "stops": {}}), encoding="utf-8")
+    (results / "eval_cost_stress" / "20261101-000000.json").write_text(json.dumps({"run": "20261101-000000", "families": {}}), encoding="utf-8")
+    lst = server.Listing(runs, results)
+    assert lst.eval_list()["evals"] == []
+    assert lst.cost_maps()["files"] == ["eval_cost_stress/20261103-210247.json", "eval_cost_stress/20261101-000000.json"]  # newest first
+    assert server.resolve("results/eval_cost_stress/20261103-210247.json", runs, results) == results / "eval_cost_stress" / "20261103-210247.json"
+    assert server.resolve("results/eval_cost_stress/20261103-210247.md", runs, results) is None
+
+
+def test_the_committed_cost_map_is_found_and_has_six_families_and_the_page_has_its_route():
+    lst = server.Listing()
+    files = lst.cost_maps()["files"]
+    assert files and all(e["file"] not in files for e in lst.eval_list()["evals"])
+    r = json.loads((server.RESULTS / files[0]).read_text(encoding="utf-8"))
+    assert len(r["families"]) == 6 and "review fee" in r["families"]
+    for rows in r["families"].values():
+        for x in rows:
+            assert {"logreg_deployed", "logreg_repicked", "adapter_deployed", "adapter_repicked"} <= set(x)
+    js = (server.HERE / "console.js").read_text(encoding="utf-8")
+    page = (server.HERE / "index.html").read_text(encoding="utf-8")
+    assert 'h === "costs"' in js and 'getJSON("api/costs")' in js and 'href="#/costs"' in page
+    assert "not corrected for multiple comparisons" in js and "Phase 12's adapter, not a final one" in js

@@ -551,7 +551,13 @@ Eval pages read the result folders in `EVAL_DIRS` of `fraud/viewer/server.py`. P
 and `eval_final/`. Phase 6's `fraud/results/eval_d3/` ran no test windows and has no page. The start page lists every eval with what
 it is (phase, test or dev only) and links the final test first. The final test's page also shows what was read out after the test,
 from `eval_final/rich_cust_readout.json` and `extras.json`, marked as a read-out.
-Pages: `#/` runs, `#/run/<file>`, `#/eval` (latest) or `#/eval/<eval id>`, `#/demo`. Pin a run by
+IEEE-CIS eval pages open with the first registered question as a verdict, then fact cards, the answers drawn as intervals
+(approve-all on its own scale) and a per-window scatter on a linear axis with each setup's mean as a line (PaySim keeps a log
+axis). Tables use short setup names (the deck's names for the final five); the full names and ids are in each page's legend.
+The cost map, `#/costs`, reads Phase 16's newest `fraud/results/eval_cost_stress/<run>.json` (found through `/api/costs`; it is
+served but not listed as an eval): pick a cost assumption, step through the values Phase 16 tested, and compare "as deployed"
+with "re-picked" for logreg or Phase 12's adapter. No result is re-priced and no model runs.
+Pages: `#/` runs, `#/run/<file>`, `#/eval` (latest) or `#/eval/<eval id>`, `#/costs`, `#/demo`. Pin a run by
 renaming it to `*.pinned.jsonl` and listing it in `fraud/runs/README.md`.
 
 ### IEEE-CIS (real data, Phase 11)

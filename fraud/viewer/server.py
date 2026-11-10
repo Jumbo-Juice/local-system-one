@@ -6,8 +6,8 @@
 
 The page is fraud/viewer/index.html with console.js and console.css. This server serves those
 files, the traces fraud/runs/*.jsonl, the eval results fraud/results/<dir>/*.json for each dir in
-EVAL_DIRS, and two listings
-(/api/runs, /api/evals). It only reads files: nothing here runs a model. It binds to 127.0.0.1
+EVAL_DIRS, and three listings
+(/api/runs, /api/evals, /api/costs). It only reads files: nothing here runs a model. It binds to 127.0.0.1
 unless --host says otherwise. It shares no code with the game viewer (fraud/CLAUDE.md).
 """
 
@@ -29,7 +29,9 @@ HERE = Path(__file__).resolve().parent
 RESULTS = HERE.parent / "results"
 # result folders with eval pages (fraud/results/eval_d3 has no test windows; *_repro.json is not an eval). The second row is IEEE-CIS at a 10 USD review.
 EVAL_DIRS = ("eval", "eval_d3ft", "eval_d1ft",
-             "eval_ieee", "eval_ieee_full", "eval_ieee_amount", "eval_column_audit", "eval_rule", "eval_features", "eval_tabular", "eval_lm_nuc", "eval_combos", "eval_lm_cost", "eval_final")
+             "eval_ieee", "eval_ieee_full", "eval_ieee_amount", "eval_column_audit", "eval_rule", "eval_features", "eval_tabular", "eval_lm_nuc", "eval_combos", "eval_lm_cost", "eval_final",
+             "eval_cost_stress")  # Phase 16's cost map: served for the #/costs page, never listed as an eval (it has no totals or setups)
+COST_MAP = "eval_cost_stress"
 PAGES = ("index.html", "console.js", "console.css")
 TYPES = {".html": "text/html; charset=utf-8", ".js": "text/javascript; charset=utf-8", ".css": "text/css; charset=utf-8",
          ".jsonl": "application/x-ndjson; charset=utf-8", ".json": "application/json; charset=utf-8"}
@@ -119,6 +121,12 @@ class Listing:
         evals.sort(key=lambda r: r["created"] or "", reverse=True)
         return {"evals": evals}
 
+    def cost_maps(self) -> dict:
+        """Phase 16's cost-stress results (fraud/results/eval_cost_stress/<run>.json), newest first, for the #/costs page."""
+        d = self.results / COST_MAP
+        files = sorted(d.glob("2*.json"), reverse=True) if d.is_dir() else []
+        return {"files": [f"{COST_MAP}/{p.name}" for p in files]}
+
 
 def resolve(route: str, runs: Path = RUNS, results: Path = RESULTS) -> Path | None:
     """The file behind a route, or None. Only the console files, runs/<name>.jsonl and
@@ -147,6 +155,8 @@ def make_handler(listing: Listing, verbose: bool = False):
                 return self.send(json.dumps(listing.run_list(), ensure_ascii=False).encode("utf-8"), TYPES[".json"])
             if route == "api/evals":
                 return self.send(json.dumps(listing.eval_list(), ensure_ascii=False).encode("utf-8"), TYPES[".json"])
+            if route == "api/costs":
+                return self.send(json.dumps(listing.cost_maps(), ensure_ascii=False).encode("utf-8"), TYPES[".json"])
             path = resolve(route, listing.runs, listing.results)
             if path is None:
                 return self.send_error(HTTPStatus.NOT_FOUND)
