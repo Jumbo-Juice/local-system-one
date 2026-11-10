@@ -705,11 +705,15 @@ const SPEED_BARS = new Set(["bar2", "barB"]);
 
 // A scatter: one small dot per setup per window, and a soft dotted line at each setup's mean (r.means, the mean the table shows), labelled at the right edge.
 // r.linear: a linear axis from 0 (IEEE-CIS, where the setups sit close together); otherwise log (PaySim, whose costs span orders of magnitude).
-// Interactive: the legend's buttons hide or show a setup (the axis rescales to what is shown), hovering one picks it out, and a button
-// hides or shows the mean lines. Motion is short and is off under prefers-reduced-motion (console.css).
+// Interactive: every setup of the eval has a toggle. r.chart_series (or EVAL_SERIES) start on; the rest (r.extra_series, or every other
+// setup in r.windows) start off under "More setups" and take a free colour when turned on, at most PALETTE.length at once. The axis
+// rescales to what is shown, hovering a setup picks it out, and a button hides or shows the mean lines. Motion is short and is off
+// under prefers-reduced-motion (console.css).
+const PALETTE = [1, 2, 3, 4, 5, 6, 7, 8].map((k) => `var(--series-${k})`);
 function evalChart(r) {
   const ws = r.test_windows;
   const series = r.chart_series || EVAL_SERIES.filter(([s]) => r.windows[s]);
+  const extra = (r.extra_series || Object.keys(r.windows)).filter((s) => !series.some(([t]) => t === s) && r.windows[s] && ws.some((w) => r.windows[s][w]));
   const label = r.label || setupName;
   const means = r.means || {};
   const W = 720, H = 280, L = 52, R = 70, T = 12, B = 26;
@@ -717,7 +721,8 @@ function evalChart(r) {
   const x = (i) => L + ((W - L - R) * (i + 0.5)) / ws.length;
   const scale = r.linear ? "linear scale from 0" : "log scale";
   const dense = ws.length > 30;  // the 88-chain dev pages: no side-by-side offset, smaller dots
-  const state = { on: new Set(series.map(([s]) => s)), meansOn: true, hot: null };
+  const all = [...series.map(([s, c]) => [s, c]), ...extra.map((s) => [s, null])];
+  const state = { on: new Set(series.map(([s]) => s)), meansOn: true };
   const svg = svgEl("svg", { class: "chart evalchart", viewBox: `0 0 ${W} ${H}`, role: "img",
     "aria-label": `Cost per ${r.unit || "test window"} in USD for ${series.map(([s]) => label(s)).join(", ")}, ${scale}, with each setup's mean as a dotted line` });
   const gTicks = svgEl("g", {}), gDots = svgEl("g", {}), gMeans = svgEl("g", { class: "means" }), gLabs = svgEl("g", { class: "means" });
@@ -727,15 +732,16 @@ function evalChart(r) {
     if (i % every === 0) { const t = svgEl("text", { x: x(i), y: H - 8, "text-anchor": "middle" }); t.textContent = w.replace(/^\D+/, ""); svg.append(t); }
   });
   svg.append(gDots, gMeans, gLabs);
+  const nSide = Math.min(series.length, 5);
   // Per setup: a group of dots, a mean line (drawn at y 0 and moved by a transform, so it can glide) and a label with its leader.
-  const parts = series.map(([s, color], j) => {
+  const parts = all.map(([s, color], j) => {
     const g = svgEl("g", { class: "s-group" });
     const dots = [];
     ws.forEach((w, i) => {
       const v = r.windows[s][w] && r.windows[s][w].cost;
-      if (v === undefined) return;
-      const dx = dense ? 0 : (j - (series.length - 1) / 2) * 3.5;
-      const c = svgEl("circle", { class: "s-dot", cx: x(i) + dx, cy: T + plotH, r: dense ? 2 : 2.6, fill: color, stroke: "var(--surface)", "stroke-width": 0.6, "fill-opacity": dense ? 0.7 : 0.85 });
+      if (v === undefined || v === null) return;
+      const dx = dense ? 0 : ((j % nSide) - (nSide - 1) / 2) * 3.5;
+      const c = svgEl("circle", { class: "s-dot", cx: x(i) + dx, cy: T + plotH, r: dense ? 2 : 2.6, stroke: "var(--surface)", "stroke-width": 0.6, "fill-opacity": dense ? 0.7 : 0.85 });
       g.append(c);
       dots.push({ el: c, cx: x(i) + dx, v, w, s });
     });
@@ -743,17 +749,20 @@ function evalChart(r) {
     const m = means[s];
     const has = m !== undefined && m !== null;
     const mg = svgEl("g", { class: "s-mean" }), lg = svgEl("g", { class: "s-lab" });
-    if (has) {
-      mg.append(svgEl("line", { class: "mean-line", x1: L, x2: W - R, y1: 0, y2: 0, stroke: color, "stroke-width": 1.5, "stroke-dasharray": "1.5 4", "stroke-linecap": "round" }));
-      gMeans.append(mg);
-      const t = svgEl("text", { x: W - R + 10, y: 4, style: `fill:${color};font-weight:600` }); t.textContent = money(m);
-      lg.append(t);
-      gLabs.append(lg);
-    }
-    const lead = svgEl("polyline", { class: "s-lead", fill: "none", stroke: color, "stroke-width": 1, "stroke-opacity": 0.6 });
-    if (has) gLabs.append(lead);
-    return { s, color, g, dots, m: has ? m : null, mg, lg, lead };
+    const line = svgEl("line", { class: "mean-line", x1: L, x2: W - R, y1: 0, y2: 0, "stroke-width": 1.5, "stroke-dasharray": "1.5 4", "stroke-linecap": "round" });
+    const text = svgEl("text", { x: W - R + 10, y: 4 });
+    const lead = svgEl("polyline", { class: "s-lead", fill: "none", "stroke-width": 1, "stroke-opacity": 0.6 });
+    if (has) { text.textContent = money(m); mg.append(line); lg.append(text); gMeans.append(mg); gLabs.append(lg, lead); }
+    return { s, color, g, dots, m: has ? m : null, mg, lg, line, text, lead, extra: j >= series.length };
   });
+  function paint(p, color) {
+    p.color = color;
+    for (const d of p.dots) d.el.setAttribute("fill", color);
+    p.line.setAttribute("stroke", color);
+    p.lead.setAttribute("stroke", color);
+    p.text.setAttribute("style", `fill:${color};font-weight:600`);
+    if (p.swatch) p.swatch.style.background = color;
+  }
   const place = (el, y) => { el.style.transform = `translate(0px, ${y.toFixed(1)}px)`; };
   let leadTimer = null;
   function layout(first) {
@@ -777,10 +786,9 @@ function evalChart(r) {
     }));
     for (const p of parts) {
       const on = state.on.has(p.s);
-      p.g.classList.toggle("is-off", !on);
-      p.mg.classList.toggle("is-off", !on);
-      p.lg.classList.toggle("is-off", !on);
-      p.lead.classList.toggle("is-off", !on);
+      for (const e of [p.g, p.mg, p.lg, p.lead]) e.classList.toggle("is-off", !on);
+      if (!on && !p.placed) continue;  // a setup never shown keeps its dots at the bottom, hidden, until it is turned on
+      p.placed = true;
       for (const d of p.dots) { d.cy = y(d.v); d.el.style.cy = `${d.cy.toFixed(1)}px`; }
       if (p.m !== null) { p.my = y(p.m); place(p.mg, p.my); }
     }
@@ -797,30 +805,47 @@ function evalChart(r) {
     else { for (const p of labs) p.lead.classList.add("moving"); leadTimer = setTimeout(drawLeads, 460); }
   }
   function focus(s) {
-    state.hot = s;
     svg.classList.toggle("dim", s !== null);
-    for (const p of parts) for (const el of [p.g, p.mg, p.lg, p.lead]) el.classList.toggle("hot", p.s === s);
+    for (const p of parts) for (const e of [p.g, p.mg, p.lg, p.lead]) e.classList.toggle("hot", p.s === s);
   }
-  // Controls: one toggle per setup (at least one stays on), and the mean lines.
-  const buttons = parts.map((p) => {
-    const b = el("button", { class: "s-toggle", "aria-pressed": "true", title: `${setupName(p.s)}. Click to hide or show it.`,
-      onclick: () => {
-        if (state.on.has(p.s)) { if (state.on.size === 1) return; state.on.delete(p.s); } else state.on.add(p.s);
-        b.setAttribute("aria-pressed", String(state.on.has(p.s)));
-        allBtn.disabled = state.on.size === parts.length;
-        layout(false);
-      },
-      onmouseenter: () => { if (state.on.has(p.s)) focus(p.s); }, onmouseleave: () => focus(null),
-      onfocus: () => { if (state.on.has(p.s)) focus(p.s); }, onblur: () => focus(null) },
-    el("i", { style: `background:${p.color}` }), label(p.s));
-    return b;
-  });
-  const allBtn = el("button", { class: "s-all", disabled: true, onclick: () => {
-    state.on = new Set(parts.map((p) => p.s));
-    for (const b of buttons) b.setAttribute("aria-pressed", "true");
-    allBtn.disabled = true;
+  const note = el("span", { class: "hint", role: "status" });
+  const sync = () => {
+    for (const p of parts) p.btn.setAttribute("aria-pressed", String(state.on.has(p.s)));
+    allBtn.disabled = series.every(([s]) => state.on.has(s)) && state.on.size === series.length;
+    if (moreSum) moreSum.textContent = `More setups (${extra.length}${extra.some((s) => state.on.has(s)) ? `, ${extra.filter((s) => state.on.has(s)).length} shown` : ""})`;
+  };
+  function toggle(p) {
+    note.textContent = "";
+    if (state.on.has(p.s)) {
+      if (state.on.size === 1) return;
+      state.on.delete(p.s);
+    } else {
+      // Keep the setup's own colour unless a shown setup has it; otherwise take a free one. At most PALETTE.length at once.
+      const used = new Set(parts.filter((q) => state.on.has(q.s)).map((q) => q.color));
+      if (!p.color || used.has(p.color)) {
+        const free = PALETTE.find((c) => !used.has(c));
+        if (!free) { note.textContent = `At most ${PALETTE.length} setups at once: hide one first.`; return; }
+        paint(p, free);
+      }
+      state.on.add(p.s);
+    }
+    sync();
     layout(false);
-  } }, "Show all");
+  }
+  for (const p of parts) {
+    p.swatch = el("i", {});
+    p.btn = el("button", { class: "s-toggle", "aria-pressed": "false", title: `${setupName(p.s)}. Click to show or hide it.`, onclick: () => toggle(p),
+      onmouseenter: () => { if (state.on.has(p.s)) focus(p.s); }, onmouseleave: () => focus(null),
+      onfocus: () => { if (state.on.has(p.s)) focus(p.s); }, onblur: () => focus(null) }, p.swatch, label(p.s));
+    if (p.color) paint(p, p.color);
+  }
+  const allBtn = el("button", { class: "s-all", onclick: () => {  // back to the starting setups and colours
+    state.on = new Set(series.map(([s]) => s));
+    for (const p of parts) if (!p.extra) paint(p, series.find(([s]) => s === p.s)[1]);
+    note.textContent = "";
+    sync();
+    layout(false);
+  } }, "Reset");
   const anyMean = parts.some((p) => p.m !== null);
   const meanBtn = !anyMean ? null : el("button", { class: "s-means", "aria-pressed": "true", onclick: () => {
     state.meansOn = !state.meansOn;
@@ -828,6 +853,9 @@ function evalChart(r) {
     svg.classList.toggle("no-means", !state.meansOn);
     if (state.meansOn) { svg.classList.remove("draw", "redraw"); void svg.getBoundingClientRect(); svg.classList.add("redraw"); }  // replay the lines' draw-in
   } }, el("span", { class: "dotline", "aria-hidden": "true" }), "Mean lines");
+  const moreSum = extra.length ? el("summary", {}) : null;
+  const more = extra.length ? el("details", { class: "more-setups" }, moreSum,
+    el("div", { class: "legend toggles", role: "group", "aria-label": "More setups" }, ...parts.filter((p) => p.extra).map((p) => p.btn))) : null;
   svg.addEventListener("mousemove", (e) => {
     const box = svg.getBoundingClientRect();
     const px = ((e.clientX - box.left) / box.width) * W, py = ((e.clientY - box.top) / box.height) * H;
@@ -837,15 +865,18 @@ function evalChart(r) {
     showTip(e, [`${best.w} · ${label(best.s)}`, `cost ${money(best.v)}`, means[best.s] !== undefined ? `mean ${money(means[best.s])}` : ""].filter(Boolean));
   });
   svg.addEventListener("mouseleave", hideTip);
+  sync();
   layout(true);
   svg.classList.add("draw");  // the first draw: dots fade up and the mean lines draw in from the left
   return el("div", {},
-    el("div", { class: "chart-controls" }, el("div", { class: "legend toggles", role: "group", "aria-label": "Setups on the chart" }, ...buttons),
+    el("div", { class: "chart-controls" },
+      el("div", { class: "legend toggles", role: "group", "aria-label": "Setups on the chart" }, ...parts.filter((p) => !p.extra).map((p) => p.btn)),
       el("div", { class: "toggles" }, meanBtn, allBtn)),
+    more, note,
     svg, el("div", { class: "hint" }, `Cost per ${r.unit || "test window"} in USD, ${scale} (${r.unit ? "its" : "window"} number on the x axis). ` +
       `${anyMean ? "Each dotted line is that setup's mean over all of them, the number in the table, written at the right edge. " : ""}` +
-      `Click a setup to hide or show it; the axis rescales to what is shown. Hover one to pick it out. ` +
-      `${r.chart_series ? "The other setups are in the table below." : "Random and approve-all are in the table below."}`));
+      `Click a setup to hide or show it; the axis rescales to what is shown. Hover one to pick it out.` +
+      `${extra.length ? ` More setups adds any other setup in this eval, up to ${PALETTE.length} at once.` : ""}`));
 }
 
 function devGate(d) {
@@ -1002,7 +1033,8 @@ async function ieeeEval(r) {  // IEEE-CIS evals (eval_ieee*.py and the phases af
   const cheapest = order.filter(([s]) => s !== "ieee-approve-all").slice(0, 4).map(([s]) => s);
   const chart = { test_windows: wins, windows: {}, means: {}, linear: true, label: name, unit: dev ? "held-out dev chain" : "",
     chart_series: [...cheapest, "ieee-approve-all"].filter((s) => r.setups[s]).map((s, i) => [s, `var(--series-${i + 1})`]) };
-  for (const [s] of chart.chart_series) {
+  chart.extra_series = order.map(([s]) => s).filter((s) => !chart.chart_series.some(([t]) => t === s));  // every other setup, cheapest first, off at the start
+  for (const [s] of order) {
     chart.windows[s] = {}; chart.means[s] = r.setups[s].mean_cost;
     wins.forEach((w, i) => { chart.windows[s][w] = { cost: r.setups[s].windows[i] }; });
   }

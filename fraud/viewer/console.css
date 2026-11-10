@@ -16,6 +16,9 @@
   --series-3: #1baf7a;
   --series-4: #8a5cd6;
   --series-5: #c4417f;
+  --series-6: #a87b00;
+  --series-7: #0f8fa6;
+  --series-8: #7a6a58;
   --good: #006300;
   --good-bg: #e3f3e3;
   --warn: #8a5a00;
@@ -44,6 +47,9 @@
     --series-4: #a07de6;
   --series-5: #e0659f;
     --series-5: #e0659f;
+    --series-6: #d9a929;
+    --series-7: #3bb3c7;
+    --series-8: #a8977f;
     --good: #4cc44c;
     --good-bg: #183018;
     --warn: #f0b84a;
@@ -70,6 +76,9 @@
   --series-3: #199e70;
   --series-4: #a07de6;
   --series-5: #e0659f;
+  --series-6: #d9a929;
+  --series-7: #3bb3c7;
+  --series-8: #a8977f;
   --good: #4cc44c;
   --good-bg: #183018;
   --warn: #f0b84a;
@@ -299,7 +308,7 @@ details.more[open] > summary { margin-bottom: 8px; }
   color: var(--ink-2); transition: opacity 0.2s ease, background-color 0.2s ease, border-color 0.2s ease;
 }
 .toggles button i { display: inline-block; width: 9px; height: 9px; border-radius: 50%; margin: 0; }
-.toggles button[aria-pressed=false] { opacity: 0.5; background: transparent; text-decoration: line-through; }
+.toggles button[aria-pressed=false] { opacity: 0.6; background: transparent; }
 .toggles button[aria-pressed=false] i { background: transparent !important; box-shadow: inset 0 0 0 1.5px var(--muted); }
 .toggles button:disabled { opacity: 0.4; cursor: default; }
 .dotline { display: inline-block; width: 18px; height: 0; border-top: 2px dotted var(--ink-2); }
@@ -326,3 +335,6 @@ svg.evalchart .fade-in { animation: fade-in 0.35s ease-out both; }
 @media (prefers-reduced-motion: reduce) {
   svg.evalchart *, .toggles button { transition: none !important; animation: none !important; }
 }
+.more-setups { margin: 2px 0 4px; }
+.more-setups > summary { font-size: 12px; font-weight: 600; color: var(--ink-2); padding: 2px 0; }
+.more-setups[open] > summary { margin-bottom: 6px; }
