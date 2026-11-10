@@ -172,7 +172,7 @@ Source (Observed): pinned trace dev0 for the replay; README.md and docs/media/fr
 <div class="main">
   <div class="timeline-wrap"><div class="timeline" data-id="timeline"><span class="seg fit"></span><span class="seg devseg"></span><span class="seg test"></span></div></div>
   <div class="t-labels">
-    <span class="t-label" style="left:0" data-from="0"><b>{{manual.split.rows|int}} rows of IEEE-CIS</b>real e-commerce from Vesta, {{manual.split.fraud_share}} fraud</span>
+    <span class="t-label" style="left:0" data-from="0"><b>{{manual.split.rows|int}} rows of IEEE-CIS</b>real e-commerce from Vesta, {{manual.split.fraud_share}} fraud. Fit: the first {{manual.split.fit|int}}</span>
     <span class="t-label" data-l="fit" data-from="9"></span>
     <span class="t-label" data-l="dev" data-from="1"><b>dev {{manual.split.dev|int}}</b>pick and tune here</span>
     <span class="t-label" data-l="test" data-from="1"><b>test {{manual.split.test|int}}</b>never tune here</span>
@@ -183,7 +183,7 @@ Source (Observed): pinned trace dev0 for the replay; README.md and docs/media/fr
     <div class="zoom-bar"></div>
   </div>
   <div class="commit-line">
-    <div class="tile" data-from="3"><span class="k">Chosen first</span><p>{{final.windows_n|num}} windows, seed 20261105, before this work began</p></div>
+    <div class="tile" data-from="3"><span class="k">Reserved first</span><p>{{final.windows_n|num}} windows, seed 20261105, before any final candidate was trained</p></div>
     <div class="tile" data-from="3"><span class="k">Predictions committed</span><p>rule and questions in git, commit bfbfae6, before any FINAL row was scored</p></div>
     <div class="tile" data-from="3"><span class="k">Run once</span><p>{{final.rows|int}} rows, {{final.frauds|int}} frauds. No model scored them a second time</p></div>
   </div>
@@ -193,8 +193,9 @@ Source (Observed): pinned trace dev0 for the replay; README.md and docs/media/fr
 <aside class="notes">
 [Ryu · 0:30]
 The bar you just saw becomes the real data: 590,540 labelled transactions in time order. Click: fit, then dev, then test, by time, never shuffled. That split is 60/20/20; we proposed 70/15/15.
-Click: inside test, 20 windows chosen before this work began. Click: they lock. The rule and questions went into git first. FINAL ran once, and no model scored it again. So everything before this talk's verdict section was chosen on dev.
-Source (Observed): fraud/final_test.py; fraud/results/eval_final/20261104-090649.json (window positions, committed); pre-registration in the fraud/eval_final.py docstring, commit bfbfae6. Window positions are row ranges, not rows' contents.
+Click: inside test, 20 windows reserved on 3 November, at Phase 15, on rows no earlier test had touched and before any of the final candidates was trained. Click: they lock. The rule and questions went into git first. FINAL ran once, and no model scored it again. So everything before this talk's verdict section was chosen on dev.
+If asked: Phases 11 to 14 had already used 60 other test windows. That is why FINAL was set apart, and why the phases in between ran on 38 chains of leftover test rows. A chain is 1,000 untouched rows in arrival order, skipping rows other windows used.
+Source (Observed): fraud/final_test.py; fraud/results/eval_final/20261104-090649.json (window positions, committed); pre-registration in the fraud/eval_final.py docstring, commit bfbfae6, 08:14 on 4 November; the run started at 09:06 (eval id 20261104-090649). Reservation: fraud/final_test.py, commit f7b2718, and fraud/PROGRESS.md, Phase 15. Window positions are row ranges, not rows' contents.
 </aside>
 </section>
 
@@ -221,7 +222,7 @@ Source (Observed): fraud/final_test.py; fraud/results/eval_final/20261104-090649
     <thead><tr><th>Worked examples, expected cost in USD</th><th class="r">approve</th><th class="r">review</th><th class="r">decline</th><th>cheapest</th></tr></thead>
     <tbody data-worked></tbody>
   </table>
-  <p class="print-only sub">Approve: p × amount. Decline: (1 − p) × friction, plus a flat 10 USD with the customer line. Review: 10 + λ {{cost.lambda|num}}. p is fitted on dev windows and used only to weigh costs.</p>
+  <p class="print-only sub">Approve: p × amount. Decline: (1 − p) × friction, where friction is 10% of the amount, at least 1 USD; the customer line adds a flat 10 USD to the friction. Review: 10 + λ {{cost.lambda|num}}. p is fitted on dev windows and used only to weigh costs.</p>
 </div>
 <p class="foot evidence"><span>Same logreg scores, Phase 14: two lines {{rule.phase14.lines|int}} → rule {{rule.phase14.rule|int}}, {{rule.phase14.diff.mean|signed}}, CI {{rule.phase14.diff.ci|ci}}, distinguishable. But good customers declined rise, {{manual.phase14.good_declined_lines|int}} → {{manual.phase14.good_declined_rule|int}}.</span></p>
 </div>
@@ -229,7 +230,8 @@ Source (Observed): fraud/final_test.py; fraud/results/eval_final/20261104-090649
 [Swan · 1:00]
 Our proposal had two fixed cut-offs on the score. They ignore the amount. This is arithmetic, there is no model on this slide.
 p is a number fitted on dev windows; we use it only to weigh costs. It is not a probability of fraud.
-Start: 30 USD, p 0.02: approving is cheapest. Click: same p, 1,500 USD: now a review is cheapest, because the amount alone changed the sum. Click: 30 USD, p 0.2: decline. Click: the customer line adds a flat 10 USD to the decline side, and it flips to approve. Drag the sliders if the room wants to try a case.
+Start: 30 USD, p 0.02: approving is cheapest, 0.60 against 2.94 and 15. Click: same p, 1,500 USD: now a review is cheapest, 15 against 30 and 147, because the amount alone changed the sum. Click: 30 USD, p 0.2: decline, 2.40 against 6. Click: the customer line adds a flat 10 USD to the friction of a decline, so it becomes 0.8 × 13 = 10.40, and it flips to approve.
+If asked what lambda is: the price of using up one of the reviews, since at most 5% of a window can be reviewed. It is picked on dev windows. Drag the sliders if the room wants to try a case.
 The rule was the biggest dollar gain we measured: on the same logreg scores, 825 USD per window, distinguishable. It also declined more good customers, 982 against 655, and we report both.
 Source: fraud/eval_ieee_amount.py decide, fraud/rule.py decide_paced (Implementation choice); lambda {{cost.lambda|num}} from fits in fraud/results/eval_lm_cost/20261104-140349.json. Phase 14 numbers (Observed): fraud/RESULTS-IEEE-AMOUNT.md. Backup: press down for the other phases.
 </aside>
@@ -242,22 +244,23 @@ Source: fraud/eval_ieee_amount.py decide, fraud/rule.py decide_paced (Implementa
 <div class="main"><table class="ruled big">
   <thead><tr><th style="width:150px">Phase</th><th>Question</th><th>Observed</th></tr></thead>
   <tbody>
-    <tr><td>14</td><td>Rule against two lines, same logreg scores</td><td>{{rule.phase14.lines|int}} → {{rule.phase14.rule|int}}, {{rule.phase14.diff.mean|signed}}, CI {{rule.phase14.diff.ci|ci}}, distinguishable, {{rule.phase14.diff.first_cheaper|num}} of 20 cheaper</td></tr>
-    <tr><td>16</td><td>Does it survive other friction prices?</td><td>Wins at every friction rate tried; stops winning near 50–60 USD flat per decline</td></tr>
-    <tr><td>17</td><td>Which columns does it need?</td><td>Without C, D and V, logreg costs about 1,000 more. C's timing couldn't be cleared</td></tr>
-    <tr><td>18</td><td>Customer line on logreg</td><td>Good customers declined {{rule.phase18.base|int}} → {{rule.phase18.customers|int}}, {{rule.phase18.diff.mean|signed}}, CI {{rule.phase18.diff.ci|ci}}, not distinguishable</td></tr>
-    <tr><td>20</td><td>Do trees hold up on test?</td><td>Promised −295 on dev, delivered −97, CI −385 to 182, not distinguishable</td></tr>
+    <tr><td>14</td><td>Rule against two lines, same logreg scores</td><td>{{rule.phase14.lines|int}} → {{rule.phase14.rule|int}}, {{rule.phase14.diff.mean|signed}}, CI {{rule.phase14.diff.ci|ci}}, distinguishable, {{rule.phase14.diff.first_cheaper|num}} of {{rule.phase14.windows_n|num}} windows cheaper</td></tr>
+    <tr><td>16</td><td>Does it survive other friction prices?</td><td>Phase 14's scores re-priced: wins at every friction rate tried; stops winning near 50–60 USD flat per decline</td></tr>
+    <tr><td>17</td><td>Which columns does it need?</td><td>Without C, D and V, logreg costs {{rule.phase17.diff.mean|signed}}, CI {{rule.phase17.diff.ci|ci}}, on {{rule.phase17.windows_n|num}} windows; {{rule.phase17.dev.mean|signed}} on dev. C's timing couldn't be cleared</td></tr>
+    <tr><td>18</td><td>Customer line on logreg</td><td>Good customers declined {{rule.phase18.base|int}} → {{rule.phase18.customers|int}} over {{rule.phase18.windows_n|num}} windows; cost {{rule.phase18.diff.mean|signed}}, CI {{rule.phase18.diff.ci|ci}}, not distinguishable</td></tr>
+    <tr><td>20</td><td>Do trees hold up on test?</td><td>Against logreg: {{rule.phase20.dev.mean|signed}} on dev, then {{rule.phase20.diff.mean|signed}} on {{rule.phase20.windows_n|num}} test windows, CI {{rule.phase20.diff.ci|ci}}, not distinguishable</td></tr>
   </tbody>
 </table></div>
 <p class="foot">Sources: fraud/RESULTS-IEEE-AMOUNT.md, RESULTS-COST-STRESS.md, RESULTS-COLUMN-AUDIT.md, RESULTS-RULE.md, RESULTS-TABULAR.md.</p>
 </div>
 <aside class="notes">
 Backup for questions; no talk time.
-All Observed, from the write-ups named at the bottom. These are different windows from FINAL, so don't pair them with FINAL's numbers.
+All Observed, from the write-ups named at the bottom and the result files under fraud/results/ (eval_ieee_amount, eval_cost_stress, eval_column_audit, eval_rule, eval_tabular). Each phase ran on its own test windows, 8 to 20 of them, so don't pair them with each other or with FINAL's numbers.
 </aside>
 </section>
 </section>
 
+<section data-act="B" data-n="8">
 <section id="s8" data-n="8" data-act="B" data-steps="4" data-scene="ladder" data-auto-animate data-result>
 <div class="page">
 <span class="tag">8 · Swan</span>
@@ -267,21 +270,49 @@ All Observed, from the write-ups named at the bottom. These are different window
   <div class="ladder" style="flex:none"><div class="ladder-rows"></div></div>
   <div class="ladder-note">
     <div class="tile" data-from="1"><span class="k">Fine-tuned vs frozen</span><span class="n">{{dev.diffs.phase12_frozen.mean|signed}}</span><p>CI {{dev.diffs.phase12_frozen.ci|ci}}, distinguishable</p></div>
-    <div class="tile" data-from="2"><span class="k">A second seed moved cost</span><span class="n">{{dev.diffs.seed1_phase12.mean|signed}}</span><p>our yardstick for one adapter's noise</p></div>
+    <div class="tile" data-from="2"><span class="k">A second seed moved cost</span><span class="n">{{dev.diffs.seed1_phase12.mean|signed}}</span><p>CI {{dev.diffs.seed1_phase12.ci|ci}}: our yardstick for one adapter's noise</p></div>
     <div class="tile" data-from="4"><span class="k">More columns vs logreg</span><span class="n">{{dev.diffs.rich_logreg.mean|signed}}</span><p>CI {{dev.diffs.rich_logreg.ci|ci}}, not distinguishable</p></div>
   </div>
 </div>
-<p class="foot">Mean USD per window, with the rule. {{dev.windows_n|num}} held-out chains, {{dev.frauds|int}} frauds. Flattered: lambda was picked with these rows in, except logreg's.</p>
+<p class="foot">Mean USD per 1,000 rows, with the rule. {{dev.windows_n|num}} held-out dev chains of 1,000 rows, {{dev.frauds|int}} frauds. Flattered: lambda was picked with these rows in, except logreg's.</p>
 </div>
 <aside class="notes">
 [Swan · 0:50]
 Same model, d1-Omni-2B, climbing down in cost. Click for each rung.
-No fine-tune: 3,697. Fine-tuned: 2,288, a fall of 1,409, distinguishable. That is the proposal's "untrained" baseline, beaten on dev. A second seed moved cost by about 100, so anything near 100 is noise. More columns, with no tree score: 2,112.
+No fine-tune: 3,697. Fine-tuned: 2,288, a fall of 1,409, distinguishable. That is the proposal's "untrained" baseline, beaten on dev. A second seed moved cost by about 100, interval -205 to 6. It is one extra seed, so it is a yardstick and not a variance estimate: treat a difference near 100 between two adapters as possibly noise. More columns, with no tree score: 2,112, which is 176 below the first fine-tune, interval -281 to -58.
 Click: reference lines. Logreg 2,125, so a tie, -13, not distinguishable. Trees 1,830, distinguishably cheaper than us by 282.
 Remember this tie. It did not hold on the final test.
 Good customers declined if asked: frozen 9,586, fine-tuned 3,644, seed 1 3,253, more columns 3,459, logreg 4,003, trees 3,003.
+A chain is 1,000 dev rows in arrival order, taken from the dev rows that no rule or line was fitted on. The recipe is on the backup: press down.
 Source (Observed): fraud/results/eval_lm_nuc/20261104-090217.json, fraud/RESULTS-LM-NUC.md. Dev isn't test.
 </aside>
+</section>
+<section id="s8b" data-n="8" data-act="B" data-main="no">
+<div class="page">
+<span class="tag">8 · backup</span>
+<div class="comp"><span class="sec">B</span>The recipe</div>
+<h1>How the adapter, the baselines and the intervals were made</h1>
+<div class="main"><table class="ruled tall">
+  <thead><tr><th style="width:300px">Item</th><th>What we did</th></tr></thead>
+  <tbody>
+    <tr><td>Model</td><td>d1-Omni-2B from LiquidAI, text only. One forward pass over a lettered question; the option scores are read, nothing is generated</td></tr>
+    <tr><td>Training rows</td><td>Every fraud in the fit rows, {{manual.training.fit_frauds|int}}, plus three legit rows for each: {{manual.training.fit_rows|int}} rows. Fit is {{manual.recipe.fit_fraud_share}} fraud; training is 1 in 4</td></tr>
+    <tr><td>Fine-tune</td><td>LoRA, r {{manual.recipe.lora_r|num}}, alpha {{manual.recipe.lora_alpha|num}}, dropout {{manual.recipe.lora_dropout|num}}, on the attention projections. AdamW, learning rate {{manual.recipe.lr}}, {{manual.recipe.warmup_steps|num}} warm-up steps, linear decay. {{manual.recipe.batches|int}} batches of {{manual.recipe.batch|num}}, one pass, seed 0</td></tr>
+    <tr><td>Prompt</td><td>Named columns as plain text, with no V columns and no card ids, plus what earlier rows say about the card and address. About {{final.prompt_tokens|int}} tokens, written before any model read it</td></tr>
+    <tr><td>Score to decision</td><td>The amount-aware rule. Its p is a logistic fit of the score on 30 dev windows, at the natural fraud rate</td></tr>
+    <tr><td>Baselines</td><td>Logistic regression on all columns, fit rows only, same rule. Trees: boosting in numpy, {{manual.recipe.trees}}</td></tr>
+    <tr><td>Intervals</td><td>{{manual.recipe.boot_reps|int}} resamples of windows, percentile, seed {{manual.recipe.boot_seed|num}}. AUC: {{manual.recipe.auc_boot_reps|int}} resamples</td></tr>
+  </tbody>
+</table></div>
+<p class="foot">Sources: fraud/finetune_ieee.py, finetune_d1.py, finetune.py, ieee_brain.py, eval_ieee_amount.py, eval_ieee.py; fraud/RESULTS-TABULAR.md.</p>
+</div>
+<aside class="notes">
+Backup for questions; no talk time.
+What an ML audience asks first. The training set is downsampled to one fraud in four, so the model's raw scores are not at the natural rate; that is one reason we never call them probabilities. The decision does not use the raw score directly: the rule's p is a logistic fit of the score on 30 dev windows, where fraud is at its natural rate, about 3.5%.
+One adapter per setup, seed 0, except the seed comparison on slide 8. The logreg baseline and the trees see all columns, V included; the language model sees only the columns written into its prompt, so the two don't read the same inputs. That is stated, not corrected.
+Source (Documented, from our own code): the docstrings of fraud/finetune_ieee.py (rows, batches) and fraud/eval_ieee_amount.py (the rule's p); LORA in fraud/finetune_d1.py; LR, WARMUP_STEPS and BATCH in fraud/finetune.py; boot_ci and boot_auc in fraud/eval_ieee.py; trees in fraud/RESULTS-TABULAR.md. Prompt tokens (Observed): prompt_tokens_mean of final-rich-amt in fraud/results/eval_final/20261104-090649.json.
+</aside>
+</section>
 </section>
 
 <section id="s9" data-n="9" data-act="B" data-steps="2" data-scene="shortcut" data-auto-animate data-result>
@@ -304,7 +335,7 @@ Source (Observed): fraud/results/eval_lm_nuc/20261104-090217.json, fraud/RESULTS
 <aside class="notes">
 [Swan · 0:40]
 So we tried a shortcut: give the model a boosted-tree score in its prompt. It looks cheapest, 1,920.
-Click: the score alone, with no language model, is 1,853, and the two rank payments almost identically: 0.984.
+Click: the score alone, with no language model, is 1,853, and the two rank payments almost identically: a Spearman rank correlation of 0.984 between the model's score and the tree score it read, over the 88,000 dev rows. Under the same rule, 2,233 of those decisions differ.
 Click: our verdict: "really not a decision model doing its grunt work". The bar fades to an outline because this isn't the language model's own judgement.
 Be honest about the turn. The rule we registered before the test recommended this setup, final-signal-cust. It was rejected after seeing the results, and the registered result stands as it came out.
 Source (Observed): fraud/results/eval_lm_nuc/20261104-090217.json (echo, against_signal); FINAL rows give 0.984 too (extras.json). The quote: fraud/RESULTS-FINAL.md, After the test.
@@ -357,7 +388,7 @@ Source (Observed): fraud/results/eval_final/20261104-090649.json; the customer l
     <tr class="ours"><td>d1, no trees, customer line *</td><td class="r">{{final.setups.rich_cust.mean|int}}</td><td>{{final.setups.rich_cust.ci|range}}</td><td class="r">{{final.setups.rich_cust.auc|auc}}</td><td class="r">{{final.setups.rich_cust.frauds_stopped|int}}</td><td class="r">{{final.setups.rich_cust.fraud_let_through|int}}</td><td class="r">{{final.setups.rich_cust.good_declined|int}}</td><td class="r">{{final.setups.rich_cust.reviews|int}}</td></tr>
   </tbody>
 </table>
-<p class="sub">Rank correlation of the tree-reading setups with their score, on FINAL rows: {{final.rank_corr|auc}}. It was the registered pick; the owner rejected it after the results.</p>
+<p class="sub">Rank correlation of the tree-reading setups with their score, on FINAL rows: {{final.rank_corr|auc}}. The second row was the registered pick; the owner rejected it after the results.</p>
 </div>
 <p class="foot">* Read-out on recorded scores, asked for after the results. Green rows have no tree score. Over {{final.windows_n|num}} windows; costs per window in USD.</p>
 </div>
@@ -385,6 +416,8 @@ Source (Observed): fraud/results/eval_final/20261104-090649.json, rich_cust_read
 Click: the mean differences. Click: the intervals grow out from them. Click: the zero line sweeps across; what it hits, we can't tell from nothing.
 Every comparison against the baseline crosses zero, whichever way its mean falls. Only two kinds exclude it: reading trees against not reading them, and anything against approving everything.
 That last one is the thesis in one line: about 2,800 USD per 1,000 payments saved against approving everything, and no shown saving against logistic regression. On assumed costs.
+If asked "15 of 20 windows cheaper, isn't that significant?": for the tree-reading setup against the baseline a sign test gives p = {{final.sign.signal_amt_baseline.p|d2}}, uncorrected, and the registered pick was cheaper in {{final.diffs.signal_cust_baseline.first_cheaper|num}} of 20. But the criterion we registered was the interval of the mean, because cost is a sum of dollars. One window, final12, with two frauds of 1,504 USD let through, cost that setup {{final.sign.final12_gap|int}} more than the baseline and pulls the mean back. It wins often by a little and loses rarely by a lot, so the mean isn't distinguishable. And that setup mostly follows a tree score. For the setup with no tree score there is no such tension: cheaper in {{final.sign.rich_amt_baseline.first_cheaper|num}} of 20, sign test p = {{final.sign.rich_amt_baseline.p|d2}}.
+If asked about the bootstrap: 10,000 resamples of the 20 windows, percentile interval, seed 20261102. The three registered questions aren't corrected for each other, and "reported" rows aren't questions.
 Source (Observed): verdict in fraud/results/eval_final/20261104-090649.json, against in rich_cust_readout.json. The JSON signs mean_diff from the cheaper side; slides/build_data.py turns each to first minus second, and tests/test_slides.py checks them.
 </aside>
 </section>
@@ -410,7 +443,7 @@ Source (Observed): verdict in fraud/results/eval_final/20261104-090649.json, aga
       <tr><td>Mean cost per window, USD</td><td class="r">{{final.setups.baseline.mean|int}}</td><td class="r">{{final.setups.rich_amt.mean|int}}</td><td class="r">{{final.setups.rich_cust.mean|int}}</td></tr>
     </tbody>
   </table>
-  <p class="sub" style="margin-top:12px">The line against no line: {{final.diffs.rich_cust_rich_amt.mean|signed}}, CI {{final.diffs.rich_cust_rich_amt.ci|ci}}, not distinguishable. The gain comes from the rule, not the model: on logreg it took declines {{rule.phase18.base|int}} → {{rule.phase18.customers|int}} (Phase 18, earlier windows).</p>
+  <p class="sub" style="margin-top:12px">The line against no line: {{final.diffs.rich_cust_rich_amt.mean|signed}}, CI {{final.diffs.rich_cust_rich_amt.ci|ci}}, not distinguishable. The gain comes from the rule, not the model: on logreg it took declines {{rule.phase18.base|int}} → {{rule.phase18.customers|int}} (Phase 18, {{rule.phase18.windows_n|num}} earlier windows).</p>
 </div>
 <p class="foot"><span class="no-print">The black tick on each bar is the baseline. </span>The customer line was asked for after the results, on recorded scores: a read-out, not a test.</p>
 </div>
@@ -469,7 +502,7 @@ Source (Observed): fraud/results/eval_lm_cost/20261104-140349.json, fraud/RESULT
 <div class="page">
 <span class="tag">14 · Ryu</span>
 <div class="comp"><span class="sec">C</span>Predictions against results<span class="badges"><span class="badge dev">Dev only</span></span></div>
-<h1>We wrote predictions first, and most of them missed</h1>
+<h1>We wrote seven predictions first: three missed, two held</h1>
 <div class="main"><div class="cards" data-cards></div></div>
 <p class="foot">Stated before training, in fraud/eval_lm_cost.py. lm-weighted against lm-rich unless the card says otherwise.</p>
 </div>
@@ -547,7 +580,7 @@ Source (Observed): latency_ms in fraud/results/eval_final/20261104-090649.json; 
   <div class="limit" data-from="2"><b>One adapter per setup</b><p>A second seed moved cost by about 100, so a single adapter can't say much more than that.</p></div>
   <div class="limit" data-from="3"><b>Assumed costs</b><p>Every dollar rests on them. The rule stops winning near 50–60 USD flat per decline.</p></div>
   <div class="limit" data-from="4"><b>Dev flatters</b><p>The tie with logreg on dev ({{dev.diffs.rich_logreg.mean|signed}}) didn't hold on FINAL ({{final.diffs.rich_amt_baseline.mean|signed}}).</p></div>
-  <div class="limit" data-from="5"><b>Columns may not exist in time</b><p>C's timing couldn't be cleared; without C, D and V, logreg costs about 1,000 more.</p></div>
+  <div class="limit" data-from="5"><b>Columns may not exist in time</b><p>C's timing couldn't be cleared; without C, D and V, logreg costs {{rule.phase17.dev.mean|abs}} to {{rule.phase17.diff.mean|abs}} more per window.</p></div>
   <div class="limit" data-from="6"><b>Not measured</b><p>Fairness per group; trees and the tree score alone on FINAL; real business costs.</p></div>
 </div></div>
 <p class="foot">Sources: fraud/RESULTS-FINAL.md (Limits), RESULTS-COST-STRESS.md, RESULTS-COLUMN-AUDIT.md.</p>
@@ -589,7 +622,7 @@ The six cards from slide 2. Next slide: they shrink and each gets its answer.
 <h1>What we promised, and what happened</h1>
 <div class="main"><div class="promises back">
   <div class="promise"><span class="k">RQ1</span><span class="stamp partly" data-from="1"><span data-mark="partly"></span>half answered</span><p class="said" data-id="p1">Catch more fraud than logistic regression and the untrained model, at the same precision</p>
-    <p class="got" data-from="1">Untrained: yes, {{dev.setups.frozen.frauds_stopped|int}} → {{dev.setups.rich.frauds_stopped|int}} frauds stopped (dev). Logreg: no, {{final.setups.rich_amt.frauds_stopped|num}} against {{final.setups.baseline.frauds_stopped|num}}, AUC {{final.setups.rich_amt.auc|auc}} against {{final.setups.baseline.auc|auc}}. Recall at equal precision wasn't computed.</p></div>
+    <p class="got" data-from="1">Untrained: yes, {{dev.setups.frozen.frauds_stopped|int}} → {{dev.setups.rich.frauds_stopped|int}} frauds stopped (dev). Logreg: no. {{final.setups.rich_amt.frauds_stopped|num}} against {{final.setups.baseline.frauds_stopped|num}} stopped, at lower precision, {{final.setups.rich_amt.precision|auc}} against {{final.setups.baseline.precision|auc}}. Recall at equal precision wasn't computed.</p></div>
   <div class="promise"><span class="k">RQ2</span><span class="stamp yes" data-from="2"><span data-mark="yes"></span>bar met</span><p class="said" data-id="p2">9 in 10 decisions in under 0.25 s, on one laptop, offline</p>
     <p class="got" data-from="2">{{final.latency.p90|int}} ms on a desktop GPU. On the laptop, {{rule.phase14.latency.p90|int}} ms with an earlier adapter; the final ones weren't timed there.</p></div>
   <div class="promise"><span class="k">Data</span><span class="stamp yes" data-from="3"><span data-mark="yes"></span>done</span><p class="said" data-id="p3">Real transactions, IEEE-CIS, tested in time order</p>
@@ -601,11 +634,11 @@ The six cards from slide 2. Next slide: they shrink and each gets its answer.
   <div class="promise"><span class="k">Output</span><span class="stamp yes" data-from="3"><span data-mark="yes"></span>done</span><p class="said" data-id="p6">A fine-tuned model, a prompt and an evaluation report</p>
     <p class="got" data-from="3">All three exist, with every test pre-registered in git.</p></div>
 </div></div>
-<p class="foot">Frauds stopped and AUC are at each setup's own operating point on FINAL, not matched on precision. Press down for what changed.</p>
+<p class="foot">Frauds stopped and precision are at each setup's own operating point on FINAL, not matched. AUC {{final.setups.rich_amt.auc|auc}} against {{final.setups.baseline.auc|auc}}. Press down for what changed.</p>
 </div>
 <aside class="notes">
 They shrink and get their stamps. Click four times.
-RQ1: half answered. Against the untrained model, yes, on dev. Against logistic regression, no: no shown gain on FINAL. And we did not compute recall at matched precision, the metric we proposed; we moved to dollars and said why on slide 4. The AUC intervals overlap, .831–.885 against .821–.880.
+RQ1: half answered. Against the untrained model, yes, on dev. Against logistic regression, no: no shown gain on FINAL. At its own operating point on FINAL the language model with no tree score stopped {{final.setups.rich_amt.frauds_stopped|num}} of {{final.frauds|num}} frauds, recall {{final.setups.rich_amt.recall|auc}}, with precision {{final.setups.rich_amt.precision|auc}}; logreg stopped {{final.setups.baseline.frauds_stopped|num}}, recall {{final.setups.baseline.recall|auc}}, with precision {{final.setups.baseline.precision|auc}}. So logreg stopped a few more frauds with fewer alerts. Precision here is frauds stopped over payments declined or reviewed. We did not compute recall at matched precision, the metric we proposed; we moved to dollars and said why on slide 4. AUC is {{final.setups.rich_amt.auc|auc}} against {{final.setups.baseline.auc|auc}}; we ran no test on that difference, and the two intervals, {{final.setups.rich_amt.auc_ci|aucrange}} and {{final.setups.baseline.auc_ci|aucrange}}, overlap almost entirely.
 RQ2: the bar was met. Say the machine.
 Data, model, output: done, with changes. Press down for the list.
 Fairness: not done. We said we would report recall and wrong declines per product and card type, and there's no such result in the repo. Say so directly. FINAL is spent, so doing it on FINAL's traces would be a read-out, a second look, and that's the owner's decision.

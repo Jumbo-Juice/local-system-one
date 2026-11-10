@@ -155,7 +155,7 @@
         const bub = el('span', { class: 'bub' }, 'ABC'[i])
         const line = el('div', { class: 'ebar' }, bub, el('span', { class: 'name' }, name), b.track, val, el('span', {}), el('span', {}), el('span', { class: 'how' }, formula[name]))
         box.append(line)
-        return { name, line, bub, val, fill: b.fill }
+        return { name, line, bub, val, fill: b.fill, how: line.querySelector('.how') }
       })
       this.state = { ...PRESETS[0] }
       this.amount.addEventListener('input', () => { this.state.amount = amountFrom(+this.amount.value); this.draw(false) })
@@ -180,6 +180,7 @@
         b.line.classList.toggle('on', b.name === best)
         b.bub.classList.toggle('on', b.name === best)
         count(b.val, e[b.name], f.d2, animate, motion.base)
+        if (b.name === 'decline') b.how.textContent = line ? '(1 − p) × (friction + 10)' : '(1 − p) × friction' // as fraud/rule.py prices it
       }
       this.answer.textContent = `Cheapest: ${best}`
     },
@@ -282,6 +283,7 @@
       let grid = ''
       for (const v of [0, 25000, 50000, 75000, 100000]) grid += `<line x1="${L}" x2="${W - 20}" y1="${this.sy(v)}" y2="${this.sy(v)}"/><text x="${L - 12}" y="${this.sy(v) + 10}" text-anchor="end">${v / 1000}k</text>`
       for (const k of [1, 5, 10, 15, 20]) grid += `<text x="${this.sx(k)}" y="${H - 6}" text-anchor="middle">${k}</text>`
+      grid += `<text x="${L - 12}" y="${H - 6}" text-anchor="end">window</text>` // the axes say what they count: windows along, cumulative USD up (the heading beside the plot)
       svg.innerHTML = `<g class="grid">${grid}</g>` + this.series.map(s => `<polyline class="line" stroke="${s.color}" ${s.dash ? `stroke-dasharray="${s.dash}"` : ''}/>`).join('')
       const lines = svg.querySelectorAll('polyline')
       const box = sec.querySelector('.totals')

@@ -25,6 +25,7 @@
     range: a => `${int(a[0])}–${int(a[1])}`,
     auc: x => x.toFixed(3).replace(/^0/, ''),
     auc4: x => x.toFixed(4).replace(/^0/, ''),
+    aucrange: a => `${a[0].toFixed(3).replace(/^0/, '')}–${a[1].toFixed(3).replace(/^0/, '')}`,
     num: x => String(x),
     abs: x => group(Math.round(x)),
     pct: x => `${Math.round(x * 100)}%`,

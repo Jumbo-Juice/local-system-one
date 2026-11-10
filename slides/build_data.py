@@ -25,6 +25,8 @@ SOURCES = {
     "cost": "eval_lm_cost/20261104-140349.json",
     "amount": "eval_ieee_amount/20261103-164830.json",
     "rule": "eval_rule/20261103-211736.json",
+    "audit": "eval_column_audit/20261103-210600.json",
+    "tabular": "eval_tabular/20261103-235132.json",
 }
 REPLAY_ROWS = 40  # the first rows of the pinned PaySim window
 
@@ -96,6 +98,11 @@ def final_block() -> dict:
                   "rich_cust_rich_amt": find(all_v, "final-rich-cust", "final-rich-amt"),
                   "rich_cust_approve": find(all_v, "final-rich-cust", "ieee-approve-all"),
                   "rich_amt_approve": find(all_v, "final-rich-amt", "ieee-approve-all")},
+        # for the notes: the sign test the JSON records beside each registered question, and the window that pulls the primary's mean back
+        "sign": {"signal_amt_baseline": {"p": num(v["primary"]["sign_p"]), "first_cheaper": find(all_v, "final-signal-amt", "final-logreg-amt")["first_cheaper"]},
+                 "rich_amt_baseline": {"p": num(v["third"]["sign_p"]), "first_cheaper": find(all_v, "final-rich-amt", "final-logreg-amt")["first_cheaper"]},
+                 "final12_gap": num(s["final-signal-amt"]["windows"][list(d["windows"]).index(x["dearest_window"]["window"])] - x["dearest_window"]["baseline"])},
+        "prompt_tokens": num(s["final-rich-amt"]["prompt_tokens_mean"], 0),
         "rank_corr": num(x["signal_rank_corr"]),
         "told": {"rich_cust": num(r["told_10_usd"]["mean"]["final-rich-cust"]), "baseline": num(r["told_10_usd"]["mean"]["final-logreg-amt"]),
                  "diff": num(r["told_10_usd"]["against_baseline"]), "ci": [num(c) for c in r["told_10_usd"]["ci"]]},
@@ -144,13 +151,18 @@ def cost_block() -> dict:
 
 
 def rule_block() -> dict:
-    a, r = load("amount"), load("rule")
+    """Earlier phases, each on its own test windows: never paired with FINAL, and the window count goes on the slide."""
+    a, r, c, t = load("amount"), load("rule"), load("audit"), load("tabular")
     s = a["setups"]
     return {
-        "phase14": {"lines": num(s["ieee-logreg-all"]["mean_cost"]), "rule": num(s["ieee-logreg-all-amt"]["mean_cost"]),
+        "phase14": {"lines": num(s["ieee-logreg-all"]["mean_cost"]), "rule": num(s["ieee-logreg-all-amt"]["mean_cost"]), "windows_n": len(a["windows"]),
                     "diff": diff(a["verdict"]["primary"], "ieee-logreg-all-amt"), "latency": {"p50": num(s["ieee-ft-ieee-full"]["latency_ms"]["p50"]), "p90": num(s["ieee-ft-ieee-full"]["latency_ms"]["p90"])}},
+        "phase17": {"windows_n": len(c["windows"]), "diff": diff(c["verdict"]["primary"], "audit-noCDV-amt"),
+                    "dev": {"mean": num(c["heldout"]["noCDV"]["diff_to_all"]), "ci": [num(v) for v in c["heldout"]["noCDV"]["diff_ci"]], "windows": c["heldout"]["noCDV"]["windows"]}},
         "phase18": {"base": r["setups"]["rule-base"]["good_customers_declined"], "customers": r["setups"]["rule-customers"]["good_customers_declined"],
-                    "diff": diff(r["verdict"]["fourth"], "rule-customers")},
+                    "windows_n": len(r["windows"]), "diff": diff(r["verdict"]["fourth"], "rule-customers")},
+        "phase20": {"windows_n": len(t["windows"]), "diff": diff(t["verdict"]["primary"], "tab-all-amt"),
+                    "dev": {"mean": num(t["heldout"]["tab-all"]["diff"]), "ci": [num(v) for v in t["heldout"]["tab-all"]["diff_ci"]]}},
     }
 
 

@@ -175,3 +175,60 @@ def test_every_result_slide_has_a_status_badge(html):
 def test_the_words_the_handoff_rules_out(html, banned):
     visible = re.sub(r"<aside class=\"notes\">.*?</aside>", "", html, flags=re.S)
     assert not re.search(banned, visible, flags=re.I)
+
+
+def test_earlier_phases_carry_their_own_window_counts(data):
+    """Each earlier phase ran on its own test windows, so the backup table says how many and binds every number."""
+    r = data["rule"]
+    assert (r["phase14"]["windows_n"], r["phase17"]["windows_n"], r["phase18"]["windows_n"], r["phase20"]["windows_n"]) == (20, 8, 10, 10)
+    assert r["phase14"]["diff"]["first_cheaper"] == 18 and r["phase14"]["diff"]["windows"] == 20
+    p17, p20 = r["phase17"], r["phase20"]
+    assert (round(p17["diff"]["mean"]), [round(v) for v in p17["diff"]["ci"]], p17["diff"]["distinguishable"]) == (1002, [405, 1870], True)
+    assert (round(p17["dev"]["mean"]), [round(v) for v in p17["dev"]["ci"]], p17["dev"]["windows"]) == (626, [475, 780], 88)
+    assert (round(p20["diff"]["mean"]), [round(v) for v in p20["diff"]["ci"]], p20["diff"]["distinguishable"]) == (-97, [-385, 182], False)
+    assert (round(p20["dev"]["mean"]), [round(v) for v in p20["dev"]["ci"]]) == (-295, [-411, -173])
+    assert [round(v) for v in r["phase18"]["diff"]["ci"]] == [-2, 245] and r["phase18"]["diff"]["distinguishable"] is False
+
+
+def test_operating_points_and_the_sign_test_in_the_notes(data):
+    f = data["final"]
+    rich, base = f["setups"]["rich_amt"], f["setups"]["baseline"]
+    assert (round(rich["recall"], 3), round(rich["precision"], 3)) == (.595, .165)
+    assert (round(base["recall"], 3), round(base["precision"], 3)) == (.610, .184)
+    assert base["frauds_stopped"] > rich["frauds_stopped"] and base["precision"] > rich["precision"]  # the slide says "no", on both counts
+    assert [round(v, 3) for v in rich["auc_ci"]] == [.831, .885] and [round(v, 3) for v in base["auc_ci"]] == [.821, .880]
+    sign = f["sign"]
+    assert (round(sign["signal_amt_baseline"]["p"], 3), sign["signal_amt_baseline"]["first_cheaper"]) == (.041, 15)
+    assert (round(sign["rich_amt_baseline"]["p"], 2), sign["rich_amt_baseline"]["first_cheaper"]) == (.50, 8)
+    assert round(sign["final12_gap"]) == 2951 and f["dearest"]["window"] == "final12"
+    assert round(f["prompt_tokens"]) == 345
+
+
+def test_the_recipe_slide_says_what_the_code_does(data):
+    fraud = SLIDES.parent / "fraud"
+    r, t = data["manual"]["recipe"], data["manual"]["training"]
+    src = (fraud / "finetune.py").read_text(encoding="utf-8")
+    lr, warm, batch, epochs = re.search(r"^LR, WARMUP_STEPS, BATCH, EPOCHS = ([\w.-]+), (\d+), (\d+), (\d+)", src, flags=re.M).groups()
+    assert (float(lr), int(warm), int(batch), int(epochs)) == (float(r["lr"]), r["warmup_steps"], r["batch"], 1)
+    lora = re.search(r'^LORA = \{"r": (\d+), "lora_alpha": (\d+), "lora_dropout": ([\d.]+)', (fraud / "finetune_d1.py").read_text(encoding="utf-8"), flags=re.M).groups()
+    assert (int(lora[0]), int(lora[1]), float(lora[2])) == (r["lora_r"], r["lora_alpha"], r["lora_dropout"])
+    assert t["fit_frauds"] * 4 == t["fit_rows"] == t["fit_frauds"] + t["fit_legit"] and r["batches"] * r["batch"] == t["fit_rows"]
+    ev = (fraud / "eval_ieee.py").read_text(encoding="utf-8")
+    assert re.search(rf"^SEED = {r['boot_seed']}$", ev, flags=re.M)
+    assert f"def boot_ci(values: np.ndarray, seed: int = SEED, reps: int = {r['boot_reps']})" in ev
+    assert f"def boot_auc(v: dict, seed: int = SEED, reps: int = {r['auc_boot_reps']})" in ev
+    assert r["trees"] in (fraud / "RESULTS-TABULAR.md").read_text(encoding="utf-8")
+
+
+def test_every_format_on_a_slide_exists(html):
+    core = (SLIDES / "js" / "core.js").read_text(encoding="utf-8")
+    block = core[core.index("const formats = {"):core.index("const get =")]
+    known = set(re.findall(r"^\s+(\w+)(?::|,)", block, flags=re.M)) | {"int", "signed"}
+    used = set(re.findall(r"\{\{\s*[\w.]+\|(\w+)", html))
+    assert used and used <= known, used - known
+
+
+def test_the_readme_counts_the_slides(html):
+    leaves = [s for s in sections(html) if 'class="page' in s]
+    backups = sum('data-main="no"' in s and "backup" in s for s in leaves)
+    assert f"{backups} backup sub-slides" in " ".join((SLIDES / "README.md").read_text(encoding="utf-8").split())

@@ -2,6 +2,7 @@
 window.DATA = {
  "_sources": {
   "amount": "fraud/results/eval_ieee_amount/20261103-164830.json",
+  "audit": "fraud/results/eval_column_audit/20261103-210600.json",
   "cost": "fraud/results/eval_lm_cost/20261104-140349.json",
   "extras": "fraud/results/eval_final/extras.json",
   "final": "fraud/results/eval_final/20261104-090649.json",
@@ -9,7 +10,8 @@ window.DATA = {
   "nuc": "fraud/results/eval_lm_nuc/20261104-090217.json",
   "paysim_trace": "fraud/runs/20261003-052030_hybrid_qwen2.5-1.5b_dev0.pinned.jsonl",
   "readout": "fraud/results/eval_final/rich_cust_readout.json",
-  "rule": "fraud/results/eval_rule/20261103-211736.json"
+  "rule": "fraud/results/eval_rule/20261103-211736.json",
+  "tabular": "fraud/results/eval_tabular/20261103-235132.json"
  },
  "cost": {
   "big_frauds": 275,
@@ -534,6 +536,7 @@ window.DATA = {
    "p50": 53.1,
    "p90": 55.8
   },
+  "prompt_tokens": 345.0,
   "rank_corr": 0.984479,
   "rows": 20000,
   "setups": {
@@ -796,6 +799,17 @@ window.DATA = {
     ]
    }
   },
+  "sign": {
+   "final12_gap": 2951.3965,
+   "rich_amt_baseline": {
+    "first_cheaper": 8,
+    "p": 0.503445
+   },
+   "signal_amt_baseline": {
+    "first_cheaper": 15,
+    "p": 0.041389
+   }
+  },
   "told": {
    "baseline": 2631.61177,
    "ci": [
@@ -986,6 +1000,21 @@ window.DATA = {
      "verdict": "yes"
     }
    ]
+  },
+  "recipe": {
+   "_source": "fraud/finetune_ieee.py docstring (--full: rows, batches); fraud/finetune_d1.py LORA and fraud/finetune.py (LR, WARMUP_STEPS, BATCH); fraud/d1torch.py (the model); fraud/eval_ieee.py boot_ci and boot_auc (resamples); fraud/RESULTS-TABULAR.md (trees); fraud/DATA-IEEE.md (fraud share of the fit rows).",
+   "auc_boot_reps": 1000,
+   "batch": 8,
+   "batches": 5994,
+   "boot_reps": 10000,
+   "boot_seed": 20261102,
+   "fit_fraud_share": "3.4%",
+   "lora_alpha": 32,
+   "lora_dropout": 0.05,
+   "lora_r": 16,
+   "lr": "2e-4",
+   "trees": "800 trees, depth 6, learning rate 0.05",
+   "warmup_steps": 30
   },
   "split": {
    "_source": "slides-handoff.md, Data and recipe; fraud/final_test.py",
@@ -1325,7 +1354,29 @@ window.DATA = {
     "p90": 127.8425
    },
    "lines": 2751.597565,
-   "rule": 1926.4178
+   "rule": 1926.4178,
+   "windows_n": 20
+  },
+  "phase17": {
+   "dev": {
+    "ci": [
+     475.042187,
+     780.195751
+    ],
+    "mean": 626.483089,
+    "windows": 88
+   },
+   "diff": {
+    "ci": [
+     404.643233,
+     1870.117542
+    ],
+    "distinguishable": true,
+    "first_cheaper": 0,
+    "mean": 1001.703125,
+    "windows": 8
+   },
+   "windows_n": 8
   },
   "phase18": {
    "base": 476,
@@ -1339,7 +1390,28 @@ window.DATA = {
     "first_cheaper": 3,
     "mean": 119.08022,
     "windows": 10
-   }
+   },
+   "windows_n": 10
+  },
+  "phase20": {
+   "dev": {
+    "ci": [
+     -410.808269,
+     -173.117784
+    ],
+    "mean": -294.867665
+   },
+   "diff": {
+    "ci": [
+     -385.195907,
+     182.258245
+    ],
+    "distinguishable": false,
+    "first_cheaper": 6,
+    "mean": -96.54269,
+    "windows": 10
+   },
+   "windows_n": 10
   }
  }
 };

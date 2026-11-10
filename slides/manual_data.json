@@ -30,6 +30,21 @@
     "fit_frauds": 11988,
     "fit_legit": 35964
   },
+  "recipe": {
+    "_source": "fraud/finetune_ieee.py docstring (--full: rows, batches); fraud/finetune_d1.py LORA and fraud/finetune.py (LR, WARMUP_STEPS, BATCH); fraud/d1torch.py (the model); fraud/eval_ieee.py boot_ci and boot_auc (resamples); fraud/RESULTS-TABULAR.md (trees); fraud/DATA-IEEE.md (fraud share of the fit rows).",
+    "batches": 5994,
+    "batch": 8,
+    "lora_r": 16,
+    "lora_alpha": 32,
+    "lora_dropout": 0.05,
+    "lr": "2e-4",
+    "warmup_steps": 30,
+    "fit_fraud_share": "3.4%",
+    "boot_reps": 10000,
+    "auc_boot_reps": 1000,
+    "boot_seed": 20261102,
+    "trees": "800 trees, depth 6, learning rate 0.05"
+  },
   "bands": {
     "_source": "fraud/RESULTS-LM-COST.md, Frauds stopped by size. Counted from traces, not in the JSON.",
     "rows": [
