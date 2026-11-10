@@ -545,8 +545,12 @@ Open one run directly:
 ```
 
 Flags: `--port N` (default 8766), `--host <addr>` (default 127.0.0.1), `--no-browser`, `--verbose`.
-Eval pages read `fraud/results/eval/`, `fraud/results/eval_d3ft/` and `fraud/results/eval_d1ft/` (the fine-tune pages merge in the
-Phase 5 setups of the same windows); Phase 6's `fraud/results/eval_d3/` ran no test windows and has no page.
+Eval pages read the result folders in `EVAL_DIRS` of `fraud/viewer/server.py`. PaySim: `fraud/results/eval/`, `eval_d3ft/` and
+`eval_d1ft/` (the fine-tune pages merge in the Phase 5 setups of the same windows). IEEE-CIS: `eval_ieee/`, `eval_ieee_full/`,
+`eval_ieee_amount/`, `eval_column_audit/`, `eval_rule/`, `eval_features/`, `eval_tabular/`, `eval_lm_nuc/`, `eval_combos/`, `eval_lm_cost/`
+and `eval_final/`. Phase 6's `fraud/results/eval_d3/` ran no test windows and has no page. The start page lists every eval with what
+it is (phase, test or dev only) and links the final test first. The final test's page also shows what was read out after the test,
+from `eval_final/rich_cust_readout.json` and `extras.json`, marked as a read-out.
 Pages: `#/` runs, `#/run/<file>`, `#/eval` (latest) or `#/eval/<eval id>`, `#/demo`. Pin a run by
 renaming it to `*.pinned.jsonl` and listing it in `fraud/runs/README.md`.
 

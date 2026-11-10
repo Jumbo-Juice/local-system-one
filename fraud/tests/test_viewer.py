@@ -90,3 +90,43 @@ def test_the_dev_evals_and_the_final_test_are_listed():
     from fraud.viewer.server import EVAL_DIRS
 
     assert {"eval_lm_nuc", "eval_combos", "eval_final"} <= set(EVAL_DIRS)
+
+
+def test_the_ieee_eval_page_pairs_costs_with_the_windows_that_were_scored():
+    """Phase 11's result lists its 10 dev windows beside the 20 test windows its costs are for. The page keeps only the scored ones."""
+    import re
+
+    results = Path(__file__).resolve().parents[1] / "results"
+    r = json.loads((results / "eval_ieee" / "20261102-183431.json").read_text(encoding="utf-8"))
+    scored = len(next(iter(r["setups"].values()))["windows"])
+    assert len(r["windows"]) == 30 and scored == 20
+    kept = [w for w in r["windows"] if len(r["windows"]) == scored or not re.match(r"^dev\d+$", w)][-scored:]  # the page's rule, in console.js ieeeEval
+    assert kept == [f"test{k}" for k in range(20)]
+    js = (server.HERE / "console.js").read_text(encoding="utf-8")
+    assert r"all.length === scored || !/^dev\d+$/.test(w)" in js and ".slice(-scored)" in js
+
+
+def test_every_committed_ieee_setup_has_a_name_on_the_console():
+    import re
+
+    results = Path(__file__).resolve().parents[1] / "results"
+    js = (server.HERE / "console.js").read_text(encoding="utf-8")
+    assert "function setupName" in js
+    for d in server.EVAL_DIRS:
+        for f in sorted((results / d).glob("2*.json")):
+            r = json.loads(f.read_text(encoding="utf-8"))
+            for setup in r.get("setups", {}) if isinstance(r.get("setups"), dict) else ():
+                patterned = re.match(r"^audit-(all|no[A-Z]+)-(amt|lines)$", setup) or re.match(r"^feat-(all|rich|uid|nocdv|nocdv-rich)-(amt|lines)$", setup)
+                assert f'"{setup}"' in js or patterned, (f.name, setup)
+
+
+def test_the_final_test_page_shows_the_owners_verdict_and_the_readout_as_a_readout():
+    js = (server.HERE / "console.js").read_text(encoding="utf-8")
+    assert "rich_cust_readout.json" in js and "extras.json" in js and '"final-rich-cust"' in js
+    assert "read-out, not a test" in js and "The registered result above stands as it came out" in js
+    assert "held-out dev chain" in js  # a dev eval's chart doesn't call its chains test windows
+    results = Path(__file__).resolve().parents[1] / "results"
+    readout = json.loads((results / "eval_final" / "rich_cust_readout.json").read_text(encoding="utf-8"))
+    final = json.loads((results / "eval_final" / "20261104-090649.json").read_text(encoding="utf-8"))
+    assert readout["eval"] == final["eval"] and set(readout["table"]) >= {"final-rich-cust", "final-rich-amt", "final-logreg-amt"}
+    assert server.resolve("results/eval_final/rich_cust_readout.json") and server.resolve("results/eval_final/extras.json")

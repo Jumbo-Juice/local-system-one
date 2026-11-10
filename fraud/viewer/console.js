@@ -30,7 +30,33 @@ const SETUP_NAME = {
   "lm-rich-signal-amt": "d1-Omni-2B, more columns and tabular score averaged, amount-aware rule", "lm-rich-signal-cust": "d1-Omni-2B, more columns and tabular score averaged, the rule with a customer line",
   "lm-rich+trees-amt": "d1-Omni-2B, more columns, fitted with the tabular score, amount-aware rule", "lm-rich+trees-cust": "d1-Omni-2B, more columns, fitted with the tabular score, the rule with a customer line", "lm-signal+trees-amt": "d1-Omni-2B reading the score, fitted with it again, amount-aware rule", "lm-signal+trees-cust": "d1-Omni-2B reading the score, fitted with it again, the rule with a customer line",
   "final-logreg-amt": "logistic regression, all columns, Phase 14's rule (the baseline)", "final-signal-amt": "d1-Omni-2B reading a tabular score, amount-aware rule", "final-signal-cust": "d1-Omni-2B reading a tabular score, the rule with a customer line", "final-rich-amt": "d1-Omni-2B with more prompt columns, no tabular score, amount-aware rule",
+  "final-rich-cust": "d1-Omni-2B with more prompt columns, no tabular score, the rule with a customer line (read-out)",
+  "ieee-logreg-all-dev30": "logistic regression, all columns, two lines re-picked on 30 dev windows", "ieee-ft-full-dev30": "d1-Omni-2B fine-tuned on every fit fraud, two lines re-picked on 30 dev windows",
 };
+// Setups named by a pattern rather than listed: Phase 17's column audit (what is left out of logreg) and Phase 19's feature sets.
+const RULE_NAME = { amt: "amount-aware rule", lines: "two lines" };
+const FEATURE_SET = { all: "all columns", rich: "all columns and extra features", uid: "extra features, interactions and a card id",
+  nocdv: "without C, D, V", "nocdv-rich": "without C, D, V, with extra features" };
+function setupName(s) {
+  if (SETUP_NAME[s]) return SETUP_NAME[s];
+  let m = /^audit-(all|no[A-Z]+)-(amt|lines)$/.exec(s);
+  if (m) return `logistic regression, ${m[1] === "all" ? "all columns" : `without ${m[1].slice(2).split("").join(", ")}`}, ${RULE_NAME[m[2]]}`;
+  m = /^feat-(.+)-(amt|lines)$/.exec(s);
+  if (m && FEATURE_SET[m[1]]) return `logistic regression, ${FEATURE_SET[m[1]]}, ${RULE_NAME[m[2]]}`;
+  return s;
+}
+// What each eval is, by the script that wrote it (fraud/ROADMAP.md). Dev evals never score a test row.
+const EVAL_WHAT = {
+  "fraud/eval.py": "Phase 3: frozen Qwen2.5-1.5B on PaySim, 20 test windows", "fraud/eval_ft.py": "Phase 5: fine-tuned Qwen2.5-1.5B on PaySim, 20 test windows",
+  "fraud/eval_d3ft.py": "Phase 7: fine-tuned d3-nano on PaySim, 20 test windows", "fraud/eval_d1ft.py": "Phase 9: fine-tuned d1-Omni-2B on PaySim, 20 test windows",
+  "fraud/eval_ieee.py": "Phase 11: the first IEEE-CIS fine-tune, 20 test windows", "fraud/eval_ieee_full.py": "Phase 12: fine-tuned on every fit fraud, 20 test windows",
+  "fraud/eval_ieee_amount.py": "Phase 14: the amount-aware rule, 20 test windows", "fraud/eval_column_audit.py": "Phase 17: the C, D, V column audit, 8 test windows",
+  "fraud/eval_rule.py": "Phase 18: changes to the rule, 10 test windows", "fraud/eval_features.py": "Phase 19: more features for logreg, 10 test windows",
+  "fraud/eval_tabular.py": "Phase 20: boosted trees, 10 test windows", "fraud/eval_lm_nuc.py": "Phase 21: the language model's options, dev only",
+  "fraud/eval_combos.py": "Phase 22: choosing the final candidates, dev only", "fraud/eval_final.py": "Phase 23: the final test, 20 windows, run once",
+  "fraud/eval_lm_cost.py": "Phase 25: training on cost, dev only",
+};
+const evalWhat = (script) => EVAL_WHAT[script || "fraud/eval.py"] || "";
 const SIGNALS = [
   ["dest_in_before", "Receiver: received money before", (v) => (v === 0 ? "never (new account)" : times(v))],
   ["dest_transfer_in_before", "Receiver: received a TRANSFER before", times],
@@ -165,7 +191,7 @@ class Replay {
     this.totalsBox = el("div");
     this.latBox = el("div");
     this.demoBox = el("div");
-    const title = `${SETUP_NAME[h.setup] || h.setup} · window ${h.window.id}${model ? ` · ${model}` : ""}`;
+    const title = `${setupName(h.setup)} · window ${h.window.id}${model ? ` · ${model}` : ""}`;
     app.replaceChildren(
       el("section", { class: "panel" },
         el("div", { class: "controls" },
@@ -432,7 +458,7 @@ function about(h, ticks, end, total) {
     : el("div", { class: `banner ${missed.length || wrongDecl.length ? "bad" : "good"}` },
       el("div", { class: "big" }, `Cost ${money(s.cost)} · ${s.confusion.fraud.approve === 0 ? "every" : `${s.fraud - s.confusion.fraud.approve} of ${s.fraud}`} fraud stopped`
         + ` · ${wrongDecl.length} legit declined`),
-      el("div", { class: "hint" }, `${SETUP_NAME[h.setup] || h.setup} on window ${h.window.id} (${h.window.split}).`));
+      el("div", { class: "hint" }, `${setupName(h.setup)} on window ${h.window.id} (${h.window.split}).`));
   const natural = h.window.enriched === false; // IEEE-CIS: contiguous rows at the natural fraud rate, no filter
   const facts = [
     factCard("Window",
@@ -443,7 +469,7 @@ function about(h, ticks, end, total) {
       natural ? fact("Fraud", s ? s.fraud : "–", "Natural rate, not enriched")
         : fact("Fraud", h.window.fraud, `Enriched; the natural rate in these hours is ${pct(h.window.natural_fraud_rate, 3)}`)),
     factCard("Setup",
-      fact("Setup", h.setup, SETUP_NAME[h.setup] || ""),
+      fact("Setup", h.setup, SETUP_NAME[h.setup] ? setupName(h.setup) : ""),
       model.length ? fact("Model", (b.model || "").split("/").pop() || b.kind, natural
         ? `${b.device_name || b.device || ""}, ${b.dtype || ""}${b.adapter ? `, LoRA ${b.adapter.dir}` : ""}`
         : b.orders
@@ -540,6 +566,7 @@ async function startPage() {
   document.title = "Fraud Console";
   const [{ runs }, { evals }] = await Promise.all([getJSON("api/runs"), getJSON("api/evals")]);
   const latest = evals[0];
+  const finalTest = evals.find((e) => e.script === "fraud/eval_final.py");
   const setups = [...new Set(runs.map((r) => r.setup))].sort();
   const body = el("tbody");
   const setupSel = el("select", { "aria-label": "Setup" }, el("option", { value: "" }, "all setups"),
@@ -574,16 +601,20 @@ async function startPage() {
   evalBox.addEventListener("change", fill);
   fill();
   app.replaceChildren(
-    el("h1", {}, "Approve, review or decline: System One on PaySim"),
+    el("h1", {}, "Approve, review or decline: System One on PaySim and IEEE-CIS"),
     el("p", { class: "intro" }, "A local model judges each TRANSFER and CASH_OUT (Qwen2.5-1.5B; later evals add fine-tuned Qwen2.5-1.5B, " +
       "d3-nano and d1-Omni-2B), and a rule filter approves the transaction types " +
       "that had no fraud in training. The console replays recorded runs at their recorded speed and shows the pre-registered eval " +
       "against rules-only, logistic regression, random and approve-all. IEEE-CIS runs (real card payments, no filter, a review at 10 USD) replay here too, and their evals are listed below."),
     el("div", { class: "cards" },
+      finalTest ? el("section", { class: "panel bar-card" }, el("h3", {}, "The final test"),
+        el("div", {}, `Eval ${finalTest.id}`),
+        el("div", { class: "hint" }, "IEEE-CIS, 20 windows reserved first and run once. The numbers the write-up and the talk rest on."),
+        el("p", {}, el("a", { href: `#/eval/${finalTest.id}` }, "Open the final test"))) : null,
       el("section", { class: "panel bar-card" }, el("h3", {}, "Latest eval"),
         latest ? el("div", {},
           el("div", {}, `Eval ${latest.id}${latest.complete === false ? " (incomplete)" : ""}`),
-          latest.script ? el("div", { class: "hint" }, latest.script) : null,
+          el("div", { class: "hint" }, evalWhat(latest.script) || latest.script || ""),
           ...Object.entries(latest.bars || {}).map(([k, b]) => el("div", { style: "margin-top:6px" },
             chip(b.pass ? "pass" : "fail", b.pass ? "PASS" : "FAIL"), ` ${b.rule}`)),
           el("p", {}, el("a", { href: `#/eval/${latest.id}` }, "Open the eval"))) : el("p", { class: "muted" }, "No eval results yet.")),
@@ -593,8 +624,8 @@ async function startPage() {
     el("section", { class: "panel", style: "margin-top:12px" },
       el("h2", {}, "Evals"),
       el("div", { class: "scroll-x" }, el("table", {},
-        el("thead", {}, el("tr", {}, ...["eval", "data and review fee", "script"].map((t) => el("th", {}, t)))),
-        el("tbody", {}, ...evals.map((e) => el("tr", {}, el("td", {}, el("a", { href: `#/eval/${e.id}` }, e.id)),
+        el("thead", {}, el("tr", {}, ...["eval", "what it is", "data and review fee", "script"].map((t) => el("th", {}, t)))),
+        el("tbody", {}, ...evals.map((e) => el("tr", {}, el("td", {}, el("a", { href: `#/eval/${e.id}` }, e.id)), el("td", {}, evalWhat(e.script)),
           el("td", {}, e.ieee ? "IEEE-CIS, 10 USD" : "PaySim, 50 USD"), el("td", {}, e.script || "fraud/eval.py"))))))),
     el("section", { class: "panel", style: "margin-top:12px" },
       el("h2", {}, "Runs"),
@@ -640,7 +671,7 @@ function evalChart(r) {
   const x = (i) => L + ((W - L - R) * (i + 0.5)) / ws.length;
   const y = (v) => T + (H - T - B) * (1 - (Math.log10(Math.max(v, 10 ** lo)) - lo) / (hi - lo));
   const svg = svgEl("svg", { class: "chart", viewBox: `0 0 ${W} ${H}`, role: "img",
-    "aria-label": `Cost per test window for ${series.map(([s]) => SETUP_NAME[s] || s).join(", ")}, log scale` });
+    "aria-label": `Cost per ${r.unit || "test window"} in USD for ${series.map(([s]) => setupName(s)).join(", ")}, log scale` });
   for (let p = lo; p <= hi; p++) {
     svg.append(svgEl("line", { x1: L, x2: W - R, y1: y(10 ** p), y2: y(10 ** p), stroke: "var(--grid)", "stroke-width": 1 }));
     const t = svgEl("text", { x: L - 6, y: y(10 ** p) + 4, "text-anchor": "end" });
@@ -669,15 +700,15 @@ function evalChart(r) {
   });
   svg.addEventListener("mouseleave", hideTip);
   return el("div", {},
-    el("div", { class: "legend" }, ...series.map(([s, c]) => el("span", {}, el("i", { style: `background:${c}` }), SETUP_NAME[s] || s))),
-    svg, el("div", { class: "hint" }, `Cost per test window, log scale (window number on the x axis). ${r.chart_series ? "The other setups are in the table below." : "Random and approve-all are in the table below."}`));
+    el("div", { class: "legend" }, ...series.map(([s, c]) => el("span", {}, el("i", { style: `background:${c}` }), setupName(s)))),
+    svg, el("div", { class: "hint" }, `Cost per ${r.unit || "test window"} in USD, log scale (${r.unit ? "its" : "window"} number on the x axis). ${r.chart_series ? "The other setups are in the table below." : "Random and approve-all are in the table below."}`));
 }
 
 function devGate(d) {
   if (d.variant) return devGateOrders(d);
   return el("section", { class: "panel bar-card", style: "margin-bottom:12px" }, el("h3", {}, "Dev gate (dev0–dev9)"),
     el("div", {}, chip(d.gate.pass ? "pass" : "fail", d.gate.pass ? "PASS" : "FAIL"), ` ${d.gate.rule}`),
-    ...Object.entries(d.auc).map(([s, a]) => el("div", { style: "margin-top:6px" }, `${SETUP_NAME[s] || s}: AUC ${a.auc.toFixed(3)}`,
+    ...Object.entries(d.auc).map(([s, a]) => el("div", { style: "margin-top:6px" }, `${setupName(s)}: AUC ${a.auc.toFixed(3)}`,
       el("div", { class: "hint" }, `decline score, ${a.rows} model rows, ${a.fraud} fraud`))),
     el("div", { style: "margin-top:6px" }, `Thresholds: review ≥ ${d.thresholds.review}, decline ≥ ${d.thresholds.decline}`,
       el("div", { class: "hint" }, "picked on dev windows by cost, before any new test window ran")));
@@ -728,7 +759,7 @@ async function evalPage(id) {
     el("thead", {}, el("tr", {}, ...["setup", "mean cost", "mean cost (natural rate)", "recall", "precision", "alert rate", "p50 / p90 ms"]
       .map((t, i) => el("th", { class: i ? "r" : "" }, t)))),
     el("tbody", {}, ...setups.map((s) => { const v = r.totals[s]; const l = v.latency_ms;
-      return el("tr", {}, el("td", {}, SETUP_NAME[s] || s), el("td", { class: "r" }, money(v.cost_mean)), el("td", { class: "r" }, money(v.cost_natural_mean)),
+      return el("tr", {}, el("td", {}, setupName(s)), el("td", { class: "r" }, money(v.cost_mean)), el("td", { class: "r" }, money(v.cost_natural_mean)),
         el("td", { class: "r" }, fix(v.recall_mean)), el("td", { class: "r" }, fix(v.precision_mean)), el("td", { class: "r" }, pct(v.alert_rate_mean, 1)),
         el("td", { class: "r" }, l ? `${l.p50.toFixed(0)} / ${l.p90.toFixed(0)}` : "–")); })));
   const perWin = el("table", {},
@@ -746,7 +777,8 @@ async function evalPage(id) {
   const cal = Object.entries(r.totals).filter(([, v]) => v.calibration);
   app.replaceChildren(
     el("h1", {}, `Eval ${r.eval}`),
-    el("p", { class: "intro" }, `${r.test_windows.length} held-out test windows, run once per setup. Pre-registered in the docstring of ${r.script || "fraud/eval.py"} before any ` +
+    el("p", { class: "hint", style: "margin-top:-6px" }, evalWhat(r.script)),
+    el("p", { class: "intro" }, `PaySim (simulated): ${r.test_windows.length} held-out test windows, run once per setup. Pre-registered in the docstring of ${r.script || "fraud/eval.py"} before any ` +
       `test window ran. Complete: ${r.complete ? "yes" : "no"}. Write-up with labelled claims: ` +
       `${WRITE_UP[r.script] || "fraud/RESULTS.md"}.` +
       (r.phase5_eval ? ` The other setups are the committed results of eval ${r.phase5_eval} on the same windows.` : "")),
@@ -777,26 +809,51 @@ async function ieeeEval(r) {  // IEEE-CIS evals (eval_ieee*.py and the phases af
   const { runs } = await getJSON("api/runs");
   const have = new Set(runs.map((x) => x.file));
   document.title = `Eval ${r.eval} · Fraud Console`;
-  const wins = Object.keys(r.windows);
+  // Phase 11's file lists its dev windows too; a setup's costs are for the test windows only, in file order.
+  const scored = Object.values(r.setups)[0].windows.length;
+  const wins = Object.keys(r.windows).filter((w, _, all) => all.length === scored || !/^dev\d+$/.test(w)).slice(-scored);
+  const dev = r.test_rows === undefined;
   const order = Object.entries(r.setups).sort((a, b) => a[1].mean_cost - b[1].mean_cost);
-  const name = (s) => SETUP_NAME[s] || s;
+  const name = (s) => setupName(s);
+  const count = (x) => (x === undefined || x === null ? "–" : x.toLocaleString("en-US"));
+  let after = null;  // the final test's read-outs, asked for after its results were seen
+  if (r.script === "fraud/eval_final.py") {
+    try { after = { readout: await getJSON("results/eval_final/rich_cust_readout.json"), extras: await getJSON("results/eval_final/extras.json") }; }
+    catch (err) { after = null; }
+    if (after && after.readout.eval !== r.eval) after = null;
+  }
   const cheapest = order.filter(([s]) => s !== "ieee-approve-all").slice(0, 4).map(([s]) => s);
-  const chart = { test_windows: wins, windows: {}, chart_series: [...cheapest, "ieee-approve-all"].filter((s) => r.setups[s]).map((s, i) => [s, `var(--series-${i + 1})`]) };
+  const chart = { test_windows: wins, windows: {}, unit: dev ? "held-out dev chain" : "", chart_series: [...cheapest, "ieee-approve-all"].filter((s) => r.setups[s]).map((s, i) => [s, `var(--series-${i + 1})`]) };
   for (const [s] of chart.chart_series) { chart.windows[s] = {}; wins.forEach((w, i) => { chart.windows[s][w] = { cost: r.setups[s].windows[i] }; }); }
   const head = (cols) => el("thead", {}, el("tr", {}, ...cols.map((t, i) => el("th", { class: i ? "r" : "" }, t))));
   const tot = el("table", {},
     head(["setup", "mean cost", "95% CI", "AUC", "recall", "precision", "reviews", "declines", "good customers declined", "fraud let through"]),
-    el("tbody", {}, ...order.map(([s, v]) => el("tr", {}, el("td", {}, name(s)), el("td", { class: "r" }, money(v.mean_cost)),
+    el("tbody", {}, ...order.map(([s, v]) => el("tr", {}, el("td", {}, name(s), name(s) === s ? null : el("div", { class: "hint" }, s)), el("td", { class: "r" }, money(v.mean_cost)),
       el("td", { class: "r" }, `${money(v.cost_ci95[0])}–${money(v.cost_ci95[1])}`), el("td", { class: "r" }, v.auc === null ? "–" : fix(v.auc, 3)),
-      el("td", { class: "r" }, fix(v.recall, 3)), el("td", { class: "r" }, fix(v.precision, 3)), el("td", { class: "r" }, v.reviews), el("td", { class: "r" }, v.declines),
-      el("td", { class: "r" }, v.good_customers_declined === undefined ? "–" : v.good_customers_declined), el("td", { class: "r" }, money(v.fraud_let_through))))));
-  const ans = el("table", {},
-    el("thead", {}, el("tr", {}, ...["lower cost", "against", "question"].map((t) => el("th", {}, t)), ...["windows cheaper / dearer", "mean difference", "95% CI", "distinguishable"].map((t) => el("th", { class: "r" }, t)))),
-    el("tbody", {}, ...answers(r).map((p) => el("tr", {}, el("td", {}, name(p.better || p.a)), el("td", {}, name(p.other)), el("td", {}, p.q.replace(/_/g, " ")),
+      el("td", { class: "r" }, fix(v.recall, 3)), el("td", { class: "r" }, fix(v.precision, 3)), el("td", { class: "r" }, count(v.reviews)), el("td", { class: "r" }, count(v.declines)),
+      el("td", { class: "r" }, count(v.good_customers_declined)), el("td", { class: "r" }, money(v.fraud_let_through))))));
+  const answerTable = (rows) => el("table", {},
+    el("thead", {}, el("tr", {}, ...["lower cost", "against", "question"].map((t) => el("th", {}, t)), ...["windows cheaper / dearer", "mean difference, USD", "95% CI", "distinguishable"].map((t) => el("th", { class: "r" }, t)))),
+    el("tbody", {}, ...rows.map((p) => el("tr", {}, el("td", {}, name(p.better || p.a)), el("td", {}, name(p.other)), el("td", {}, p.q.replace(/_/g, " ")),
       el("td", { class: "r" }, `${p.cheaper} / ${p.dearer}`), el("td", { class: "r" }, money(p.mean_diff)), el("td", { class: "r" }, `${money(p.mean_diff_ci95[0])} to ${money(p.mean_diff_ci95[1])}`),
       el("td", { class: "r" }, chip(p.distinguishable ? "pass" : "fail", p.distinguishable ? "yes" : "no"))))));
+  const ans = answerTable(answers(r));
+  const afterPanel = !after ? [] : [el("section", { class: "panel", style: "margin-top:12px" },
+    el("h2", {}, "After the test: the owner's verdict, and a read-out ", chip("plain", "read-out, not a test")),
+    el("p", {}, `The owner judged the recommended setup “really not a decision model doing its grunt work”: its rank correlation with the tabular score it reads is ${fix(after.extras.signal_rank_corr, 3)} on these rows. ` +
+      "So the setup that meets the owner's constraint is d1-Omni-2B with no tabular score. The registered result above stands as it came out."),
+    el("p", { class: "hint" }, "The customer line on that setup was asked for after every result here was seen. It uses the recorded scores, no model ran, and it answers no registered question. Intervals are for scale. Source: fraud/results/eval_final/rich_cust_readout.json and extras.json; fraud/RESULTS-FINAL.md, After the test."),
+    el("div", { class: "scroll-x" }, el("table", {},
+      head(["setup", "mean cost", "95% CI", "good customers declined", "declined or reviewed", "frauds stopped", "fraud let through", "reviews"]),
+      el("tbody", {}, ...["final-rich-cust", "final-rich-amt", "final-logreg-amt", "final-signal-cust"].filter((s) => after.readout.table[s]).map((s) => { const v = after.readout.table[s];
+        return el("tr", {}, el("td", {}, name(s), el("div", { class: "hint" }, s)), el("td", { class: "r" }, money(v.mean_cost)), el("td", { class: "r" }, `${money(v.cost_ci95[0])}–${money(v.cost_ci95[1])}`),
+          el("td", { class: "r" }, count(v.good_customers_declined)), el("td", { class: "r" }, count(v.good_declined_or_reviewed)), el("td", { class: "r" }, `${count(v.frauds_stopped)} of ${count(v.frauds)}`),
+          el("td", { class: "r" }, money(v.fraud_usd_let_through)), el("td", { class: "r" }, count(v.reviews))); })))),
+    el("div", { class: "scroll-x", style: "margin-top:10px" }, answerTable(after.readout.against.map((p) => ({ ...p, q: "read-out" })))),
+    el("p", { class: "hint" }, `If a declined good customer truly cost 10 USD more, an assumption nobody measured: ${money(after.readout.told_10_usd.mean["final-rich-cust"])} per window against the baseline's ${money(after.readout.told_10_usd.mean["final-logreg-amt"])}, ` +
+      `a difference of ${money(after.readout.told_10_usd.against_baseline)}, 95% CI ${money(after.readout.told_10_usd.ci[0])} to ${money(after.readout.told_10_usd.ci[1])}.`))];
   const perWin = el("table", {},
-    el("thead", {}, el("tr", {}, el("th", {}, "window"), ...order.map(([s]) => el("th", { class: "r" }, s)))),
+    el("thead", {}, el("tr", {}, el("th", {}, dev ? "chain" : "window"), ...order.map(([s]) => el("th", { class: "r", title: name(s) }, s)))),
     el("tbody", {}, ...wins.map((w, i) => el("tr", {}, el("td", {}, w), ...order.map(([s, v]) => {
       const f = `${r.eval}_eval_${s}_${w}.jsonl`;
       return el("td", { class: "r" }, have.has(f) ? el("a", { href: `#/run/${encodeURIComponent(f)}` }, money(v.windows[i])) : money(v.windows[i]));
@@ -805,19 +862,21 @@ async function ieeeEval(r) {  // IEEE-CIS evals (eval_ieee*.py and the phases af
   const set_names = sens.length ? Object.keys(sens[0][1].mean_cost) : [];
   app.replaceChildren(
     el("h1", {}, `Eval ${r.eval}`),
-    el("p", { class: "intro" }, (r.test_rows === undefined ? `IEEE-CIS: ${wins.length} held-out dev chains, no test row. Reads here are flattered: lambda was picked with these rows in. Stated in the docstring of ${r.script}. ` : `IEEE-CIS: ${money(r.test_rows)} held-out test rows, ${r.test_fraud} frauds, ${wins.length} windows, run once per setup. Pre-registered in the docstring of ${r.script}. `) +
+    el("p", { class: "hint", style: "margin-top:-6px" }, evalWhat(r.script)),
+    el("p", { class: "intro" }, (dev ? `IEEE-CIS: ${wins.length} held-out dev chains of 1,000 rows, no test row. Reads here are flattered: lambda was picked with these rows in. Stated in the docstring of ${r.script}. ` : `IEEE-CIS: ${money(r.test_rows)} held-out test rows, ${count(r.test_fraud)} frauds, ${wins.length} windows, run once per setup. Pre-registered in the docstring of ${r.script}. `) +
       `A review costs ${money(r.costs.review_fee)} USD; a wrongly declined payment ${pct(r.costs.friction_rate)} of its amount, at least ${money(r.costs.friction_min)} USD; at most ${pct(r.costs.review_share)} of a window reviewed. ` +
       `Write-up with labelled claims: ${WRITE_UP[r.script] || "fraud/PROGRESS.md"}. Model scores are uncalibrated, and every number here is for these assumed costs. Don't compare the costs of different evals: they use different windows.`),
-    ...(r.recommended ? [el("section", { class: "panel", style: "margin-top:12px" }, el("h2", {}, "Recommended by the rule fixed before the run"), el("p", {}, name(r.recommended)), el("p", { class: "hint" }, "Chosen for customers and the owner's constraint. Its dollars are not shown to differ from the baseline's; see Answers."))] : []),
+    ...(r.recommended ? [el("section", { class: "panel", style: "margin-top:12px" }, el("h2", {}, "Recommended by the rule fixed before the run"), el("p", {}, name(r.recommended)), el("p", { class: "hint" }, "Chosen for customers and the owner's constraint. Its dollars are not shown to differ from the baseline's; see Answers." + (after ? " After the test the owner rejected it, because it mostly follows the tabular score it reads; see After the test, below the answers." : "")))] : []),
     el("section", { class: "panel", style: "margin-top:12px" }, el("h2", {}, "Answers"), el("p", { class: "hint" }, "Distinguishable means the 95% window-bootstrap interval of the mean paired difference excludes 0. Only the questions named in the pre-registration are questions; “reported” is not corrected for multiple comparisons."),
       el("div", { class: "scroll-x" }, ans)),
-    el("section", { class: "panel", style: "margin-top:12px" }, el("h2", {}, "Cost per window"), evalChart(chart)),
-    el("section", { class: "panel", style: "margin-top:12px" }, el("h2", {}, "Setups, cheapest first"), el("div", { class: "scroll-x" }, tot)),
-    ...(sens.length ? [el("section", { class: "panel", style: "margin-top:12px" }, el("h2", {}, "Other review fees"), el("p", { class: "hint" }, "Lines or lambda re-picked on dev. No bar and no interval."),
-      el("div", { class: "scroll-x" }, el("table", {}, el("thead", {}, el("tr", {}, el("th", {}, "cost set"), ...set_names.map((s) => el("th", { class: "r" }, s)))),
+    ...afterPanel,
+    el("section", { class: "panel", style: "margin-top:12px" }, el("h2", {}, dev ? "Cost per dev chain" : "Cost per window"), evalChart(chart)),
+    el("section", { class: "panel", style: "margin-top:12px" }, el("h2", {}, "Setups, cheapest first"), el("p", { class: "hint" }, `Mean cost in USD per ${dev ? "chain" : "window"} of 1,000 rows. Counts are over all ${wins.length} ${dev ? "chains" : "windows"}. Recall and precision count a review or a decline as an alert.`), el("div", { class: "scroll-x" }, tot)),
+    ...(sens.length ? [el("section", { class: "panel", style: "margin-top:12px" }, el("h2", {}, "Other review fees"), el("p", { class: "hint" }, "Mean cost in USD per window. Lines or lambda re-picked on dev. No bar and no interval."),
+      el("div", { class: "scroll-x" }, el("table", {}, el("thead", {}, el("tr", {}, el("th", {}, "cost set"), ...set_names.map((s) => el("th", { class: "r", title: setupName(s) }, s)))),
         el("tbody", {}, ...sens.map(([k, v]) => el("tr", {}, el("td", {}, k), ...set_names.map((s) => el("td", { class: "r" }, money(v.mean_cost[s])))))))))] : []),
-    el("section", { class: "panel", style: "margin-top:12px" }, el("h2", {}, "Cost per window, every setup"),
-      el("p", { class: "hint" }, "A linked cost opens that window's recorded run (eval traces stay local)."), el("div", { class: "scroll-x" }, perWin)));
+    el("section", { class: "panel", style: "margin-top:12px" }, el("h2", {}, dev ? "Cost per dev chain, every setup" : "Cost per window, every setup"),
+      el("p", { class: "hint" }, "In USD. A linked cost opens that window's recorded run. Eval traces stay on the machine that made them and are not in git, so most costs here have no link."), el("div", { class: "scroll-x" }, perWin)));
 }
 
 async function startDemo() {
