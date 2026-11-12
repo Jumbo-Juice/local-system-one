@@ -348,3 +348,18 @@ svg.evalchart .fade-in { animation: fade-in 0.35s ease-out both; }
 .more-setups { margin: 2px 0 4px; }
 .more-setups > summary { font-size: 12px; font-weight: 600; color: var(--ink-2); padding: 2px 0; }
 .more-setups[open] > summary { margin-bottom: 6px; }
+
+/* ---- cost and speed: the final test's setups by p90 time and mean cost, the ideal corner shaded */
+.said-one { margin: 4px 0 10px; line-height: 1.45; }
+.speedchart { min-width: 560px; }
+.speedchart .ideal { fill: var(--good-bg); }
+.speedchart .ideal-tag { font-size: 11px; fill: var(--ink-2); }
+.speedchart .axis-name { font-size: 11px; fill: var(--muted); }
+.speedchart .bar-line { stroke: var(--ink-2); stroke-width: 1.5; stroke-dasharray: 5 4; }
+.speedchart .bar-tag { font-size: 11px; fill: var(--ink-2); }
+.speedchart .sp-dot { fill: var(--surface); stroke: var(--muted); stroke-width: 2; }
+.speedchart .sp-dot.in { fill: var(--accent); stroke: var(--accent); }
+.speedchart .sp-lead { fill: none; stroke: var(--muted); stroke-width: 1; }
+.speedchart .sp-lab { font-size: 12px; fill: var(--ink); }
+.speedchart .sp-lab.strong { font-weight: 700; }
+.speedchart .sp-sub { font-size: 11px; font-weight: 400; fill: var(--muted); }

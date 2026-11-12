@@ -28,6 +28,7 @@ SOURCES = {
     "rule": "eval_rule/20261103-211736.json",
     "audit": "eval_column_audit/20261103-210600.json",
     "tabular": "eval_tabular/20261103-235132.json",
+    "timing": "time_logreg/20261112-095810.json",
 }
 REPLAY_ROWS = 40  # the first rows of the pinned PaySim window
 
@@ -100,6 +101,36 @@ def setup(s: dict, windows: bool = False) -> dict:
     return out
 
 
+def ms_text(x: float) -> str:
+    """The console's ms() (fraud/viewer/console.js)."""
+    return f"{x:.0f} ms" if x >= 100 else f"{x:.1f} ms" if x >= 1 else f"{x:.3f} ms" if x >= 0.001 else "<0.001 ms"
+
+
+def speed_block(d: dict, all_v: list) -> dict:
+    """Cost against speed on FINAL, as the console's Cost and speed panel draws it. The model's p90s are from the final test on
+    an RTX 3060 Ti; logreg's from fraud/time_logreg.py on a laptop CPU, on dev rows. Ideal = under the registered latency bar and
+    not distinguishably dearer than the cheapest timed setup, by the paired comparisons. Approve-all has no time."""
+    t, s, bar = load("timing"), d["setups"], d["latency_bar_ms"]
+    keys = {"baseline": "final-logreg-amt", "signal_amt": "final-signal-amt", "signal_cust": "final-signal-cust", "rich_amt": "final-rich-amt"}
+    pts = [{"key": k, "id": sid, "name": NAMES[sid], "cost": num(s[sid]["mean_cost"]), "cpu": sid == t["setup"],
+            "ms": num(t["latency_ms"]["p90"] if sid == t["setup"] else s[sid]["latency_ms"]["p90"])} for k, sid in keys.items()]
+    cheapest = min(pts, key=lambda p: p["cost"])
+    for p in pts:
+        e = next((e for e in all_v if {e["a"], e["b"]} == {p["id"], cheapest["id"]}), None) if p is not cheapest else None
+        p["dist_from_cheapest"] = None if p is cheapest else (e["distinguishable"] if e else "never compared")
+        p["ideal"] = p["ms"] <= bar and (p is cheapest or (e is not None and not e["distinguishable"]))
+    inn, out = [p["cost"] for p in pts if p["ideal"]], [p["cost"] for p in pts if not p["ideal"] and p["ms"] <= bar]
+    lr = next(p for p in pts if p["cpu"])
+    fastest = min(p["ms"] for p in pts if not p["cpu"])
+    times = float(f"{fastest / lr['ms']:.2g}")
+    dist = lr["dist_from_cheapest"]
+    tail = ("and it is the cheapest setup." if dist is None else "and it was not compared with the cheapest setup." if dist == "never compared"
+            else f"and its cost is {'distinguishably dearer than' if dist else 'not distinguishable from'} the cheapest setup's, “{cheapest['name']}”.")
+    return {"bar": bar, "points": pts, "cheapest": cheapest["key"], "edge": num((max(inn) + min(out)) / 2) if out else None,
+            "times": times, "cpu": t["machine"]["cpu"], "source": f"fraud/results/{SOURCES['timing']}",
+            "said": f"“{lr['name']}” decides one payment in {ms_text(lr['ms'])} at p90, about {times:,.0f} times faster than the language model's {ms_text(fastest)}, {tail}"}
+
+
 def final_block() -> dict:
     d, r, x = load("final"), load("readout"), load("extras")
     s = d["setups"]
@@ -140,6 +171,7 @@ def final_block() -> dict:
                  "said": sentence("final-rich-cust", "final-logreg-amt", r["told_10_usd"]["against_baseline"], *r["told_10_usd"]["ci"],
                                   r["told_10_usd"]["ci"][0] > 0 or r["told_10_usd"]["ci"][1] < 0, "window")},
         "dearest": {"window": x["dearest_window"]["window"], "cost": num(x["dearest_window"]["cost"]), "baseline": num(x["dearest_window"]["baseline"])},
+        "speed": speed_block(d, all_v),
     }
 
 

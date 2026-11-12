@@ -399,6 +399,7 @@ Source (Observed): fraud/results/eval_final/20261104-090649.json, rich_cust_read
 </section>
 </section>
 
+<section data-act="C" data-n="11">
 <section id="s11" data-n="11" data-act="C" data-steps="3" data-scene="forest" data-result>
 <div class="page">
 <span class="tag">11 · Juji</span>
@@ -420,6 +421,25 @@ If asked "15 of 20 windows cheaper, isn't that significant?": for the tree-readi
 If asked about the bootstrap: 10,000 resamples of the 20 windows, percentile interval, seed 20261102. The three registered questions aren't corrected for each other, and "reported" rows aren't questions.
 Source (Observed): verdict in fraud/results/eval_final/20261104-090649.json, against in rich_cust_readout.json. The JSON signs mean_diff from the cheaper side; slides/build_data.py turns each to first minus second, and tests/test_slides.py checks them.
 </aside>
+</section>
+<section id="s11b" data-n="11" data-act="C" data-main="no" data-scene="costspeed" data-result>
+<div class="page">
+<span class="tag">11 · backup</span>
+<div class="comp"><span class="sec">C</span>Cost and speed<span class="badges"><span class="badge final">FINAL, registered</span><span class="badge readout">Logreg timed after the test</span></span></div>
+<h1>Logreg is the fast one, at a cost we can't tell from the cheapest</h1>
+<div class="main">
+  <p class="sub" style="margin-top:0">{{final.speed.said}}</p>
+  <div class="costspeed"><svg role="img" aria-label="Mean cost per window on FINAL against p90 time to decide one payment, log scale, for logreg and the three language-model setups"></svg></div>
+</div>
+<p class="foot">Model: p90 during the final test on an RTX 3060 Ti, forward pass only. Logreg: p90 on a laptop CPU, one payment at a time with its features, on dev rows. Different hardware. Approve everything has no model to time.</p>
+</div>
+<aside class="notes">
+Backup for questions; no talk time. For "why not just use logreg?"
+Shaded: under the registered {{final.speed.bar|num}} ms bar, and not distinguishably dearer than the cheapest setup by the paired comparisons on slide 11. Its lower edge sits halfway between the dearest setup that passes and the cheapest that doesn't, so its height is not a threshold. Logreg, both tree-reading setups in; d1 with no trees out, distinguishably dearer than the cheapest by 484.
+The speed gap, about {{final.speed.times|num}} times, compares a laptop CPU with a GPU, so it is not a hardware-matched number (Observed for each side; the ratio across hardware is Inferred to hold in direction only). Logreg was never timed in the final test itself; it scored whole windows at once.
+Source (Observed): latency_ms in fraud/results/eval_final/20261104-090649.json; {{final.speed.source}}, written by fraud/time_logreg.py on the 30 dev windows, not FINAL rows.
+</aside>
+</section>
 </section>
 
 <section data-act="C" data-n="12">

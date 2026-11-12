@@ -1,0 +1,23 @@
+{
+ "run": "20261112-095810",
+ "script": "fraud/time_logreg.py",
+ "setup": "final-logreg-amt",
+ "model": "tab-logreg",
+ "rows": 29800,
+ "warmup": 200,
+ "rows_from": "the 30 dev windows (tabular.dev30)",
+ "latency_ms": {
+  "p50": 0.1330999657511711,
+  "p90": 0.1949999830685556,
+  "p99": 0.4593020048923787,
+  "mean": 0.15579506687291791
+ },
+ "timed": "one row's features and predict, one payment at a time",
+ "machine": {
+  "cpu": "Intel64 Family 6 Model 189 Stepping 1, GenuineIntel",
+  "system": "Windows 11",
+  "python": "3.13.9",
+  "numpy": "2.5.3"
+ },
+ "not_comparable_with": "the model's times in eval_final, taken on an RTX 3060 Ti"
+}

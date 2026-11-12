@@ -1,6 +1,6 @@
 # Final presentation (reveal.js 6.0.2)
 
-Frog Watch, Group 13: *Transforming LLMs into classifiers for fraud detection*. 19 main slides, 5 backup
+Frog Watch, Group 13: *Transforming LLMs into classifiers for fraud detection*. 19 main slides, 6 backup
 sub-slides, references. 15 minutes everything included: 12:00 of talk, 3:00 of questions. It builds on the
 midterm in `../midterm-proposal/`, and takes its look from there and from `../slides/`.
 

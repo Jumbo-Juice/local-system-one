@@ -379,6 +379,19 @@ html.printing .face.front p { font-size: 30px; line-height: 1.08; margin: 0; }
 html.printing .face.back { border-top: 0; }
 html.printing .face.back .out { font-size: 36px; }
 html.printing .race svg { height: 560px; }
+/* 11 backup: cost against speed */
+.costspeed svg { display: block; width: 100%; height: 560px; overflow: visible; }
+.costspeed svg text { font-family: "Archivo", sans-serif; font-size: 26px; fill: var(--c-ink-2); }
+.costspeed .ideal { fill: var(--c-zone); }
+.costspeed .ideal-tag { fill: var(--c-ours); font-weight: 600; }
+.costspeed .gl { stroke: var(--c-rule); stroke-width: 2; }
+.costspeed .bar { stroke: var(--c-ink); stroke-width: 3; stroke-dasharray: 10 8; }
+.costspeed .lead { fill: none; stroke: var(--c-other); stroke-width: 2; }
+.costspeed .dot { fill: var(--c-bg); stroke: var(--c-other); stroke-width: 5; }
+.costspeed .dot.in { fill: var(--c-ours); stroke: var(--c-ours); }
+.costspeed .lab { font-size: 30px; fill: var(--c-ink); }
+.costspeed .lab.strong { font-weight: 700; }
+.costspeed .lab .sub { font-size: 24px; font-weight: 400; fill: var(--c-ink-2); }
 html.printing .mrows { display: none; }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation: none !important; transition: none !important; }

@@ -551,6 +551,8 @@ Eval pages read the result folders in `EVAL_DIRS` of `fraud/viewer/server.py`. P
 and `eval_final/`. Phase 6's `fraud/results/eval_d3/` ran no test windows and has no page. The start page lists every eval with what
 it is (phase, test or dev only) and links the final test first. The final test's page also shows what was read out after the test,
 from `eval_final/rich_cust_readout.json` and `extras.json`, marked as a read-out.
+It also has a Cost and speed panel: each timed setup's mean cost against its p90 time per payment, with logreg's time from
+`time_logreg/` (below), labelled as a laptop CPU against the model's RTX 3060 Ti.
 IEEE-CIS eval pages open with the first registered question as a verdict, then fact cards, the answers drawn as intervals
 (approve-all on its own scale) and a per-window scatter on a linear axis with each setup's mean as a line (PaySim keeps a log
 axis). Tables use short setup names (the deck's names for the final five); the full names and ids are in each page's legend.
@@ -698,6 +700,14 @@ Then Phase 21's comparison, Phase 22's combinations, and the final test. The fin
 .venv/Scripts/python -m fraud.eval_final --report <eval id>
 .venv/Scripts/python -m fraud.dev.verify_tabular fraud/results/eval_final/<eval id>.json
 .venv/Scripts/python -m fraud.dev.final_extras <eval id>
+```
+
+Logreg's time per payment, which the final test didn't record (it scored logreg a window at a time). One payment at a time on the
+30 dev windows, not FINAL rows; about a minute, most of it the fit. Needs `python -m fraud.history` first. Result:
+`fraud/results/time_logreg/<time>.json`, read by the final test's console page and the deck's backup 11b.
+
+```bash
+.venv/Scripts/python -m fraud.time_logreg
 ```
 
 Training on cost (Phase 25): one adapter, then its dev scores, then the comparison. About 3.5 hours on this GPU. Dev only. Write-up: `fraud/RESULTS-LM-COST.md`.

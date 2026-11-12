@@ -11,7 +11,8 @@ window.DATA = {
   "paysim_trace": "fraud/runs/20261003-052030_hybrid_qwen2.5-1.5b_dev0.pinned.jsonl",
   "readout": "fraud/results/eval_final/rich_cust_readout.json",
   "rule": "fraud/results/eval_rule/20261103-211736.json",
-  "tabular": "fraud/results/eval_tabular/20261103-235132.json"
+  "tabular": "fraud/results/eval_tabular/20261103-235132.json",
+  "timing": "fraud/results/time_logreg/20261112-095810.json"
  },
  "cost": {
   "big_frauds": 275,
@@ -885,6 +886,57 @@ window.DATA = {
     "first_cheaper": 15,
     "p": 0.041389
    }
+  },
+  "speed": {
+   "bar": 250.0,
+   "cheapest": "signal_amt",
+   "cpu": "Intel64 Family 6 Model 189 Stepping 1, GenuineIntel",
+   "edge": 2266.431635,
+   "points": [
+    {
+     "cost": 2106.11177,
+     "cpu": true,
+     "dist_from_cheapest": false,
+     "id": "final-logreg-amt",
+     "ideal": true,
+     "key": "baseline",
+     "ms": 0.195,
+     "name": "Baseline: logreg, rule"
+    },
+    {
+     "cost": 1942.89091,
+     "cpu": false,
+     "dist_from_cheapest": null,
+     "id": "final-signal-amt",
+     "ideal": true,
+     "key": "signal_amt",
+     "ms": 55.7221,
+     "name": "d1 reads trees, rule"
+    },
+    {
+     "cost": 1991.56743,
+     "cpu": false,
+     "dist_from_cheapest": false,
+     "id": "final-signal-cust",
+     "ideal": true,
+     "key": "signal_cust",
+     "ms": 55.7221,
+     "name": "d1 reads trees, customer line"
+    },
+    {
+     "cost": 2426.7515,
+     "cpu": false,
+     "dist_from_cheapest": true,
+     "id": "final-rich-amt",
+     "ideal": false,
+     "key": "rich_amt",
+     "ms": 55.8081,
+     "name": "d1, no trees, rule"
+    }
+   ],
+   "said": "“Baseline: logreg, rule” decides one payment in 0.195 ms at p90, about 290 times faster than the language model's 55.7 ms, and its cost is not distinguishable from the cheapest setup's, “d1 reads trees, rule”.",
+   "source": "fraud/results/time_logreg/20261112-095810.json",
+   "times": 290.0
   },
   "told": {
    "baseline": 2631.61177,

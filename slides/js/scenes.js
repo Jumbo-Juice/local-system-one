@@ -396,6 +396,44 @@
     },
   }
 
+  // ------------------------------------------------------------ 11 backup: cost against speed (the console's Cost and speed panel)
+  // Static: no steps. Cheaper at the top, faster to the left (log scale). The shaded corner is final.speed's ideal rule.
+  scenes.costspeed = {
+    mount(sec) {
+      const sp = D().final.speed
+      const W = 1700, H = 560, L = 150, R = 520, T = 10, B = 84, pw = W - L - R, ph = H - T - B
+      const ms = sp.points.map(p => p.ms), costs = sp.points.map(p => p.cost)
+      const lo = Math.floor(Math.log10(Math.min(...ms))), hi = Math.ceil(Math.log10(Math.max(sp.bar, ...ms)))
+      const x = v => L + pw * (Math.log10(v) - lo) / (hi - lo)
+      const a = Math.floor(Math.min(...costs) / 200) * 200 - 100, b = Math.ceil(Math.max(...costs) / 200) * 200 + 100
+      const y = v => T + ph * (v - a) / (b - a)
+      const edge = sp.edge ?? b
+      let g = `<rect class="ideal" x="${L}" y="${T}" width="${x(sp.bar) - L}" height="${y(edge) - T}"/>`
+      g += `<text class="ideal-tag" x="${L + 16}" y="${T + 36}">ideal: fast, and not distinguishably dearer than the cheapest</text>`
+      for (let v = Math.ceil(a / 200) * 200; v <= b; v += 200) g += `<line class="gl" x1="${L}" x2="${L + pw}" y1="${y(v)}" y2="${y(v)}"/><text x="${L - 14}" y="${y(v) + 10}" text-anchor="end">${f.int(v)}</text>`
+      for (let p = lo; p <= hi; p++) g += `<line class="gl" x1="${x(10 ** p)}" x2="${x(10 ** p)}" y1="${T}" y2="${T + ph}"/><text x="${x(10 ** p)}" y="${H - 44}" text-anchor="middle">${10 ** p >= 1 ? 10 ** p : (10 ** p).toFixed(-p)} ms</text>`
+      g += `<text x="${L + pw / 2}" y="${H - 4}" text-anchor="middle">p90 time to decide one payment, log scale: faster to the left</text>`
+      g += `<text x="28" y="${T + ph / 2}" text-anchor="middle" transform="rotate(-90 28 ${T + ph / 2})">USD per window, cheaper at the top</text>`
+      g += `<line class="bar" x1="${x(sp.bar)}" x2="${x(sp.bar)}" y1="${T}" y2="${T + ph}"/><text x="${x(sp.bar) + 10}" y="${T + ph - 14}">${sp.bar} ms bar</text>`
+      // Labels: beside the dot if it has room before the bar, else in a column right of the plot on a leader line.
+      const col = L + pw + 30
+      const placed = [...sp.points].sort((p, q) => p.cost - q.cost).map(p => {
+        const cx = x(p.ms)
+        return { p, cx, cy: y(p.cost), lx: cx + 30 + 420 > x(sp.bar) ? col : cx + 30, ly: y(p.cost) }
+      })
+      placed.forEach((o, i) => { for (const q of placed.slice(0, i)) if (q.lx === o.lx && o.ly - q.ly < 70) o.ly = q.ly + 70 })
+      for (const { p, cx, cy, lx, ly } of placed) {
+        if (lx === col) g += `<polyline class="lead" points="${cx + 14},${cy} ${col - 40},${ly} ${col - 10},${ly}"/>`
+        g += `<circle class="dot${p.ideal ? ' in' : ''}" cx="${cx}" cy="${cy}" r="${p.cpu ? 15 : 12}"/>`
+        g += `<text class="lab${p.cpu ? ' strong' : ''}" x="${lx}" y="${ly + 4}">${p.name}<tspan class="sub" x="${lx}" dy="32">${f.int(p.cost)} USD · ${p.ms < 1 ? p.ms.toFixed(3) : p.ms.toFixed(1)} ms${p.cpu ? ', laptop CPU' : ''}</tspan></text>`
+      }
+      const svg = sec.querySelector('.costspeed svg')
+      svg.setAttribute('viewBox', `0 0 ${W} ${H}`)
+      svg.innerHTML = g
+    },
+    set() {},
+  }
+
   // ------------------------------------------------------------ 12 customer line toggle
   const TOGGLE = ['baseline', 'rich_amt', 'rich_cust']
   const METRICS = [

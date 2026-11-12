@@ -1038,6 +1038,98 @@ function verdictBanner(p, unit) {  // the first registered question, from the da
     el("div", { class: "hint" }, "Distinguishable means the 95% window-bootstrap interval of the mean paired difference excludes 0."));
 }
 
+// ---------------------------------------------------------------- cost and speed (the final test)
+
+// The final test timed every language-model setup and not logreg; fraud/time_logreg.py timed it afterwards, one payment at a
+// time on a laptop CPU. Different hardware from the model's RTX 3060 Ti, and the chart says so.
+const LOGREG_TIMING = "results/time_logreg/20261112-095810.json";
+
+// Each timed setup: its p90 per payment and mean cost. Ideal = under the registered latency bar and not distinguishably dearer
+// than the cheapest setup, by the paired comparisons the eval already has. Approve-all has no time and isn't drawn.
+function speedPoints(r, timing, qs) {
+  const pts = Object.entries(r.setups).filter(([s, v]) => (v.latency_ms && v.latency_ms.p90) || s === timing.setup)
+    .map(([s, v]) => ({ s, cost: v.mean_cost, ms: s === timing.setup ? timing.latency_ms.p90 : v.latency_ms.p90, cpu: s === timing.setup }));
+  const cheapest = pts.reduce((a, b) => (b.cost < a.cost ? b : a));
+  for (const p of pts) {
+    const q = qs.find((x) => new Set([x.a, x.b, p.s, cheapest.s]).size === 2 && p !== cheapest);
+    p.vsCheapest = q ? compare(q) : null;
+    p.ideal = p.ms <= r.latency_bar_ms && (p === cheapest || Boolean(q && !q.distinguishable));
+  }
+  return { pts, cheapest };
+}
+
+function speedChart(pts, bar) {
+  const W = 720, H = 300, L = 62, R = 210, T = 12, B = 42, plotW = W - L - R, plotH = H - T - B;
+  const lo = Math.floor(Math.log10(Math.min(...pts.map((p) => p.ms)))), hi = Math.ceil(Math.log10(Math.max(bar, ...pts.map((p) => p.ms))));
+  const x = (v) => L + plotW * (Math.log10(v) - lo) / (hi - lo);
+  const costs = pts.map((p) => p.cost), step = niceStep(Math.max(...costs) - Math.min(...costs), 4);
+  const a = Math.floor(Math.min(...costs) / step) * step - step / 2, b = Math.ceil(Math.max(...costs) / step) * step + step / 2;
+  const y = (v) => T + plotH * (v - a) / (b - a);  // cheaper at the top
+  const inn = pts.filter((p) => p.ideal), out = pts.filter((p) => !p.ideal && p.ms <= bar);
+  // The corner's lower edge sits between the dearest setup that passes and the cheapest timed one that doesn't: not a threshold.
+  const edge = out.length ? (Math.max(...inn.map((p) => p.cost)) + Math.min(...out.map((p) => p.cost))) / 2 : b;
+  const svg = svgEl("svg", { class: "chart speedchart", viewBox: `0 0 ${W} ${H}`, role: "img",
+    "aria-label": `Mean cost per window against p90 time per payment, log scale, for ${pts.map((p) => shortName(p.s)).join(", ")}. Shaded: fast and not distinguishably dearer than the cheapest.` });
+  svg.append(svgEl("rect", { class: "ideal", x: L, y: T, width: x(bar) - L, height: y(edge) - T }));
+  const tag = svgEl("text", { class: "ideal-tag", x: L + 8, y: T + 16 }); tag.textContent = "ideal: fast and not distinguishably dearer than the cheapest";
+  svg.append(tag);
+  for (let t = Math.ceil(a / step) * step; t <= b; t += step) {
+    svg.append(svgEl("line", { x1: L, x2: L + plotW, y1: y(t), y2: y(t), stroke: "var(--grid)", "stroke-width": 1 }));
+    const tx = svgEl("text", { x: L - 6, y: y(t) + 4, "text-anchor": "end" }); tx.textContent = money(t); svg.append(tx);
+  }
+  for (let p = lo; p <= hi; p++) {
+    svg.append(svgEl("line", { x1: x(10 ** p), x2: x(10 ** p), y1: T, y2: T + plotH, stroke: "var(--grid)", "stroke-width": 1 }));
+    const tx = svgEl("text", { x: x(10 ** p), y: H - 24, "text-anchor": "middle" }); tx.textContent = `${10 ** p >= 1 ? 10 ** p : (10 ** p).toFixed(-p)} ms`; svg.append(tx);
+  }
+  const xl = svgEl("text", { x: L + plotW / 2, y: H - 4, "text-anchor": "middle", class: "axis-name" }); xl.textContent = "p90 time to decide one payment (log scale): faster to the left"; svg.append(xl);
+  const yl = svgEl("text", { x: 14, y: T + plotH / 2, "text-anchor": "middle", class: "axis-name", transform: `rotate(-90 14 ${T + plotH / 2})` }); yl.textContent = "mean cost per window, USD"; svg.append(yl);
+  svg.append(svgEl("line", { class: "bar-line", x1: x(bar), x2: x(bar), y1: T, y2: T + plotH }));
+  const bt = svgEl("text", { x: x(bar) + 4, y: T + plotH - 6, class: "bar-tag" }); bt.textContent = `${bar} ms bar`; svg.append(bt);
+  // A label sits right of its dot unless it would cross the bar; those go to a column right of the plot, on leader lines.
+  // Labels in one place are spread so the setups that share a time don't overlap.
+  const col = L + plotW + 12;
+  const placed = [...pts].sort((p, q) => p.cost - q.cost).map((p) => {
+    const cx = x(p.ms), lx = cx + 16 + 170 > x(bar) && cx < x(bar) && cx + 16 + 170 > L + plotW * 0.4 ? col : cx + 16;
+    return { p, cx, cy: y(p.cost), lx, ly: y(p.cost) };
+  });
+  for (let i = 1; i < placed.length; i++) {
+    for (const o of placed.slice(0, i)) if (o.lx === placed[i].lx && placed[i].ly - o.ly < 32) placed[i].ly = o.ly + 32;
+  }
+  for (const { p, cx, cy, lx, ly } of placed) {
+    if (lx === col) svg.append(svgEl("polyline", { class: "sp-lead", points: `${cx + 7},${cy} ${col - 18},${ly} ${col - 4},${ly}` }));
+    svg.append(svgEl("circle", { class: `sp-dot${p.ideal ? " in" : ""}`, cx, cy, r: p.cpu ? 6 : 5 }));
+    const t = svgEl("text", { x: lx, y: ly + 4, class: p.cpu ? "sp-lab strong" : "sp-lab" });
+    t.textContent = shortName(p.s);
+    const t2 = svgEl("tspan", { x: lx, dy: 15, class: "sp-sub" }); t2.textContent = `${money(p.cost)} USD · ${ms(p.ms)}${p.cpu ? ", laptop CPU" : ""}`;
+    t.append(t2); svg.append(t);
+  }
+  return svg;
+}
+
+// The chart's answer as one sentence, before the chart. lr: logreg's point; dist: whether its cost is distinguishable from the
+// cheapest setup's (null if it is the cheapest, undefined if never compared). The deck says the same (slides/build_data.py).
+function speedSentence(lr, fastestLm, cheapest, dist) {
+  const who = (s) => el("span", { title: `${setupName(s)} (${s})` }, `“${shortName(s)}”`);
+  const times = Number((fastestLm / lr.ms).toPrecision(2));
+  const tail = dist === null ? ["and it is the cheapest setup."] : dist === undefined ? ["and it was not compared with the cheapest setup."]
+    : [`and its cost is ${dist ? "distinguishably dearer than" : "not distinguishable from"} the cheapest setup's, `, who(cheapest), "."];
+  return [who(lr.s), ` decides one payment in ${ms(lr.ms)} at p90, about ${money(times)} times faster than the language model's ${ms(fastestLm)}, `, ...tail];
+}
+
+function speedPanel(r, timing, qs) {
+  const { pts, cheapest } = speedPoints(r, timing, qs);
+  const lr = pts.find((p) => p.cpu);
+  const fastestLm = Math.min(...pts.filter((p) => !p.cpu).map((p) => p.ms));
+  const dist = lr === cheapest ? null : lr.vsCheapest ? lr.vsCheapest.dist : undefined;
+  return el("section", { class: "panel", style: "margin-top:12px" }, el("h2", {}, "Cost and speed"),
+    el("p", { class: "said-one" }, ...speedSentence(lr, fastestLm, cheapest.s, dist)),
+    el("div", { class: "scroll-x" }, speedChart(pts, r.latency_bar_ms)),
+    el("p", { class: "hint" }, `Shaded: under the registered ${r.latency_bar_ms} ms bar and not distinguishably dearer than the cheapest setup, by the paired comparisons above. ` +
+      "Its lower edge sits halfway between the dearest setup that passes and the cheapest that doesn't; the edge itself is not a threshold. Approving everything has no model to time and isn't drawn."),
+    el("p", { class: "hint" }, `Different hardware: the language model was timed during the final test on an RTX 3060 Ti, lone prompts, its forward pass only. ` +
+      `Logreg was timed afterwards on a laptop CPU (${timing.machine.cpu}), one payment at a time, features included, on the 30 dev windows, not FINAL rows. Source: fraud/${LOGREG_TIMING.replace(/^results/, "results")}, written by ${timing.script}.`));
+}
+
 async function ieeeEval(r) {  // IEEE-CIS evals (eval_ieee*.py and the phases after them): one shape, a 10 USD review
   const { runs } = await getJSON("api/runs");
   const have = new Set(runs.map((x) => x.file));
@@ -1052,10 +1144,12 @@ async function ieeeEval(r) {  // IEEE-CIS evals (eval_ieee*.py and the phases af
   const nameCell = (s) => el("td", { title: `${setupName(s)} (${s})` }, name(s));
   const count = (x) => (x === undefined || x === null ? "–" : x.toLocaleString("en-US"));
   let after = null;  // the final test's read-outs, asked for after its results were seen
+  let timing = null;  // logreg timed one payment at a time, after the final test (fraud/time_logreg.py)
   if (r.script === "fraud/eval_final.py") {
     try { after = { readout: await getJSON("results/eval_final/rich_cust_readout.json"), extras: await getJSON("results/eval_final/extras.json") }; }
     catch (err) { after = null; }
     if (after && after.readout.eval !== r.eval) after = null;
+    try { timing = await getJSON(LOGREG_TIMING); } catch (err) { timing = null; }
   }
   const cheapest = order.filter(([s]) => s !== "ieee-approve-all").slice(0, 4).map(([s]) => s);
   const chart = { test_windows: wins, windows: {}, means: {}, linear: true, label: name, unit: dev ? "held-out dev chain" : "",
@@ -1151,6 +1245,7 @@ async function ieeeEval(r) {  // IEEE-CIS evals (eval_ieee*.py and the phases af
       el("details", { class: "more", style: "margin-top:10px" }, el("summary", {}, "The answers as a table"), el("div", { class: "scroll-x" }, ans))),
     ...afterPanel,
     el("section", { class: "panel", style: "margin-top:12px" }, el("h2", {}, dev ? "Cost per dev chain" : "Cost per window"), evalChart(chart)),
+    timing && r.latency_bar_ms && r.setups[timing.setup] ? speedPanel(r, timing, qs) : null,
     el("section", { class: "panel", style: "margin-top:12px" }, el("h2", {}, "Setups, cheapest first"),
       el("p", { class: "hint" }, `Mean cost in USD per ${unit} of 1,000 rows. Counts are over all ${wins.length} ${unit}s. Recall and precision count a review or a decline as an alert. Hover a name for the full one.`),
       el("div", { class: "filters" }, moreBtn), el("div", { class: "scroll-x" }, tot)),

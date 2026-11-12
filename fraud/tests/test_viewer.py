@@ -1,4 +1,5 @@
 from pathlib import Path
+import re
 import json
 
 from fraud.viewer import server
@@ -193,3 +194,14 @@ def test_every_comparison_on_an_eval_page_is_the_first_setup_minus_the_second():
         assert [c["lo"], c["hi"]] == pytest.approx([-high, -low] if flip else [low, high])
         assert c["firstCheaper"] == (e["dearer"] if flip else e["cheaper"])
         assert c["dist"] == e["distinguishable"] and c["lo"] <= c["mean"] <= c["hi"]
+
+
+def test_the_logreg_timing_is_served_for_the_final_page_but_not_listed_as_an_eval():
+    """fraud/time_logreg.py's result feeds the final test's Cost and speed panel; it has no setups or totals, so it is no eval."""
+    results = Path(__file__).resolve().parents[1] / "results"
+    js = (server.HERE / "console.js").read_text(encoding="utf-8")
+    name = re.search(r'^const LOGREG_TIMING = "results/time_logreg/([\w-]+\.json)";$', js, flags=re.M)[1]
+    assert server.resolve(f"results/time_logreg/{name}") == results / "time_logreg" / name
+    t = json.loads((results / "time_logreg" / name).read_text(encoding="utf-8"))
+    assert t["setup"] == "final-logreg-amt" and 0 < t["latency_ms"]["p90"] < 1 and "dev" in t["rows_from"]
+    assert not any(e["file"].startswith("time_logreg/") for e in server.Listing().eval_list()["evals"])

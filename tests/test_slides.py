@@ -279,3 +279,35 @@ def test_only_two_comparisons_run_against_their_registered_order(data):
     assert against == {"dev.phase12_frozen", "final.signal_amt_rich_amt"}
     html = (SLIDES / "index.html").read_text(encoding="utf-8")
     assert not any(f"{k}.said" in html for k in against)
+
+
+def test_the_speed_backup_draws_the_consoles_points_and_says_its_sentence(data):
+    """s11b and the console's Cost and speed panel: the same points, the same ideal corner, the same sentence."""
+    import shutil
+    import subprocess
+
+    sp = data["final"]["speed"]
+    assert {p["key"] for p in sp["points"] if p["ideal"]} == {"baseline", "signal_amt", "signal_cust"}
+    lr = next(p for p in sp["points"] if p["cpu"])
+    assert lr["key"] == "baseline" and lr["ms"] < 1 and lr["dist_from_cheapest"] is False and sp["bar"] == 250
+    assert all(p["ms"] < sp["bar"] for p in sp["points"])
+    node = shutil.which("node")
+    if not node:
+        pytest.skip("node is not installed")
+    js = (SLIDES.parent / "fraud" / "viewer" / "console.js").read_text(encoding="utf-8")
+    names = js[js.index("const SETUP_NAME = {"):js.index("function setupLegend")]
+    helpers = "\n".join(re.search(rf"^const {h} = .*$", js, flags=re.M)[0] for h in ("money", "ms"))
+    say = js[js.index("function speedSentence("):js.index("function speedPanel(")]
+    fastest = min(p["ms"] for p in sp["points"] if not p["cpu"])
+    cheapest = next(p for p in sp["points"] if p["key"] == sp["cheapest"])
+    script = ("const el = (tag, attrs, ...kids) => kids.join('');\n" + names + "\n" + helpers + "\n" + say +
+              f"\nprocess.stdout.write(speedSentence({{s: {json.dumps(lr['id'])}, ms: {lr['ms']}}}, {fastest}, {json.dumps(cheapest['id'])}, false).join(''));")
+    out = subprocess.run([node, "-e", script], capture_output=True, text=True, encoding="utf-8", check=True).stdout
+    assert out == sp["said"]
+
+
+def test_scene_names_are_unique_and_every_scene_on_a_slide_exists(html):
+    """A second scenes.<name> silently replaces the first, and its slide draws nothing (s11b once lost to s16 this way)."""
+    names = re.findall(r"^\s+scenes\.(\w+) = \{", (SLIDES / "js" / "scenes.js").read_text(encoding="utf-8"), flags=re.M)
+    assert len(names) == len(set(names)), sorted(n for n in names if names.count(n) > 1)
+    assert set(re.findall(r'data-scene="(\w+)"', html)) <= set(names)
