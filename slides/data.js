@@ -1051,6 +1051,77 @@ window.DATA = {
     }
    ]
   },
+  "data": {
+   "_source": "fraud/DATA.md (PaySim: 6,362,620 rows, 8,213 fraud, steps 1-743 = 31 days; one fraud in 775 is 6,362,620 / 8,213 rounded); fraud/eval_ieee.py WINDOW_SIZE (rows per window). Observed; the window size is an Implementation choice.",
+   "paysim_days": 31,
+   "paysim_frauds": 8213,
+   "paysim_one_in": 775,
+   "paysim_rows": 6362620,
+   "window_rows": 1000
+  },
+  "illustration": {
+   "_source": "Implementation choice: made-up numbers to show the mechanism on the worked PaySim payment; no rule, logistic regression or tree scored this payment, and the slides label these numbers 'illustration'. Derived values are computed from these, worked.amount and costs (friction 10%, at least 1 USD; review fee 10 USD): rule.big.approve = p x 305,369.89, rule.big.decline = (1 - p) x 30,536.99, rule.review = fee + lam; logreg.log_amount.x = ln(305,369.89) rounded, logreg.p = 1 / (1 + e^1.08); trees.p = 1 / (1 + e^1.80).",
+   "logreg": {
+    "log_amount": {
+     "adds": 4.42,
+     "w": 0.35,
+     "x": 12.63
+    },
+    "night": {
+     "adds": 0.0,
+     "w": 0.8
+    },
+    "odds_times": 4.48,
+    "p": 0.2535,
+    "round": {
+     "adds": 0.0,
+     "w": 0.6
+    },
+    "score": -1.08,
+    "start": -7.0,
+    "transfer": {
+     "adds": 1.5,
+     "w": 1.5
+    }
+   },
+   "rule": {
+    "big": {
+     "approve": 76342.47,
+     "decline": 22902.74
+    },
+    "lam": 10,
+    "p": 0.25,
+    "review": 20,
+    "small": {
+     "amount": 40,
+     "approve": 10.0,
+     "decline": 3.0
+    }
+   },
+   "trees": {
+    "p": 0.14,
+    "score": -1.8,
+    "start": -3.4,
+    "t1": {
+     "no": -0.3,
+     "yes": 0.9
+    },
+    "t2": {
+     "no": -0.2,
+     "over": 200000,
+     "yes": 1.1
+    },
+    "t3": {
+     "no": -0.4,
+     "yes": 0.7
+    }
+   }
+  },
+  "nilson": {
+   "_source": "../midterm-proposal/PLAN.md, References [1]: The Nilson Report, \"Card fraud losses worldwide in 2023,\" no. 1276, Dec. 2024. Documented.",
+   "usd_billions": 33.83,
+   "year": 2023
+  },
   "paysim": {
    "_source": "README.md, docs/media/fraud-rule-book.png. Simulated data and a different cost setup from IEEE-CIS.",
    "decisions": 3862,

@@ -71,5 +71,35 @@
       {"said": "Beats logreg by about 100, not distinguishable", "got": "+40, not distinguishable", "verdict": "no", "tag": "direction wrong"},
       {"said": "Stays dearer than the trees", "got": "+335, distinguishable", "verdict": "yes", "tag": "right"}
     ]
+  },
+  "nilson": {
+    "_source": "../midterm-proposal/PLAN.md, References [1]: The Nilson Report, \"Card fraud losses worldwide in 2023,\" no. 1276, Dec. 2024. Documented.",
+    "usd_billions": 33.83,
+    "year": 2023
+  },
+  "data": {
+    "_source": "fraud/DATA.md (PaySim: 6,362,620 rows, 8,213 fraud, steps 1-743 = 31 days; one fraud in 775 is 6,362,620 / 8,213 rounded); fraud/eval_ieee.py WINDOW_SIZE (rows per window). Observed; the window size is an Implementation choice.",
+    "paysim_rows": 6362620,
+    "paysim_frauds": 8213,
+    "paysim_days": 31,
+    "paysim_one_in": 775,
+    "window_rows": 1000
+  },
+  "illustration": {
+    "_source": "Implementation choice: made-up numbers to show the mechanism on the worked PaySim payment; no rule, logistic regression or tree scored this payment, and the slides label these numbers 'illustration'. Derived values are computed from these, worked.amount and costs (friction 10%, at least 1 USD; review fee 10 USD): rule.big.approve = p x 305,369.89, rule.big.decline = (1 - p) x 30,536.99, rule.review = fee + lam; logreg.log_amount.x = ln(305,369.89) rounded, logreg.p = 1 / (1 + e^1.08); trees.p = 1 / (1 + e^1.80).",
+    "rule": {"p": 0.25, "lam": 10, "review": 20,
+             "big": {"approve": 76342.47, "decline": 22902.74},
+             "small": {"amount": 40, "approve": 10.0, "decline": 3.0}},
+    "logreg": {"start": -7.0,
+               "transfer": {"w": 1.5, "adds": 1.5},
+               "log_amount": {"x": 12.63, "w": 0.35, "adds": 4.42},
+               "night": {"w": 0.8, "adds": 0.0},
+               "round": {"w": 0.6, "adds": 0.0},
+               "score": -1.08, "p": 0.2535, "odds_times": 4.48},
+    "trees": {"start": -3.4,
+              "t1": {"yes": 0.9, "no": -0.3},
+              "t2": {"over": 200000, "yes": 1.1, "no": -0.2},
+              "t3": {"yes": 0.7, "no": -0.4},
+              "score": -1.8, "p": 0.14}
   }
 }

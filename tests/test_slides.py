@@ -339,3 +339,32 @@ def test_cost_stress_edge_is_in_the_manual_data(data):
     s = data["manual"]["stress"]
     assert (s["flat_low"], s["flat_high"]) == (50, 60)
     assert "RESULTS-COST-STRESS" in s["_source"]
+
+
+def test_illustration_numbers_are_labelled(html):
+    """Rules, logistic regression and trees recorded no score for the worked payment, so their numbers are made up
+    (manual_data.json → illustration), and every slide that shows one says "illustration" where the room can read it."""
+    showing = [s for s in sections(html) if "manual.illustration." in s]
+    assert len(showing) >= 3, "the rule, logistic regression and trees slides show the mechanism on illustration numbers"
+    for s in showing:
+        assert re.search(r"\billustration\b", visible_text(s), flags=re.I), s[:120]
+
+
+def test_every_manual_block_names_its_source(data):
+    for key, block in data["manual"].items():
+        if isinstance(block, dict):
+            assert block.get("_source"), key
+    assert "Implementation choice" in data["manual"]["illustration"]["_source"]
+    assert "[1]" in data["manual"]["nilson"]["_source"]
+
+
+@pytest.mark.parametrize("n,name,time", [
+    (1, "Juji", "0:25"), (2, "Juji", "0:45"), (3, "Juji", "1:00"), (4, "Juji", "0:45"),
+    (5, "Swan", "0:45"), (6, "Swan", "0:50"), (7, "Swan", "0:45"),
+])
+def test_the_first_slides_follow_the_running_order(html, n, name, time):
+    """Slides 01–07 as the spec's running order: who presents, for how long, on the tag and in the notes."""
+    s = next((s for s in sections(html) if re.match(rf'<section id="s{n:02d}" data-n="{n}"', s)), None)
+    assert s, n
+    assert f'<span class="tag">{n} · {name}</span>' in s
+    assert f"[{name} · {time}]" in s

@@ -39,6 +39,226 @@ Source: title, names, IDs and topic from the midterm deck (../midterm-proposal/i
 </aside>
 </section>
 
+<!-- ================================================================ 02 the problem -->
+<section id="s02" data-n="2">
+<div class="page">
+<span class="tag">2 · Juji</span>
+<div class="comp"><span class="num">02</span>The problem</div>
+<h1>Every payment needs a decision <em class="hl">before</em> the money moves</h1>
+<p class="sub"><b>Task:</b> for each payment, pick one of three actions. Each kind of mistake has its own price.</p>
+<div class="main">
+  <ol class="choices">
+    <li><span class="bub">A</span><div><b>approve</b><p>the money moves; if it was fraud, the money is lost</p></div></li>
+    <li><span class="bub">B</span><div><b>review</b><p>a person checks it first; each check costs a fee, and there are only a few</p></div></li>
+    <li><span class="bub">C</span><div><b>decline</b><p>the payment is blocked; if it was genuine, a good customer is turned away</p></div></li>
+  </ol>
+  <div class="row end">
+    <div class="tile"><span class="n">{{manual.nilson.usd_billions|num}} B USD</span><p>card fraud losses worldwide in {{manual.nilson.year|num}} <span class="cite">[1]</span></p></div>
+    <div class="tile"><span class="k">One payment we follow through every method</span><p><b class="ink">{{worked.type}}</b> of <b class="ink">{{worked.amount|usd2}} USD</b> to a {{worked.to}}, at hour {{worked.hour}}. From PaySim (simulated).</p></div>
+    <div class="tile ask"><span class="k">Our question</span><p>Can a small language model, on one laptop, be the one that decides?</p></div>
+  </div>
+</div>
+<p class="foot">We build on simulated payments, then test on {{manual.split.rows|int}} real e-commerce payments, in time order.</p>
+</div>
+<aside class="notes">
+[Juji · 0:45]
+Every payment needs a decision before the money moves. There are three: approve it, send it to a person for a review, or decline it. Each can be wrong in its own way. Approve a fraud and the money is gone. Decline a genuine payment and a good customer is turned away. A review finds the truth, but it costs a fee and only a few payments can get one.
+Why it matters: card fraud cost {{manual.nilson.usd_billions|num}} billion dollars worldwide in {{manual.nilson.year|num}}.
+Our question: can a small language model, running on one laptop, be the one that decides?
+To keep it practical we follow one payment through every method: a transfer of {{worked.amount|usd2}} dollars to a customer, from PaySim, a simulated dataset. It comes back on every method slide.
+Source: {{manual.nilson.usd_billions|num}} B USD, The Nilson Report no. 1276, reference [1], as cited in ../midterm-proposal/PLAN.md, References (Documented). The payment: fraud/runs/20261003-052030_hybrid_qwen2.5-1.5b_dev0.pinned.jsonl, model-judged payment {{worked.i}}, picked by the written rule in slides/build_data.py, worked_block (Observed; the rule is an Implementation choice). {{manual.split.rows|int}} rows: slides/manual_data.json, split, from slides-handoff.md and fraud/DATA-IEEE.md (Observed).
+</aside>
+</section>
+
+<!-- ================================================================ 03 flip: accuracy lies -->
+<section id="s03" data-n="3" data-steps="2">
+<div class="page">
+<span class="tag">3 · Juji</span>
+<div class="comp"><span class="num">03</span>How we judge a decision maker</div>
+<h1>This model is right on {{final.approve_all_accuracy|pct}} of real payments. Is it good?</h1>
+<div class="main">
+  <div class="duo">
+    <div class="tile"><span class="k">The trivial model: approve every payment, look at nothing</span>
+      <span class="n">{{final.approve_all_accuracy|pct}} accurate</span>
+      <p>on {{final.rows|int}} real payments. Fraud is rare ({{final.frauds|int}} of them), so “genuine” is nearly always the right label.</p></div>
+    <div class="tile" data-from="1"><span class="k">But it loses the most money</span>
+      <div class="chart" data-chart="bars" data-fmt="int" data-width="740" data-label-w="300" data-value-w="110" data-title="USD lost per window: approve every payment against the baseline model">
+        <i data-label="approve every one" data-value="{{final.setups.approve_all.mean}}"></i><i data-label="baseline model" data-value="{{final.setups.baseline.mean}}" data-hl></i>
+      </div>
+      <p>USD lost per window. A window: {{manual.data.window_rows|int}} payments in a row. The baseline: logistic regression with the rule, coming up.</p></div>
+  </div>
+  <div class="row end" data-from="2">
+    <div class="sum">
+      <span class="eq">cost per window =</span>
+      <div class="tile"><span class="k">each fraud approved</span><span class="f">its amount</span><p>the money is gone</p></div>
+      <span class="op">+</span>
+      <div class="tile"><span class="k">each good customer declined</span><span class="f">{{costs.friction_rate|pct}} of the amount</span><p>at least {{costs.friction_min|num}} USD: the friction</p></div>
+      <span class="op">+</span>
+      <div class="tile"><span class="k">each review</span><span class="f">{{costs.review_fee|num}} USD</span><p>at most {{costs.review_share|pct}} of payments</p></div>
+    </div>
+  </div>
+</div>
+<p class="foot">Accuracy: the share of payments a model labels correctly.</p>
+</div>
+<aside class="notes">
+[Juji · 1:00]
+Here is a model that is right on {{final.approve_all_accuracy|pct}} of real payments. Is it good? Let the room answer.
+It is the trivial model: it approves every payment and looks at nothing. Fraud is rare, {{final.frauds|int}} of {{final.rows|int}} payments on our final test, so saying "genuine" is almost always right.
+Click: it is also the most expensive setup we tested. It loses {{final.setups.approve_all.mean|int}} dollars per window of {{manual.data.window_rows|int}} payments, against {{final.setups.baseline.mean|int}} for our baseline, logistic regression with the rule, which comes up in two slides. Accuracy counts a tiny fraud and a huge one as one mistake each; the loss doesn't.
+Click: so we judge every method by dollars. Cost per window: each fraud approved costs its full amount; each good customer declined costs {{costs.friction_rate|pct}} of the amount, at least {{costs.friction_min|num}} dollar, which we call the friction; each review costs {{costs.review_fee|num}} dollars, and at most {{costs.review_share|pct}} of payments can be reviewed. These prices are assumed, not measured, and every dollar in this talk rests on them. Next to every cost we also report how many good customers were declined.
+Source: accuracy = 1 − frauds / rows, computed in slides/build_data.py from fraud/results/eval_final/20261104-090649.json, approve-all setup (Observed). Mean cost per window, approve-all {{final.setups.approve_all.mean|int}} and the baseline (final-logreg-amt) {{final.setups.baseline.mean|int}}: same file, the final test, {{final.windows_n|num}} windows (Observed). Prices: fraud/eval_ieee.py COSTS and fraud/costs.py, as recorded in the result file (Implementation choice; assumed, not measured).
+</aside>
+</section>
+
+<!-- ================================================================ 04 data and split -->
+<section id="s04" data-n="4">
+<div class="page">
+<span class="tag">4 · Juji</span>
+<div class="comp"><span class="num">04</span>Data and split</div>
+<h1>Built on simulated payments, tested on real ones, split by time</h1>
+<div class="main">
+  <div class="row">
+    <div class="tile"><span class="name">PaySim <span class="cite">[8]</span></span>
+      <dl class="kv small"><dt>Type</dt><dd>simulated mobile money</dd><dt>Size</dt><dd><b>{{manual.data.paysim_rows|int}}</b> payments, {{manual.data.paysim_days|num}} days</dd><dt>Fraud</dt><dd><b>one in {{manual.data.paysim_one_in|int}}</b></dd><dt>Use</dt><dd>first cycle: build the pipeline, fine-tune</dd></dl></div>
+    <div class="tile"><span class="name">IEEE-CIS <span class="cite">[9]</span></span>
+      <dl class="kv small"><dt>Type</dt><dd>real e-commerce payments, from Vesta</dd><dt>Size</dt><dd><b>{{manual.split.rows|int}}</b> labelled payments</dd><dt>Fraud</dt><dd><b>{{manual.split.fraud_share}}</b></dd><dt>Use</dt><dd>second cycle: tune on dev, then the final test</dd></dl></div>
+  </div>
+  <div class="tile split-tile"><span class="k">IEEE-CIS, split by time, never shuffled: earlier → later</span>
+    <div class="split"><span class="fit" style="flex:{{manual.split.fit}}">fit {{manual.split.fit|int}}</span><span class="dev" style="flex:{{manual.split.dev}}">dev {{manual.split.dev|int}}</span><span class="test" style="flex:{{manual.split.test}}">test {{manual.split.test|int}}</span></div>
+    <div class="split-say"><span style="flex:{{manual.split.fit}}"><b>fit:</b> models learn their weights here</span><span style="flex:{{manual.split.dev}}"><b>dev:</b> pick and tune, e.g. the cut-offs</span><span style="flex:{{manual.split.test}}"><b>test:</b> never tuned on</span></div>
+  </div>
+  <div class="row end small">
+    <div class="tile"><span class="k">A window</span><p>{{manual.data.window_rows|int}} payments in a row, in time order. Every method decides the same windows, so we compare them window by window.</p></div>
+    <div class="tile"><span class="k">The final test, locked away</span><p>{{final.windows_n|num}} windows from the test part: {{final.rows|int}} payments, {{final.frauds|int}} frauds. Chosen before the final models were trained, scored once.</p></div>
+  </div>
+</div>
+<p class="foot">Simulated data proves the pipeline works; only real data can say whether it is worth using.</p>
+</div>
+<aside class="notes">
+[Juji · 0:45]
+Two datasets, two cycles. PaySim is simulated mobile money: {{manual.data.paysim_rows|int}} payments over {{manual.data.paysim_days|num}} days, about one fraud in {{manual.data.paysim_one_in|int}}. We built the whole pipeline and the fine-tuning there first. IEEE-CIS is real: {{manual.split.rows|int}} labelled e-commerce payments from Vesta, {{manual.split.fraud_share}} fraud.
+We split IEEE-CIS by time, never shuffled, so a model never learns from the future. Fit: the models learn here. Dev: we pick and tune here, for example the cut-offs, and which setups go forward. Test: nothing is tuned here.
+A window is {{manual.data.window_rows|int}} payments in a row. Every method decides the same windows, so we compare methods window by window.
+The final test is {{final.windows_n|num}} windows from the test part, {{final.rows|int}} payments with {{final.frauds|int}} frauds. They were set aside before any final model was trained, the decision rule was committed first, and they were scored once.
+Source: PaySim counts, fraud/DATA.md (Observed). IEEE-CIS split, slides/manual_data.json split, from slides-handoff.md and fraud/final_test.py (Observed). Window size, fraud/eval_ieee.py WINDOW_SIZE (Implementation choice). Final windows: fraud/final_test.py (reserved, seed 20261105) and fraud/results/eval_final/20261104-090649.json (Observed); pre-registration in the fraud/eval_final.py docstring (Documented). [8] PaySim and [9] IEEE-CIS as in ../midterm-proposal/PLAN.md, References.
+</aside>
+</section>
+
+<!-- ================================================================ 05 method: the rule -->
+<section id="s05" data-n="5" data-steps="1">
+<div class="page">
+<span class="tag">5 · Swan</span>
+<div class="comp"><span class="num">05</span>Method: the rule</div>
+<h1>Price each action for this payment, then take the cheapest</h1>
+<p class="sub">Every model here gives a fraud score <b>p</b>, between zero and one. The rule turns p and the amount into an action.</p>
+<div class="main">
+  <div class="row">
+    <div class="tile"><span class="k">approve costs</span><span class="f">p × amount</span><p>what we expect to lose if it is fraud</p></div>
+    <div class="tile"><span class="k">review costs</span><span class="f">fee + λ</span><p>{{costs.review_fee|num}} USD, plus λ: a price for using up one of the few reviews</p></div>
+    <div class="tile"><span class="k">decline costs</span><span class="f">(1 − p) × friction</span><p>friction: {{costs.friction_rate|pct}} of the amount, at least {{costs.friction_min|num}} USD</p></div>
+  </div>
+  <div class="row end">
+    <div class="tile"><span class="k">Our transfer, {{worked.amount|usd2}} USD, p {{manual.illustration.rule.p|num}} <span class="illus">illustration</span></span>
+      <div class="chart" data-chart="bars" data-fmt="usd2" data-width="780" data-label-w="150" data-value-w="170" data-title="Expected cost of each action for the transfer">
+        <i data-label="approve" data-value="{{manual.illustration.rule.big.approve}}"></i><i data-label="review" data-value="{{manual.illustration.rule.review}}" data-hl></i><i data-label="decline" data-value="{{manual.illustration.rule.big.decline}}"></i>
+      </div>
+      <p>Cheapest: <b class="hl">review</b>. A big payment is worth a person’s look.</p></div>
+    <div class="tile" data-from="1"><span class="k">Same p, a {{manual.illustration.rule.small.amount|num}} USD payment <span class="illus">illustration</span></span>
+      <div class="chart" data-chart="bars" data-fmt="usd2" data-width="780" data-label-w="150" data-value-w="170" data-title="Expected cost of each action for a small payment">
+        <i data-label="approve" data-value="{{manual.illustration.rule.small.approve}}"></i><i data-label="review" data-value="{{manual.illustration.rule.review}}"></i><i data-label="decline" data-value="{{manual.illustration.rule.small.decline}}" data-hl></i>
+      </div>
+      <p>Cheapest: <b class="hl">decline</b>. The review fee is more than the risk.</p></div>
+  </div>
+</div>
+<p class="foot">Two fixed cut-offs on p would treat both payments the same. On earlier test windows, the rule cut logistic regression’s cost by {{rule.phase14.diff.mean|abs}} USD per window: {{rule.phase14.diff|dist}}.</p>
+</div>
+<aside class="notes">
+[Swan · 0:45]
+Before the models, the one piece every model shares: the rule that turns a score into an action. Every model in this talk gives a fraud score p between zero and one. The rule prices each action for this one payment and takes the cheapest. Approving costs p times the amount: what we expect to lose. Declining costs one minus p, times the friction. A review costs its {{costs.review_fee|num}} dollar fee plus lambda, a price for using up one of the few reviews.
+Our transfer of {{worked.amount|usd2}} dollars, with a made-up p of {{manual.illustration.rule.p|num}}: approving would expect to lose {{manual.illustration.rule.big.approve|usd2}}, declining {{manual.illustration.rule.big.decline|usd2}}, a review {{manual.illustration.rule.review|num}}. So: review.
+Click: the same p on a {{manual.illustration.rule.small.amount|num}} dollar payment. Now a review costs more than the risk, so the rule declines. Same score, different action: the amount decides. Two fixed cut-offs on the score, which is what we proposed at the midterm, cannot do that.
+It was the largest dollar gain we measured: on the same logistic-regression scores, {{rule.phase14.diff.mean|abs}} dollars less per window, CI {{rule.phase14.diff.ci|ci}}, on {{rule.phase14.windows_n|num}} earlier test windows. If asked: it also declined more good customers, {{manual.phase14.good_declined_rule|int}} with the rule against {{manual.phase14.good_declined_lines|int}} with two cut-offs.
+Source: the rule, fraud/eval_ieee_amount.py decide and fraud/rule.py decide_paced (Implementation choice, pre-registered). p, lambda and the {{manual.illustration.rule.small.amount|num}} dollar payment are illustration numbers, slides/manual_data.json illustration (Implementation choice); nothing scored this payment with the rule, and the PaySim payment is priced with the IEEE-CIS costs only to show the arithmetic. Earlier-test result: fraud/RESULTS-IEEE-AMOUNT.md and fraud/results/eval_ieee_amount/20261103-164830.json (Observed).
+</aside>
+</section>
+
+<!-- ================================================================ 06 method: logistic regression -->
+<section id="s06" data-n="6" data-steps="1">
+<div class="page">
+<span class="tag">6 · Swan</span>
+<div class="comp"><span class="num">06</span>Method: logistic regression</div>
+<h1>Add up weighted facts, then squash the sum into a probability</h1>
+<div class="main">
+  <div class="duo">
+    <div class="tile"><span class="k">Our transfer, fact by fact <span class="illus">illustration</span></span>
+      <table class="ruled">
+        <thead><tr><th>fact</th><th>this payment</th><th class="r">× weight</th><th class="r">= adds</th></tr></thead>
+        <tbody>
+          <tr><td>start</td><td>every payment</td><td class="r"></td><td class="r">{{manual.illustration.logreg.start|d2}}</td></tr>
+          <tr><td>a transfer</td><td>yes</td><td class="r">+{{manual.illustration.logreg.transfer.w|d2}}</td><td class="r">+{{manual.illustration.logreg.transfer.adds|d2}}</td></tr>
+          <tr><td>log of the amount</td><td>{{manual.illustration.logreg.log_amount.x|d2}}</td><td class="r">+{{manual.illustration.logreg.log_amount.w|d2}}</td><td class="r">+{{manual.illustration.logreg.log_amount.adds|d2}}</td></tr>
+          <tr><td>at night</td><td>no, hour {{worked.hour}}</td><td class="r">+{{manual.illustration.logreg.night.w|d2}}</td><td class="r">{{manual.illustration.logreg.night.adds|d2}}</td></tr>
+          <tr><td>a round amount</td><td>no</td><td class="r">+{{manual.illustration.logreg.round.w|d2}}</td><td class="r">{{manual.illustration.logreg.round.adds|d2}}</td></tr>
+          <tr class="ours"><td>score: the sum</td><td></td><td class="r"></td><td class="r"><b>{{manual.illustration.logreg.score|d2}}</b></td></tr>
+        </tbody>
+      </table>
+      <p class="note">“yes” counts as one, “no” as zero.</p></div>
+    <div class="stack">
+      <div class="tile"><span class="k">Score → probability</span><span class="n">{{manual.illustration.logreg.p|d2}}</span><p>p = 1 ÷ (1 + e<sup>−score</sup>): any score lands between zero and one</p></div>
+      <div class="tile" data-from="1"><span class="k">Each weight changes the odds of fraud</span><p>odds = p ÷ (1 − p). Being a transfer adds +{{manual.illustration.logreg.transfer.w|d2}} to the score, so it multiplies the odds by e<sup>{{manual.illustration.logreg.transfer.w|d2}}</sup> = <b class="hl">{{manual.illustration.logreg.odds_times|d2}}</b>. A fact that is “no” changes nothing.</p></div>
+    </div>
+  </div>
+</div>
+<p class="foot">The weights are learned on the fit part. With the rule, this is our baseline: every other method is compared with it.</p>
+</div>
+<aside class="notes">
+[Swan · 0:50]
+Logistic regression is the simplest real model we use. Each fact about the payment gets a weight. Multiply each fact by its weight and add them up: that is the score.
+Our transfer, with made-up weights: start at {{manual.illustration.logreg.start|d2}}. It is a transfer, and yes counts as one, so add {{manual.illustration.logreg.transfer.adds|d2}}. The log of the amount is {{manual.illustration.logreg.log_amount.x|d2}}, times {{manual.illustration.logreg.log_amount.w|d2}}, adds {{manual.illustration.logreg.log_amount.adds|d2}}. Not at night, it is hour {{worked.hour}}, and not a round amount: those add nothing. The score is {{manual.illustration.logreg.score|d2}}.
+The sigmoid squashes any score into a number between zero and one: here {{manual.illustration.logreg.p|d2}}. That p goes into the rule from the last slide.
+Click: how to read a weight. Odds are p over one minus p. Adding {{manual.illustration.logreg.transfer.w|d2}} to the score multiplies the odds of fraud by e to the {{manual.illustration.logreg.transfer.w|d2}}, about {{manual.illustration.logreg.odds_times|d2}}, whatever the other facts are.
+Its weights are learned on the fit part of the data. With the rule, logistic regression is our baseline: on the final test it cost {{final.setups.baseline.mean|int}} dollars per window, and every other method is compared with it.
+Source: the real models: fraud/baselines.py (PaySim: transfer, log amount, night hours one to six, round amount and earlier-activity counts, standardised, fitted by Newton's method) and fraud/tabular.py (IEEE-CIS, all columns) (Implementation choice). Every weight, the score and p on this slide are illustration numbers, slides/manual_data.json illustration (Implementation choice); the log of the amount is ln of {{worked.amount|usd2}}, rounded. Baseline cost: fraud/results/eval_final/20261104-090649.json, final-logreg-amt (Observed).
+</aside>
+</section>
+
+<!-- ================================================================ 07 method: boosted trees -->
+<section id="s07" data-n="7" data-steps="1">
+<div class="page">
+<span class="tag">7 · Swan</span>
+<div class="comp"><span class="num">07</span>Method: boosted trees</div>
+<h1>Many small trees, each one correcting the trees before it</h1>
+<p class="sub">Our transfer through three small trees. Each asks one question and adds a correction to the score. <span class="illus">illustration</span></p>
+<div class="main">
+  <div class="pipe">
+    <div class="stage"><span class="lbl">Start</span><p class="what">The same for every payment</p><span class="n">{{manual.illustration.trees.start|d2}}</span><p class="how">low, because fraud is rare</p></div>
+    <div class="stage"><span class="lbl">Tree 1</span>
+      <div class="tree"><p class="q">A transfer?</p><p class="leaf on"><span>yes</span><span>+{{manual.illustration.trees.t1.yes|d2}}</span></p><p class="leaf"><span>no</span><span>{{manual.illustration.trees.t1.no|d2}}</span></p></div></div>
+    <div class="stage"><span class="lbl">Tree 2</span>
+      <div class="tree"><p class="q">Amount over {{manual.illustration.trees.t2.over|int}} USD?</p><p class="leaf on"><span>yes</span><span>+{{manual.illustration.trees.t2.yes|d2}}</span></p><p class="leaf"><span>no</span><span>{{manual.illustration.trees.t2.no|d2}}</span></p></div></div>
+    <div class="stage"><span class="lbl">Tree 3</span>
+      <div class="tree"><p class="q">At night?</p><p class="leaf"><span>yes</span><span>+{{manual.illustration.trees.t3.yes|d2}}</span></p><p class="leaf on"><span>no</span><span>{{manual.illustration.trees.t3.no|d2}}</span></p></div></div>
+    <div class="stage ours" data-from="1"><span class="lbl">Score</span>
+      <div class="box"><p class="what">Start + every correction</p><span class="n">{{manual.illustration.trees.score|d2}}</span><p class="how">squashed as before:<br><span class="nowrap">p = {{manual.illustration.trees.p|d2}}</span></p></div></div>
+  </div>
+  <div class="row end">
+    <div class="tile"><span class="k">Each tree fixes what is left</span><p>Tree 2 is fitted to what tree 1 still gets wrong, tree 3 to what both still get wrong, and so on.</p></div>
+    <div class="tile"><span class="k">Combinations, not just sums</span><p>A deeper tree can ask “a transfer, and large?”, which one weighted sum cannot.</p></div>
+    <div class="tile"><span class="k">The real model</span><p>{{manual.recipe.trees}}: each correction is shrunk, so no single tree decides.</p></div>
+  </div>
+</div>
+<p class="foot">Boosted trees give a score p as logistic regression does, and the same rule turns it into an action.</p>
+</div>
+<aside class="notes">
+[Swan · 0:45]
+Boosted trees. A tree asks a question about the payment and, depending on the answer, adds a correction to the score. Boosting means many small trees, added one after another.
+Our transfer: every payment starts at the same score, {{manual.illustration.trees.start|d2}}, low because fraud is rare. Tree 1 asks: a transfer? Yes, add {{manual.illustration.trees.t1.yes|d2}}. Tree 2 is fitted to what tree 1 still got wrong. It asks: amount over {{manual.illustration.trees.t2.over|int}}? Yes, add {{manual.illustration.trees.t2.yes|d2}}. Tree 3: at night? No, {{manual.illustration.trees.t3.no|d2}}.
+Click: the score is the start plus every correction, {{manual.illustration.trees.score|d2}}, squashed to a probability as before, {{manual.illustration.trees.p|d2}}. The same rule then picks the action.
+Why bother, next to logistic regression: a deeper tree can catch combinations, a transfer that is also large, which one weighted sum cannot. The real model: {{manual.recipe.trees}}.
+Source: fraud/gbdt.py and fraud/RESULTS-TABULAR.md (the real model: {{manual.recipe.trees}}, on the IEEE-CIS columns) (Implementation choice). The three trees, their questions and corrections, the start, the score and p are illustration numbers, slides/manual_data.json illustration (Implementation choice); real trees are deeper and their corrections are scaled by the learning rate.
+</aside>
+</section>
+
 <!-- ================================================================ 08 the language model (frame sample; Task 5 writes the slide) -->
 <section id="s08" data-n="8" data-steps="1">
 <div class="page">
