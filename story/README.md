@@ -29,6 +29,9 @@ Every command is in `RUN-GUIDE.md` → The story.
   shows every panel, stacked.
 - **No network.** Figtree is in `vendor/fonts/` (SIL OFL). The only links out are the sources a reader
   may follow.
+- **Hosted as plain files.** `.github/workflows/story-pages.yml` copies the page's own files (not
+  `build_data.py`, `manual_data.json` or this README) to GitHub Pages. Every path in the page is
+  relative, so it works under the repo's sub-path.
 - **No model runs here,** and no IEEE-CIS row appears: results per window, pinned game runs and the
   committed PaySim trace, labelled as PaySim.
 

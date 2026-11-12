@@ -1,0 +1,39 @@
+# Publishes the story (story/) to GitHub Pages. Only the page's own files go up:
+# index.html, story.css, data.js, js/ and vendor/ (with its licences). The build inputs stay in the repo.
+# Needs Settings -> Pages -> Source: GitHub Actions. data.js is committed, so nothing is built here;
+# run tests/test_story.py locally before pushing (RUN-GUIDE.md -> The story).
+name: story-pages
+
+on:
+  push:
+    branches: [main]
+    paths: ["story/**", ".github/workflows/story-pages.yml"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v7
+      - name: Collect the page's files
+        run: |
+          mkdir _site
+          cp -r story/index.html story/story.css story/data.js story/js story/vendor _site/
+      - uses: actions/configure-pages@v6
+      - uses: actions/upload-pages-artifact@v5
+        with:
+          path: _site
+      - id: deployment
+        uses: actions/deploy-pages@v5

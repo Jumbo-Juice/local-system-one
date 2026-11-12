@@ -729,7 +729,13 @@ One scroll page of the whole project's findings, for a newcomer. It runs no mode
 .venv/Scripts/python.exe -m pytest tests/test_story.py                                   # numbers, bindings, no network, no IEEE-CIS row, the glossary's words
 ```
 
-Add `?reduced=1` to see it without motion. The numbered circles in the bar jump to a trial. `story/` is plain files, so it can be hosted as it is (for example on GitHub Pages).
+Add `?reduced=1` to see it without motion. The numbered circles in the bar jump to a trial.
+
+**Hosting.** `.github/workflows/story-pages.yml` publishes the story to GitHub Pages at
+`https://jumbo-juice.github.io/local-system-one/` on every push to `main` that changes `story/`, or by hand
+from the repo's Actions tab (`story-pages` → Run workflow). It uploads only `index.html`, `story.css`,
+`data.js`, `js/` and `vendor/`, and builds nothing, so rebuild `data.js` and run the story tests before you
+push. Once, on GitHub: Settings → Pages → Source: GitHub Actions.
 
 ## Final presentation (`slides/`)
 
