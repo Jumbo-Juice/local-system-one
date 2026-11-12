@@ -31,6 +31,7 @@
     pct: x => `${Math.round(x * 100)}%`,
     d2: x => x.toFixed(2),
     usd2: x => group(x, 2),
+    dist: d => (d.distinguishable ? 'distinguishable' : 'not distinguishable'),  // a verdict word from the data, never typed
   }
 
   const get = path => path.split('.').reduce((node, part) => node[Array.isArray(node) ? Number(part) : part], window.DATA)

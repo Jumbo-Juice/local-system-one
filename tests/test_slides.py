@@ -232,3 +232,50 @@ def test_the_readme_counts_the_slides(html):
     leaves = [s for s in sections(html) if 'class="page' in s]
     backups = sum('data-main="no"' in s and "backup" in s for s in leaves)
     assert f"{backups} backup sub-slides" in " ".join((SLIDES / "README.md").read_text(encoding="utf-8").split())
+
+
+def all_diffs(data):
+    """Every comparison in data.js with its unit, as the console words it: chains for the dev-only evals."""
+    for block, unit in (("final", "window"), ("dev", "chain"), ("cost", "chain")):
+        for key, d in data[block]["diffs"].items():
+            yield f"{block}.{key}", d, unit
+    for phase, p in data["rule"].items():
+        yield f"rule.{phase}", p["diff"], "window"
+
+
+def test_the_deck_says_each_comparison_in_the_consoles_own_sentence(data):
+    """build_data.sentence() is the Python twin of the console's sentence() (fraud/viewer/console.js): run the console's
+    own code in node on every comparison in data.js, and on every name, and require the same text."""
+    import shutil
+    import subprocess
+
+    node = shutil.which("node")
+    if not node:
+        pytest.skip("node is not installed")
+    js = (SLIDES.parent / "fraud" / "viewer" / "console.js").read_text(encoding="utf-8")
+    names = js[js.index("const SETUP_NAME = {"):js.index("function setupLegend")]
+    money = re.search(r"^const money = .*$", js, flags=re.M)[0]
+    say = js[js.index("function sentence(c, unit)"):js.index("function sentences(")]
+    cases = [{"key": k, "c": {"first": d["first"], "second": d["second"], "mean": d["mean"], "lo": d["ci"][0], "hi": d["ci"][1], "dist": d["distinguishable"]},
+              "unit": u, "said": d["said"]} for k, d, u in all_diffs(data)]
+    t = data["final"]["told"]
+    cases.append({"key": "final.told", "c": {"first": "final-rich-cust", "second": "final-logreg-amt", "mean": t["diff"], "lo": t["ci"][0], "hi": t["ci"][1],
+                                             "dist": t["ci"][0] > 0 or t["ci"][1] < 0}, "unit": "window", "said": t["said"]})
+    script = ("const el = (tag, attrs, ...kids) => kids.join('');\n" + names + "\n" + money + "\n" + say +
+              "\nconst inp = JSON.parse(require('fs').readFileSync(0, 'utf8'));"
+              "\nprocess.stdout.write(JSON.stringify({said: inp.cases.map((x) => sentence(x.c, x.unit).join('')), names: inp.ids.map(shortName)}));")
+    ids = sorted(build_data.NAMES)
+    out = json.loads(subprocess.run([node, "-e", script], input=json.dumps({"cases": cases, "ids": ids}), capture_output=True, text=True, encoding="utf-8", check=True).stdout)
+    assert out["names"] == [build_data.NAMES[s] for s in ids]
+    assert len(cases) > 20
+    for case, console in zip(cases, out["said"], strict=True):
+        assert case["said"] == console, case["key"]
+
+
+def test_only_two_comparisons_run_against_their_registered_order(data):
+    """The console always words a comparison in its registered order. The deck keeps two the other way round, by choice:
+    the s8 tile "Fine-tuned vs frozen" and the s11 row "d1 reads trees vs d1, no trees". Neither carries a sentence."""
+    against = {k for k, d, _ in all_diffs(data) if not d["registered_order"]}
+    assert against == {"dev.phase12_frozen", "final.signal_amt_rich_amt"}
+    html = (SLIDES / "index.html").read_text(encoding="utf-8")
+    assert not any(f"{k}.said" in html for k in against)

@@ -12,6 +12,7 @@ JSON's mean_diff is signed from the cheaper setup's side, so `diff` turns it rou
 from __future__ import annotations
 
 import json
+import math
 from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
@@ -39,21 +40,50 @@ def num(x, digits: int = 6):
     return None if x is None else round(float(x), digits)
 
 
-def diff(entry: dict, first: str) -> dict:
-    """A verdict entry as first minus second, whichever side the JSON calls better."""
+# Each setup's short name, the same as the console's shortName() in fraud/viewer/console.js (tests/test_slides.py checks).
+NAMES = {
+    "final-logreg-amt": "Baseline: logreg, rule", "final-signal-amt": "d1 reads trees, rule", "final-signal-cust": "d1 reads trees, customer line",
+    "final-rich-amt": "d1, no trees, rule", "final-rich-cust": "d1, no trees, customer line", "ieee-approve-all": "Approve everything",
+    "lm-frozen-amt": "d1, frozen, rule", "lm-phase12-amt": "d1, Phase 12 adapter, rule", "lm-seed1-amt": "d1, seed 1, rule", "lm-rich-amt": "d1, no trees, rule",
+    "tab-logreg-amt": "logreg, rule", "lm-signal-amt": "d1 reads trees, rule", "signal-alone-amt": "trees at 400 alone, rule", "tab-all-amt": "trees, rule",
+    "lm-weighted-amt": "d1, no trees, trained on cost, rule", "ieee-logreg-all-amt": "logreg, rule", "ieee-logreg-all": "logreg, two lines",
+    "audit-noCDV-amt": "logreg, no C/D/V, rule", "audit-all-amt": "logreg, all columns, rule", "rule-customers": "rule with a customer line", "rule-base": "logreg, Phase 14's rule",
+}
+
+
+def js_round(x: float) -> int:
+    """Math.round, so a sentence here rounds as the console's does (Python's round() goes to even)."""
+    return math.floor(x + 0.5)
+
+
+def sentence(first: str, second: str, mean: float, low: float, high: float, distinguishable: bool, unit: str) -> str:
+    """A comparison as one plain sentence, word for word the console's sentence() (fraud/viewer/console.js)."""
+    who = lambda s: f"“{NAMES[s]}”"
+    bound = lambda v: f"{-js_round(v):,} less" if js_round(v) < 0 else f"{js_round(v):,} more" if js_round(v) > 0 else "0"
+    m = js_round(mean)
+    head = (f"{who(first)} cost the same per {unit} as {who(second)} to the dollar" if m == 0
+            else f"{who(first)} cost {abs(m):,} USD {'less' if m < 0 else 'more'} per {unit} than {who(second)}")
+    return (f"{head}, {'and' if distinguishable or m == 0 else 'but'} the 95% interval of the difference runs from {bound(low)} to {bound(high)}, "
+            f"so the two are {'' if distinguishable else 'not '}distinguishable.")
+
+
+def diff(entry: dict, first: str, unit: str) -> dict:
+    """A verdict entry as first minus second, whichever side the JSON calls better, with its sentence."""
     sign = 1 if entry["better"] == first else -1
+    second = entry["b"] if first == entry["a"] else entry["a"]
     low, high = entry["mean_diff_ci95"]
     ci = [low, high] if sign == 1 else [-high, -low]
     wins = entry["cheaper"] if sign == 1 else entry["dearer"]
-    return {"mean": num(sign * entry["mean_diff"]), "ci": [num(ci[0]), num(ci[1])],
+    mean, dist = sign * entry["mean_diff"], bool(entry["distinguishable"])
+    return {"first": first, "second": second, "registered_order": first == entry["a"], "mean": num(mean), "ci": [num(ci[0]), num(ci[1])],
             "first_cheaper": wins, "windows": entry["cheaper"] + entry["dearer"] + entry["ties"],
-            "distinguishable": bool(entry["distinguishable"])}
+            "distinguishable": dist, "said": sentence(first, second, mean, ci[0], ci[1], dist, unit)}
 
 
-def find(entries: list, a: str, b: str) -> dict:
+def find(entries: list, a: str, b: str, unit: str) -> dict:
     for e in entries:
         if {e["a"], e["b"]} == {a, b}:
-            return diff(e, a)
+            return diff(e, a, unit)
     raise KeyError((a, b))
 
 
@@ -89,23 +119,26 @@ def final_block() -> dict:
         "setups": {"signal_amt": setup(s["final-signal-amt"], True), "signal_cust": setup(s["final-signal-cust"], True),
                    "baseline": setup(s["final-logreg-amt"], True), "rich_amt": setup(s["final-rich-amt"], True),
                    "approve_all": setup(s["ieee-approve-all"], True), "rich_cust": rich_cust},
-        "diffs": {"rich_amt_baseline": find(all_v, "final-rich-amt", "final-logreg-amt"),
-                  "signal_amt_baseline": find(all_v, "final-signal-amt", "final-logreg-amt"),
-                  "signal_cust_baseline": find(all_v, "final-signal-cust", "final-logreg-amt"),
-                  "signal_amt_rich_amt": find(all_v, "final-signal-amt", "final-rich-amt"),
-                  "signal_amt_approve": find(all_v, "final-signal-amt", "ieee-approve-all"),
-                  "rich_cust_baseline": find(all_v, "final-rich-cust", "final-logreg-amt"),
-                  "rich_cust_rich_amt": find(all_v, "final-rich-cust", "final-rich-amt"),
-                  "rich_cust_approve": find(all_v, "final-rich-cust", "ieee-approve-all"),
-                  "rich_amt_approve": find(all_v, "final-rich-amt", "ieee-approve-all")},
+        "diffs": {"rich_amt_baseline": find(all_v, "final-rich-amt", "final-logreg-amt", "window"),
+                  "signal_amt_baseline": find(all_v, "final-signal-amt", "final-logreg-amt", "window"),
+                  "signal_cust_baseline": find(all_v, "final-signal-cust", "final-logreg-amt", "window"),
+                  "signal_amt_rich_amt": find(all_v, "final-signal-amt", "final-rich-amt", "window"),
+                  "signal_amt_approve": find(all_v, "final-signal-amt", "ieee-approve-all", "window"),
+                  "rich_cust_baseline": find(all_v, "final-rich-cust", "final-logreg-amt", "window"),
+                  "rich_cust_rich_amt": find(all_v, "final-rich-cust", "final-rich-amt", "window"),
+                  "rich_cust_approve": find(all_v, "final-rich-cust", "ieee-approve-all", "window"),
+                  "rich_amt_approve": find(all_v, "final-rich-amt", "ieee-approve-all", "window")},
         # for the notes: the sign test the JSON records beside each registered question, and the window that pulls the primary's mean back
-        "sign": {"signal_amt_baseline": {"p": num(v["primary"]["sign_p"]), "first_cheaper": find(all_v, "final-signal-amt", "final-logreg-amt")["first_cheaper"]},
-                 "rich_amt_baseline": {"p": num(v["third"]["sign_p"]), "first_cheaper": find(all_v, "final-rich-amt", "final-logreg-amt")["first_cheaper"]},
+        "sign": {"signal_amt_baseline": {"p": num(v["primary"]["sign_p"]), "first_cheaper": find(all_v, "final-signal-amt", "final-logreg-amt", "window")["first_cheaper"]},
+                 "rich_amt_baseline": {"p": num(v["third"]["sign_p"]), "first_cheaper": find(all_v, "final-rich-amt", "final-logreg-amt", "window")["first_cheaper"]},
                  "final12_gap": num(s["final-signal-amt"]["windows"][list(d["windows"]).index(x["dearest_window"]["window"])] - x["dearest_window"]["baseline"])},
         "prompt_tokens": num(s["final-rich-amt"]["prompt_tokens_mean"], 0),
         "rank_corr": num(x["signal_rank_corr"]),
         "told": {"rich_cust": num(r["told_10_usd"]["mean"]["final-rich-cust"]), "baseline": num(r["told_10_usd"]["mean"]["final-logreg-amt"]),
-                 "diff": num(r["told_10_usd"]["against_baseline"]), "ci": [num(c) for c in r["told_10_usd"]["ci"]]},
+                 "diff": num(r["told_10_usd"]["against_baseline"]), "ci": [num(c) for c in r["told_10_usd"]["ci"]],
+                 # against_baseline is already rich-cust minus the baseline (fraud/dev/final_rich_cust.py)
+                 "said": sentence("final-rich-cust", "final-logreg-amt", r["told_10_usd"]["against_baseline"], *r["told_10_usd"]["ci"],
+                                  r["told_10_usd"]["ci"][0] > 0 or r["told_10_usd"]["ci"][1] < 0, "window")},
         "dearest": {"window": x["dearest_window"]["window"], "cost": num(x["dearest_window"]["cost"]), "baseline": num(x["dearest_window"]["baseline"])},
     }
 
@@ -120,13 +153,13 @@ def dev_block() -> dict:
     return {
         "eval": n["eval"], "windows_n": len(n["windows"]), "rows": n["rows"], "frauds": n["frauds"],
         "setups": {k: setup(s[name]) for k, name in names.items()},
-        "diffs": {"phase12_frozen": find(all_v, "lm-phase12-amt", "lm-frozen-amt"),
-                  "rich_phase12": find(all_v, "lm-rich-amt", "lm-phase12-amt"),
-                  "seed1_phase12": find(all_v, "lm-seed1-amt", "lm-phase12-amt"),
-                  "rich_logreg": find(all_v, "lm-rich-amt", "tab-logreg-amt"),
-                  "signal_signal_alone": find(all_v, "lm-signal-amt", "signal-alone-amt"),
-                  "rich_trees": find(all_v, "lm-rich-amt", "tab-all-amt"),
-                  "signal_rich": find(all_v, "lm-signal-amt", "lm-rich-amt")},
+        "diffs": {"phase12_frozen": find(all_v, "lm-phase12-amt", "lm-frozen-amt", "chain"),
+                  "rich_phase12": find(all_v, "lm-rich-amt", "lm-phase12-amt", "chain"),
+                  "seed1_phase12": find(all_v, "lm-seed1-amt", "lm-phase12-amt", "chain"),
+                  "rich_logreg": find(all_v, "lm-rich-amt", "tab-logreg-amt", "chain"),
+                  "signal_signal_alone": find(all_v, "lm-signal-amt", "signal-alone-amt", "chain"),
+                  "rich_trees": find(all_v, "lm-rich-amt", "tab-all-amt", "chain"),
+                  "signal_rich": find(all_v, "lm-signal-amt", "lm-rich-amt", "chain")},
         "echo": {"rank_corr": num(n["echo"]["rank_corr"]), "differ": n["echo"]["decisions_differ"], "rows": n["echo"]["rows"]},
     }
 
@@ -141,8 +174,8 @@ def cost_block() -> dict:
         "eval": c["eval"], "windows_n": n, "frauds": rich["frauds"], "big_frauds": rich["big_frauds"], "lambda": c["fits"]["lm-rich"]["lambda"],
         "setups": {"rich": {**setup(rich), "big_stopped": rich["big_frauds_stopped"]}, "weighted": {**setup(weighted), "big_stopped": weighted["big_frauds_stopped"]},
                    "rich_cust": setup(s["lm-rich-cust"]), "weighted_cust": setup(s["lm-weighted-cust"])},
-        "diffs": {"weighted_rich": diff(v["primary"], "lm-weighted-amt"), "weighted_logreg": diff(v["second"], "lm-weighted-amt"),
-                  "weighted_trees": diff(v["third"], "lm-weighted-amt")},
+        "diffs": {"weighted_rich": diff(v["primary"], "lm-weighted-amt", "chain"), "weighted_logreg": diff(v["second"], "lm-weighted-amt", "chain"),
+                  "weighted_trees": diff(v["third"], "lm-weighted-amt", "chain")},
         "waterfall": {"start": num(rich["mean_cost"]), "end": num(weighted["mean_cost"]),
                       "fraud": num(per(weighted, "fraud_let_through") - per(rich, "fraud_let_through")),
                       "declines": num(per(weighted, "good_declined") - per(rich, "good_declined")),
@@ -156,12 +189,12 @@ def rule_block() -> dict:
     s = a["setups"]
     return {
         "phase14": {"lines": num(s["ieee-logreg-all"]["mean_cost"]), "rule": num(s["ieee-logreg-all-amt"]["mean_cost"]), "windows_n": len(a["windows"]),
-                    "diff": diff(a["verdict"]["primary"], "ieee-logreg-all-amt"), "latency": {"p50": num(s["ieee-ft-ieee-full"]["latency_ms"]["p50"]), "p90": num(s["ieee-ft-ieee-full"]["latency_ms"]["p90"])}},
-        "phase17": {"windows_n": len(c["windows"]), "diff": diff(c["verdict"]["primary"], "audit-noCDV-amt"),
+                    "diff": diff(a["verdict"]["primary"], "ieee-logreg-all-amt", "window"), "latency": {"p50": num(s["ieee-ft-ieee-full"]["latency_ms"]["p50"]), "p90": num(s["ieee-ft-ieee-full"]["latency_ms"]["p90"])}},
+        "phase17": {"windows_n": len(c["windows"]), "diff": diff(c["verdict"]["primary"], "audit-noCDV-amt", "window"),
                     "dev": {"mean": num(c["heldout"]["noCDV"]["diff_to_all"]), "ci": [num(v) for v in c["heldout"]["noCDV"]["diff_ci"]], "windows": c["heldout"]["noCDV"]["windows"]}},
         "phase18": {"base": r["setups"]["rule-base"]["good_customers_declined"], "customers": r["setups"]["rule-customers"]["good_customers_declined"],
-                    "windows_n": len(r["windows"]), "diff": diff(r["verdict"]["fourth"], "rule-customers")},
-        "phase20": {"windows_n": len(t["windows"]), "diff": diff(t["verdict"]["primary"], "tab-all-amt"),
+                    "windows_n": len(r["windows"]), "diff": diff(r["verdict"]["fourth"], "rule-customers", "window")},
+        "phase20": {"windows_n": len(t["windows"]), "diff": diff(t["verdict"]["primary"], "tab-all-amt", "window"),
                     "dev": {"mean": num(t["heldout"]["tab-all"]["diff"]), "ci": [num(v) for v in t["heldout"]["tab-all"]["diff_ci"]]}},
     }
 

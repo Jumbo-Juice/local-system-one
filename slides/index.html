@@ -224,7 +224,7 @@ Source (Observed): fraud/final_test.py; fraud/results/eval_final/20261104-090649
   </table>
   <p class="print-only sub">Approve: p × amount. Decline: (1 − p) × friction, where friction is 10% of the amount, at least 1 USD; the customer line adds a flat 10 USD to the friction. Review: 10 + λ {{cost.lambda|num}}. p is fitted on dev windows and used only to weigh costs.</p>
 </div>
-<p class="foot evidence"><span>Same logreg scores, Phase 14: two lines {{rule.phase14.lines|int}} → rule {{rule.phase14.rule|int}}, {{rule.phase14.diff.mean|signed}}, CI {{rule.phase14.diff.ci|ci}}, distinguishable. But good customers declined rise, {{manual.phase14.good_declined_lines|int}} → {{manual.phase14.good_declined_rule|int}}.</span></p>
+<p class="foot evidence"><span>Same logreg scores, Phase 14: two lines {{rule.phase14.lines|int}} → rule {{rule.phase14.rule|int}}, {{rule.phase14.diff.mean|signed}}, CI {{rule.phase14.diff.ci|ci}}, {{rule.phase14.diff|dist}}. But good customers declined rise, {{manual.phase14.good_declined_lines|int}} → {{manual.phase14.good_declined_rule|int}}.</span></p>
 </div>
 <aside class="notes">
 [Swan · 1:00]
@@ -244,11 +244,11 @@ Source: fraud/eval_ieee_amount.py decide, fraud/rule.py decide_paced (Implementa
 <div class="main"><table class="ruled big">
   <thead><tr><th style="width:150px">Phase</th><th>Question</th><th>Observed</th></tr></thead>
   <tbody>
-    <tr><td>14</td><td>Rule against two lines, same logreg scores</td><td>{{rule.phase14.lines|int}} → {{rule.phase14.rule|int}}, {{rule.phase14.diff.mean|signed}}, CI {{rule.phase14.diff.ci|ci}}, distinguishable, {{rule.phase14.diff.first_cheaper|num}} of {{rule.phase14.windows_n|num}} windows cheaper</td></tr>
+    <tr><td>14</td><td>Rule against two lines, same logreg scores</td><td>{{rule.phase14.lines|int}} → {{rule.phase14.rule|int}}, {{rule.phase14.diff.mean|signed}}, CI {{rule.phase14.diff.ci|ci}}, {{rule.phase14.diff|dist}}, {{rule.phase14.diff.first_cheaper|num}} of {{rule.phase14.windows_n|num}} windows cheaper</td></tr>
     <tr><td>16</td><td>Does it survive other friction prices?</td><td>Phase 14's scores re-priced: wins at every friction rate tried; stops winning near 50–60 USD flat per decline</td></tr>
     <tr><td>17</td><td>Which columns does it need?</td><td>Without C, D and V, logreg costs {{rule.phase17.diff.mean|signed}}, CI {{rule.phase17.diff.ci|ci}}, on {{rule.phase17.windows_n|num}} windows; {{rule.phase17.dev.mean|signed}} on dev. C's timing couldn't be cleared</td></tr>
-    <tr><td>18</td><td>Customer line on logreg</td><td>Good customers declined {{rule.phase18.base|int}} → {{rule.phase18.customers|int}} over {{rule.phase18.windows_n|num}} windows; cost {{rule.phase18.diff.mean|signed}}, CI {{rule.phase18.diff.ci|ci}}, not distinguishable</td></tr>
-    <tr><td>20</td><td>Do trees hold up on test?</td><td>Against logreg: {{rule.phase20.dev.mean|signed}} on dev, then {{rule.phase20.diff.mean|signed}} on {{rule.phase20.windows_n|num}} test windows, CI {{rule.phase20.diff.ci|ci}}, not distinguishable</td></tr>
+    <tr><td>18</td><td>Customer line on logreg</td><td>Good customers declined {{rule.phase18.base|int}} → {{rule.phase18.customers|int}} over {{rule.phase18.windows_n|num}} windows; cost {{rule.phase18.diff.mean|signed}}, CI {{rule.phase18.diff.ci|ci}}, {{rule.phase18.diff|dist}}</td></tr>
+    <tr><td>20</td><td>Do trees hold up on test?</td><td>Against logreg: {{rule.phase20.dev.mean|signed}} on dev, then {{rule.phase20.diff.mean|signed}} on {{rule.phase20.windows_n|num}} test windows, CI {{rule.phase20.diff.ci|ci}}, {{rule.phase20.diff|dist}}</td></tr>
   </tbody>
 </table></div>
 <p class="foot">Sources: fraud/RESULTS-IEEE-AMOUNT.md, RESULTS-COST-STRESS.md, RESULTS-COLUMN-AUDIT.md, RESULTS-RULE.md, RESULTS-TABULAR.md.</p>
@@ -269,9 +269,9 @@ All Observed, from the write-ups named at the bottom and the result files under 
 <div class="main">
   <div class="ladder" style="flex:none"><div class="ladder-rows"></div></div>
   <div class="ladder-note">
-    <div class="tile" data-from="1"><span class="k">Fine-tuned vs frozen</span><span class="n">{{dev.diffs.phase12_frozen.mean|signed}}</span><p>CI {{dev.diffs.phase12_frozen.ci|ci}}, distinguishable</p></div>
+    <div class="tile" data-from="1"><span class="k">Fine-tuned vs frozen</span><span class="n">{{dev.diffs.phase12_frozen.mean|signed}}</span><p>CI {{dev.diffs.phase12_frozen.ci|ci}}, {{dev.diffs.phase12_frozen|dist}}</p></div>
     <div class="tile" data-from="2"><span class="k">A second seed moved cost</span><span class="n">{{dev.diffs.seed1_phase12.mean|signed}}</span><p>CI {{dev.diffs.seed1_phase12.ci|ci}}: our yardstick for one adapter's noise</p></div>
-    <div class="tile" data-from="4"><span class="k">More columns vs logreg</span><span class="n">{{dev.diffs.rich_logreg.mean|signed}}</span><p>CI {{dev.diffs.rich_logreg.ci|ci}}, not distinguishable</p></div>
+    <div class="tile" data-from="4"><span class="k">More columns vs logreg</span><span class="n">{{dev.diffs.rich_logreg.mean|signed}}</span><p>CI {{dev.diffs.rich_logreg.ci|ci}}, {{dev.diffs.rich_logreg|dist}}</p></div>
   </div>
 </div>
 <p class="foot">Mean USD per 1,000 rows, with the rule. {{dev.windows_n|num}} held-out dev chains of 1,000 rows, {{dev.frauds|int}} frauds. Flattered: lambda was picked with these rows in, except logreg's.</p>
@@ -326,7 +326,7 @@ Source (Documented, from our own code): the docstrings of fraud/finetune_ieee.py
     <div class="tile" data-from="1"><span class="k">Rank correlation with that score</span><span class="n" data-corr>0</span><p>{{dev.echo.differ|int}} of {{dev.echo.rows|int}} decisions differ</p></div>
     <div data-from="2">
       <blockquote class="quote">“really not a decision model doing its grunt work”</blockquote>
-      <p>The project owner, after the final test. So the fair number for the language model is the setup with no tree score. Its result against the score alone: {{dev.diffs.signal_signal_alone.mean|signed}}, CI {{dev.diffs.signal_signal_alone.ci|ci}}, not distinguishable.</p>
+      <p>The project owner, after the final test. So the fair number for the language model is the setup with no tree score. Against the score alone: {{dev.diffs.signal_signal_alone.said}}</p>
     </div>
   </div>
 </div>
@@ -358,7 +358,7 @@ Handing over: "Now the one run that counts."
   <div>
     <p class="totals-h">Running total, USD</p>
     <div class="totals"></div>
-    <p class="sub" data-from="2" style="font-size:var(--fs-lbl);margin-top:10px"><b>{{final.diffs.rich_amt_baseline.mean|signed}} per window</b> against the baseline, CI {{final.diffs.rich_amt_baseline.ci|ci}}: not distinguishable.</p>
+    <p class="sub" data-from="2" style="font-size:var(--fs-lbl);margin-top:10px">{{final.diffs.rich_amt_baseline.said}}</p>
   </div>
 </div></div>
 <p class="foot">{{final.rows|int}} rows, {{final.frauds|int}} frauds, {{final.fraud_usd|int}} USD of fraud. Costs are assumed. Replay from traces: 0 rows differ.</p>
@@ -443,7 +443,7 @@ Source (Observed): verdict in fraud/results/eval_final/20261104-090649.json, aga
       <tr><td>Mean cost per window, USD</td><td class="r">{{final.setups.baseline.mean|int}}</td><td class="r">{{final.setups.rich_amt.mean|int}}</td><td class="r">{{final.setups.rich_cust.mean|int}}</td></tr>
     </tbody>
   </table>
-  <p class="sub" style="margin-top:12px">The line against no line: {{final.diffs.rich_cust_rich_amt.mean|signed}}, CI {{final.diffs.rich_cust_rich_amt.ci|ci}}, not distinguishable. The gain comes from the rule, not the model: on logreg it took declines {{rule.phase18.base|int}} → {{rule.phase18.customers|int}} (Phase 18, {{rule.phase18.windows_n|num}} earlier windows).</p>
+  <p class="sub" style="margin-top:12px">The line against no line: {{final.diffs.rich_cust_rich_amt.said}} The gain comes from the rule, not the model: on logreg it took declines {{rule.phase18.base|int}} → {{rule.phase18.customers|int}} (Phase 18, {{rule.phase18.windows_n|num}} earlier windows).</p>
 </div>
 <p class="foot"><span class="no-print">The black tick on each bar is the baseline. </span>The customer line was asked for after the results, on recorded scores: a read-out, not a test.</p>
 </div>
@@ -464,8 +464,8 @@ Source (Observed): fraud/results/eval_final/rich_cust_readout.json; fraud/RESULT
 <div class="main"><div class="commit-line">
   <div class="tile"><span class="k">d1, no trees, customer line</span><span class="n">{{final.told.rich_cust|int}}</span><p>USD per window</p></div>
   <div class="tile"><span class="k">Baseline: logreg, rule</span><span class="n">{{final.told.baseline|int}}</span><p>USD per window</p></div>
-  <div class="tile"><span class="k">Difference</span><span class="n">{{final.told.diff|signed}}</span><p>CI {{final.told.ci|ci}}, not distinguishable</p></div>
-</div></div>
+</div>
+<p class="sub" style="margin-top:12px">{{final.told.said}}</p></div>
 <p class="foot">The 10 USD is an assumption, not a measurement. Asked for after the results were seen.</p>
 </div>
 <aside class="notes">
@@ -485,7 +485,7 @@ Source (Observed arithmetic on an assumed cost): told_10_usd in fraud/results/ev
   <div class="wcol"><span class="w" data-wv="large"></span><div class="wbar-box"><span class="wbar" data-w="large"></span></div><span class="who4">1,500 USD fraud</span></div>
   <div class="w-side">
     <div class="tile"><span class="k">Why try it</span><p>The top 10% of training frauds hold {{manual.training.top10_share|num}}% of the dollars, yet every row taught the same. Largest weight: {{manual.training.largest_weight|num}}.</p></div>
-    <div class="tile" data-from="2"><span class="k">Weighted against lm-rich</span><span class="n">{{cost.diffs.weighted_rich.mean|signed}}</span><p>CI {{cost.diffs.weighted_rich.ci|ci}}, not distinguishable. Each cheaper in about half the windows.</p></div>
+    <div class="tile" data-from="2"><span class="k">Weighted against lm-rich</span><span class="n">{{cost.diffs.weighted_rich.mean|signed}}</span><p>CI {{cost.diffs.weighted_rich.ci|ci}}, {{cost.diffs.weighted_rich|dist}}. Each cheaper in about half the windows.</p></div>
   </div>
 </div></div>
 <p class="foot">Pre-registered before training. Bar heights are a schematic; the 7.3 is observed on the training rows, capped at the 99th percentile. One adapter.</p>

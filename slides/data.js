@@ -22,8 +22,12 @@ window.DATA = {
      156.74795
     ],
     "distinguishable": false,
+    "first": "lm-weighted-amt",
     "first_cheaper": 42,
     "mean": 40.26022,
+    "registered_order": true,
+    "said": "“d1, no trees, trained on cost, rule” cost 40 USD more per chain than “logreg, rule”, but the 95% interval of the difference runs from 76 less to 157 more, so the two are not distinguishable.",
+    "second": "tab-logreg-amt",
     "windows": 88
    },
    "weighted_rich": {
@@ -32,8 +36,12 @@ window.DATA = {
      142.061863
     ],
     "distinguishable": false,
+    "first": "lm-weighted-amt",
     "first_cheaper": 46,
     "mean": 53.332292,
+    "registered_order": true,
+    "said": "“d1, no trees, trained on cost, rule” cost 53 USD more per chain than “d1, no trees, rule”, but the 95% interval of the difference runs from 39 less to 142 more, so the two are not distinguishable.",
+    "second": "lm-rich-amt",
     "windows": 88
    },
    "weighted_trees": {
@@ -42,8 +50,12 @@ window.DATA = {
      449.847777
     ],
     "distinguishable": true,
+    "first": "lm-weighted-amt",
     "first_cheaper": 15,
     "mean": 335.127885,
+    "registered_order": true,
+    "said": "“d1, no trees, trained on cost, rule” cost 335 USD more per chain than “trees, rule”, and the 95% interval of the difference runs from 219 more to 450 more, so the two are distinguishable.",
+    "second": "tab-all-amt",
     "windows": 88
    }
   },
@@ -169,8 +181,12 @@ window.DATA = {
      -1188.368657
     ],
     "distinguishable": true,
+    "first": "lm-phase12-amt",
     "first_cheaper": 84,
     "mean": -1409.192427,
+    "registered_order": false,
+    "said": "“d1, Phase 12 adapter, rule” cost 1,409 USD less per chain than “d1, frozen, rule”, and the 95% interval of the difference runs from 1,641 less to 1,188 less, so the two are distinguishable.",
+    "second": "lm-frozen-amt",
     "windows": 88
    },
    "rich_logreg": {
@@ -179,8 +195,12 @@ window.DATA = {
      125.015553
     ],
     "distinguishable": false,
+    "first": "lm-rich-amt",
     "first_cheaper": 51,
     "mean": -13.072072,
+    "registered_order": true,
+    "said": "“d1, no trees, rule” cost 13 USD less per chain than “logreg, rule”, but the 95% interval of the difference runs from 142 less to 125 more, so the two are not distinguishable.",
+    "second": "tab-logreg-amt",
     "windows": 88
    },
    "rich_phase12": {
@@ -189,8 +209,12 @@ window.DATA = {
      -57.72711
     ],
     "distinguishable": true,
+    "first": "lm-rich-amt",
     "first_cheaper": 59,
     "mean": -175.640311,
+    "registered_order": true,
+    "said": "“d1, no trees, rule” cost 176 USD less per chain than “d1, Phase 12 adapter, rule”, and the 95% interval of the difference runs from 281 less to 58 less, so the two are distinguishable.",
+    "second": "lm-phase12-amt",
     "windows": 88
    },
    "rich_trees": {
@@ -199,8 +223,12 @@ window.DATA = {
      422.969972
     ],
     "distinguishable": true,
+    "first": "lm-rich-amt",
     "first_cheaper": 25,
     "mean": 281.795593,
+    "registered_order": true,
+    "said": "“d1, no trees, rule” cost 282 USD more per chain than “trees, rule”, and the 95% interval of the difference runs from 151 more to 423 more, so the two are distinguishable.",
+    "second": "tab-all-amt",
     "windows": 88
    },
    "seed1_phase12": {
@@ -209,8 +237,12 @@ window.DATA = {
      5.953184
     ],
     "distinguishable": false,
+    "first": "lm-seed1-amt",
     "first_cheaper": 55,
     "mean": -101.968056,
+    "registered_order": true,
+    "said": "“d1, seed 1, rule” cost 102 USD less per chain than “d1, Phase 12 adapter, rule”, but the 95% interval of the difference runs from 205 less to 6 more, so the two are not distinguishable.",
+    "second": "lm-phase12-amt",
     "windows": 88
    },
    "signal_rich": {
@@ -219,8 +251,12 @@ window.DATA = {
      -66.636283
     ],
     "distinguishable": true,
+    "first": "lm-signal-amt",
     "first_cheaper": 55,
     "mean": -191.959324,
+    "registered_order": true,
+    "said": "“d1 reads trees, rule” cost 192 USD less per chain than “d1, no trees, rule”, and the 95% interval of the difference runs from 325 less to 67 less, so the two are distinguishable.",
+    "second": "lm-rich-amt",
     "windows": 88
    },
    "signal_signal_alone": {
@@ -229,8 +265,12 @@ window.DATA = {
      165.690474
     ],
     "distinguishable": false,
+    "first": "lm-signal-amt",
     "first_cheaper": 36,
     "mean": 66.754513,
+    "registered_order": true,
+    "said": "“d1 reads trees, rule” cost 67 USD more per chain than “trees at 400 alone, rule”, but the 95% interval of the difference runs from 33 less to 166 more, so the two are not distinguishable.",
+    "second": "signal-alone-amt",
     "windows": 88
    }
   },
@@ -443,8 +483,12 @@ window.DATA = {
      -1970.360403
     ],
     "distinguishable": true,
+    "first": "final-rich-amt",
     "first_cheaper": 18,
     "mean": -2805.8151,
+    "registered_order": true,
+    "said": "“d1, no trees, rule” cost 2,806 USD less per window than “Approve everything”, and the 95% interval of the difference runs from 3,631 less to 1,970 less, so the two are distinguishable.",
+    "second": "ieee-approve-all",
     "windows": 20
    },
    "rich_amt_baseline": {
@@ -453,8 +497,12 @@ window.DATA = {
      773.84535
     ],
     "distinguishable": false,
+    "first": "final-rich-amt",
     "first_cheaper": 8,
     "mean": 320.63973,
+    "registered_order": true,
+    "said": "“d1, no trees, rule” cost 321 USD more per window than “Baseline: logreg, rule”, but the 95% interval of the difference runs from 74 less to 774 more, so the two are not distinguishable.",
+    "second": "final-logreg-amt",
     "windows": 20
    },
    "rich_cust_approve": {
@@ -463,8 +511,12 @@ window.DATA = {
      -1985.617699
     ],
     "distinguishable": true,
+    "first": "final-rich-cust",
     "first_cheaper": 18,
     "mean": -2815.89325,
+    "registered_order": true,
+    "said": "“d1, no trees, customer line” cost 2,816 USD less per window than “Approve everything”, and the 95% interval of the difference runs from 3,631 less to 1,986 less, so the two are distinguishable.",
+    "second": "ieee-approve-all",
     "windows": 20
    },
    "rich_cust_baseline": {
@@ -473,8 +525,12 @@ window.DATA = {
      745.537661
     ],
     "distinguishable": false,
+    "first": "final-rich-cust",
     "first_cheaper": 8,
     "mean": 310.56158,
+    "registered_order": true,
+    "said": "“d1, no trees, customer line” cost 311 USD more per window than “Baseline: logreg, rule”, but the 95% interval of the difference runs from 75 less to 746 more, so the two are not distinguishable.",
+    "second": "final-logreg-amt",
     "windows": 20
    },
    "rich_cust_rich_amt": {
@@ -483,8 +539,12 @@ window.DATA = {
      86.799636
     ],
     "distinguishable": false,
+    "first": "final-rich-cust",
     "first_cheaper": 15,
     "mean": -10.07815,
+    "registered_order": true,
+    "said": "“d1, no trees, customer line” cost 10 USD less per window than “d1, no trees, rule”, but the 95% interval of the difference runs from 91 less to 87 more, so the two are not distinguishable.",
+    "second": "final-rich-amt",
     "windows": 20
    },
    "signal_amt_approve": {
@@ -493,8 +553,12 @@ window.DATA = {
      -2422.310149
     ],
     "distinguishable": true,
+    "first": "final-signal-amt",
     "first_cheaper": 19,
     "mean": -3289.67569,
+    "registered_order": true,
+    "said": "“d1 reads trees, rule” cost 3,290 USD less per window than “Approve everything”, and the 95% interval of the difference runs from 4,127 less to 2,422 less, so the two are distinguishable.",
+    "second": "ieee-approve-all",
     "windows": 20
    },
    "signal_amt_baseline": {
@@ -503,8 +567,12 @@ window.DATA = {
      237.893096
     ],
     "distinguishable": false,
+    "first": "final-signal-amt",
     "first_cheaper": 15,
     "mean": -163.22086,
+    "registered_order": true,
+    "said": "“d1 reads trees, rule” cost 163 USD less per window than “Baseline: logreg, rule”, but the 95% interval of the difference runs from 462 less to 238 more, so the two are not distinguishable.",
+    "second": "final-logreg-amt",
     "windows": 20
    },
    "signal_amt_rich_amt": {
@@ -513,8 +581,12 @@ window.DATA = {
      -103.356529
     ],
     "distinguishable": true,
+    "first": "final-signal-amt",
     "first_cheaper": 17,
     "mean": -483.86059,
+    "registered_order": false,
+    "said": "“d1 reads trees, rule” cost 484 USD less per window than “d1, no trees, rule”, and the 95% interval of the difference runs from 972 less to 103 less, so the two are distinguishable.",
+    "second": "final-rich-amt",
     "windows": 20
    },
    "signal_cust_baseline": {
@@ -523,8 +595,12 @@ window.DATA = {
      273.172983
     ],
     "distinguishable": false,
+    "first": "final-signal-cust",
     "first_cheaper": 16,
     "mean": -114.54434,
+    "registered_order": true,
+    "said": "“d1 reads trees, customer line” cost 115 USD less per window than “Baseline: logreg, rule”, but the 95% interval of the difference runs from 391 less to 273 more, so the two are not distinguishable.",
+    "second": "final-logreg-amt",
     "windows": 20
    }
   },
@@ -817,7 +893,8 @@ window.DATA = {
     481.005073
    ],
    "diff": 7.06158,
-   "rich_cust": 2638.67335
+   "rich_cust": 2638.67335,
+   "said": "“d1, no trees, customer line” cost 7 USD more per window than “Baseline: logreg, rule”, but the 95% interval of the difference runs from 405 less to 481 more, so the two are not distinguishable."
   },
   "window_rows": {
    "final0": [
@@ -1345,8 +1422,12 @@ window.DATA = {
      -463.809899
     ],
     "distinguishable": true,
+    "first": "ieee-logreg-all-amt",
     "first_cheaper": 18,
     "mean": -825.179765,
+    "registered_order": true,
+    "said": "“logreg, rule” cost 825 USD less per window than “logreg, two lines”, and the 95% interval of the difference runs from 1,307 less to 464 less, so the two are distinguishable.",
+    "second": "ieee-logreg-all",
     "windows": 20
    },
    "latency": {
@@ -1372,8 +1453,12 @@ window.DATA = {
      1870.117542
     ],
     "distinguishable": true,
+    "first": "audit-noCDV-amt",
     "first_cheaper": 0,
     "mean": 1001.703125,
+    "registered_order": true,
+    "said": "“logreg, no C/D/V, rule” cost 1,002 USD more per window than “logreg, all columns, rule”, and the 95% interval of the difference runs from 405 more to 1,870 more, so the two are distinguishable.",
+    "second": "audit-all-amt",
     "windows": 8
    },
    "windows_n": 8
@@ -1387,8 +1472,12 @@ window.DATA = {
      245.253486
     ],
     "distinguishable": false,
+    "first": "rule-customers",
     "first_cheaper": 3,
     "mean": 119.08022,
+    "registered_order": true,
+    "said": "“rule with a customer line” cost 119 USD more per window than “logreg, Phase 14's rule”, but the 95% interval of the difference runs from 2 less to 245 more, so the two are not distinguishable.",
+    "second": "rule-base",
     "windows": 10
    },
    "windows_n": 10
@@ -1407,8 +1496,12 @@ window.DATA = {
      182.258245
     ],
     "distinguishable": false,
+    "first": "tab-all-amt",
     "first_cheaper": 6,
     "mean": -96.54269,
+    "registered_order": true,
+    "said": "“trees, rule” cost 97 USD less per window than “logreg, rule”, but the 95% interval of the difference runs from 385 less to 182 more, so the two are not distinguishable.",
+    "second": "tab-logreg-amt",
     "windows": 10
    },
    "windows_n": 10

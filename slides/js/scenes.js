@@ -263,7 +263,7 @@
   // ------------------------------------------------------------ 10 window race: cumulative cost over FINAL's 20 windows
   const RACE = [
     { key: 'approve_all', name: 'Approve everything', color: 'var(--c-fraud)' },
-    { key: 'rich_amt', name: 'd1, no tree score, rule', color: 'var(--c-ours)' },
+    { key: 'rich_amt', name: 'd1, no trees, rule', color: 'var(--c-ours)' },
     { key: 'rich_cust', name: 'the same, customer line', color: 'var(--c-miss)', dash: '1 15' },
     { key: 'baseline', name: 'Baseline: logreg, rule', color: 'var(--c-ink)' },
   ]
