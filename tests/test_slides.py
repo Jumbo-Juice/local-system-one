@@ -344,7 +344,7 @@ def test_cost_stress_edge_is_in_the_manual_data(data):
 def test_illustration_numbers_are_labelled(html):
     """Rules, logistic regression and trees recorded no score for the worked payment, so their numbers are made up
     (manual_data.json → illustration), and every slide that shows one says "illustration" where the room can read it."""
-    showing = [s for s in sections(html) if "manual.illustration." in s]
+    showing = [s for s in sections(html) if re.search(r"\{\{\s*(?:manual\.)?illustration\.", s)]
     assert len(showing) >= 3, "the rule, logistic regression and trees slides show the mechanism on illustration numbers"
     for s in showing:
         assert re.search(r"\billustration\b", visible_text(s), flags=re.I), s[:120]
@@ -368,3 +368,32 @@ def test_the_first_slides_follow_the_running_order(html, n, name, time):
     assert s, n
     assert f'<span class="tag">{n} · {name}</span>' in s
     assert f"[{name} · {time}]" in s
+
+
+def test_illustration_numbers_are_computed_from_their_inputs(data):
+    """Only the made-up inputs (weights, starts, leaves, lambda, the small amount) are typed in manual_data.json;
+    build_data.illustration_block() derives the rest from them, worked.amount and costs, so nothing can drift.
+    The rule slide's p is the logistic regression's p."""
+    ins, out, w, c = data["manual"]["illustration"], data["illustration"], data["worked"], data["costs"]
+    sig = lambda s: 1 / (1 + math.exp(-s))
+    lr = out["logreg"]
+    assert lr["rows"]["log_amount"]["x"] == pytest.approx(math.log(w["amount"]))
+    assert lr["rows"]["transfer"]["x"] == (1 if w["type"] == "TRANSFER" else 0)
+    for k, row in lr["rows"].items():
+        assert row["w"] == ins["logreg"]["w"][k] and row["adds"] == pytest.approx(row["w"] * row["x"])
+    assert lr["score"] == pytest.approx(ins["logreg"]["start"] + sum(r["adds"] for r in lr["rows"].values()))
+    assert lr["p"] == pytest.approx(sig(lr["score"])) and lr["odds_times"] == pytest.approx(math.exp(ins["logreg"]["w"]["transfer"]))
+    rule = out["rule"]
+    assert rule["p"] == lr["p"]
+    assert rule["review"] == c["review_fee"] + ins["rule"]["lam"]
+    for case, amount in (("big", w["amount"]), ("small", ins["rule"]["small_amount"])):
+        assert rule[case]["amount"] == amount
+        assert rule[case]["approve"] == pytest.approx(rule["p"] * amount)
+        assert rule[case]["decline"] == pytest.approx((1 - rule["p"]) * max(c["friction_rate"] * amount, c["friction_min"]))
+    # the slide says review for the transfer and decline for the small payment: the arithmetic must agree
+    assert rule["review"] < min(rule["big"]["approve"], rule["big"]["decline"])
+    assert rule["small"]["decline"] < min(rule["small"]["approve"], rule["review"])
+    tr = out["trees"]
+    assert [tr[t]["took"] for t in ("t1", "t2", "t3")] == ["yes", "yes", "no"]  # the leaves drawn in green on the slide
+    assert tr["score"] == pytest.approx(ins["trees"]["start"] + sum(ins["trees"][t][tr[t]["took"]] for t in ("t1", "t2", "t3")))
+    assert tr["p"] == pytest.approx(sig(tr["score"]))

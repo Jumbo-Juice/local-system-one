@@ -279,12 +279,43 @@ def worked_block() -> dict:
     raise LookupError("no two-order TRANSFER that flips in the trace")
 
 
+def illustration_block(ins: dict, worked: dict, costs: dict) -> dict:
+    """The mechanism slides' numbers, derived from the made-up inputs in manual_data.json (illustration), the worked
+    PaySim payment and the cost model, so they can't drift apart. The rule prices the payment at the p that
+    logistic regression gives it. Features as fraud/baselines.py: night is hours 1-6, round is a whole multiple of 1,000."""
+    sig = lambda s: 1 / (1 + math.exp(-s))
+    amount, hour = worked["amount"], worked["hour"]
+    x = {"transfer": 1.0 if worked["type"] == "TRANSFER" else 0.0, "log_amount": math.log(amount),
+         "night": 1.0 if 1 <= hour <= 6 else 0.0, "round": 1.0 if amount % 1000 == 0 else 0.0}
+    lr_in = ins["logreg"]
+    rows = {k: {"x": x[k], "w": lr_in["w"][k], "adds": lr_in["w"][k] * x[k]} for k in x}
+    score = lr_in["start"] + sum(r["adds"] for r in rows.values())
+    p = sig(score)
+    logreg = {"start": lr_in["start"], "rows": rows, "score": score, "p": p, "odds_times": math.exp(lr_in["w"]["transfer"])}
+
+    def priced(a: float) -> dict:
+        return {"amount": a, "approve": p * a, "decline": (1 - p) * max(costs["friction_rate"] * a, costs["friction_min"])}
+    rule = {"p": p, "lam": ins["rule"]["lam"], "review": costs["review_fee"] + ins["rule"]["lam"],
+            "big": priced(amount), "small": priced(ins["rule"]["small_amount"])}
+
+    t_in = ins["trees"]
+    asks = {"t1": x["transfer"] == 1, "t2": amount > t_in["t2"]["over"], "t3": x["night"] == 1}
+    trees = {"start": t_in["start"]}
+    for t, yes in asks.items():
+        trees[t] = t_in[t] | {"took": "yes" if yes else "no"}
+    trees["score"] = t_in["start"] + sum(t_in[t][trees[t]["took"]] for t in asks)
+    trees["p"] = sig(trees["score"])
+    return {"logreg": logreg, "rule": rule, "trees": trees}
+
+
 def build() -> dict:
     manual = json.loads((HERE / "manual_data.json").read_text(encoding="utf-8"))
     costs = load("final")["costs"]
+    worked = worked_block()
     return {
         "_sources": {k: f"fraud/results/{v}" for k, v in SOURCES.items()} | {"paysim_trace": f"fraud/runs/{TRACE.name}", "manual": "slides/manual_data.json"},
-        "costs": costs, "final": final_block(), "dev": dev_block(), "cost": cost_block(), "rule": rule_block(), "paysim": paysim_block(), "worked": worked_block(), "manual": manual,
+        "costs": costs, "final": final_block(), "dev": dev_block(), "cost": cost_block(), "rule": rule_block(), "paysim": paysim_block(), "worked": worked, "manual": manual,
+        "illustration": illustration_block(manual["illustration"], worked, costs),
     }
 
 

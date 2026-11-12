@@ -58,7 +58,7 @@ Source: title, names, IDs and topic from the midterm deck (../midterm-proposal/i
     <div class="tile ask"><span class="k">Our question</span><p>Can a small language model, on one laptop, be the one that decides?</p></div>
   </div>
 </div>
-<p class="foot">We build on simulated payments, then test on {{manual.split.rows|int}} real e-commerce payments, in time order.</p>
+<p class="foot">We build on simulated payments, then move to {{manual.split.rows|int}} real e-commerce payments, in time order.</p>
 </div>
 <aside class="notes">
 [Juji · 0:45]
@@ -158,27 +158,27 @@ Source: PaySim counts, fraud/DATA.md (Observed). IEEE-CIS split, slides/manual_d
     <div class="tile"><span class="k">decline costs</span><span class="f">(1 − p) × friction</span><p>friction: {{costs.friction_rate|pct}} of the amount, at least {{costs.friction_min|num}} USD</p></div>
   </div>
   <div class="row end">
-    <div class="tile"><span class="k">Our transfer, {{worked.amount|usd2}} USD, p {{manual.illustration.rule.p|num}} <span class="illus">illustration</span></span>
+    <div class="tile"><span class="k">Our transfer, {{worked.amount|usd2}} USD, p {{illustration.rule.p|d2}} <span class="illus">illustration</span></span>
       <div class="chart" data-chart="bars" data-fmt="usd2" data-width="780" data-label-w="150" data-value-w="170" data-title="Expected cost of each action for the transfer">
-        <i data-label="approve" data-value="{{manual.illustration.rule.big.approve}}"></i><i data-label="review" data-value="{{manual.illustration.rule.review}}" data-hl></i><i data-label="decline" data-value="{{manual.illustration.rule.big.decline}}"></i>
+        <i data-label="approve" data-value="{{illustration.rule.big.approve}}"></i><i data-label="review" data-value="{{illustration.rule.review}}" data-hl></i><i data-label="decline" data-value="{{illustration.rule.big.decline}}"></i>
       </div>
-      <p>Cheapest: <b class="hl">review</b>. A big payment is worth a person’s look.</p></div>
-    <div class="tile" data-from="1"><span class="k">Same p, a {{manual.illustration.rule.small.amount|num}} USD payment <span class="illus">illustration</span></span>
+      <p>Cheapest: <b class="hl">review</b>, worth a person’s look.</p></div>
+    <div class="tile" data-from="1"><span class="k">Same p, a {{illustration.rule.small.amount|num}} USD payment <span class="illus">illustration</span></span>
       <div class="chart" data-chart="bars" data-fmt="usd2" data-width="780" data-label-w="150" data-value-w="170" data-title="Expected cost of each action for a small payment">
-        <i data-label="approve" data-value="{{manual.illustration.rule.small.approve}}"></i><i data-label="review" data-value="{{manual.illustration.rule.review}}"></i><i data-label="decline" data-value="{{manual.illustration.rule.small.decline}}" data-hl></i>
+        <i data-label="approve" data-value="{{illustration.rule.small.approve}}"></i><i data-label="review" data-value="{{illustration.rule.review}}"></i><i data-label="decline" data-value="{{illustration.rule.small.decline}}" data-hl></i>
       </div>
-      <p>Cheapest: <b class="hl">decline</b>. The review fee is more than the risk.</p></div>
+      <p>Cheapest: <b class="hl">decline</b>; a review costs more.</p></div>
   </div>
 </div>
-<p class="foot">Two fixed cut-offs on p would treat both payments the same. On earlier test windows, the rule cut logistic regression’s cost by {{rule.phase14.diff.mean|abs}} USD per window: {{rule.phase14.diff|dist}}.</p>
+<p class="foot">Two fixed cut-offs on p would treat both payments alike. Measured on {{rule.phase14.windows_n|num}} earlier test windows, on the same logistic-regression scores: the rule cost {{rule.phase14.diff.mean|abs}} USD less per window, less in {{rule.phase14.diff.first_cheaper|num}} of them, and the plausible range of the saving, {{rule.phase14.diff.ci.1|abs}} to {{rule.phase14.diff.ci.0|abs}} USD, stays above zero: {{rule.phase14.diff|dist}}. The price: {{manual.phase14.good_declined_rule|int}} good customers declined, against {{manual.phase14.good_declined_lines|int}}.</p>
 </div>
 <aside class="notes">
 [Swan · 0:45]
 Before the models, the one piece every model shares: the rule that turns a score into an action. Every model in this talk gives a fraud score p between zero and one. The rule prices each action for this one payment and takes the cheapest. Approving costs p times the amount: what we expect to lose. Declining costs one minus p, times the friction. A review costs its {{costs.review_fee|num}} dollar fee plus lambda, a price for using up one of the few reviews.
-Our transfer of {{worked.amount|usd2}} dollars, with a made-up p of {{manual.illustration.rule.p|num}}: approving would expect to lose {{manual.illustration.rule.big.approve|usd2}}, declining {{manual.illustration.rule.big.decline|usd2}}, a review {{manual.illustration.rule.review|num}}. So: review.
-Click: the same p on a {{manual.illustration.rule.small.amount|num}} dollar payment. Now a review costs more than the risk, so the rule declines. Same score, different action: the amount decides. Two fixed cut-offs on the score, which is what we proposed at the midterm, cannot do that.
-It was the largest dollar gain we measured: on the same logistic-regression scores, {{rule.phase14.diff.mean|abs}} dollars less per window, CI {{rule.phase14.diff.ci|ci}}, on {{rule.phase14.windows_n|num}} earlier test windows. If asked: it also declined more good customers, {{manual.phase14.good_declined_rule|int}} with the rule against {{manual.phase14.good_declined_lines|int}} with two cut-offs.
-Source: the rule, fraud/eval_ieee_amount.py decide and fraud/rule.py decide_paced (Implementation choice, pre-registered). p, lambda and the {{manual.illustration.rule.small.amount|num}} dollar payment are illustration numbers, slides/manual_data.json illustration (Implementation choice); nothing scored this payment with the rule, and the PaySim payment is priced with the IEEE-CIS costs only to show the arithmetic. Earlier-test result: fraud/RESULTS-IEEE-AMOUNT.md and fraud/results/eval_ieee_amount/20261103-164830.json (Observed).
+Our transfer of {{worked.amount|usd2}} dollars, with p {{illustration.rule.p|d2}}, the score logistic regression gives it on the next slide (made-up weights): approving would expect to lose {{illustration.rule.big.approve|usd2}}, declining {{illustration.rule.big.decline|usd2}}, a review {{illustration.rule.review|num}}. So: review.
+Click: the same p on a {{illustration.rule.small.amount|num}} dollar payment. Now a review costs more than the risk, so the rule declines. Same score, different action: the amount decides. Two fixed cut-offs on the score, which is what we proposed at the midterm, cannot do that.
+Measured on {{rule.phase14.windows_n|num}} earlier test windows, on the same logistic-regression scores: the rule cost {{rule.phase14.diff.mean|abs}} dollars less per window than two fixed cut-offs, and less in {{rule.phase14.diff.first_cheaper|num}} of the {{rule.phase14.windows_n|num}} windows. The 95% interval of the per-window difference runs from {{rule.phase14.diff.ci.0|abs}} to {{rule.phase14.diff.ci.1|abs}} dollars saved; it stays on one side of zero, which is what we call distinguishable. The price, said out loud: it declined more good customers, {{manual.phase14.good_declined_rule|int}} against {{manual.phase14.good_declined_lines|int}}, because a wrong decline is priced at only a tenth of the amount.
+Source: the rule, fraud/eval_ieee_amount.py decide and fraud/rule.py decide_paced (Implementation choice, pre-registered). p (from the made-up weights on the next slide), lambda and the {{illustration.rule.small.amount|num}} dollar payment are illustration numbers, made up from the inputs in slides/manual_data.json illustration and derived in slides/build_data.py illustration_block (Implementation choice); nothing scored this payment with the rule, and the PaySim payment is priced with the IEEE-CIS costs only to show the arithmetic. Earlier-test result: fraud/RESULTS-IEEE-AMOUNT.md and fraud/results/eval_ieee_amount/20261103-164830.json (Observed).
 </aside>
 </section>
 
@@ -194,18 +194,18 @@ Source: the rule, fraud/eval_ieee_amount.py decide and fraud/rule.py decide_pace
       <table class="ruled">
         <thead><tr><th>fact</th><th>this payment</th><th class="r">× weight</th><th class="r">= adds</th></tr></thead>
         <tbody>
-          <tr><td>start</td><td>every payment</td><td class="r"></td><td class="r">{{manual.illustration.logreg.start|d2}}</td></tr>
-          <tr><td>a transfer</td><td>yes</td><td class="r">+{{manual.illustration.logreg.transfer.w|d2}}</td><td class="r">+{{manual.illustration.logreg.transfer.adds|d2}}</td></tr>
-          <tr><td>log of the amount</td><td>{{manual.illustration.logreg.log_amount.x|d2}}</td><td class="r">+{{manual.illustration.logreg.log_amount.w|d2}}</td><td class="r">+{{manual.illustration.logreg.log_amount.adds|d2}}</td></tr>
-          <tr><td>at night</td><td>no, hour {{worked.hour}}</td><td class="r">+{{manual.illustration.logreg.night.w|d2}}</td><td class="r">{{manual.illustration.logreg.night.adds|d2}}</td></tr>
-          <tr><td>a round amount</td><td>no</td><td class="r">+{{manual.illustration.logreg.round.w|d2}}</td><td class="r">{{manual.illustration.logreg.round.adds|d2}}</td></tr>
-          <tr class="ours"><td>score: the sum</td><td></td><td class="r"></td><td class="r"><b>{{manual.illustration.logreg.score|d2}}</b></td></tr>
+          <tr><td>start</td><td>every payment</td><td class="r"></td><td class="r">{{illustration.logreg.start|d2}}</td></tr>
+          <tr><td>a transfer</td><td>yes</td><td class="r">+{{illustration.logreg.rows.transfer.w|d2}}</td><td class="r">+{{illustration.logreg.rows.transfer.adds|d2}}</td></tr>
+          <tr><td>log of the amount</td><td>{{illustration.logreg.rows.log_amount.x|d2}}</td><td class="r">+{{illustration.logreg.rows.log_amount.w|d2}}</td><td class="r">+{{illustration.logreg.rows.log_amount.adds|d2}}</td></tr>
+          <tr><td>at night</td><td>no, hour {{worked.hour}}</td><td class="r">+{{illustration.logreg.rows.night.w|d2}}</td><td class="r">{{illustration.logreg.rows.night.adds|d2}}</td></tr>
+          <tr><td>a round amount</td><td>no</td><td class="r">+{{illustration.logreg.rows.round.w|d2}}</td><td class="r">{{illustration.logreg.rows.round.adds|d2}}</td></tr>
+          <tr class="ours"><td>score: the sum</td><td></td><td class="r"></td><td class="r"><b>{{illustration.logreg.score|d2}}</b></td></tr>
         </tbody>
       </table>
       <p class="note">“yes” counts as one, “no” as zero.</p></div>
     <div class="stack">
-      <div class="tile"><span class="k">Score → probability</span><span class="n">{{manual.illustration.logreg.p|d2}}</span><p>p = 1 ÷ (1 + e<sup>−score</sup>): any score lands between zero and one</p></div>
-      <div class="tile" data-from="1"><span class="k">Each weight changes the odds of fraud</span><p>odds = p ÷ (1 − p). Being a transfer adds +{{manual.illustration.logreg.transfer.w|d2}} to the score, so it multiplies the odds by e<sup>{{manual.illustration.logreg.transfer.w|d2}}</sup> = <b class="hl">{{manual.illustration.logreg.odds_times|d2}}</b>. A fact that is “no” changes nothing.</p></div>
+      <div class="tile"><span class="k">Score → probability</span><span class="n">{{illustration.logreg.p|d2}}</span><p>p = 1 ÷ (1 + e<sup>−score</sup>): any score lands between zero and one</p></div>
+      <div class="tile" data-from="1"><span class="k">Each weight changes the odds of fraud</span><p>odds = p ÷ (1 − p). Being a transfer adds +{{illustration.logreg.rows.transfer.w|d2}} to the score, so it multiplies the odds by e<sup>{{illustration.logreg.rows.transfer.w|d2}}</sup> = <b class="hl">{{illustration.logreg.odds_times|d2}}</b>. A fact that is “no” changes nothing.</p></div>
     </div>
   </div>
 </div>
@@ -214,11 +214,11 @@ Source: the rule, fraud/eval_ieee_amount.py decide and fraud/rule.py decide_pace
 <aside class="notes">
 [Swan · 0:50]
 Logistic regression is the simplest real model we use. Each fact about the payment gets a weight. Multiply each fact by its weight and add them up: that is the score.
-Our transfer, with made-up weights: start at {{manual.illustration.logreg.start|d2}}. It is a transfer, and yes counts as one, so add {{manual.illustration.logreg.transfer.adds|d2}}. The log of the amount is {{manual.illustration.logreg.log_amount.x|d2}}, times {{manual.illustration.logreg.log_amount.w|d2}}, adds {{manual.illustration.logreg.log_amount.adds|d2}}. Not at night, it is hour {{worked.hour}}, and not a round amount: those add nothing. The score is {{manual.illustration.logreg.score|d2}}.
-The sigmoid squashes any score into a number between zero and one: here {{manual.illustration.logreg.p|d2}}. That p goes into the rule from the last slide.
-Click: how to read a weight. Odds are p over one minus p. Adding {{manual.illustration.logreg.transfer.w|d2}} to the score multiplies the odds of fraud by e to the {{manual.illustration.logreg.transfer.w|d2}}, about {{manual.illustration.logreg.odds_times|d2}}, whatever the other facts are.
+Our transfer, with made-up weights: start at {{illustration.logreg.start|d2}}. It is a transfer, and yes counts as one, so add {{illustration.logreg.rows.transfer.adds|d2}}. The log of the amount is {{illustration.logreg.rows.log_amount.x|d2}}, times {{illustration.logreg.rows.log_amount.w|d2}}, adds {{illustration.logreg.rows.log_amount.adds|d2}}. Not at night, it is hour {{worked.hour}}, and not a round amount: those add nothing. The score is {{illustration.logreg.score|d2}}.
+The sigmoid squashes any score into a number between zero and one: here {{illustration.logreg.p|d2}}. That p goes into the rule from the last slide.
+Click: how to read a weight. Odds are p over one minus p. Adding {{illustration.logreg.rows.transfer.w|d2}} to the score multiplies the odds of fraud by e to the {{illustration.logreg.rows.transfer.w|d2}}, about {{illustration.logreg.odds_times|d2}}, whatever the other facts are.
 Its weights are learned on the fit part of the data. With the rule, logistic regression is our baseline: on the final test it cost {{final.setups.baseline.mean|int}} dollars per window, and every other method is compared with it.
-Source: the real models: fraud/baselines.py (PaySim: transfer, log amount, night hours one to six, round amount and earlier-activity counts, standardised, fitted by Newton's method) and fraud/tabular.py (IEEE-CIS, all columns) (Implementation choice). Every weight, the score and p on this slide are illustration numbers, slides/manual_data.json illustration (Implementation choice); the log of the amount is ln of {{worked.amount|usd2}}, rounded. Baseline cost: fraud/results/eval_final/20261104-090649.json, final-logreg-amt (Observed).
+Source: the real models: fraud/baselines.py (PaySim: transfer, log amount, night hours one to six, round amount and earlier-activity counts, standardised, fitted by Newton's method) and fraud/tabular.py (IEEE-CIS, all columns) (Implementation choice). Every weight, the score and p on this slide are illustration numbers, made up from the inputs in slides/manual_data.json illustration and derived in slides/build_data.py illustration_block (Implementation choice); the log of the amount is ln of {{worked.amount|usd2}}, rounded. Baseline cost: fraud/results/eval_final/20261104-090649.json, final-logreg-amt (Observed).
 </aside>
 </section>
 
@@ -231,15 +231,15 @@ Source: the real models: fraud/baselines.py (PaySim: transfer, log amount, night
 <p class="sub">Our transfer through three small trees. Each asks one question and adds a correction to the score. <span class="illus">illustration</span></p>
 <div class="main">
   <div class="pipe">
-    <div class="stage"><span class="lbl">Start</span><p class="what">The same for every payment</p><span class="n">{{manual.illustration.trees.start|d2}}</span><p class="how">low, because fraud is rare</p></div>
+    <div class="stage"><span class="lbl">Start</span><p class="what">The same for every payment</p><span class="n">{{illustration.trees.start|d2}}</span><p class="how">low, because fraud is rare</p></div>
     <div class="stage"><span class="lbl">Tree 1</span>
-      <div class="tree"><p class="q">A transfer?</p><p class="leaf on"><span>yes</span><span>+{{manual.illustration.trees.t1.yes|d2}}</span></p><p class="leaf"><span>no</span><span>{{manual.illustration.trees.t1.no|d2}}</span></p></div></div>
+      <div class="tree"><p class="q">A transfer?</p><p class="leaf on"><span>yes</span><span>+{{illustration.trees.t1.yes|d2}}</span></p><p class="leaf"><span>no</span><span>{{illustration.trees.t1.no|d2}}</span></p></div></div>
     <div class="stage"><span class="lbl">Tree 2</span>
-      <div class="tree"><p class="q">Amount over {{manual.illustration.trees.t2.over|int}} USD?</p><p class="leaf on"><span>yes</span><span>+{{manual.illustration.trees.t2.yes|d2}}</span></p><p class="leaf"><span>no</span><span>{{manual.illustration.trees.t2.no|d2}}</span></p></div></div>
+      <div class="tree"><p class="q">Amount over {{illustration.trees.t2.over|int}} USD?</p><p class="leaf on"><span>yes</span><span>+{{illustration.trees.t2.yes|d2}}</span></p><p class="leaf"><span>no</span><span>{{illustration.trees.t2.no|d2}}</span></p></div></div>
     <div class="stage"><span class="lbl">Tree 3</span>
-      <div class="tree"><p class="q">At night?</p><p class="leaf"><span>yes</span><span>+{{manual.illustration.trees.t3.yes|d2}}</span></p><p class="leaf on"><span>no</span><span>{{manual.illustration.trees.t3.no|d2}}</span></p></div></div>
+      <div class="tree"><p class="q">At night?</p><p class="leaf"><span>yes</span><span>+{{illustration.trees.t3.yes|d2}}</span></p><p class="leaf on"><span>no</span><span>{{illustration.trees.t3.no|d2}}</span></p></div></div>
     <div class="stage ours" data-from="1"><span class="lbl">Score</span>
-      <div class="box"><p class="what">Start + every correction</p><span class="n">{{manual.illustration.trees.score|d2}}</span><p class="how">squashed as before:<br><span class="nowrap">p = {{manual.illustration.trees.p|d2}}</span></p></div></div>
+      <div class="box"><p class="what">Start + every correction</p><span class="n">{{illustration.trees.score|d2}}</span><p class="how">squashed as before:<br><span class="nowrap">p = {{illustration.trees.p|d2}}</span></p></div></div>
   </div>
   <div class="row end">
     <div class="tile"><span class="k">Each tree fixes what is left</span><p>Tree 2 is fitted to what tree 1 still gets wrong, tree 3 to what both still get wrong, and so on.</p></div>
@@ -252,10 +252,10 @@ Source: the real models: fraud/baselines.py (PaySim: transfer, log amount, night
 <aside class="notes">
 [Swan · 0:45]
 Boosted trees. A tree asks a question about the payment and, depending on the answer, adds a correction to the score. Boosting means many small trees, added one after another.
-Our transfer: every payment starts at the same score, {{manual.illustration.trees.start|d2}}, low because fraud is rare. Tree 1 asks: a transfer? Yes, add {{manual.illustration.trees.t1.yes|d2}}. Tree 2 is fitted to what tree 1 still got wrong. It asks: amount over {{manual.illustration.trees.t2.over|int}}? Yes, add {{manual.illustration.trees.t2.yes|d2}}. Tree 3: at night? No, {{manual.illustration.trees.t3.no|d2}}.
-Click: the score is the start plus every correction, {{manual.illustration.trees.score|d2}}, squashed to a probability as before, {{manual.illustration.trees.p|d2}}. The same rule then picks the action.
+Our transfer: every payment starts at the same score, {{illustration.trees.start|d2}}, low because fraud is rare. Tree 1 asks: a transfer? Yes, add {{illustration.trees.t1.yes|d2}}. Tree 2 is fitted to what tree 1 still got wrong. It asks: amount over {{illustration.trees.t2.over|int}}? Yes, add {{illustration.trees.t2.yes|d2}}. Tree 3: at night? No, {{illustration.trees.t3.no|d2}}.
+Click: the score is the start plus every correction, {{illustration.trees.score|d2}}, squashed to a probability as before, {{illustration.trees.p|d2}}. The same rule then picks the action.
 Why bother, next to logistic regression: a deeper tree can catch combinations, a transfer that is also large, which one weighted sum cannot. The real model: {{manual.recipe.trees}}.
-Source: fraud/gbdt.py and fraud/RESULTS-TABULAR.md (the real model: {{manual.recipe.trees}}, on the IEEE-CIS columns) (Implementation choice). The three trees, their questions and corrections, the start, the score and p are illustration numbers, slides/manual_data.json illustration (Implementation choice); real trees are deeper and their corrections are scaled by the learning rate.
+Source: fraud/gbdt.py and fraud/RESULTS-TABULAR.md (the real model: {{manual.recipe.trees}}, on the IEEE-CIS columns) (Implementation choice). The three trees, their questions and corrections, the start, the score and p are illustration numbers, made up from the inputs in slides/manual_data.json illustration and derived in slides/build_data.py illustration_block (Implementation choice); real trees are deeper and their corrections are scaled by the learning rate.
 </aside>
 </section>
 

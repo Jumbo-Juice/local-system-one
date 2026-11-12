@@ -86,20 +86,12 @@
     "window_rows": 1000
   },
   "illustration": {
-    "_source": "Implementation choice: made-up numbers to show the mechanism on the worked PaySim payment; no rule, logistic regression or tree scored this payment, and the slides label these numbers 'illustration'. Derived values are computed from these, worked.amount and costs (friction 10%, at least 1 USD; review fee 10 USD): rule.big.approve = p x 305,369.89, rule.big.decline = (1 - p) x 30,536.99, rule.review = fee + lam; logreg.log_amount.x = ln(305,369.89) rounded, logreg.p = 1 / (1 + e^1.08); trees.p = 1 / (1 + e^1.80).",
-    "rule": {"p": 0.25, "lam": 10, "review": 20,
-             "big": {"approve": 76342.47, "decline": 22902.74},
-             "small": {"amount": 40, "approve": 10.0, "decline": 3.0}},
-    "logreg": {"start": -7.0,
-               "transfer": {"w": 1.5, "adds": 1.5},
-               "log_amount": {"x": 12.63, "w": 0.35, "adds": 4.42},
-               "night": {"w": 0.8, "adds": 0.0},
-               "round": {"w": 0.6, "adds": 0.0},
-               "score": -1.08, "p": 0.2535, "odds_times": 4.48},
+    "_source": "Implementation choice: made-up inputs to show the mechanism on the worked PaySim payment; no rule, logistic regression or tree scored this payment, and the slides label these numbers 'illustration'. Only the inputs are here (logistic-regression start and weights, the tree start, questions and leaves, lambda, the small payment's amount); slides/build_data.py illustration_block derives every other number from them, worked and costs.",
+    "rule": {"lam": 10, "small_amount": 40},
+    "logreg": {"start": -7.0, "w": {"transfer": 1.5, "log_amount": 0.35, "night": 0.8, "round": 0.6}},
     "trees": {"start": -3.4,
               "t1": {"yes": 0.9, "no": -0.3},
               "t2": {"over": 200000, "yes": 1.1, "no": -0.2},
-              "t3": {"yes": 0.7, "no": -0.4},
-              "score": -1.8, "p": 0.14}
+              "t3": {"yes": 0.7, "no": -0.4}}
   }
 }

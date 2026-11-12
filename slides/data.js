@@ -1014,6 +1014,72 @@ window.DATA = {
   },
   "windows_n": 20
  },
+ "illustration": {
+  "logreg": {
+   "odds_times": 4.4816890703380645,
+   "p": 0.2535528899477657,
+   "rows": {
+    "log_amount": {
+     "adds": 4.420247676213488,
+     "w": 0.35,
+     "x": 12.62927907489568
+    },
+    "night": {
+     "adds": 0.0,
+     "w": 0.8,
+     "x": 0.0
+    },
+    "round": {
+     "adds": 0.0,
+     "w": 0.6,
+     "x": 0.0
+    },
+    "transfer": {
+     "adds": 1.5,
+     "w": 1.5,
+     "x": 1.0
+    }
+   },
+   "score": -1.0797523237865123,
+   "start": -7.0
+  },
+  "rule": {
+   "big": {
+    "amount": 305369.89,
+    "approve": 77427.41811253132,
+    "decline": 22794.24718874687
+   },
+   "lam": 10,
+   "p": 0.2535528899477657,
+   "review": 20.0,
+   "small": {
+    "amount": 40,
+    "approve": 10.142115597910628,
+    "decline": 2.985788440208937
+   }
+  },
+  "trees": {
+   "p": 0.14185106490048782,
+   "score": -1.7999999999999998,
+   "start": -3.4,
+   "t1": {
+    "no": -0.3,
+    "took": "yes",
+    "yes": 0.9
+   },
+   "t2": {
+    "no": -0.2,
+    "over": 200000,
+    "took": "yes",
+    "yes": 1.1
+   },
+   "t3": {
+    "no": -0.4,
+    "took": "no",
+    "yes": 0.7
+   }
+  }
+ },
  "manual": {
   "_note": "Numbers that exist only in prose or in traces that aren't committed. Each block names its source. Everything else in data.js is read from committed JSON by build_data.py.",
   "bands": {
@@ -1060,47 +1126,21 @@ window.DATA = {
    "window_rows": 1000
   },
   "illustration": {
-   "_source": "Implementation choice: made-up numbers to show the mechanism on the worked PaySim payment; no rule, logistic regression or tree scored this payment, and the slides label these numbers 'illustration'. Derived values are computed from these, worked.amount and costs (friction 10%, at least 1 USD; review fee 10 USD): rule.big.approve = p x 305,369.89, rule.big.decline = (1 - p) x 30,536.99, rule.review = fee + lam; logreg.log_amount.x = ln(305,369.89) rounded, logreg.p = 1 / (1 + e^1.08); trees.p = 1 / (1 + e^1.80).",
+   "_source": "Implementation choice: made-up inputs to show the mechanism on the worked PaySim payment; no rule, logistic regression or tree scored this payment, and the slides label these numbers 'illustration'. Only the inputs are here (logistic-regression start and weights, the tree start, questions and leaves, lambda, the small payment's amount); slides/build_data.py illustration_block derives every other number from them, worked and costs.",
    "logreg": {
-    "log_amount": {
-     "adds": 4.42,
-     "w": 0.35,
-     "x": 12.63
-    },
-    "night": {
-     "adds": 0.0,
-     "w": 0.8
-    },
-    "odds_times": 4.48,
-    "p": 0.2535,
-    "round": {
-     "adds": 0.0,
-     "w": 0.6
-    },
-    "score": -1.08,
     "start": -7.0,
-    "transfer": {
-     "adds": 1.5,
-     "w": 1.5
+    "w": {
+     "log_amount": 0.35,
+     "night": 0.8,
+     "round": 0.6,
+     "transfer": 1.5
     }
    },
    "rule": {
-    "big": {
-     "approve": 76342.47,
-     "decline": 22902.74
-    },
     "lam": 10,
-    "p": 0.25,
-    "review": 20,
-    "small": {
-     "amount": 40,
-     "approve": 10.0,
-     "decline": 3.0
-    }
+    "small_amount": 40
    },
    "trees": {
-    "p": 0.14,
-    "score": -1.8,
     "start": -3.4,
     "t1": {
      "no": -0.3,
