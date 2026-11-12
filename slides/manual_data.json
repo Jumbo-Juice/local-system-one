@@ -55,6 +55,11 @@
       {"label": "500 or more", "frauds": 275, "rich": 258, "weighted": 259}
     ]
   },
+  "stress": {
+    "_source": "fraud/RESULTS-COST-STRESS.md, flat price per good customer declined: not distinguishable up to 30 USD; the mean flips between 50 and 60 USD",
+    "flat_low": 50,
+    "flat_high": 60
+  },
   "predictions": {
     "_source": "fraud/eval_lm_cost.py docstring (stated before running); fraud/RESULTS-LM-COST.md, Predictions against what happened",
     "rows": [

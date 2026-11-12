@@ -148,6 +148,7 @@ def final_block() -> dict:
     latency = s["final-rich-amt"]["latency_ms"]
     return {
         "eval": d["eval"], "windows_n": len(d["windows"]), "rows": d["test_rows"], "frauds": d["test_fraud"],
+        "approve_all_accuracy": 1 - d["test_fraud"] / d["test_rows"],
         "fraud_usd": num(s["final-logreg-amt"]["fraud_usd"]),
         "window_rows": {k: v_ for k, v_ in d["windows"].items()},
         "latency": {"p50": num(latency["p50"], 1), "p90": num(latency["p90"], 1), "bar": d["latency_bar_ms"]},
@@ -250,12 +251,40 @@ def paysim_block() -> dict:
     }
 
 
+def worked_block() -> dict:
+    """The first PaySim TRANSFER the model read in both orders and answered differently by order (reads TRACE at call time)."""
+    names = ["approve", "review", "decline"]
+    for line in TRACE.read_text(encoding="utf-8").splitlines():
+        r = json.loads(line)
+        if r.get("type") != "tx" or r.get("by") != "model" or r["tx"]["type"] != "TRANSFER":
+            continue
+        listed, reversed_ = r["orders"]
+        top = [max(range(3), key=o.__getitem__) for o in (listed, reversed_)]
+        if top[0] == top[1]:
+            continue
+
+        def logits(p):
+            ls = [math.log(x) for x in p]
+            return [x - max(ls) for x in ls]
+
+        scores = r["scores"]
+        return {
+            "i": r["i"], "type": r["tx"]["type"], "amount": r["tx"]["amount"], "to": r["tx"]["to"], "hour": r["tx"]["hour"],
+            "truth": r["truth"], "orders": {"listed": listed, "reversed": reversed_},
+            "scores": [scores[n] for n in names],
+            "logits": {"listed": logits(listed), "reversed": logits(reversed_)},
+            "top": {"listed": names[top[0]], "reversed": names[top[1]], "averaged": max(names, key=scores.get)},
+            "action": r["action"],
+        }
+    raise LookupError("no two-order TRANSFER that flips in the trace")
+
+
 def build() -> dict:
     manual = json.loads((HERE / "manual_data.json").read_text(encoding="utf-8"))
     costs = load("final")["costs"]
     return {
         "_sources": {k: f"fraud/results/{v}" for k, v in SOURCES.items()} | {"paysim_trace": f"fraud/runs/{TRACE.name}", "manual": "slides/manual_data.json"},
-        "costs": costs, "final": final_block(), "dev": dev_block(), "cost": cost_block(), "rule": rule_block(), "paysim": paysim_block(), "manual": manual,
+        "costs": costs, "final": final_block(), "dev": dev_block(), "cost": cost_block(), "rule": rule_block(), "paysim": paysim_block(), "worked": worked_block(), "manual": manual,
     }
 
 

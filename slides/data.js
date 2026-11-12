@@ -462,6 +462,7 @@ window.DATA = {
   "windows_n": 88
  },
  "final": {
+  "approve_all_accuracy": 0.9685,
   "dearest": {
    "baseline": 2066.2211,
    "cost": 4936.1018,
@@ -1134,6 +1135,11 @@ window.DATA = {
    "rows": 590540,
    "test": 118108
   },
+  "stress": {
+   "_source": "fraud/RESULTS-COST-STRESS.md, flat price per good customer declined: not distinguishable up to 30 USD; the mean flips between 50 and 60 USD",
+   "flat_high": 60,
+   "flat_low": 50
+  },
   "training": {
    "_source": "fraud/eval_lm_cost.py docstring, Phase 25 pre-registration",
    "fit_frauds": 11988,
@@ -1535,5 +1541,48 @@ window.DATA = {
    },
    "windows_n": 10
   }
+ },
+ "worked": {
+  "action": "decline",
+  "amount": 305369.89,
+  "hour": 16,
+  "i": 2,
+  "logits": {
+   "listed": [
+    -3.4062709882855415,
+    -3.405685432255268,
+    0.0
+   ],
+   "reversed": [
+    0.0,
+    -2.4157466888427734,
+    -0.2568473815917969
+   ]
+  },
+  "orders": {
+   "listed": [
+    0.031101122133409622,
+    0.031119338915976045,
+    0.9377795389506143
+   ],
+   "reversed": [
+    0.5368300619110649,
+    0.04793926500442517,
+    0.41523067308450995
+   ]
+  },
+  "scores": [
+   0.28396559202223726,
+   0.03952930196020061,
+   0.6765051060175621
+  ],
+  "to": "customer",
+  "top": {
+   "averaged": "decline",
+   "listed": "decline",
+   "reversed": "approve"
+  },
+  "truth": 0,
+  "type": "TRANSFER"
  }
 };

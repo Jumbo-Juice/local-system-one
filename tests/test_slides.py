@@ -3,6 +3,7 @@ every binding on a slide resolves, nothing reaches the network, and the talk fit
 
 import importlib.util
 import json
+import math
 import re
 from pathlib import Path
 
@@ -315,3 +316,35 @@ def test_scene_names_are_unique_and_every_scene_on_a_slide_exists(html):
     names = re.findall(r"^\s+scenes\.(\w+) = \{", (SLIDES / "js" / "scenes.js").read_text(encoding="utf-8"), flags=re.M)
     assert len(names) == len(set(names)), sorted(n for n in names if names.count(n) > 1)
     assert set(re.findall(r'data-scene="(\w+)"', html)) <= set(names)
+
+
+def test_worked_payment_is_paysim_and_its_orders_disagree(data):
+    w = data["worked"]
+    assert w["type"] == "TRANSFER"
+    assert w["top"]["listed"] != w["top"]["reversed"]
+    for k in ("listed", "reversed"):
+        assert abs(sum(w["orders"][k]) - 1) < 1e-6
+        assert max(w["logits"][k]) == 0
+        e = [math.exp(x) for x in w["logits"][k]]
+        s = sum(e)
+        assert all(abs(a / s - b) < 1e-9 for a, b in zip(e, w["orders"][k]))
+
+
+def test_worked_rule_raises_when_nothing_matches(monkeypatch, tmp_path):
+    p = tmp_path / "t.jsonl"
+    p.write_text(json.dumps({"type": "header"}) + "\n" + json.dumps({"type": "tx", "by": "filter", "tx": {"type": "TRANSFER"}}) + "\n", encoding="utf-8")
+    monkeypatch.setattr(build_data, "TRACE", p)
+    with pytest.raises(LookupError):
+        build_data.worked_block()
+
+
+def test_approve_all_accuracy(data):
+    f = data["final"]
+    assert f["approve_all_accuracy"] == 1 - f["frauds"] / f["rows"]
+    assert 0.9 < f["approve_all_accuracy"] < 1
+
+
+def test_cost_stress_edge_is_in_the_manual_data(data):
+    s = data["manual"]["stress"]
+    assert (s["flat_low"], s["flat_high"]) == (50, 60)
+    assert "RESULTS-COST-STRESS" in s["_source"]
