@@ -6,6 +6,7 @@ output; no "|fmt" means String(value), as the deck's bindings do. Run `python pa
 import importlib.util
 import json
 import re
+from decimal import ROUND_HALF_UP, Decimal
 from collections.abc import Callable
 from pathlib import Path
 
@@ -36,13 +37,20 @@ def _round(x: float) -> int:
     return js_round(x)
 
 
+def to_fixed(x: float, digits: int) -> str:
+    """JS Number.toFixed: the exact binary value, ties away from zero (Python's :.Nf rounds ties to even)."""
+    return f"{Decimal(x).quantize(Decimal(1).scaleb(-digits), rounding=ROUND_HALF_UP):.{digits}f}"
+
+
 def group(x: float, digits: int = 0) -> str:
-    return f"{abs(x):,.{digits}f}"
+    """toLocaleString('en-US', fixed digits): Intl rounds half-expand on the shortest decimal, i.e. repr(x)."""
+    d = Decimal(repr(float(abs(x)))).quantize(Decimal(1).scaleb(-digits), rounding=ROUND_HALF_UP)
+    return f"{d:,.{digits}f}"
 
 
 def _int(x): return (MINUS if _round(x) < 0 else "") + group(_round(x))
 def _signed(x): return ("+" if _round(x) > 0 else MINUS if _round(x) < 0 else "") + group(_round(x))
-def _auc(x, d=3): return re.sub(r"^0", "", f"{x:.{d}f}")
+def _auc(x, d=3): return re.sub(r"^0", "", to_fixed(x, d))
 
 
 def _str(x) -> str:
@@ -65,7 +73,7 @@ FORMATS: dict[str, Callable] = {
     "num": _str,
     "abs": lambda x: group(_round(x)),
     "pct": lambda x: f"{_round(x * 100)}%",
-    "d2": lambda x: (MINUS if f"{x:.2f}".startswith("-") else "") + f"{abs(x):.2f}",
+    "d2": lambda x: (MINUS if to_fixed(x, 2).startswith("-") else "") + to_fixed(abs(x), 2),
     "usd2": lambda x: group(x, 2),
     "dist": lambda d: "distinguishable" if d["distinguishable"] else "not distinguishable",
 }
