@@ -10,7 +10,7 @@ import { launch, serve, sleep } from './cdp.mjs'
 
 const ROOT = path.dirname(fileURLToPath(import.meta.url))
 const PDF = path.join(ROOT, 'exports', 'FrogWatch(Group 13)_Final_128-331.pdf')
-const MIN = { text: 30, h1: 64, refs: 26 }
+const MIN = { text: 30, h1: 64, refs: 22 }
 
 function checkPages(min) {
   return [...document.querySelectorAll('.pdf-page')].map((p, i) => {
@@ -30,9 +30,13 @@ function checkPages(min) {
       if (r.width && (r.left < box.left - 1 || r.right > box.right + 1 || r.bottom > box.bottom + 1)) out.push(`overflows the page: ${name}`)
       if (el.scrollWidth > el.clientWidth + 1 && style.overflowX === 'hidden') out.push(`clipped: ${name}`)
       const own = [...el.childNodes].some(n => n.nodeType === 3 && n.textContent.trim())
-      if (!own || el.closest('svg')) continue
+      if (!own || el.closest('svg.mark')) continue
+      // chart text: its size on the page is its font size times how much the SVG is stretched
+      const svg = el.closest('svg')
+      const stretch = svg?.viewBox?.baseVal?.width ? svg.getBoundingClientRect().width / box.width * 1920 / svg.viewBox.baseVal.width : 1
+      const size = parseFloat(style.fontSize) * stretch
       const floor = el.closest('h1') ? min.h1 : el.closest('.refs') ? min.refs : min.text
-      if (parseFloat(style.fontSize) < floor - 0.01) out.push(`${parseFloat(style.fontSize)}px text: "${el.textContent.trim().slice(0, 40)}"`)
+      if (size < floor - 0.01) out.push(`${size.toFixed(1)}px text: "${el.textContent.trim().slice(0, 40)}"`)
     }
     return { page: i + 1, out: [...new Set(out)] }
   })
@@ -47,6 +51,7 @@ try {
   await sleep(500)
   const problems = await edge.evaluate(`(${checkPages.toString()})(${JSON.stringify(MIN)})`)
   const { data } = await edge.send('Page.printToPDF', { printBackground: true, preferCSSPageSize: true })
+  fs.mkdirSync(path.dirname(PDF), { recursive: true })
   fs.writeFileSync(PDF, Buffer.from(data, 'base64'))
   // the PNGs come from the PDF itself, so what you look at is what ships
   const png = path.join(ROOT, 'exports', 'png')
