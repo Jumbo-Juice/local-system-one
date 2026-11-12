@@ -19,7 +19,8 @@ Presenters on the corner tags are a proposal (Implementation choice): edit `.tag
 - **Numbers come from data.** `build_data.py` reads the committed results and writes `data.js`. `index.html`
   binds with `{{path|format}}`, in the notes too. Numbers that exist only in prose are in `manual_data.json`, each
   with its source. `tests/test_slides.py` rebuilds `data.js` and checks the key numbers.
-- **A comparison stated in prose is the console's sentence.** Each difference in `data.js` carries `said`, the
+- **A comparison stated in prose is the console's sentence.** Every difference runs in registered order, the first
+  setup minus the second (`build_data.diff()` refuses the other way round). Each difference in `data.js` carries `said`, the
   analyst console's sentence word for word (`tests/test_slides.py` runs the console's own code to check). Tiles and
   tables keep their numbers, and their verdict comes from the data through `|dist`, never typed.
 - **A slide's state is a pure function of its step.** `data-steps="n"` adds n reveal fragments, `data-from="k"`

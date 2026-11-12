@@ -269,7 +269,7 @@ All Observed, from the write-ups named at the bottom and the result files under 
 <div class="main">
   <div class="ladder" style="flex:none"><div class="ladder-rows"></div></div>
   <div class="ladder-note">
-    <div class="tile" data-from="1"><span class="k">Fine-tuned vs frozen</span><span class="n">{{dev.diffs.phase12_frozen.mean|signed}}</span><p>CI {{dev.diffs.phase12_frozen.ci|ci}}, {{dev.diffs.phase12_frozen|dist}}</p></div>
+    <div class="tile" data-from="1"><span class="k">Frozen vs fine-tuned</span><span class="n">{{dev.diffs.frozen_phase12.mean|signed}}</span><p>CI {{dev.diffs.frozen_phase12.ci|ci}}, {{dev.diffs.frozen_phase12|dist}}</p></div>
     <div class="tile" data-from="2"><span class="k">A second seed moved cost</span><span class="n">{{dev.diffs.seed1_phase12.mean|signed}}</span><p>CI {{dev.diffs.seed1_phase12.ci|ci}}: our yardstick for one adapter's noise</p></div>
     <div class="tile" data-from="4"><span class="k">More columns vs logreg</span><span class="n">{{dev.diffs.rich_logreg.mean|signed}}</span><p>CI {{dev.diffs.rich_logreg.ci|ci}}, {{dev.diffs.rich_logreg|dist}}</p></div>
   </div>
@@ -415,11 +415,11 @@ Source (Observed): fraud/results/eval_final/20261104-090649.json, rich_cust_read
 <aside class="notes">
 [Juji · 0:40]
 Click: the mean differences. Click: the intervals grow out from them. Click: the zero line sweeps across; what it hits, we can't tell from nothing.
-Every comparison against the baseline crosses zero, whichever way its mean falls. Only two kinds exclude it: reading trees against not reading them, and anything against approving everything.
+Every comparison against the baseline crosses zero, whichever way its mean falls. Only two kinds exclude it: not reading trees against reading them, and anything against approving everything.
 That last one is the thesis in one line: about 2,800 USD per 1,000 payments saved against approving everything, and no shown saving against logistic regression. On assumed costs.
 If asked "15 of 20 windows cheaper, isn't that significant?": for the tree-reading setup against the baseline a sign test gives p = {{final.sign.signal_amt_baseline.p|d2}}, uncorrected, and the registered pick was cheaper in {{final.diffs.signal_cust_baseline.first_cheaper|num}} of 20. But the criterion we registered was the interval of the mean, because cost is a sum of dollars. One window, final12, with two frauds of 1,504 USD let through, cost that setup {{final.sign.final12_gap|int}} more than the baseline and pulls the mean back. It wins often by a little and loses rarely by a lot, so the mean isn't distinguishable. And that setup mostly follows a tree score. For the setup with no tree score there is no such tension: cheaper in {{final.sign.rich_amt_baseline.first_cheaper|num}} of 20, sign test p = {{final.sign.rich_amt_baseline.p|d2}}.
 If asked about the bootstrap: 10,000 resamples of the 20 windows, percentile interval, seed 20261102. The three registered questions aren't corrected for each other, and "reported" rows aren't questions.
-Source (Observed): verdict in fraud/results/eval_final/20261104-090649.json, against in rich_cust_readout.json. The JSON signs mean_diff from the cheaper side; slides/build_data.py turns each to first minus second, and tests/test_slides.py checks them.
+Source (Observed): verdict in fraud/results/eval_final/20261104-090649.json, against in rich_cust_readout.json. The JSON signs mean_diff from the cheaper side; slides/build_data.py turns each to first minus second in registered order, as the console does, and tests/test_slides.py checks them.
 </aside>
 </section>
 <section id="s11b" data-n="11" data-act="C" data-main="no" data-scene="costspeed" data-result>

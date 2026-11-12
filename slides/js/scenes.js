@@ -364,7 +364,7 @@
         return { built }
       }
       this.top = panel(sec.querySelector('[data-forest=base]'), [
-        ['signal_amt_rich_amt', 'd1 reads trees <span class="dim">vs</span> d1, no trees'],
+        ['rich_amt_signal_amt', 'd1, no trees <span class="dim">vs</span> d1 reads trees'],
         ['signal_amt_baseline', 'd1 reads trees <span class="dim">vs baseline</span>'],
         ['signal_cust_baseline', '…customer line <span class="dim">vs baseline</span>'],
         ['rich_cust_rich_amt', 'd1, no trees: line <span class="dim">vs no line</span> *'],

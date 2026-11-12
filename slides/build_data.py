@@ -69,14 +69,18 @@ def sentence(first: str, second: str, mean: float, low: float, high: float, dist
 
 
 def diff(entry: dict, first: str, unit: str) -> dict:
-    """A verdict entry as first minus second, whichever side the JSON calls better, with its sentence."""
+    """A verdict entry as first minus second, whichever side the JSON calls better, with its sentence.
+    The first is always the registered a, as on the console: a comparison the other way round is refused."""
+    if first != entry["a"]:
+        raise ValueError(f"{first} vs {entry['a'] if first == entry['b'] else '?'}: the deck states comparisons in registered order, "
+                         f"{entry['a']} minus {entry['b']}")
     sign = 1 if entry["better"] == first else -1
-    second = entry["b"] if first == entry["a"] else entry["a"]
+    second = entry["b"]
     low, high = entry["mean_diff_ci95"]
     ci = [low, high] if sign == 1 else [-high, -low]
     wins = entry["cheaper"] if sign == 1 else entry["dearer"]
     mean, dist = sign * entry["mean_diff"], bool(entry["distinguishable"])
-    return {"first": first, "second": second, "registered_order": first == entry["a"], "mean": num(mean), "ci": [num(ci[0]), num(ci[1])],
+    return {"first": first, "second": second, "mean": num(mean), "ci": [num(ci[0]), num(ci[1])],
             "first_cheaper": wins, "windows": entry["cheaper"] + entry["dearer"] + entry["ties"],
             "distinguishable": dist, "said": sentence(first, second, mean, ci[0], ci[1], dist, unit)}
 
@@ -153,7 +157,7 @@ def final_block() -> dict:
         "diffs": {"rich_amt_baseline": find(all_v, "final-rich-amt", "final-logreg-amt", "window"),
                   "signal_amt_baseline": find(all_v, "final-signal-amt", "final-logreg-amt", "window"),
                   "signal_cust_baseline": find(all_v, "final-signal-cust", "final-logreg-amt", "window"),
-                  "signal_amt_rich_amt": find(all_v, "final-signal-amt", "final-rich-amt", "window"),
+                  "rich_amt_signal_amt": find(all_v, "final-rich-amt", "final-signal-amt", "window"),
                   "signal_amt_approve": find(all_v, "final-signal-amt", "ieee-approve-all", "window"),
                   "rich_cust_baseline": find(all_v, "final-rich-cust", "final-logreg-amt", "window"),
                   "rich_cust_rich_amt": find(all_v, "final-rich-cust", "final-rich-amt", "window"),
@@ -185,7 +189,7 @@ def dev_block() -> dict:
     return {
         "eval": n["eval"], "windows_n": len(n["windows"]), "rows": n["rows"], "frauds": n["frauds"],
         "setups": {k: setup(s[name]) for k, name in names.items()},
-        "diffs": {"phase12_frozen": find(all_v, "lm-phase12-amt", "lm-frozen-amt", "chain"),
+        "diffs": {"frozen_phase12": find(all_v, "lm-frozen-amt", "lm-phase12-amt", "chain"),
                   "rich_phase12": find(all_v, "lm-rich-amt", "lm-phase12-amt", "chain"),
                   "seed1_phase12": find(all_v, "lm-seed1-amt", "lm-phase12-amt", "chain"),
                   "rich_logreg": find(all_v, "lm-rich-amt", "tab-logreg-amt", "chain"),

@@ -60,7 +60,7 @@ def test_readout_matches_the_handoff(data):
     ("rich_amt_baseline", 321, -74, 774, False),
     ("signal_amt_baseline", -163, -462, 238, False),
     ("signal_cust_baseline", -115, -391, 273, False),
-    ("signal_amt_rich_amt", -484, -972, -103, True),
+    ("rich_amt_signal_amt", 484, 103, 972, True),
     ("signal_amt_approve", -3290, -4127, -2422, True),
     ("rich_cust_baseline", 311, -75, 746, False),
     ("rich_cust_rich_amt", -10, -91, 87, False),
@@ -84,7 +84,7 @@ def test_ladder_matches_the_handoff(data, key, mean, auc, declined, stopped):
 
 
 @pytest.mark.parametrize("key,mean,low,high,distinguishable", [
-    ("phase12_frozen", -1409, -1641, -1188, True), ("rich_phase12", -176, -281, -58, True), ("rich_logreg", -13, -142, 125, False),
+    ("frozen_phase12", 1409, 1188, 1641, True), ("rich_phase12", -176, -281, -58, True), ("rich_logreg", -13, -142, 125, False),
     ("signal_signal_alone", 67, -33, 166, False), ("rich_trees", 282, 151, 423, True), ("seed1_phase12", -102, -205, 6, False),
 ])
 def test_dev_differences_are_first_minus_second(data, key, mean, low, high, distinguishable):
@@ -272,13 +272,17 @@ def test_the_deck_says_each_comparison_in_the_consoles_own_sentence(data):
         assert case["said"] == console, case["key"]
 
 
-def test_only_two_comparisons_run_against_their_registered_order(data):
-    """The console always words a comparison in its registered order. The deck keeps two the other way round, by choice:
-    the s8 tile "Fine-tuned vs frozen" and the s11 row "d1 reads trees vs d1, no trees". Neither carries a sentence."""
-    against = {k for k, d, _ in all_diffs(data) if not d["registered_order"]}
-    assert against == {"dev.phase12_frozen", "final.signal_amt_rich_amt"}
-    html = (SLIDES / "index.html").read_text(encoding="utf-8")
-    assert not any(f"{k}.said" in html for k in against)
+def test_every_comparison_runs_in_its_registered_order(data):
+    """The deck states every comparison as the console does: the registered first minus the second. build_data.diff()
+    refuses the other way round, so a reversed comparison fails the build, and every key names the first setup first."""
+    entry = {"a": "lm-frozen-amt", "b": "lm-phase12-amt", "better": "lm-phase12-amt", "other": "lm-frozen-amt",
+             "cheaper": 20, "dearer": 0, "ties": 0, "mean_diff": -1409.0, "mean_diff_ci95": [-1641.0, -1188.0], "distinguishable": True}
+    assert build_data.diff(entry, "lm-frozen-amt", "chain")["mean"] == 1409
+    with pytest.raises(ValueError, match="registered order"):
+        build_data.diff(entry, "lm-phase12-amt", "chain")
+    for key, d, _ in all_diffs(data):
+        assert "registered_order" not in d, key
+    assert {"frozen_phase12", "rich_phase12"} <= set(data["dev"]["diffs"]) and "rich_amt_signal_amt" in data["final"]["diffs"]
 
 
 def test_the_speed_backup_draws_the_consoles_points_and_says_its_sentence(data):
