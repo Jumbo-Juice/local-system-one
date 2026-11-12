@@ -255,6 +255,12 @@ details.panel.more > summary { font-size: 15px; }
 details.more[open] > summary { margin-bottom: 8px; }
 .banner { margin-top: 4px; }
 .banner > div + div { margin-top: 4px; }
+.banner .big { line-height: 1.4; }
+
+/* ---- every answer as one sentence, above its numbers */
+.said { margin: 8px 0 10px; padding-left: 22px; }
+.said li { margin: 6px 0; line-height: 1.45; }
+.said .vf-tag { margin-top: 0; vertical-align: 1px; }
 
 /* ---- the answers as intervals: one column per answer, USD on the y axis */
 .vf-row { display: flex; flex-wrap: wrap; gap: 12px 28px; align-items: flex-start; margin-top: 10px; }

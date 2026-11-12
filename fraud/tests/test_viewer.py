@@ -158,3 +158,38 @@ def test_the_committed_cost_map_is_found_and_has_six_families_and_the_page_has_i
     page = (server.HERE / "index.html").read_text(encoding="utf-8")
     assert 'h === "costs"' in js and 'getJSON("api/costs")' in js and 'href="#/costs"' in page
     assert "not corrected for multiple comparisons" in js and "Phase 12's adapter, not a final one" in js
+
+
+def test_every_comparison_on_an_eval_page_is_the_first_setup_minus_the_second():
+    """The eval files store mean_diff as the cheaper setup minus the dearer one. The console's compare() turns every committed
+    comparison back into the registered order, a minus b (the deck does the same in slides/build_data.py diff())."""
+    import shutil
+    import subprocess
+
+    import pytest
+
+    node = shutil.which("node")
+    if not node:
+        pytest.skip("node is not installed")
+    results = Path(__file__).resolve().parents[1] / "results"
+    entries = []
+    for path in sorted(results.glob("*/*.json")):
+        d = json.loads(path.read_text(encoding="utf-8"))
+        if not isinstance(d, dict):
+            continue
+        for v in (d.get("verdict") or {}).values():
+            entries += v if isinstance(v, list) else [v]
+        entries += d.get("against") or [] if isinstance(d.get("against"), list) else []
+    assert len(entries) > 100
+    js = (server.HERE / "console.js").read_text(encoding="utf-8")
+    body = js[js.index("function compare(p)"):js.index("const questionTag")]
+    script = body + "\nprocess.stdout.write(JSON.stringify(JSON.parse(require('fs').readFileSync(0, 'utf8')).map(compare)));"
+    out = json.loads(subprocess.run([node, "-e", script], input=json.dumps(entries), capture_output=True, text=True, check=True).stdout)
+    for e, c in zip(entries, out, strict=True):
+        flip = e["better"] != e["a"]
+        low, high = e["mean_diff_ci95"]
+        assert (c["first"], c["second"]) == (e["a"], e["b"])
+        assert c["mean"] == pytest.approx(-e["mean_diff"] if flip else e["mean_diff"])
+        assert [c["lo"], c["hi"]] == pytest.approx([-high, -low] if flip else [low, high])
+        assert c["firstCheaper"] == (e["dearer"] if flip else e["cheaper"])
+        assert c["dist"] == e["distinguishable"] and c["lo"] <= c["mean"] <= c["hi"]

@@ -1003,14 +1003,38 @@ function forest(rows, title) {
         el("div", { class: "vf-name" }, r.label, el("span", { class: "hint" }, r.sub), r.tag ? el("span", { class: "vf-tag" }, r.tag) : null))))));
 }
 
-function verdictBanner(p, n, unit) {  // the first registered question, from the data
-  const S = shortName, better = p.better || p.a;
-  return el("div", { class: `banner${p.distinguishable ? " good" : ""}` },
-    el("div", { class: "hint" }, `The first registered question (${p.q.replace(/_/g, " ")})`),
-    el("div", { class: "big" }, p.distinguishable ? `Distinguishable: ${S(better)} costs less` : "Not distinguishable"),
-    el("div", { style: "font-weight:600" }, `${S(better)}  vs  ${S(p.other)}`),
-    el("div", {}, `Mean difference ${signed(p.mean_diff)} USD per ${unit} (the first minus the second), 95% CI ${signed(p.mean_diff_ci95[0])} to ${signed(p.mean_diff_ci95[1])}. ` +
-      `The first was cheaper in ${p.cheaper} of ${n} ${unit}s.`),
+// One comparison of two setups in the order its question was registered: the first setup (a) minus the second (b), whichever
+// came out cheaper. The eval files store mean_diff as the cheaper side minus the dearer one, so it is never positive; this turns it
+// back, as slides/build_data.py diff() does for the deck. Every comparison on an eval page goes through here.
+function compare(p) {
+  const flip = Boolean(p.better) && p.better !== p.a;
+  const [lo, hi] = p.mean_diff_ci95;
+  return { first: p.a, second: p.b, mean: flip ? -p.mean_diff : p.mean_diff, lo: flip ? -hi : lo, hi: flip ? -lo : hi,
+    firstCheaper: flip ? p.dearer : p.cheaper, firstDearer: flip ? p.cheaper : p.dearer, windows: p.cheaper + p.dearer + (p.ties || 0),
+    dist: Boolean(p.distinguishable) };
+}
+const questionTag = (q) => q.replace(/_/g, " ");
+// The comparison as one plain sentence: the answer first, the statistics after it (GRADE's summary-of-findings order).
+// Returns nodes; each setup's name is quoted, with its full name and id on hover.
+function sentence(c, unit) {
+  const who = (s) => el("span", { title: `${setupName(s)} (${s})` }, `“${shortName(s)}”`);
+  const bound = (v) => { const r = Math.round(v); return r < 0 ? `${money(-r)} less` : r > 0 ? `${money(r)} more` : "0"; };
+  const m = Math.round(c.mean);
+  const head = m === 0 ? [who(c.first), ` cost the same per ${unit} as `, who(c.second), " to the dollar"]
+    : [who(c.first), ` cost ${money(Math.abs(m))} USD ${m < 0 ? "less" : "more"} per ${unit} than `, who(c.second)];
+  return [...head, `, ${c.dist || m === 0 ? "and" : "but"} the 95% interval of the difference runs from ${bound(c.lo)} to ${bound(c.hi)}, so the two are ${c.dist ? "" : "not "}distinguishable.`];
+}
+function sentences(qs, unit) {  // every answer as a sentence, in registered order
+  return el("ol", { class: "said" }, ...qs.map((p) => el("li", {}, el("span", { class: "vf-tag" }, questionTag(p.q)), " ", ...sentence(compare(p), unit))));
+}
+
+function verdictBanner(p, unit) {  // the first registered question, from the data
+  const c = compare(p);
+  return el("div", { class: `banner${c.dist ? " good" : ""}` },
+    el("div", { class: "hint" }, `The first registered question (${questionTag(p.q)})`),
+    el("div", { class: "big" }, ...sentence(c, unit)),
+    el("div", {}, `Paired difference ${signed(c.mean)} USD per ${unit}, the first minus the second; 95% CI ${signed(c.lo)} to ${signed(c.hi)}. ` +
+      `The first was cheaper in ${c.firstCheaper} of ${c.windows} ${unit}s.`),
     el("div", { class: "hint" }, "Distinguishable means the 95% window-bootstrap interval of the mean paired difference excludes 0."));
 }
 
@@ -1055,17 +1079,20 @@ async function ieeeEval(r) {  // IEEE-CIS evals (eval_ieee*.py and the phases af
     e.currentTarget.textContent = on ? "Fewer columns" : "More columns: AUC, recall, precision, reviews, declines";
   } }, "More columns: AUC, recall, precision, reviews, declines");
   const answerTable = (rows) => el("table", { class: "data" },
-    el("thead", {}, el("tr", {}, ...["lower cost", "against", "question"].map((t) => el("th", {}, t)), ...["windows cheaper / dearer", "mean difference, USD", "95% CI", "distinguishable"].map((t) => el("th", { class: "r" }, t)))),
-    el("tbody", {}, ...rows.map((p) => el("tr", {}, nameCell(p.better || p.a), nameCell(p.other), el("td", {}, p.q.replace(/_/g, " ")),
-      el("td", { class: "r" }, `${p.cheaper} / ${p.dearer}`), el("td", { class: "r" }, money(p.mean_diff)), el("td", { class: "r" }, `${money(p.mean_diff_ci95[0])} to ${money(p.mean_diff_ci95[1])}`),
-      el("td", { class: "r" }, chip(p.distinguishable ? "pass" : "fail", p.distinguishable ? "yes" : "no"))))));
+    el("thead", {}, el("tr", {}, ...["first", "second", "question"].map((t) => el("th", {}, t)), ...[`${unit}s first cheaper / dearer`, "first minus second, USD", "95% CI", "distinguishable"].map((t) => el("th", { class: "r" }, t)))),
+    el("tbody", {}, ...rows.map((p) => { const c = compare(p);
+      return el("tr", {}, nameCell(c.first), nameCell(c.second), el("td", {}, questionTag(p.q)),
+        el("td", { class: "r" }, `${c.firstCheaper} / ${c.firstDearer}`), el("td", { class: "r" }, signed(c.mean)), el("td", { class: "r" }, `${signed(c.lo)} to ${signed(c.hi)}`),
+        el("td", { class: "r" }, chip(c.dist ? "pass" : "fail", c.dist ? "yes" : "no"))); })));
   const qs = answers(r);
   const ans = answerTable(qs);
   // The picture of the answers: comparisons against approve-all are about ten times larger, so they get their own panel and scale.
-  const toRow = (p) => ({ label: name(p.better || p.a), sub: `minus ${name(p.other)}`, tag: p.q.replace(/_/g, " "),
-    mean: p.mean_diff, lo: p.mean_diff_ci95[0], hi: p.mean_diff_ci95[1], dist: p.distinguishable });
-  const isAll = (p) => p.other === "ieee-approve-all" || p.better === "ieee-approve-all";
+  const toRow = (p) => { const c = compare(p);
+    return { label: name(c.first), sub: `minus ${name(c.second)}`, tag: questionTag(p.q), mean: c.mean, lo: c.lo, hi: c.hi, dist: c.dist }; };
+  const isAll = (p) => p.a === "ieee-approve-all" || p.b === "ieee-approve-all";
   const main = qs.filter((p) => !isAll(p)).map(toRow), vsAll = qs.filter(isAll).map(toRow);
+  const readoutQs = after ? after.readout.against.map((p) => ({ ...p, q: "read-out" })) : [];
+  const told = after ? after.readout.told_10_usd : null;
   const afterPanel = !after ? [] : [el("section", { class: "panel", style: "margin-top:12px" },
     el("h2", {}, "After the test: the owner's verdict, and a read-out ", chip("plain", "read-out, not a test")),
     el("p", {}, `The owner judged the recommended setup “really not a decision model doing its grunt work”: its rank correlation with the tabular score it reads is ${fix(after.extras.signal_rank_corr, 3)} on these rows. ` +
@@ -1077,9 +1104,11 @@ async function ieeeEval(r) {  // IEEE-CIS evals (eval_ieee*.py and the phases af
         return el("tr", {}, nameCell(s), el("td", { class: "r" }, money(v.mean_cost)), el("td", { class: "r" }, `${money(v.cost_ci95[0])}–${money(v.cost_ci95[1])}`),
           el("td", { class: "r" }, count(v.good_customers_declined)), el("td", { class: "r" }, count(v.good_declined_or_reviewed)), el("td", { class: "r" }, `${count(v.frauds_stopped)} of ${count(v.frauds)}`),
           el("td", { class: "r" }, money(v.fraud_usd_let_through)), el("td", { class: "r" }, count(v.reviews))); })))),
-    el("div", { class: "scroll-x", style: "margin-top:10px" }, answerTable(after.readout.against.map((p) => ({ ...p, q: "read-out" })))),
-    el("p", { class: "hint" }, `If a declined good customer truly cost 10 USD more, an assumption nobody measured: ${money(after.readout.told_10_usd.mean["final-rich-cust"])} per window against the baseline's ${money(after.readout.told_10_usd.mean["final-logreg-amt"])}, ` +
-      `a difference of ${money(after.readout.told_10_usd.against_baseline)}, 95% CI ${money(after.readout.told_10_usd.ci[0])} to ${money(after.readout.told_10_usd.ci[1])}.`))];
+    sentences(readoutQs, unit),
+    el("div", { class: "scroll-x", style: "margin-top:10px" }, answerTable(readoutQs)),
+    // told_10_usd.against_baseline is already rich-cust minus the baseline (fraud/dev/final_rich_cust.py), so it needs no flip.
+    el("p", { class: "hint" }, `If a declined good customer truly cost 10 USD more, an assumption nobody measured: `,
+      ...sentence({ first: "final-rich-cust", second: "final-logreg-amt", mean: told.against_baseline, lo: told.ci[0], hi: told.ci[1], dist: told.ci[0] > 0 || told.ci[1] < 0 }, unit)))];
   const perWin = el("table", { class: "data" },
     el("thead", {}, el("tr", {}, el("th", {}, dev ? "chain" : "window"), ...order.map(([s]) => el("th", { class: "r", title: `${setupName(s)} (${s})` }, name(s))))),
     el("tbody", {}, ...wins.map((w, i) => el("tr", {}, el("td", {}, w), ...order.map(([s, v]) => {
@@ -1100,7 +1129,7 @@ async function ieeeEval(r) {  // IEEE-CIS evals (eval_ieee*.py and the phases af
       fact("Wrong decline", `${pct(r.costs.friction_rate)} of the amount`, `At least ${money(r.costs.friction_min)} USD`),
       fact("Review budget", `${pct(r.costs.review_share)} of a ${unit}`, "Past it, a review becomes an approve")),
     r.recommended ? factCard("Recommended by the rule fixed before the run",
-      fact("Setup", name(r.recommended), "Chosen for customers and the owner's constraint. Its dollars are not shown to differ from the baseline's; see the answers" +
+      fact("Setup", name(r.recommended), "Chosen for customers and the owner's constraint. Its dollars are not distinguishable from the baseline's; see the answers" +
         (after ? ". After the test the owner rejected it, because it mostly follows the tabular score it reads; see After the test" : ""))) : null,
   ];
   const notes = noteCard("Read with care", [
@@ -1112,10 +1141,11 @@ async function ieeeEval(r) {  // IEEE-CIS evals (eval_ieee*.py and the phases af
   app.replaceChildren(
     el("h1", {}, `Eval ${r.eval}`),
     el("p", { class: "hint", style: "margin-top:-6px" }, evalWhat(r.script)),
-    qs.length ? verdictBanner(qs[0], wins.length, unit) : null,
+    qs.length ? verdictBanner(qs[0], unit) : null,
     el("div", { class: "cards", style: "margin-top:12px" }, ...facts, notes),
     el("section", { class: "panel", style: "margin-top:12px" }, el("h2", {}, "Answers"),
-      el("p", { class: "hint" }, `Mean paired difference in USD per ${unit}, the first setup minus the second, with its 95% window-bootstrap interval. Below the dashed 0 line: the first is cheaper. Filled: the interval excludes 0.`),
+      qs.length ? sentences(qs, unit) : null,
+      el("p", { class: "hint" }, `Mean paired difference in USD per ${unit}: the first setup minus the second, in the order each question was registered, with its 95% window-bootstrap interval. Below the dashed 0 line: the first is cheaper. Filled: the interval excludes 0.`),
       el("div", { class: "vf-row" }, main.length ? forest(main, vsAll.length ? "Between setups" : null) : null,
         vsAll.length ? forest(vsAll, "Against approving everything (own scale)") : null),
       el("details", { class: "more", style: "margin-top:10px" }, el("summary", {}, "The answers as a table"), el("div", { class: "scroll-x" }, ans))),
@@ -1135,8 +1165,8 @@ async function ieeeEval(r) {  // IEEE-CIS evals (eval_ieee*.py and the phases af
 // ---------------------------------------------------------------- the cost map (Phase 16)
 
 // fraud/results/eval_cost_stress/<run>.json, written by fraud/eval_cost_stress.py: Phase 14's recorded scores on its 20 test windows,
-// re-priced under other costs. No model ran. diff is the rule MINUS two lines (a plus means the rule costs more), unlike the eval
-// files' mean_diff, which is signed from the cheaper side.
+// re-priced under other costs. No model ran. diff is the rule MINUS two lines (a plus means the rule costs more): the first
+// minus the second, the same sign compare() gives the eval pages' answers.
 const pctTight = (v) => pct(v, Math.round(v * 1000) % 10 ? 1 : 0);  // 7.5%, 0.5%, 10%
 const COST_FAMILIES = {
   "review fee": { key: "review_fee", label: "Review fee", fmt: (v) => `${money(v)} USD`, what: "what one review costs" },
