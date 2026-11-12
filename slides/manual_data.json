@@ -58,7 +58,8 @@
   "stress": {
     "_source": "fraud/RESULTS-COST-STRESS.md, flat price per good customer declined: not distinguishable up to 30 USD; the mean flips between 50 and 60 USD",
     "flat_low": 50,
-    "flat_high": 60
+    "flat_high": 60,
+    "not_distinguishable_from": 30
   },
   "predictions": {
     "_source": "fraud/eval_lm_cost.py docstring (stated before running); fraud/RESULTS-LM-COST.md, Predictions against what happened",
@@ -107,5 +108,9 @@
   "tabular_dev": {
     "_source": "fraud/RESULTS-TABULAR.md, 'Held-out dev, 88 chains, no bar' (fraud/tabular.py heldout_dev): the dev read of trees against logistic regression. Lambda for trees was picked with these rows in, so that read is flattered (Observed).",
     "chains": 88
+  },
+  "customer_line": {
+    "_source": "fraud/eval_final.py docstring (final-signal-cust: Phase 18's flat 10 USD in the expected cost of declining, never in what it's charged); fraud/eval_combos.py FLAT. Implementation choice.",
+    "flat": 10
   }
 }

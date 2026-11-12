@@ -452,3 +452,31 @@ def test_derived_keys_for_slides_08_to_14(data):
     assert data["manual"]["tabular_dev"]["chains"] == 88
     ft = data["manual"]["paysim_ft"]
     assert (ft["window_rows"], ft["windows"], ft["cheaper_than_logreg"], ft["minutes"]) == (500, 20, 19, 52)
+
+
+def test_order_bias_is_the_untrained_paysim_models(html):
+    """The 190-of-257 lean is the untrained PaySim model's. On real payments the trained d1 read one order, chosen on dev
+    (fraud/eval_final.py), so no slide may say real payments were asked both ways, and 14/15 name the PaySim model."""
+    text = re.sub(r"\s+", " ", visible_text(html))
+    assert not re.search(r"(?i)real payments[^.]*both (?:orders|ways)|both (?:orders|ways)[^.]*real payments", text)
+    for n in (14, 15):
+        assert "untrained PaySim model" in visible_text(section(html, n)), n
+    assert re.search(r"one order, chosen on dev", visible_text(section(html, 14)))
+    notes = " ".join(re.findall(r'<aside class="notes">(.*?)</aside>', html, flags=re.S))
+    assert not re.search(r"(?i)both orders\.\s*$|one payment at a time, both orders", notes)
+
+
+def test_results_say_what_they_measured(html, data):
+    """The latency is the language model's alone; the customer line is a price in the decision, never charged; the
+    flat-price edge is where the mean flips; the h1s don't overstate."""
+    s13 = visible_text(section(html, 13))
+    assert "language model only" in s13 and "not timed" in s13
+    s11 = section(html, 11)
+    assert "{{manual.customer_line.flat" in s11.split('<aside class="notes">')[0] and "never charged" in visible_text(s11)
+    s14 = section(html, 14).split('<aside class="notes">')[0]
+    assert "{{manual.stress.not_distinguishable_from" in s14 and "mean saving" in s14
+    assert data["manual"]["customer_line"]["flat"] == 10 and data["manual"]["stress"]["not_distinguishable_from"] == 30
+    h15 = re.search(r"<h1>(.*?)</h1>", section(html, 15), flags=re.S)[1]
+    assert "distinguishable" in h15 and "did not save money" not in h15
+    s12 = visible_text(section(html, 12))
+    assert "trees’ settings" not in s12 and "was locked away" not in s12

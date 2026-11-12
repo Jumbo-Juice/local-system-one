@@ -1117,6 +1117,10 @@ window.DATA = {
     }
    ]
   },
+  "customer_line": {
+   "_source": "fraud/eval_final.py docstring (final-signal-cust: Phase 18's flat 10 USD in the expected cost of declining, never in what it's charged); fraud/eval_combos.py FLAT. Implementation choice.",
+   "flat": 10
+  },
   "data": {
    "_source": "fraud/DATA.md (PaySim: 6,362,620 rows, 8,213 fraud, steps 1-743 = 31 days; one fraud in 775 is 6,362,620 / 8,213 rounded); fraud/eval_ieee.py WINDOW_SIZE (rows per window). Observed; the window size is an Implementation choice.",
    "paysim_days": 31,
@@ -1259,7 +1263,8 @@ window.DATA = {
   "stress": {
    "_source": "fraud/RESULTS-COST-STRESS.md, flat price per good customer declined: not distinguishable up to 30 USD; the mean flips between 50 and 60 USD",
    "flat_high": 60,
-   "flat_low": 50
+   "flat_low": 50,
+   "not_distinguishable_from": 30
   },
   "tabular_dev": {
    "_source": "fraud/RESULTS-TABULAR.md, 'Held-out dev, 88 chains, no bar' (fraud/tabular.py heldout_dev): the dev read of trees against logistic regression. Lambda for trees was picked with these rows in, so that read is flattered (Observed).",

@@ -328,16 +328,16 @@ Source (Observed): fraud/runs/20261003-052030_hybrid_qwen2.5-1.5b_dev0.pinned.js
   <div class="tile wide end" data-from="2"><span class="k">After training: two cut-offs on the averaged decline score, picked on dev</span>
     <div class="cuts"><span class="seg">below the lower cut-off: <b>approve</b></span><span class="seg mid">between the two: <b>review</b></span><span class="seg hi">above the upper: <b>decline</b></span></div></div>
 </div>
-<p class="foot">Both orders run in the same batch, so the second costs little time. On real payments the score goes through the rule instead.</p>
+<p class="foot">On PaySim both orders run in the same batch. On real payments the trained model read one order, chosen on dev, and its score went through the rule.</p>
 </div>
 <aside class="notes">
 [Juji · 0:45]
 Same payment, same question, but this time we list the options the other way round. Does the order matter? Let the room guess.
 As listed, the model put {{worked.orders.listed.2|d2}} on C, decline.
 Click: reversed, C now means approve, and the model put {{worked.orders.reversed.0|d2}} on it. Top answer: {{worked.top.reversed}}. It picked the last letter both times: it follows the position, not the meaning. In this PaySim window the two orders gave different top answers on {{paysim.order_flips}} of the {{paysim.model_n}} payments the model judged. Small models are known to do this, reference 6.
-Click: so we always ask in both orders, in the same batch, and average: approve {{worked.scores.0|d2}}, review {{worked.scores.1|d2}}, decline {{worked.scores.2|d2}}. The untrained model then takes the top answer, {{worked.action}}. This payment was genuine, so a good customer was turned away. Untrained, it declined all {{paysim.model_declined}} of the {{paysim.model_n}} payments it judged in this window.
-After training, we don't take the top answer. The averaged decline score goes through two cut-offs picked on dev: below the lower one approve, between them review, above the upper one decline. On the real payments later, the score goes through the rule from slide 5 instead.
-Source (Observed): the same trace record as slide 08; orders[1] is the reversed read, mapped back to approve, review, decline (system_one/engine.py decide_batch), and scores is their average. The action is the record's action. Counts over the window's model-judged rows: slides/build_data.py paysim_block (order_flips, model_declined). Cut-offs: fraud/brain.py ThresholdDecider and fraud/eval_ft.py (Implementation choice). [6] Pezeshkpour and Hruschka.
+Click: so on PaySim we ask in both orders, in the same batch, and average: approve {{worked.scores.0|d2}}, review {{worked.scores.1|d2}}, decline {{worked.scores.2|d2}}. The untrained model then takes the top answer, {{worked.action}}. This payment was genuine, so a good customer was turned away. Untrained, it declined all {{paysim.model_declined}} of the {{paysim.model_n}} payments it judged in this window.
+After training, we don't take the top answer. The averaged decline score goes through two cut-offs picked on dev: below the lower one approve, between them review, above the upper one decline. On the real payments later, the trained model read one order only, the one dev picked, and its score went through the rule from slide 5 instead.
+Source (Observed): the same trace record as slide 08; orders[1] is the reversed read, mapped back to approve, review, decline (system_one/engine.py decide_batch), and scores is their average. The action is the record's action. Counts over the window's model-judged rows: slides/build_data.py paysim_block (order_flips, model_declined). Cut-offs: fraud/brain.py ThresholdDecider and fraud/eval_ft.py (Implementation choice). Real payments, one order (rev) chosen on dev: fraud/eval_final.py docstring, fraud/RESULTS-LM-NUC.md, Setup (Implementation choice). [6] Pezeshkpour and Hruschka.
 </aside>
 </section>
 
@@ -402,7 +402,7 @@ Source: PaySim costs, slides/manual_data.json paysim, from README.md and docs/me
   <div class="row end small">
     <div class="tile"><span class="k">A row</span><p>that setup’s cost minus logistic regression’s, both deciding the same {{final.windows_n|num}} windows. Left of 0: cheaper.</p></div>
     <div class="tile"><span class="k">The bar: an interval</span><p>the difference on the same windows, and how far it could plausibly move. Distinguishable: it stays on one side of 0.</p></div>
-    <div class="tile"><span class="k">The setups</span><p>the language model is d1-Omni-2B <span class="cite">[14]</span>, trained. Tree score: the trees’ p, given as one more fact. Customer line: each decline also pays a flat price per good customer.</p></div>
+    <div class="tile"><span class="k">The setups</span><p>the language model is d1-Omni-2B <span class="cite">[14]</span>, trained. Tree score: the trees’ p, given as one more fact. Customer line: when the rule weighs a decline, it counts {{manual.customer_line.flat|num}} USD for turning a good customer away, never charged.</p></div>
   </div>
 </div>
 <p class="foot">Logistic regression with the rule cost {{final.setups.baseline.mean|int}} USD per window; approving everything, {{final.setups.approve_all.mean|int}}.</p>
@@ -415,7 +415,7 @@ With the customer line: {{final.diffs.signal_cust_baseline.said}}
 The language model alone, no tree score, with the rule: {{final.diffs.rich_amt_baseline.said}}
 And alone with the customer line, which we only read after the test: {{final.diffs.rich_cust_baseline.said}}
 So, said plainly: no setup showed a distinguishable saving against logistic regression on the final test. Every bar crosses zero.
-Source: fraud/results/eval_final/20261104-090649.json, verdict, primary and reported comparisons; the last row from fraud/results/eval_final/rich_cust_readout.json, a read-out after the test, not registered (fraud/SUMMARY.md, first paragraph). Each sentence is build_data.sentence(), the analyst console's own wording (Observed). Bootstrap over windows, {{manual.recipe.boot_reps|int}} resamples (fraud/eval_ieee.py boot_ci). Customer line: fraud/rule.py, a flat price in the decision only (Implementation choice). Tree score: fraud/lm_signal.py.
+Source: fraud/results/eval_final/20261104-090649.json, verdict, primary and reported comparisons; the last row from fraud/results/eval_final/rich_cust_readout.json, a read-out after the test, not registered (fraud/SUMMARY.md, first paragraph). Each sentence is build_data.sentence(), the analyst console's own wording (Observed). Bootstrap over windows, {{manual.recipe.boot_reps|int}} resamples (fraud/eval_ieee.py boot_ci). Customer line: a flat {{manual.customer_line.flat|num}} USD in the expected cost of declining, never in what it is charged (fraud/eval_final.py docstring, fraud/rule.py; Implementation choice). Tree score: fraud/lm_signal.py.
 </aside>
 </section>
 
@@ -434,16 +434,16 @@ Source: fraud/results/eval_final/20261104-090649.json, verdict, primary and repo
   <div class="row end">
     <div class="tile"><span class="k">On dev</span><span class="n">{{rule.phase20.dev.mean|signed}} USD</span><p>per window: <b class="ink">{{rule.phase20.dev|dist}}</b>. It looked like a clear win.</p></div>
     <div class="tile" data-from="1"><span class="k">On new windows</span><span class="n">{{rule.phase20.diff.mean|signed}} USD</span><p>per window: <b class="ink">{{rule.phase20.diff|dist}}</b>. Same model, same rule.</p></div>
-    <div class="tile" data-from="1"><span class="k">Why</span><p>Dev rows sit close to the rows the trees learned from, and dev also set one of the trees’ settings. A model that fits fine detail looks best there.</p></div>
+    <div class="tile" data-from="1"><span class="k">Why</span><p>Dev rows sit close to the rows the trees learned from, and the rule’s review price was picked on the trees’ dev scores. A model that fits fine detail looks best there.</p></div>
   </div>
 </div>
-<p class="foot">That is why the final test was locked away and scored once: only data nobody tuned on can say what holds.</p>
+<p class="foot">This is why a final test is kept locked away and scored once: only data nobody tuned on can say what holds.</p>
 </div>
 <aside class="notes">
 [Ryu · 0:45]
 A second flip. Boosted trees against logistic regression, both with the rule. On dev they looked clearly cheaper: {{rule.phase20.dev.mean|signed}} dollars per window over {{manual.tabular_dev.chains}} dev windows, interval {{rule.phase20.dev.ci.0|int}} to {{rule.phase20.dev.ci.1|int}}, {{rule.phase20.dev|dist}}. Would you ship it?
 Click: on {{rule.phase20.windows_n}} new windows, the same model and the same rule: {{rule.phase20.diff.said}}
-Why: dev rows sit close to the rows the trees learned from, and on dev we also picked one of the trees' settings, the price of a review, lambda. So dev flatters a model that fits fine detail. That is why the final test was locked away before training, and scored once.
+Why: dev rows sit close to the rows the trees learned from, and the rule's price for a review, lambda, was picked on the trees' dev scores, these rows included. So dev flatters a model that fits fine detail. That is why we keep a final test locked away: its windows were reserved before this work began, and scored once.
 Source: fraud/results/eval_tabular/20261103-235132.json, verdict primary (new windows, Observed) and heldout tab-all (dev, Observed; flattered because lambda for trees was picked with those rows in, fraud/RESULTS-TABULAR.md). Dev window count: slides/manual_data.json tabular_dev. The dev verdict uses the same rule as the others, its 95% CI leaving out 0 (slides/build_data.py rule_block). Earlier-test windows, never the final test.
 </aside>
 </section>
@@ -453,7 +453,7 @@ Source: fraud/results/eval_tabular/20261103-235132.json, verdict primary (new wi
 <div class="page">
 <span class="tag">13 · Ryu</span>
 <div class="comp"><span class="num">13</span>Results: what did work</div>
-<h1>Far fewer good customers turned away, and fast enough for a payment stream</h1>
+<h1>Far fewer good customers turned away, and the language model answers well inside its time bar</h1>
 <div class="main">
   <div class="duo">
     <div class="tile"><span class="k">Good customers declined, final test</span>
@@ -463,7 +463,7 @@ Source: fraud/results/eval_tabular/20261103-235132.json, verdict primary (new wi
       <p class="note">* read after the test, not a test result. The price: fewer frauds stopped, {{final.setups.signal_cust.frauds_stopped|int}} and {{final.setups.rich_cust.frauds_stopped|int}} against {{final.setups.baseline.frauds_stopped|int}} of {{final.frauds|int}}.</p>
       <p class="note">Most of this is the customer line, not the language model: on logistic regression, in an earlier test, it cut good customers declined from {{rule.phase18.base|int}} to {{rule.phase18.customers|int}}.</p></div>
     <div class="stack">
-      <div class="tile"><span class="k">Speed per payment</span><span class="n">{{final.latency.p90|int}} ms</span><p>for 90% of payments, against a bar of {{final.latency.bar|int}} ms set before the test</p></div>
+      <div class="tile"><span class="k">Speed per payment, language model only</span><span class="n">{{final.latency.p90|int}} ms</span><p>for 90% of payments on one graphics card, against a bar of {{final.latency.bar|int}} ms. The trees and history features it reads were not timed.</p></div>
       <div class="tile"><span class="k">But it mostly copies the tree score</span><span class="n">{{final.rank_corr|d2}}</span><p>rank correlation of the cheapest-looking language setup with the tree score: 1 would be the same order</p></div>
     </div>
   </div>
@@ -474,9 +474,9 @@ Source: fraud/results/eval_tabular/20261103-235132.json, verdict primary (new wi
 [Ryu · 0:45]
 What did work. Good customers wrongly declined over the final test: logistic regression {{final.setups.baseline.good_declined|int}}; the language model reading the tree score, with the customer line, {{final.setups.signal_cust.good_declined|int}}; the language model alone with the customer line, read after the test, {{final.setups.rich_cust.good_declined|int}}. The price: fewer frauds stopped, {{final.setups.signal_cust.frauds_stopped|int}} and {{final.setups.rich_cust.frauds_stopped|int}} against {{final.setups.baseline.frauds_stopped|int}} of {{final.frauds|int}}.
 Be fair about where that comes from: mostly the customer line, which works on logistic regression too. In an earlier test on {{rule.phase18.windows_n}} windows, it cut logistic regression's good customers declined from {{rule.phase18.base|int}} to {{rule.phase18.customers|int}}.
-Speed: {{final.latency.p90|int}} milliseconds per payment for 90% of payments, far under the {{final.latency.bar|int}} millisecond bar we set before the test.
+Speed: the language model alone answers in {{final.latency.p90|int}} milliseconds for 90% of payments, on one desktop graphics card, far under the {{final.latency.bar|int}} millisecond bar we set before the test. That is not the whole stack: the trees and history features it reads were not timed.
 And the cheapest-looking language setup mostly copies the tree score it reads: rank correlation {{final.rank_corr|d2}}, where 1 would mean the same order. The test can't show what the language model adds on top, because the tree score alone was not a registered setup.
-Source: fraud/results/eval_final/20261104-090649.json (setups, latency p90 of the language setups, the bar; Observed), fraud/results/eval_final/rich_cust_readout.json (read-out after the test, fraud/SUMMARY.md first paragraph), fraud/results/eval_final/extras.json signal_rank_corr (Observed). Earlier test: fraud/results/eval_rule/20261103-211736.json (Observed). Latency on an RTX 3060 Ti, one payment at a time, both orders.
+Source: fraud/results/eval_final/20261104-090649.json (setups, latency p90 of the language setups, the bar; Observed), fraud/results/eval_final/rich_cust_readout.json (read-out after the test, fraud/SUMMARY.md first paragraph), fraud/results/eval_final/extras.json signal_rank_corr (Observed). Earlier test: fraud/results/eval_rule/20261103-211736.json (Observed). Latency on an RTX 3060 Ti, one payment at a time, one option order, the language model only; the trees and history features were not timed (fraud/RESULTS-FINAL.md, Setup: latency is this machine's) (Observed).
 </aside>
 </section>
 
@@ -491,20 +491,20 @@ Source: fraud/results/eval_final/20261104-090649.json (setups, latency p90 of th
     <div class="tile"><span class="k">Assumed costs <span class="illus">assumed</span></span>
       <p>Every dollar here rests on prices we chose, not measured: a wrong decline {{costs.friction_rate|pct}} of the amount, at least {{costs.friction_min|num}} USD; a review {{costs.review_fee|num}} USD.</p>
       <span class="f">Change one price</span>
-      <p>Add a flat price for each good customer declined: the rule’s saving over two fixed cut-offs (slide 05) turns into a loss, on average, between <b class="ink">{{manual.stress.flat_low}} and {{manual.stress.flat_high}} USD</b> per customer.</p></div>
+      <p>Charge a flat price for each good customer declined. At <b class="ink">{{manual.stress.flat_low}}–{{manual.stress.flat_high}} USD</b> a customer, the rule’s mean saving over two fixed cut-offs (slide 05) becomes a loss; from {{manual.stress.not_distinguishable_from}} USD it is already not distinguishable.</p></div>
     <div class="tile"><span class="k">Option-order bias <span class="cite">[6]</span></span>
-      <p>The model leans towards a letter’s position, not only its meaning. Our transfer (slide 09): listed, top answer <b class="ink">{{worked.top.listed}}</b>; reversed, <b class="ink">{{worked.top.reversed}}</b>. The last letter both times.</p>
+      <p>The untrained PaySim model leans towards a letter’s position, not only its meaning. Our transfer (slide 09): listed, top answer <b class="ink">{{worked.top.listed}}</b>; reversed, <b class="ink">{{worked.top.reversed}}</b>. The last letter both times.</p>
       <span class="f">{{paysim.order_flips}} of {{paysim.model_n}}</span>
-      <p>PaySim payments in that window whose top answer flipped with the order. Asking both ways and averaging cancels the position; it can’t remove every lean.</p></div>
+      <p>PaySim payments in that window whose top answer flipped with the order. On PaySim we averaged both orders. On real payments the trained model read one order, chosen on dev; its lean there was not measured.</p></div>
   </div>
 </div>
 <p class="foot">Assumed prices are a choice: change them and the dollar verdicts can change.</p>
 </div>
 <aside class="notes">
 [Ponh · 0:45]
-Two biases we built in. First, the prices. Every dollar in this talk rests on prices we assumed: a wrong decline costs {{costs.friction_rate|pct}} of the amount, at least {{costs.friction_min|num}} dollar; a review {{costs.review_fee|num}} dollars. They are not measured. Change one and verdicts move: if each good customer declined also costs a flat price, the rule's saving over two fixed cut-offs, from slide 5, turns into a loss on average somewhere between {{manual.stress.flat_low}} and {{manual.stress.flat_high}} dollars per customer.
-Second, the order of the options. Our transfer: listed, the top answer was {{worked.top.listed}}; reversed, {{worked.top.reversed}}, the last letter both times. In that PaySim window the top answer flipped with the order on {{paysim.order_flips}} of {{paysim.model_n}} payments, and every one of those flips took the last letter both times. Asking in both orders and averaging cancels the position, references 5 and 6, but it can't remove a lean the model has towards the content itself.
-Source: prices, fraud/results/eval_final/20261104-090649.json costs (Implementation choice; assumed, not measured). Flat-price edge: slides/manual_data.json stress, from fraud/RESULTS-COST-STRESS.md (Observed, on earlier-test windows, the rule as deployed). Order flips: slides/build_data.py paysim_block over the pinned PaySim trace, order_flips {{paysim.order_flips}}, last letter both times {{paysim.last_letter_both}} (Observed).
+Two biases we built in. First, the prices. Every dollar in this talk rests on prices we assumed: a wrong decline costs {{costs.friction_rate|pct}} of the amount, at least {{costs.friction_min|num}} dollar; a review {{costs.review_fee|num}} dollars. They are not measured. Change one and verdicts move: charge a flat price for each good customer declined. From {{manual.stress.not_distinguishable_from}} dollars a customer, the rule's saving over two fixed cut-offs, from slide 5, is no longer distinguishable; once the price is {{manual.stress.flat_low}} to {{manual.stress.flat_high}} dollars, its mean saving becomes a loss.
+Second, the order of the options, in the untrained PaySim model. Our transfer: listed, the top answer was {{worked.top.listed}}; reversed, {{worked.top.reversed}}, the last letter both times. In that PaySim window the top answer flipped with the order on {{paysim.order_flips}} of {{paysim.model_n}} payments, and every one of those flips took the last letter both times. On PaySim we asked in both orders and averaged, which cancels the position, references 5 and 6. On real payments the trained model read one order, the one dev picked, so nothing there was averaged, and its lean was not measured.
+Source: prices, fraud/results/eval_final/20261104-090649.json costs (Implementation choice; assumed, not measured). Flat-price edge: slides/manual_data.json stress, from fraud/RESULTS-COST-STRESS.md, flat price per good customer declined: not distinguishable from 30 USD, mean flips between 50 and 60 (Observed, on earlier-test windows, the rule as deployed). One order on real payments: fraud/eval_final.py docstring (Implementation choice). Order flips: slides/build_data.py paysim_block over the pinned PaySim trace, order_flips {{paysim.order_flips}}, last letter both times {{paysim.last_letter_both}} (Observed).
 </aside>
 </section>
 
@@ -513,19 +513,19 @@ Source: prices, fraud/results/eval_final/20261104-090649.json costs (Implementat
 <div class="page">
 <span class="tag">15 · Ponh</span>
 <div class="comp"><span class="num">15</span>Takeaways</div>
-<h1>A language model can decide in one pass. On real payments, it did not save money.</h1>
+<h1>A language model can decide in one pass. On real payments, it showed no distinguishable saving.</h1>
 <div class="main">
   <div class="row">
     <div class="tile"><span class="k">What holds</span><ul>
       <li><span data-mark="yes"></span>A language model reads as a classifier: one pass, one score per letter, no words.</li>
       <li><span data-mark="yes"></span>A small adapter took it from useless to matching the hand-written rules on PaySim.</li>
-      <li><span data-mark="yes"></span>Fast enough: {{final.latency.p90|int}} ms per payment against a {{final.latency.bar|int}} ms bar.</li>
+      <li><span data-mark="partly"></span>The language model alone took {{final.latency.p90|int}} ms against a {{final.latency.bar|int}} ms bar; the whole stack was not timed.</li>
       <li><span data-mark="yes"></span>Far fewer good customers declined, mostly thanks to the customer line.</li>
     </ul></div>
     <div class="tile"><span class="k">What doesn’t, or wasn’t checked</span><ul>
       <li><span data-mark="no"></span>No setup showed a distinguishable saving against logistic regression on the final test.</li>
       <li><span data-mark="no"></span>The cheapest-looking language setup mostly copies the tree score.</li>
-      <li><span data-mark="partly"></span>The prices are assumed, and the model leans towards the last letter.</li>
+      <li><span data-mark="partly"></span>The prices are assumed, and the untrained PaySim model leaned towards the last letter.</li>
       <li><span data-mark="no"></span>Fairness was not measured: who gets declined was never checked by group.</li>
     </ul></div>
   </div>
@@ -534,8 +534,8 @@ Source: prices, fraud/results/eval_final/20261104-090649.json costs (Implementat
 </div>
 <aside class="notes">
 [Ponh · 0:25]
-What holds: a language model can be read as a classifier, in one pass, without writing; a small adapter made it useful on PaySim; it is fast enough; and far fewer good customers were declined, mostly thanks to the customer line.
-What doesn't: no setup showed a distinguishable saving against logistic regression on the final test; the cheapest-looking language setup mostly copies the tree score; the prices are assumed; and fairness was not measured. The paper and the analyst console have the details. Thank you; questions.
+What holds: a language model can be read as a classifier, in one pass, without writing; a small adapter made it useful on PaySim; the language model alone is quick, though the whole stack was not timed; and far fewer good customers were declined, mostly thanks to the customer line.
+What doesn't: no setup showed a distinguishable saving against logistic regression on the final test; the cheapest-looking language setup mostly copies the tree score; the prices are assumed, and the untrained PaySim model leaned towards the last letter; and fairness was not measured. The paper and the analyst console have the details. Thank you; questions.
 Source: slides 08 to 14 and their sources. Fairness: no eval in fraud/ measures outcomes by group (Observed: nothing was run).
 </aside>
 </section>
