@@ -1,0 +1,2 @@
+# Vendored files are kept byte for byte: tests/test_story.py checks their checksums.
+story/vendor/** -text

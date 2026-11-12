@@ -1,0 +1,166 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-11-12T00:00:00Z",
+  "title": "Design System: local-system-one, the story",
+  "extensions": {
+    "scope": "This design system is the story's (story/). It does not govern the reveal.js deck (slides/), the fraud analyst console (fraud/viewer/) or the game viewer (viewer/), and they must not be restyled to match.",
+    "colorMeta": {
+      "blue": { "role": "primary", "displayName": "Model Blue", "canonical": "#2563eb", "tonalRamp": ["#172554", "#1e3a8a", "#1d4ed8", "#2563eb", "#60a5fa", "#93c5fd", "#dbeafe", "#eff6ff"] },
+      "blue-ink": { "role": "primary", "displayName": "Model Blue Ink", "canonical": "#1d4ed8" },
+      "blue-soft": { "role": "primary", "displayName": "Model Blue Soft", "canonical": "#dbeafe" },
+      "yes": { "role": "secondary", "displayName": "Yes Green", "canonical": "#15803d", "tonalRamp": ["#052e16", "#14532d", "#15803d", "#16a34a", "#4ade80", "#86efac", "#dcfce7", "#f0fdf4"] },
+      "yes-soft": { "role": "secondary", "displayName": "Yes Green Soft", "canonical": "#dcfce7" },
+      "no": { "role": "secondary", "displayName": "No Red", "canonical": "#b91c1c", "tonalRamp": ["#450a0a", "#7f1d1d", "#b91c1c", "#dc2626", "#f87171", "#fca5a5", "#fee2e2", "#fef2f2"] },
+      "no-soft": { "role": "secondary", "displayName": "No Red Soft", "canonical": "#fee2e2" },
+      "help": { "role": "secondary", "displayName": "Only With Help Amber", "canonical": "#b45309", "tonalRamp": ["#451a03", "#78350f", "#b45309", "#d97706", "#fbbf24", "#fcd34d", "#fef3c7", "#fffbeb"] },
+      "help-soft": { "role": "secondary", "displayName": "Only With Help Amber Soft", "canonical": "#fef3c7" },
+      "cant": { "role": "secondary", "displayName": "Can't Tell Slate", "canonical": "#475569", "tonalRamp": ["#0f172a", "#1e293b", "#334155", "#475569", "#94a3b8", "#cbd5e1", "#e2e8f0", "#f8fafc"] },
+      "cant-soft": { "role": "secondary", "displayName": "Can't Tell Slate Soft", "canonical": "#e2e8f0" },
+      "bg": { "role": "neutral", "displayName": "Page White", "canonical": "#ffffff" },
+      "ink": { "role": "neutral", "displayName": "Ink", "canonical": "#111827", "tonalRamp": ["#111827", "#1f2937", "#374151", "#4b5563", "#9ca3af", "#d1d5db", "#e5e7eb", "#f3f4f6"] },
+      "ink-2": { "role": "neutral", "displayName": "Ink 2", "canonical": "#374151" },
+      "muted": { "role": "neutral", "displayName": "Muted", "canonical": "#4b5563" },
+      "rule": { "role": "neutral", "displayName": "Rule", "canonical": "#e5e7eb" },
+      "rule-2": { "role": "neutral", "displayName": "Rule 2", "canonical": "#d1d5db" },
+      "track": { "role": "neutral", "displayName": "Track", "canonical": "#f3f4f6" }
+    },
+    "typographyMeta": {
+      "display": { "displayName": "Display", "purpose": "The question at the top. Used once. The closing takeaway uses the same weight and tracking at 1.75rem to 3.25rem." },
+      "headline": { "displayName": "Headline", "purpose": "Trial headings, closing section headings and the stamp line." },
+      "title": { "displayName": "Title", "purpose": "The title above a figure." },
+      "lead": { "displayName": "Lead", "purpose": "The opening paragraphs and the sentence under a stamp." },
+      "body": { "displayName": "Body", "purpose": "Step text, at most 34rem wide. Tabular numerals are set on the body." },
+      "label": { "displayName": "Label", "purpose": "Captions, hints, keys, option text and source notes. Muted for captions and hints." },
+      "chart-label": { "displayName": "Chart label", "purpose": "Text inside an SVG chart. Muted at 500, or 700 in the line's colour for a direct label." }
+    },
+    "shadows": [],
+    "motion": [
+      { "name": "ease", "value": "cubic-bezier(0.16, 1, 0.3, 1)", "purpose": "The one ease for CSS transitions. GSAP uses expo.out, the same curve family." },
+      { "name": "t-fast", "value": "0.2s", "purpose": "Hover and state changes on slots, pills and the chevron." },
+      { "name": "t", "value": "0.45s", "purpose": "Panel swap fade, step opacity, interval row fade." },
+      { "name": "enter", "value": "0.7s expo.out", "purpose": "Default GSAP move (S.to). Entrances run 0.6s to 0.8s." },
+      { "name": "bars-grow", "value": "0.8s expo.out, stagger 0.05s", "purpose": "Bar fills grow from zero when a panel arrives." },
+      { "name": "grid-count", "value": "1.2s expo.out", "purpose": "A canvas grid counts up to its total." },
+      { "name": "stamp-land", "value": "mark: scale 1.9 and rotate -14deg to rest, 0.7s; stroke draws 0.6s after 0.18s; line slides 18px, 0.7s after 0.08s; slot pulses from scale 1.7, 0.6s after 0.25s", "purpose": "The one authored moment. Fires when the stamp's top crosses 82% of the viewport." },
+      { "name": "step-line", "value": "62% of viewport height, 78% under 60rem", "purpose": "Where a step becomes active and swaps the figure's panel." },
+      { "name": "scrub", "value": "ScrollTrigger progress, 0 to 1 over a long step", "purpose": "Four long steps tie a figure to scroll position: three across the two replays, one on the race chart." },
+      { "name": "reduced", "value": "gsap.set to final state; CSS transitions off; scroll-behavior auto", "purpose": "prefers-reduced-motion, or ?reduced=1, shows final states." }
+    ],
+    "breakpoints": [
+      { "name": "narrow", "value": "59.99rem", "purpose": "max-width. One column; the figure sticks at the top and steps pass under it." },
+      { "name": "phone", "value": "42rem", "purpose": "max-width. The bar keeps only the name and slots; tally rows stack." }
+    ]
+  },
+  "components": [
+    {
+      "name": "Slots (top bar tally)",
+      "kind": "nav",
+      "refersTo": "slot",
+      "description": "Six numbered circles in the sticky bar. A slot fills with its stamp colour and mark when its trial is stamped.",
+      "html": "<ol class=\"ds-slots\"><li><a class=\"ds-slot ds-on\" style=\"--s:var(--yes,#15803d)\" href=\"#\" aria-label=\"Trial 1. Stamped yes.\"><svg viewBox=\"0 0 24 24\" aria-hidden=\"true\"><path d=\"M5 12.5l4.5 4.5L19 7.5\"/></svg></a></li><li><a class=\"ds-slot ds-on\" style=\"--s:var(--help,#b45309)\" href=\"#\" aria-label=\"Trial 2. Stamped only with help.\"><svg viewBox=\"0 0 24 24\" aria-hidden=\"true\"><path d=\"M12 5.5v13M5.5 12h13\"/></svg></a></li><li><a class=\"ds-slot\" href=\"#\">3</a></li><li><a class=\"ds-slot\" href=\"#\">4</a></li><li><a class=\"ds-slot\" href=\"#\">5</a></li><li><a class=\"ds-slot\" href=\"#\">6</a></li></ol>",
+      "css": ".ds-slots { display: flex; gap: 0.375rem; list-style: none; margin: 0; padding: 0; font-family: Figtree, system-ui, sans-serif; } .ds-slot { display: grid; place-items: center; width: 1.75rem; height: 1.75rem; border-radius: 50%; border: 1.5px solid var(--rule-2, #d1d5db); color: var(--muted, #4b5563); font-size: 0.8125rem; font-weight: 700; text-decoration: none; transition: background 0.2s, border-color 0.2s, color 0.2s; } .ds-slot:hover { border-color: var(--ink-2, #374151); color: var(--ink, #111827); } .ds-slot:focus-visible { outline: 3px solid var(--blue, #2563eb); outline-offset: 3px; } .ds-slot.ds-on { background: var(--s); border-color: var(--s); color: #fff; } .ds-slot svg { width: 1rem; height: 1rem; } .ds-slot path { fill: none; stroke: currentColor; stroke-width: 2.6; stroke-linecap: round; stroke-linejoin: round; }"
+    },
+    {
+      "name": "Stamp",
+      "kind": "custom",
+      "refersTo": "stamp-mark",
+      "description": "The verdict at the end of a trial: a 2px ink rule, a coloured circle with a drawn mark, the line, and one sentence of why.",
+      "html": "<div class=\"ds-stamp\" style=\"--s:var(--help,#b45309)\"><span class=\"ds-stamp-mark\" aria-hidden=\"true\"><svg viewBox=\"0 0 24 24\"><path d=\"M12 5.5v13M5.5 12h13\"/></svg></span><p class=\"ds-stamp-line\">Stamped <strong>only with help</strong></p><p class=\"ds-stamp-why\">On a short, clear question it chooses well. To stay that way it needed help.</p></div>",
+      "css": ".ds-stamp { display: grid; grid-template-columns: auto minmax(0, 1fr); column-gap: 1.25rem; align-items: center; max-width: 42.5rem; padding-top: 2rem; border-top: 2px solid var(--ink, #111827); font-family: Figtree, system-ui, sans-serif; color: var(--ink, #111827); } .ds-stamp-mark { width: 4.25rem; height: 4.25rem; border-radius: 50%; background: var(--s); color: #fff; display: grid; place-items: center; } .ds-stamp-mark svg { width: 2.25rem; height: 2.25rem; } .ds-stamp-mark path { fill: none; stroke: currentColor; stroke-width: 2.6; stroke-linecap: round; stroke-linejoin: round; } .ds-stamp-line { margin: 0; font-size: clamp(1.75rem, 1.2rem + 2.2vw, 2.5rem); line-height: 1.1; font-weight: 800; letter-spacing: -0.025em; } .ds-stamp-line strong { font-weight: 800; color: var(--s); } .ds-stamp-why { grid-column: 1 / -1; margin: 1.25rem 0 0; font-size: 1.1875rem; line-height: 1.6; }"
+    },
+    {
+      "name": "The four marks",
+      "kind": "custom",
+      "refersTo": "stamp-mark",
+      "description": "Tick, cross, plus and question mark, each on its stamp colour. Open strokes on a 24 unit grid.",
+      "html": "<div class=\"ds-marks\"><span class=\"ds-mark\" style=\"--s:var(--yes,#15803d)\" title=\"yes\"><svg viewBox=\"0 0 24 24\" aria-hidden=\"true\"><path d=\"M5 12.5l4.5 4.5L19 7.5\"/></svg></span><span class=\"ds-mark\" style=\"--s:var(--no,#b91c1c)\" title=\"no\"><svg viewBox=\"0 0 24 24\" aria-hidden=\"true\"><path d=\"M6.5 6.5l11 11M17.5 6.5l-11 11\"/></svg></span><span class=\"ds-mark\" style=\"--s:var(--help,#b45309)\" title=\"only with help\"><svg viewBox=\"0 0 24 24\" aria-hidden=\"true\"><path d=\"M12 5.5v13M5.5 12h13\"/></svg></span><span class=\"ds-mark\" style=\"--s:var(--cant,#475569)\" title=\"can't tell\"><svg viewBox=\"0 0 24 24\" aria-hidden=\"true\"><path d=\"M8.6 9.2a3.4 3.4 0 1 1 5.7 2.5c-1.3 1.1-2.3 1.8-2.3 3.3M12 18.7v.1\"/></svg></span></div>",
+      "css": ".ds-marks { display: flex; gap: 0.75rem; } .ds-mark { width: 2.25rem; height: 2.25rem; border-radius: 50%; background: var(--s); color: #fff; display: grid; place-items: center; } .ds-mark svg { width: 1.25rem; height: 1.25rem; } .ds-mark path { fill: none; stroke: currentColor; stroke-width: 2.6; stroke-linecap: round; stroke-linejoin: round; }"
+    },
+    {
+      "name": "Choice pills",
+      "kind": "chip",
+      "refersTo": "choice-pill",
+      "description": "A radio group the reader can press. Blue because it can be touched.",
+      "html": "<fieldset class=\"ds-seg\"><legend>Ask it in this order</legend><label><input type=\"radio\" name=\"ds-order\" checked><span>As written</span></label><label><input type=\"radio\" name=\"ds-order\"><span>Flipped</span></label></fieldset>",
+      "css": ".ds-seg { display: flex; flex-wrap: wrap; gap: 0.5rem; border: 0; margin: 0; padding: 0; font-family: Figtree, system-ui, sans-serif; } .ds-seg legend { font-size: 0.9375rem; font-weight: 700; padding: 0; margin-bottom: 0.6rem; color: var(--ink, #111827); } .ds-seg label { position: relative; cursor: pointer; } .ds-seg input { position: absolute; opacity: 0; inset: 0; cursor: pointer; } .ds-seg span { display: block; padding: 0.5rem 0.9rem; border: 1.5px solid var(--blue, #2563eb); border-radius: 999px; color: var(--blue-ink, #1d4ed8); font-size: 0.9375rem; font-weight: 600; transition: background 0.2s, color 0.2s; } .ds-seg label:hover span { background: var(--blue-soft, #dbeafe); } .ds-seg input:checked + span { background: var(--blue, #2563eb); color: #fff; } .ds-seg input:focus-visible + span { outline: 3px solid var(--blue, #2563eb); outline-offset: 3px; }"
+    },
+    {
+      "name": "Bar rows",
+      "kind": "custom",
+      "refersTo": "bar-track",
+      "description": "The basic figure: label, value and a flat bar. The model's bar is blue, the others are ink. A limit is a 2px ink line with a label.",
+      "html": "<div class=\"ds-rows\"><div class=\"ds-row ds-model\"><span class=\"ds-row-label\">One look</span><span class=\"ds-row-val\">98 ms</span><span class=\"ds-row-track\"><i class=\"ds-row-fill\" style=\"--v:0.25\"></i></span></div><div class=\"ds-row\"><span class=\"ds-row-label\">Writing the answer out</span><span class=\"ds-row-val\">360 ms</span><span class=\"ds-row-track\"><i class=\"ds-row-fill\" style=\"--v:0.9\"></i></span></div><p class=\"ds-cap\">Sample values. Time for one decision. Shorter is quicker.</p></div>",
+      "css": ".ds-rows { display: grid; gap: 0.9rem; font-family: Figtree, system-ui, sans-serif; font-variant-numeric: tabular-nums; color: var(--ink, #111827); } .ds-row { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 0.3rem 0.75rem; align-items: baseline; } .ds-row-label { font-size: 1rem; font-weight: 600; line-height: 1.35; } .ds-row-val { font-weight: 700; white-space: nowrap; } .ds-row-track { grid-column: 1 / -1; height: 0.875rem; background: var(--track, #f3f4f6); border-radius: 2px; } .ds-row-fill { display: block; height: 100%; background: var(--ink-2, #374151); border-radius: 2px; transform-origin: left; transform: scaleX(var(--v, 0)); } .ds-model .ds-row-fill { background: var(--blue, #2563eb); } .ds-cap { font-size: 0.9375rem; line-height: 1.5; color: var(--muted, #4b5563); margin: 0.1rem 0 0; }"
+    },
+    {
+      "name": "Lettered options",
+      "kind": "custom",
+      "refersTo": "bar-fill-model",
+      "description": "One look: a question, lettered options with score bars, and the option the model leans to in blue.",
+      "html": "<div class=\"ds-look\"><p class=\"ds-ask\">What should the agent do now?</p><ol class=\"ds-opts\"><li class=\"ds-opt ds-top\"><span class=\"ds-opt-letter\">A</span><span class=\"ds-opt-text\">Step back behind cover</span><span class=\"ds-opt-score\">41</span><span class=\"ds-opt-track\"><i style=\"--v:0.82\"></i></span></li><li class=\"ds-opt\"><span class=\"ds-opt-letter\">B</span><span class=\"ds-opt-text\">Fire at the gunner</span><span class=\"ds-opt-score\">27</span><span class=\"ds-opt-track\"><i style=\"--v:0.54\"></i></span></li><li class=\"ds-opt\"><span class=\"ds-opt-letter\">C</span><span class=\"ds-opt-text\">Go for the key</span><span class=\"ds-opt-score\">12</span><span class=\"ds-opt-track\"><i style=\"--v:0.24\"></i></span></li></ol></div>",
+      "css": ".ds-look { font-family: Figtree, system-ui, sans-serif; font-variant-numeric: tabular-nums; color: var(--ink, #111827); } .ds-ask { font-size: 1.0625rem; font-weight: 600; line-height: 1.4; margin: 0 0 1rem; } .ds-opts { display: grid; gap: 0.7rem; list-style: none; margin: 0; padding: 0; } .ds-opt { display: grid; grid-template-columns: 1.75rem minmax(0, 1fr) auto; gap: 0.25rem 0.6rem; align-items: baseline; } .ds-opt-letter { font-weight: 800; color: var(--ink-2, #374151); } .ds-opt-text { font-size: 0.9375rem; line-height: 1.35; } .ds-opt-score { font-size: 0.9375rem; font-weight: 700; } .ds-opt-track { grid-column: 2 / -1; height: 0.625rem; background: var(--track, #f3f4f6); border-radius: 2px; } .ds-opt-track i { display: block; height: 100%; background: var(--ink-2, #374151); border-radius: 2px; transform-origin: left; transform: scaleX(var(--v, 0)); } .ds-top .ds-opt-letter { color: var(--blue-ink, #1d4ed8); } .ds-top .ds-opt-text { font-weight: 700; } .ds-top .ds-opt-track i { background: var(--blue, #2563eb); }"
+    },
+    {
+      "name": "Tally row",
+      "kind": "custom",
+      "refersTo": "stamp-mark",
+      "description": "One line of the closing tally: mark, question, verdict in its colour, ruled with hairlines.",
+      "html": "<ol class=\"ds-tally\"><li class=\"ds-tally-row\" style=\"--s:var(--yes,#15803d)\"><span class=\"ds-tally-mark\" aria-hidden=\"true\"><svg viewBox=\"0 0 24 24\"><path d=\"M5 12.5l4.5 4.5L19 7.5\"/></svg></span><span class=\"ds-tally-q\"><a href=\"#\">Can it be trusted to be quick?</a></span><span class=\"ds-tally-s\">yes</span></li><li class=\"ds-tally-row\" style=\"--s:var(--cant,#475569)\"><span class=\"ds-tally-mark\" aria-hidden=\"true\"><svg viewBox=\"0 0 24 24\"><path d=\"M8.6 9.2a3.4 3.4 0 1 1 5.7 2.5c-1.3 1.1-2.3 1.8-2.3 3.3M12 18.7v.1\"/></svg></span><span class=\"ds-tally-q\"><a href=\"#\">Against a simple baseline?</a></span><span class=\"ds-tally-s\">can't tell</span></li></ol>",
+      "css": ".ds-tally { list-style: none; margin: 0; padding: 0; max-width: 52rem; border-top: 1px solid var(--rule-2, #d1d5db); font-family: Figtree, system-ui, sans-serif; color: var(--ink, #111827); } .ds-tally-row { display: grid; grid-template-columns: 2.25rem minmax(0, 1fr) auto; gap: 0 1rem; align-items: center; padding: 0.9rem 0; border-bottom: 1px solid var(--rule-2, #d1d5db); } .ds-tally-mark { width: 2.25rem; height: 2.25rem; border-radius: 50%; background: var(--s); color: #fff; display: grid; place-items: center; } .ds-tally-mark svg { width: 1.25rem; height: 1.25rem; } .ds-tally-mark path { fill: none; stroke: currentColor; stroke-width: 2.6; stroke-linecap: round; stroke-linejoin: round; } .ds-tally-q { font-weight: 600; } .ds-tally-q a { color: inherit; text-decoration: none; } .ds-tally-q a:hover { text-decoration: underline; } .ds-tally-q a:focus-visible { outline: 3px solid var(--blue, #2563eb); outline-offset: 3px; border-radius: 2px; } .ds-tally-s { font-weight: 800; color: var(--s); text-align: right; }"
+    },
+    {
+      "name": "Where this comes from",
+      "kind": "custom",
+      "refersTo": "source-note",
+      "description": "A closed disclosure after each stamp. The only place a file path appears. Each item opens with its evidence label.",
+      "html": "<details class=\"ds-where\"><summary>Where this comes from</summary><ul><li><span class=\"ds-tag\">Observed.</span> Laptop timings: <code>bench/results/bench/</code>, one decision at a time.</li></ul></details>",
+      "css": ".ds-where { max-width: 42.5rem; font-family: Figtree, system-ui, sans-serif; font-size: 0.9375rem; line-height: 1.6; color: var(--ink-2, #374151); } .ds-where summary { cursor: pointer; font-weight: 600; color: var(--blue-ink, #1d4ed8); padding-block: 0.4rem; width: fit-content; list-style: none; display: flex; align-items: center; gap: 0.6rem; } .ds-where summary::-webkit-details-marker { display: none; } .ds-where summary::before { content: \"\"; width: 0.45rem; height: 0.45rem; border-right: 2px solid currentColor; border-bottom: 2px solid currentColor; rotate: -45deg; transition: rotate 0.2s cubic-bezier(0.16, 1, 0.3, 1); } .ds-where[open] summary::before { rotate: 45deg; } .ds-where summary:hover { text-decoration: underline; } .ds-where summary:focus-visible { outline: 3px solid var(--blue, #2563eb); outline-offset: 3px; border-radius: 2px; } .ds-where ul { margin: 0.5rem 0 0; padding-left: 1.1rem; display: grid; gap: 0.4rem; } .ds-where code { font: inherit; font-size: 0.875rem; background: var(--track, #f3f4f6); padding: 0.05rem 0.3rem; border-radius: 3px; } .ds-tag { font-weight: 700; color: var(--ink, #111827); }"
+    }
+  ],
+  "narrative": {
+    "northStar": "The Figure That Stays Put",
+    "overview": "The story is a scrolling explainer in the category standard. The owner chose that standard and named Distill and The Pudding as the craft bar. The page is white, the ink is near black and the rules are hairline grey. Text passes a figure that holds still. Each trial ends on a stamp.\n\nColour is sparse and every colour has one job. One blue means the model itself or something the reader can touch. Four stamp colours mean the four verdicts. Everything else is ink and grey. Figures are flat SVG, canvas or CSS with direct labels. There are no cards, no panels with fills and no decoration around a figure.\n\nThe reader is a newcomer reading alone. The page is calm so the evidence can be seen before the verdict. It is not a dark AI landing page with glowing charts and a hero metric.",
+    "keyCharacteristics": [
+      "White ground, near-black ink, hairline grey rules.",
+      "One blue with a fixed meaning. Four stamp colours with fixed meanings.",
+      "One typeface, Figtree, with tabular numerals everywhere.",
+      "Flat figures with direct labels.",
+      "A figure that stays put while text steps pass it.",
+      "One ease for all motion. The stamp landing is the one authored moment.",
+      "Reduced motion shows final states. No fact lives only in motion or only in colour."
+    ],
+    "rules": [
+      { "name": "The One Blue Rule", "body": "Blue means the model itself (its lean, its time, its cost) or something the reader can touch. Nothing else is blue. A comparison bar that is not the model is Ink 2.", "section": "colors" },
+      { "name": "The Four Stamps Rule", "body": "Green, red, amber and slate are the four verdicts. A stamp colour never appears without its drawn mark or its word. Inside a figure the same four keep the nearest meaning: good, harm, needs something, unknown.", "section": "colors" },
+      { "name": "The Mark Carries It Rule", "body": "Colour never stands alone. Each stamp has its own mark (tick, cross, plus, question mark) and its own words.", "section": "colors" },
+      { "name": "The One Family Rule", "body": "Figtree throughout. Hierarchy comes from weight (400, 500, 600, 700, 800) and size.", "section": "typography" },
+      { "name": "The Tabular Rule", "body": "`font-variant-numeric: tabular-nums` is set on the body. Numbers line up everywhere and do not shift when they change.", "section": "typography" },
+      { "name": "The Plain Words Rule", "body": "Prose uses plain words for a newcomer and the glossary's terms: trial, stamp, help, can't tell, distinguishable. No phase numbers and no setup ids. File paths appear only in \"Where this comes from\" notes. Headings sit alone, with no label above them.", "section": "typography" },
+      { "name": "The Flat Figure Rule", "body": "Figures carry no shadows, no gradients and no fills behind them. A mark that sits on a track gets a 2px or 3px white ring to separate it, not a shadow.", "section": "elevation" }
+    ],
+    "dos": [
+      "Do keep blue for the model itself or for something the reader can touch.",
+      "Do pair every stamp colour with its mark and its word.",
+      "Do label figures directly, and state the unit in the caption.",
+      "Do build figures from flat SVG, canvas or CSS on the white page.",
+      "Do separate with hairlines (1px Rule or Rule 2). Open a stamp with the 2px Ink rule.",
+      "Do use Figtree with tabular numerals for every number.",
+      "Do use the one ease and show final states under reduced motion.",
+      "Do keep the figure in place while the text moves, and keep it a function of the step in view.",
+      "Do write in plain words with the glossary's terms, and keep file paths inside \"Where this comes from\" notes.",
+      "Do check every new layout at 375px for sideways scroll."
+    ],
+    "donts": [
+      "Don't use blue for decoration, for a non-model series or for emphasis in prose.",
+      "Don't use a stamp colour as a general accent.",
+      "Don't put shadows, gradients or filled cards on or around a figure.",
+      "Don't add a second typeface or a monospace face.",
+      "Don't put a small label above a heading.",
+      "Don't add a second authored animation that competes with the stamp landing.",
+      "Don't carry a fact in motion alone or in colour alone.",
+      "Don't show model scores as odds or percentages of certainty.",
+      "Don't use phase numbers, setup ids or file paths in the prose.",
+      "Don't restyle the deck, the fraud console or the game viewer to match this system."
+    ]
+  }
+}

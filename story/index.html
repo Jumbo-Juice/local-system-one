@@ -1,0 +1,555 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Can a model that never writes be trusted to decide?</title>
+<meta name="description" content="A small local AI decides with one multiple-choice look and never writes. Six trials, in three games and on simulated and real payments, and what each one found.">
+<script>document.documentElement.classList.add("js");</script>
+<link rel="icon" href="data:,">
+<link rel="stylesheet" href="story.css">
+</head>
+<body id="top">
+<a class="skip" href="#main">Skip to the story</a>
+
+<header class="bar">
+  <div class="wrap bar-in">
+    <a class="bar-name" href="#top">local-system-one</a>
+    <nav class="bar-nav" aria-label="The story">
+      <a href="#question">The question</a>
+      <ol class="slots" aria-label="The six trials">
+        <li><a class="slot" href="#trial-1" data-slot="1" data-q="to be quick?"><span class="slot-n">1</span></a></li>
+        <li><a class="slot" href="#trial-2" data-slot="2" data-q="with one question?"><span class="slot-n">2</span></a></li>
+        <li><a class="slot" href="#trial-3" data-slot="3" data-q="with a whole game?"><span class="slot-n">3</span></a></li>
+        <li><a class="slot" href="#trial-4" data-slot="4" data-q="with a payment, as it comes?"><span class="slot-n">4</span></a></li>
+        <li><a class="slot" href="#trial-5" data-slot="5" data-q="after training?"><span class="slot-n">5</span></a></li>
+        <li><a class="slot" href="#trial-6" data-slot="6" data-q="against a simple baseline?"><span class="slot-n">6</span></a></li>
+      </ol>
+      <a href="#tally">The tally</a>
+      <a href="#sources">Sources</a>
+    </nav>
+  </div>
+  <div class="bar-progress" aria-hidden="true"><i></i></div>
+</header>
+
+<main id="main">
+
+<section class="wrap hero" id="question">
+  <div class="hero-text">
+    <h1>Can a model that never writes be trusted to decide?</h1>
+    <p>Most AI tools think by writing. They build an answer one word at a time. This one never writes. It is handed a question with lettered options, takes <strong>one look</strong>, and we read which letter it leans to.</p>
+    <p>We put that idea through six trials, in three games and on two sets of payments, one simulated and one real. Each trial ends on a stamp: <strong>yes</strong>, <strong>no</strong>, <strong>only with help</strong> or <strong>can’t tell</strong>.</p>
+    <p>Nothing on this page runs a model. Every figure is a recorded run, or arithmetic on results whose rules were written down before the results were known.</p>
+    <a class="onward" href="#trial-1">Trial 1: to be quick?
+      <svg viewBox="0 0 24 24" class="mark" aria-hidden="true"><path d="M12 5v14M6 13l6 6 6-6"/></svg></a>
+  </div>
+  <figure class="fig" id="fig-look">
+    <p class="fig-title">One look, as it was recorded</p>
+    <div data-build="look"></div>
+    <figcaption class="cap">A moment from the shooter game. The model was asked once and leaned to the option in blue. The bars are scores. They rank the options; they are not odds.</figcaption>
+  </figure>
+</section>
+
+<!-- ============================== Trial 1 ============================== -->
+<section class="trial" id="trial-1" data-trial="1">
+  <div class="wrap">
+    <header class="trial-head"><h2><span class="trial-no">Trial 1.</span> Can it be trusted to be quick?</h2></header>
+    <div class="scrolly">
+      <div class="fig-wrap">
+        <figure class="fig"><div class="fig-stage">
+          <div class="panel" data-panel="speed-laptop">
+            <p class="fig-title">The same question, answered two ways, on a laptop</p>
+            <div class="rows">
+              <div class="row is-model" data-fill="engine.speed.look_ms" data-max="400"><span class="row-label">One look</span><span class="row-val" data-bind="engine.speed.look_ms|ms"></span><span class="row-track"><i class="row-fill"></i></span></div>
+              <div class="row" data-fill="engine.speed.write_ms" data-max="400"><span class="row-label">Writing the answer out</span><span class="row-val" data-bind="engine.speed.write_ms|ms"></span><span class="row-track"><i class="row-fill"></i></span></div>
+            </div>
+            <p class="cap">Time for one decision, in thousandths of a second. Shorter is quicker.</p>
+          </div>
+          <div class="panel" data-panel="speed-pay">
+            <p class="fig-title">Nine payment decisions in ten were made within</p>
+            <div class="rows">
+              <div class="row is-model" data-fill="fraud.final.latency.p90" data-max="300"><span class="row-label">Real payments<small>on a desktop graphics card</small></span><span class="row-val" data-bind="fraud.final.latency.p90|ms"></span><span class="row-track"><i class="row-fill"></i><b class="row-mark" style="--at:0.8333" data-label="the limit: 250 ms"></b></span></div>
+              <div class="row is-model" data-fill="manual.paysim_frozen.p90_ms" data-max="300"><span class="row-label">Simulated payments<small>on the laptop, each question asked twice</small></span><span class="row-val" data-bind="manual.paysim_frozen.p90_ms|ms"></span><span class="row-track"><i class="row-fill"></i><b class="row-mark" style="--at:0.8333" data-label=""></b></span></div>
+            </div>
+            <p class="cap">Two machines and two sets of payments, so compare each bar with the limit, not with the other bar.</p>
+          </div>
+        </div></figure>
+      </div>
+      <div class="steps">
+        <div class="step" data-panel="speed-laptop">
+          <p>A model that writes its answer has to run once for every piece of a word. One look runs once.</p>
+          <p>On an ordinary laptop with no internet, one look took <b data-bind="engine.speed.look_ms|ms"></b>, about a tenth of a second. Writing the same answer out took <b data-bind="engine.speed.write_ms|ms"></b>, which is <b data-bind="engine.speed.times|x"></b> times as long.</p>
+        </div>
+        <div class="step" data-panel="speed-pay">
+          <p>Payments have a deadline. Before the final test on real payments we set a limit: nine decisions in ten within <b data-bind="fraud.final.latency.bar|ms"></b>.</p>
+          <p>The model took <b data-bind="fraud.final.latency.p90|ms"></b>. On the laptop, on simulated payments and asking every question twice, it took <b data-bind="manual.paysim_frozen.p90_ms|ms"></b>.</p>
+        </div>
+      </div>
+    </div>
+    <div class="stamp" data-stamp="yes" data-trial="1">
+      <span class="stamp-mark" aria-hidden="true"></span>
+      <p class="stamp-line">Stamped <strong>yes</strong></p>
+      <p class="stamp-why">One look is quick enough to decide while a payment waits or a game runs. It is the only trial the model passes with no help.</p>
+    </div>
+    <details class="where"><summary>Where this comes from</summary><ul>
+      <li><span class="tag">Observed.</span> Laptop timings: <code>bench/results/bench/</code>, one decision at a time, a 256-token state, Qwen2.5-1.5B on an Intel Arc 140V laptop chip.</li>
+      <li><span class="tag">Observed.</span> Real payments: the final test, on an RTX 3060 Ti. Simulated payments: <code>fraud/RESULTS.md</code>, on the laptop.</li>
+    </ul></details>
+  </div>
+</section>
+
+<!-- ============================== Trial 2 ============================== -->
+<section class="trial" id="trial-2" data-trial="2">
+  <div class="wrap">
+    <header class="trial-head"><h2><span class="trial-no">Trial 2.</span> Can it be trusted with one question?</h2></header>
+    <div class="scrolly">
+      <div class="fig-wrap">
+        <figure class="fig"><div class="fig-stage">
+          <div class="panel" data-panel="scores">
+            <p class="fig-title">Its top score, against how often it was right</p>
+            <div class="group">
+              <p class="group-title">The most overconfident model we tried</p>
+              <div class="rows">
+                <div class="row is-model" data-fill="manual.confidence.worst_sure" data-max="100"><span class="row-label">Average top score</span><span class="row-val"><span data-bind="manual.confidence.worst_sure|int"></span> in 100</span><span class="row-track"><i class="row-fill"></i></span></div>
+                <div class="row" data-fill="manual.confidence.worst_right" data-max="100"><span class="row-label">Right answers</span><span class="row-val"><span data-bind="manual.confidence.worst_right|int"></span> in 100</span><span class="row-track"><i class="row-fill"></i></span></div>
+              </div>
+            </div>
+            <div class="group">
+              <p class="group-title">The model we chose</p>
+              <div class="rows">
+                <div class="row is-model" data-fill="manual.confidence.chosen_sure" data-max="100"><span class="row-label">Average top score</span><span class="row-val"><span data-bind="manual.confidence.chosen_sure|int"></span> in 100</span><span class="row-track"><i class="row-fill"></i></span></div>
+                <div class="row" data-fill="manual.confidence.chosen_right" data-max="100"><span class="row-label">Right answers</span><span class="row-val"><span data-bind="manual.confidence.chosen_right|int"></span> in 100</span><span class="row-track"><i class="row-fill"></i></span></div>
+              </div>
+            </div>
+          </div>
+          <div class="panel" data-panel="lists">
+            <p class="fig-title">Right answers as the list of options grows</p>
+            <div data-build="tournament"></div>
+            <p class="cap">30 problems at each size, one right option in each. A small sample: read it as a clear signal, not a precise rate.</p>
+          </div>
+          <div class="panel" data-panel="flip">
+            <div data-build="flip"></div>
+          </div>
+          <div class="panel" data-panel="escapes">
+            <p class="fig-title">Maps escaped by the small model, out of 10</p>
+            <div class="dotgroup"><p class="dotline"><b data-bind="manual.order.escapes_before|int"></b> escapes, asking each question once</p><ul class="dots" data-dots="manual.order.escapes_before" data-of="manual.order.runs"></ul></div>
+            <div class="dotgroup"><p class="dotline"><b data-bind="manual.order.escapes_after|int"></b> escapes, asking in both orders and averaging</p><ul class="dots" data-dots="manual.order.escapes_after" data-of="manual.order.runs"></ul></div>
+            <p class="cap">Ten maps is a small sample. A gap this wide held up; smaller gaps did not.</p>
+          </div>
+        </div></figure>
+      </div>
+      <div class="steps">
+        <div class="step" data-panel="scores">
+          <p>Each look gives every option a score. It is tempting to read a top score of 0.99 as “99% sure”.</p>
+          <p>We checked on <b data-bind="manual.confidence.items|int"></b> questions with known answers. One model’s top score averaged <b data-bind="manual.confidence.worst_sure|int"></b> in 100 while it was right <b data-bind="manual.confidence.worst_right|int"></b> times in 100. Every model we tried leaned the same way.</p>
+          <p>So a score ranks the options. It is not odds.</p>
+        </div>
+        <div class="step" data-panel="lists">
+          <p>Hand it a long list and it loses its place. With 10 options in one question it found the right one <b data-bind="engine.tournament.0.at_once|pct"></b> of the time. With 80 it managed <b data-bind="engine.tournament.5.at_once|pct"></b>.</p>
+          <p>The help is a tournament: split the options into groups of 10, take one look at each group, and run the winners against each other. With 80 options that kept it at <b data-bind="engine.tournament.5.tournament|pct"></b>, for about twice the time.</p>
+        </div>
+        <div class="step" data-panel="flip">
+          <p>The order of the options matters more than it should.</p>
+          <p>This is a recorded moment from the shooter game. Three sleeping gunners are in sight, and the small model is asked which shot to take. With “hold fire” listed last, it holds fire.</p>
+          <p><strong>Try it:</strong> flip the list and watch where it leans.</p>
+          <p class="hint">The options, word for word: “<span data-bind="games.flip.options.0|raw"></span>”, the same for gunners #10 and #12, and “<span data-bind="games.flip.options.3|raw"></span>”.</p>
+        </div>
+        <div class="step" data-panel="escapes">
+          <p>In the game this decided everything. The small model’s choice to fire followed the order of the options in <b data-bind="manual.order.states_followed|int"></b> of <b data-bind="manual.order.states|int"></b> moments we checked, so with “hold fire” last it never fired.</p>
+          <p>The help: ask every question in both orders and average the scores. That costs a second look.</p>
+        </div>
+      </div>
+    </div>
+    <div class="stamp" data-stamp="help" data-trial="2">
+      <span class="stamp-mark" aria-hidden="true"></span>
+      <p class="stamp-line">Stamped <strong>only with help</strong></p>
+      <p class="stamp-why">On a short, clear question it chooses well. To stay that way it needed tournaments for long lists and a second look in the other order. Its scores can’t be read as odds at all.</p>
+    </div>
+    <details class="where"><summary>Where this comes from</summary><ul>
+      <li><span class="tag">Observed.</span> Scores against right answers: <code>docs/research.md</code>, 58 questions; the two models are Qwen3-1.7B and Qwen2.5-1.5B.</li>
+      <li><span class="tag">Observed.</span> Long lists: <code>bench/results/tournament_compare/</code>.</li>
+      <li><span class="tag">Observed.</span> The flipped question is one decision in a pinned run, <code>runs/shooter/…1.5b_seed1.pinned.jsonl</code>, with the scores the run recorded for each order.</li>
+      <li><span class="tag">Observed.</span> Escapes and the 34 moments: <code>docs/lessons-learned.md</code>, first shooter, Qwen2.5-1.5B.</li>
+    </ul></details>
+  </div>
+</section>
+
+<!-- ============================== Trial 3 ============================== -->
+<section class="trial" id="trial-3" data-trial="3">
+  <div class="wrap">
+    <header class="trial-head"><h2><span class="trial-no">Trial 3.</span> Can it be trusted with a whole game?</h2></header>
+    <div class="scrolly">
+      <div class="fig-wrap">
+        <figure class="fig"><div class="fig-stage">
+          <div class="panel" data-panel="run"><div data-build="replay" data-run="bullet"></div></div>
+          <div class="panel" data-panel="warned">
+            <p class="fig-title">Hits taken after choosing a move labelled dangerous, with a safe move on the list</p>
+            <div class="dotgroup"><p class="dotline"><b data-bind="manual.warned.small_hits|int"></b> of <span data-bind="manual.warned.small_all|int"></span> hits, the small model</p><ul class="dots" data-dots="manual.warned.small_hits" data-of="manual.warned.small_all" data-kind="bad"></ul></div>
+            <div class="dotgroup"><p class="dotline"><b data-bind="manual.warned.large_hits|int"></b> of <span data-bind="manual.warned.large_all|int"></span> hits, the larger model</p><ul class="dots" data-dots="manual.warned.large_hits" data-of="manual.warned.large_all" data-kind="bad"></ul></div>
+            <p class="cap">One dot is one hit. Red dots are the hits it walked into after being warned.</p>
+          </div>
+          <div class="panel" data-panel="loop">
+            <p class="fig-title">Right on one question, stuck in the game</p>
+            <svg class="loop-svg" viewBox="0 0 320 130" role="img" aria-label="An agent going back and forth between two doorways">
+              <path class="arc" d="M70 52 C 120 8, 200 8, 250 52"/><path class="arc" d="M250 78 C 200 122, 120 122, 70 78"/>
+              <path class="arc" d="M240 40 l10 12 l-15 3"/><path class="arc" d="M80 90 l-10 -12 l15 -3"/>
+              <rect class="door" x="34" y="40" width="36" height="50" rx="3"/><rect class="door" x="250" y="40" width="36" height="50" rx="3"/>
+              <text x="52" y="110" text-anchor="middle">doorway</text><text x="268" y="110" text-anchor="middle">doorway</text>
+            </svg>
+            <div class="facts">
+              <div class="fact"><b><span data-bind="manual.loop.single_right_low|int"></span> to <span data-bind="manual.loop.single_right_high|int"></span> in 100</b><span>good moves on one-off test questions</span></div>
+              <div class="fact"><b><span data-bind="manual.loop.turns|int"></span> turns</b><span>one agent spent walking between two doorways</span></div>
+            </div>
+          </div>
+          <div class="panel" data-panel="tiers">
+            <p class="fig-title">What four agents collected in the grid game</p>
+            <div class="group">
+              <p class="group-title">Gems</p>
+              <div class="rows">
+                <div class="row is-quiet" data-fill="games.grid.random.gems" data-max="60"><span class="row-label">Random moves</span><span class="row-val" data-bind="games.grid.random.gems|int"></span><span class="row-track"><i class="row-fill"></i></span></div>
+                <div class="row is-model" data-fill="games.grid.flat.gems" data-max="60"><span class="row-label">The model choosing moves alone</span><span class="row-val" data-bind="games.grid.flat.gems|int"></span><span class="row-track"><i class="row-fill"></i></span></div>
+                <div class="row" data-fill="games.grid.tiers.gems" data-max="60"><span class="row-label">A goal, then a target, then a move</span><span class="row-val" data-bind="games.grid.tiers.gems|int"></span><span class="row-track"><i class="row-fill"></i></span></div>
+              </div>
+            </div>
+            <div class="group">
+              <p class="group-title">Food</p>
+              <div class="rows">
+                <div class="row is-quiet" data-fill="games.grid.random.food" data-max="60"><span class="row-label">Random moves</span><span class="row-val" data-bind="games.grid.random.food|int"></span><span class="row-track"><i class="row-fill"></i></span></div>
+                <div class="row is-model" data-fill="games.grid.flat.food" data-max="60"><span class="row-label">The model choosing moves alone</span><span class="row-val" data-bind="games.grid.flat.food|int"></span><span class="row-track"><i class="row-fill"></i></span></div>
+                <div class="row" data-fill="games.grid.tiers.food" data-max="60"><span class="row-label">A goal, then a target, then a move</span><span class="row-val" data-bind="games.grid.tiers.food|int"></span><span class="row-track"><i class="row-fill"></i></span></div>
+              </div>
+            </div>
+          </div>
+          <div class="panel" data-panel="escape"><div data-build="replay" data-run="escape"></div></div>
+        </div></figure>
+      </div>
+      <div class="steps">
+        <div class="step" data-panel="run" data-tick="0">
+          <p>In the shooter, one agent clears locked rooms, takes the key and leaves by the exit. Nothing is scripted. On every tick the model answers a goal question, a target question, a move question and a shoot question.</p>
+          <p>This is a recorded run of the larger model. We chose which run to show before we knew how it would end.</p>
+          <p class="hint">The blue dot is the agent. Red shapes are enemies, hollow while asleep, and the small red dots are their bullets. The key is orange and the exit green.</p>
+        </div>
+        <div class="step step--long" data-panel="run" data-scrub="0:moment"><div class="step-in">
+          <p>Scroll to play it, tick by tick.</p>
+          <p>Stop at tick <b data-bind="replays.bullet.moment.tick|int"></b>. A bullet is coming. The list offers “<span data-bind="replays.bullet.moment.safe|raw"></span>”.</p>
+          <p>The model chooses “<b data-bind="replays.bullet.moment.move|raw"></b>”, with a score of <b data-bind="replays.bullet.moment.score|score2"></b>.</p>
+        </div></div>
+        <div class="step step--long" data-panel="run" data-scrub="moment:end"><div class="step-in">
+          <p>It keeps doing it. <b data-bind="replays.bullet.warned_ticks.length|int"></b> times in this run it steps into a labelled bullet path while a safe move is on the list.</p>
+          <p>The red marks under the map are those steps. On tick <span data-bind="replays.bullet.end_tick|int"></span> a gunner kills it, key in hand.</p>
+        </div></div>
+        <div class="step" data-panel="warned">
+          <p>That run was the rule, not the exception. Nearly every hit either model took came from a move it had been told was dangerous, chosen while a safe one was offered.</p>
+          <p>Spelling the danger out more clearly changed nothing.</p>
+        </div>
+        <div class="step" data-panel="loop">
+          <p>A second problem only shows over time. The model gives the same answer every time it meets the same moment. So one wrong answer in one spot repeats, every time it comes back there.</p>
+          <p>A score card of single questions can’t see that. Only playing the whole game can.</p>
+        </div>
+        <div class="step" data-panel="tiers">
+          <p>What fixed the games was structure around the model, not a better model.</p>
+          <p>Layers of decisions came first: a slow goal, then a target, then a move. In the grid game that gave <b data-bind="games.grid.gems_times|x"></b> times the gems and <b data-bind="games.grid.food_times|x"></b> times the food. Choosing moves alone did no better than random.</p>
+          <p>Then two rules: never offer a dangerous move when a safe one exists, and keep a target until you reach it.</p>
+        </div>
+        <div class="step step--long" data-panel="escape" data-scrub="0:end"><div class="step-in">
+          <p>With that help, both models escaped <b data-bind="games.escape.escaped|int"></b> of <b data-bind="games.escape.runs|int"></b> maps in the final checks: in the shooter, and in a dungeon where the agent has no weapon and must slip past ghouls.</p>
+          <p>Scroll to play one of those runs: the blue dot again, with ghouls in red. An earlier dungeon, with corridors one cell wide, was escaped <span data-bind="manual.first_dungeon.escaped|int"></span> times in <span data-bind="manual.first_dungeon.runs|int"></span> before we rebuilt it.</p>
+        </div></div>
+      </div>
+    </div>
+    <div class="stamp" data-stamp="help" data-trial="3">
+      <span class="stamp-mark" aria-hidden="true"></span>
+      <p class="stamp-line">Stamped <strong>only with help</strong></p>
+      <p class="stamp-why">The escapes show the model can plan and find its way. They do not show that it judges danger: the safety comes from the list of options we hand it.</p>
+    </div>
+    <details class="where"><summary>Where this comes from</summary><ul>
+      <li><span class="tag">Observed.</span> The shooter replay is the pinned run <code>runs/shooter/…classic_qwen2.5-3b_seed0.pinned.jsonl</code>: seed 0, chosen before the run, whatever the outcome.</li>
+      <li><span class="tag">Observed.</span> Hits after warnings, the 570 turns and the single-question rates: <code>docs/lessons-learned.md</code> and <code>docs/research.md</code>. The looping run was pruned, so it is told here and not replayed.</li>
+      <li><span class="tag">Observed.</span> Grid game: <code>bench/results/demo_compare/</code>, 3 seeds of 100 ticks. Escapes: <code>bench/results/escape_check/</code>, two checks of 20 runs.</li>
+      <li><span class="tag">Observed.</span> The dungeon replay is <code>runs/dungeon/…check_3b_seed0.pinned.jsonl</code>.</li>
+      <li><span class="tag">Inferred.</span> That safety has to come from the option lists and the planning layers, not from the move question.</li>
+    </ul></details>
+  </div>
+</section>
+
+<!-- ============================== Trial 4 ============================== -->
+<section class="trial" id="trial-4" data-trial="4">
+  <div class="wrap">
+    <header class="trial-head"><h2><span class="trial-no">Trial 4.</span> Can it be trusted with a payment, as it comes?</h2></header>
+    <div class="scrolly">
+      <div class="fig-wrap">
+        <figure class="fig"><div class="fig-stage">
+          <div class="panel" data-panel="payment"><div data-build="payment"></div></div>
+          <div class="panel" data-panel="declined">
+            <p class="fig-title">Every payment the untrained model judged</p>
+            <canvas class="grid-canvas" data-grid="declined" role="img" aria-label="A grid of 3,800 squares, every one marked declined: 520 were fraud and 3,280 were genuine"></canvas>
+            <ul class="key">
+              <li><i style="--c:#7f1d1d"></i>Declined, and it was fraud: <b data-bind="manual.paysim_frozen.frauds|int"></b></li>
+              <li><i style="--c:#f87171"></i>Declined, and it was genuine: <b data-bind="manual.paysim_frozen.genuine|int"></b></li>
+              <li><i class="hollow" style="--c:#4b5563"></i>Approved or sent for review: 0</li>
+            </ul>
+          </div>
+          <div class="panel" data-panel="rules">
+            <p class="fig-title">Test windows where six hand-written rules cost less than the model</p>
+            <p class="dotline"><b data-bind="manual.paysim_frozen.windows_lost_to_rules|int"></b> of <span data-bind="manual.paysim_frozen.windows|int"></span> windows</p>
+            <ul class="dots sq" data-dots="manual.paysim_frozen.windows_lost_to_rules" data-of="manual.paysim_frozen.windows" data-kind="bad"></ul>
+            <div class="facts">
+              <div class="fact"><b><span data-bind="manual.paysim_frozen.ranked_right_pct|int"></span> in 100</b><span>times its scores put a fraud above a genuine payment</span></div>
+              <div class="fact"><b>0</b><span>payments where its top answer was anything but decline</span></div>
+            </div>
+          </div>
+        </div></figure>
+      </div>
+      <div class="steps">
+        <div class="step" data-panel="payment">
+          <p>The serious test is fraud. Every payment gets one of three actions: <b>approve</b>, <b>review</b> (hand it to a person) or <b>decline</b>.</p>
+          <p>A few hand-written rules approve the kinds of payment that never had fraud. The model judges the rest, one look each. We began on PaySim, a public set of simulated mobile-money payments.</p>
+          <p>Here is one recorded decision. The payment was genuine.</p>
+        </div>
+        <div class="step" data-panel="declined">
+          <p>It did that every time. With no training, the model declined all <b data-bind="manual.paysim_frozen.declined|int"></b> payments it judged in the test: <b data-bind="manual.paysim_frozen.frauds|int"></b> frauds, and <b data-bind="manual.paysim_frozen.genuine|int"></b> genuine payments.</p>
+        </div>
+        <div class="step" data-panel="rules">
+          <p>Its scores were not noise. They put a fraud above a genuine payment about <span data-bind="manual.paysim_frozen.ranked_right_pct|int"></span> times in 100. But its top answer never moved off “decline”, however we worded the question.</p>
+          <p>Six hand-written rules cost less in every one of the <span data-bind="manual.paysim_frozen.windows|int"></span> test windows. A window is a block of payments in the order they arrived.</p>
+        </div>
+      </div>
+    </div>
+    <div class="stamp" data-stamp="no" data-trial="4">
+      <span class="stamp-mark" aria-hidden="true"></span>
+      <p class="stamp-line">Stamped <strong>no</strong></p>
+      <p class="stamp-why">As it comes, the model can’t be trusted with a payment. It declines everything.</p>
+    </div>
+    <details class="where"><summary>Where this comes from</summary><ul>
+      <li><span class="tag">Observed.</span> <code>fraud/RESULTS.md</code>: Qwen2.5-1.5B, untrained, 20 test windows of 500 PaySim payments, fixed before the run.</li>
+      <li><span class="tag">Observed.</span> The single decision is the first the model made in a pinned run, <code>fraud/runs/…dev0.pinned.jsonl</code>. PaySim is simulated data (CC BY-SA 4.0).</li>
+    </ul></details>
+  </div>
+</section>
+
+<!-- ============================== Trial 5 ============================== -->
+<section class="trial" id="trial-5" data-trial="5">
+  <div class="wrap">
+    <header class="trial-head"><h2><span class="trial-no">Trial 5.</span> Can it be trusted after training?</h2></header>
+    <div class="scrolly">
+      <div class="fig-wrap">
+        <figure class="fig"><div class="fig-stage">
+          <div class="panel" data-panel="match">
+            <p class="fig-title">The trained model’s decisions, against the rule book</p>
+            <canvas class="grid-canvas" data-grid="match" role="img" aria-label="A grid of 3,862 squares: 3,853 where the trained model wanted the same action as the rules, and 9 where it differed"></canvas>
+            <ul class="key">
+              <li><i style="--c:#cbd5e1"></i>Same action as the rules: <b data-bind="fraud.paysim.matched|int"></b></li>
+              <li><i style="--c:#b45309"></i>A different action: <b data-bind="fraud.paysim.differ|int"></b></li>
+            </ul>
+          </div>
+          <div class="panel" data-panel="ladder">
+            <p class="fig-title">Cost per window of 1,000 real payments, in USD</p>
+            <div class="rows">
+              <div class="row is-model" data-fill="fraud.dev.setups.frozen.mean" data-max="4000"><span class="row-label">The model, as it comes</span><span class="row-val" data-bind="fraud.dev.setups.frozen.mean|int"></span><span class="row-track"><i class="row-fill"></i></span></div>
+              <div class="row is-model" data-fill="fraud.dev.setups.phase12.mean" data-max="4000"><span class="row-label">Trained</span><span class="row-val" data-bind="fraud.dev.setups.phase12.mean|int"></span><span class="row-track"><i class="row-fill"></i></span></div>
+              <div class="row is-model" data-fill="fraud.dev.setups.rich.mean" data-max="4000"><span class="row-label">Trained, and shown more of each payment</span><span class="row-val" data-bind="fraud.dev.setups.rich.mean|int"></span><span class="row-track"><i class="row-fill"></i></span></div>
+              <div class="row" data-fill="fraud.dev.setups.logreg.mean" data-max="4000"><span class="row-label">Logistic regression<small>a simple statistical method, for reference</small></span><span class="row-val" data-bind="fraud.dev.setups.logreg.mean|int"></span><span class="row-track"><i class="row-fill"></i></span></div>
+            </div>
+            <p class="cap"><span data-bind="fraud.dev.windows_n|int"></span> practice windows, not the final test. Shorter is cheaper.</p>
+          </div>
+          <div class="panel" data-panel="rule"><div data-build="rule"></div></div>
+          <div class="panel" data-panel="ruleeffect">
+            <p class="fig-title">The same scores, two ways of turning them into actions</p>
+            <div class="rows">
+              <div class="row is-quiet" data-fill="fraud.rule.lines" data-max="3000"><span class="row-label">Two fixed lines<small>decline above one score, review above another</small></span><span class="row-val" data-bind="fraud.rule.lines|usd"></span><span class="row-track"><i class="row-fill"></i></span></div>
+              <div class="row" data-fill="fraud.rule.rule" data-max="3000"><span class="row-label">Weigh the amount<small>the rule you just tried</small></span><span class="row-val" data-bind="fraud.rule.rule|usd"></span><span class="row-track"><i class="row-fill"></i></span></div>
+            </div>
+            <p class="cap">Cost per window, on <span data-bind="fraud.rule.windows_n|int"></span> earlier test windows. The scores here are logistic regression’s, not the model’s.</p>
+          </div>
+        </div></figure>
+      </div>
+      <div class="steps">
+        <div class="step" data-panel="match">
+          <p>So we trained it: <b data-bind="manual.paysim_trained.minutes|int"></b> minutes on the laptop, on earlier payments with known answers.</p>
+          <p>The trained model wanted the same action as the rule book on <b data-bind="fraud.paysim.matched|int"></b> of <b data-bind="fraud.paysim.decisions|int"></b> decisions. It was cheaper than logistic regression in <b data-bind="manual.paysim_trained.cheaper_than_logreg|int"></b> of <span data-bind="manual.paysim_trained.windows|int"></span> new windows.</p>
+          <p>It never beat the rules: <b data-bind="manual.paysim_trained.cheaper_than_rules|int"></b> of <span data-bind="manual.paysim_trained.windows|int"></span>. In this simulated data two clues give almost every fraud away, so little is left for a model to add.</p>
+        </div>
+        <div class="step" data-panel="ladder">
+          <p>Simulated payments were too easy, so we moved to real ones: <b data-bind="fraud.split.rows|int"></b> card payments from a public competition, split by time.</p>
+          <p>Cost is now in dollars: fraud let through, good customers declined, and the fee for each review. These costs are assumed, not measured.</p>
+          <p>Training paid again. <span data-compare="fraud.dev.diffs.frozen_phase12" data-first="The model as it comes" data-second="the trained model" data-unit="window"></span></p>
+        </div>
+        <div class="step" data-panel="rule">
+          <p>Part of that gain is not the model at all. It is the rule that turns a score into an action.</p>
+          <p>A missed fraud costs its whole amount. Declining a good customer costs a tenth of it. A review costs a flat fee. So the cheapest action depends on the amount.</p>
+          <p><strong>Try it:</strong> move the two sliders and watch the cheapest action change.</p>
+        </div>
+        <div class="step" data-panel="ruleeffect">
+          <p>On real payments, that rule alone cut the cost with the scores left untouched.</p>
+          <p><span data-compare="fraud.rule.diff" data-first="Weighing the amount" data-second="two fixed lines" data-unit="window"></span></p>
+          <p>It is arithmetic around the model, and it works on any scores.</p>
+        </div>
+      </div>
+    </div>
+    <div class="stamp" data-stamp="help" data-trial="5">
+      <span class="stamp-mark" aria-hidden="true"></span>
+      <p class="stamp-line">Stamped <strong>only with help</strong></p>
+      <p class="stamp-why">Training turned a model that declined everything into one that wanted the rule book’s action on nearly every payment. On practice windows its cost was not distinguishable from logistic regression’s. Training and the cost rule did that. It was never cheaper than the rules.</p>
+    </div>
+    <details class="where"><summary>Where this comes from</summary><ul>
+      <li><span class="tag">Observed.</span> Simulated payments: <code>fraud/RESULTS-FT.md</code>, 20 new test windows. Costs per window there: rules <span data-bind="fraud.paysim.mean_rules|int"></span>, trained model <span data-bind="fraud.paysim.mean_trained|int"></span>, logistic regression <span data-bind="fraud.paysim.mean_logreg|int"></span>.</li>
+      <li><span class="tag">Observed.</span> Real payments: IEEE-CIS, <code>fraud/results/eval_lm_nuc/</code>, 88 practice windows of 1,000 payments; the model is d1-Omni-2B. Practice windows flatter every setup a little, because some settings were chosen on them.</li>
+      <li><span class="tag">Observed.</span> The rule: <code>fraud/results/eval_ieee_amount/</code>, 20 earlier test windows that share no payment with the final test.</li>
+      <li><span class="tag">Assumption.</span> A wrong decline costs 10% of the amount (at least 1 USD), a review 10 USD, and at most 5% of payments can be reviewed.</li>
+      <li><span class="tag">Implementation choice.</span> The fraud estimate in the sliders is a fit made on practice windows and used only to weigh costs. The model’s raw scores are never treated as odds.</li>
+    </ul></details>
+  </div>
+</section>
+
+<!-- ============================== Trial 6 ============================== -->
+<section class="trial" id="trial-6" data-trial="6">
+  <div class="wrap">
+    <header class="trial-head"><h2><span class="trial-no">Trial 6.</span> Can it be trusted against a simple baseline?</h2></header>
+    <div class="scrolly">
+      <div class="fig-wrap">
+        <figure class="fig"><div class="fig-stage">
+          <div class="panel" data-panel="locked">
+            <p class="fig-title">The final test: locked first, run once</p>
+            <ul class="dots sq" data-dots="fraud.final.windows_n" data-of="fraud.final.windows_n"></ul>
+            <div class="facts">
+              <div class="fact"><b data-bind="fraud.final.windows_n|int"></b><span>windows of 1,000 real payments</span></div>
+              <div class="fact"><b data-bind="fraud.final.frauds|int"></b><span>frauds among them</span></div>
+              <div class="fact"><b data-bind="fraud.final.fraud_usd|usd"></b><span>of fraud in all</span></div>
+            </div>
+          </div>
+          <div class="panel" data-panel="race">
+            <p class="fig-title">Cost adding up across the 20 windows, in USD</p>
+            <div data-build="race"></div>
+          </div>
+          <div class="panel" data-panel="forest"><div data-build="forest"></div></div>
+          <div class="panel" data-panel="customers">
+            <p class="fig-title">Good customers declined, over the 20 windows</p>
+            <div class="rows">
+              <div class="row" data-fill="fraud.final.setups.baseline.good_declined" data-max="1200"><span class="row-label">Logistic regression</span><span class="row-val" data-bind="fraud.final.setups.baseline.good_declined|int"></span><span class="row-track"><i class="row-fill"></i></span></div>
+              <div class="row is-model" data-fill="fraud.final.setups.rich_amt.good_declined" data-max="1200"><span class="row-label">The model</span><span class="row-val" data-bind="fraud.final.setups.rich_amt.good_declined|int"></span><span class="row-track"><i class="row-fill"></i></span></div>
+              <div class="row is-model" data-fill="fraud.final.setups.rich_cust.good_declined" data-max="1200"><span class="row-label">The model, with the customer line<small>read after the test, not a tested result</small></span><span class="row-val" data-bind="fraud.final.setups.rich_cust.good_declined|int"></span><span class="row-track"><i class="row-fill"></i></span></div>
+            </div>
+            <p class="cap">The customer line is one more term in the rule: it counts every wrong decline as 10 USD dearer.</p>
+          </div>
+        </div></figure>
+      </div>
+      <div class="steps">
+        <div class="step" data-panel="locked">
+          <p>One test was locked away before this work began: <b data-bind="fraud.final.windows_n|int"></b> windows of real payments, <b data-bind="fraud.final.rows|int"></b> in all.</p>
+          <p>The questions it would answer were written down first. Then it ran once.</p>
+        </div>
+        <div class="step step--long" data-panel="race" data-scrub="0:1"><div class="step-in">
+          <p>Scroll, and the cost adds up window by window.</p>
+          <p>Approving everything loses the most: <b data-bind="fraud.final.setups.approve_all.mean|usd"></b> a window. The model loses <b data-bind="fraud.final.setups.rich_amt.mean|usd"></b>. Logistic regression, the simple baseline, loses <b data-bind="fraud.final.setups.baseline.mean|usd"></b>.</p>
+        </div></div>
+        <div class="step" data-panel="forest" data-state="a">
+          <p>Against approving everything, the answer is clear.</p>
+          <p><span data-compare="fraud.final.diffs.rich_amt_approve" data-first="The model" data-second="approving everything" data-unit="window"></span></p>
+          <p class="hint">The interval is the range the true difference plausibly lies in, found by redrawing the 20 windows many times. If it leaves out zero, we call the two distinguishable.</p>
+        </div>
+        <div class="step" data-panel="forest" data-state="b">
+          <p>Against logistic regression, it is not.</p>
+          <p><span data-compare="fraud.final.diffs.rich_amt_baseline" data-first="The model" data-second="logistic regression" data-unit="window"></span></p>
+          <p>The interval crosses zero. This test cannot say which of the two costs less.</p>
+        </div>
+        <div class="step" data-panel="customers">
+          <p>One thing did change for customers. A line added to the rule cut the good customers declined from <b data-bind="fraud.final.setups.rich_amt.good_declined|int"></b> to <b data-bind="fraud.final.setups.rich_cust.good_declined|int"></b>, at about the same cost.</p>
+          <p>That gain came from the rule again. And we looked at it after the test, so it is a reading, not a tested result.</p>
+        </div>
+      </div>
+    </div>
+    <div class="stamp" data-stamp="cant" data-trial="6">
+      <span class="stamp-mark" aria-hidden="true"></span>
+      <p class="stamp-line">Stamped <strong>can’t tell</strong></p>
+      <p class="stamp-why">The model is far better than doing nothing, and this test could not separate it from logistic regression. That is not a no. It is not a yes either.</p>
+    </div>
+    <details class="where"><summary>Where this comes from</summary><ul>
+      <li><span class="tag">Observed.</span> <code>fraud/results/eval_final/</code>: 20 windows chosen by a fixed seed before the work, run once. The model is d1-Omni-2B, trained, with no other model’s score in its question.</li>
+      <li><span class="tag">Observed.</span> Intervals: the windows redrawn 10,000 times; a difference is the first setup’s cost minus the second’s.</li>
+      <li><span class="tag">Observed, after the test.</span> The customer line: <code>fraud/results/eval_final/rich_cust_readout.json</code>. It was asked for after every result was seen, so it is not a test.</li>
+      <li><span class="tag">Assumption.</span> The same assumed costs as in trial 5.</li>
+    </ul></details>
+  </div>
+</section>
+
+<!-- ============================== The tally ============================== -->
+<section class="closing" id="tally">
+  <div class="wrap">
+    <h2>The tally</h2>
+    <ol class="tally-list">
+      <li class="tally-row" data-stamp="yes"><span class="tally-mark" aria-hidden="true"></span><span class="tally-q"><a href="#trial-1">Can it be trusted to be quick?</a></span><span class="tally-s">yes</span></li>
+      <li class="tally-row" data-stamp="help"><span class="tally-mark" aria-hidden="true"></span><span class="tally-q"><a href="#trial-2">With one question?</a></span><span class="tally-s">only with help</span></li>
+      <li class="tally-row" data-stamp="help"><span class="tally-mark" aria-hidden="true"></span><span class="tally-q"><a href="#trial-3">With a whole game?</a></span><span class="tally-s">only with help</span></li>
+      <li class="tally-row" data-stamp="no"><span class="tally-mark" aria-hidden="true"></span><span class="tally-q"><a href="#trial-4">With a payment, as it comes?</a></span><span class="tally-s">no</span></li>
+      <li class="tally-row" data-stamp="help"><span class="tally-mark" aria-hidden="true"></span><span class="tally-q"><a href="#trial-5">After training?</a></span><span class="tally-s">only with help</span></li>
+      <li class="tally-row" data-stamp="cant"><span class="tally-mark" aria-hidden="true"></span><span class="tally-q"><a href="#trial-6">Against a simple baseline?</a></span><span class="tally-s">can’t tell</span></li>
+    </ol>
+    <ul class="counts">
+      <li data-stamp="yes"><b>1</b>yes</li>
+      <li data-stamp="help"><b>3</b>only with help</li>
+      <li data-stamp="no"><b>1</b>no</li>
+      <li data-stamp="cant"><b>1</b>can’t tell</li>
+    </ul>
+    <p class="takeaway">It is quick enough to decide in real time. But every gain we measured came from the structure around the model, or from training it.</p>
+    <p>None came from its judgement as it comes. The structure was layers of decisions, lists of options, a second look in the other order, tournaments, and a rule that weighs the cost. With all of that help its cost was not distinguishable from logistic regression’s, and it was never cheaper than the hand-written rules. This reading is ours, drawn from the six trials; it was not itself a test.</p>
+  </div>
+</section>
+
+<section class="closing" id="limits">
+  <div class="wrap">
+    <h2>What this can’t tell you</h2>
+    <ul class="limits">
+      <li><b>The costs are assumed.</b> Nobody measured what a wrongly declined customer or a review really costs. Every dollar figure here rests on those assumptions.</li>
+      <li><b>The final test is spent.</b> It ran once. It can’t be run again to settle “can’t tell”, and any new claim about it would be a second look.</li>
+      <li><b>One training run per setup.</b> On practice windows a second run with another seed moved the cost by about <span data-bind="fraud.dev.diffs.seed1_phase12.mean|absusd"></span> a window, which is the size of some differences we were trying to measure.</li>
+      <li><b>A cheaper setup that we don’t count.</b> When the model also read a score from decision trees, it cost less. But its answers followed that score almost exactly (a rank match of <span data-bind="fraud.rank_corr|score2"></span>), so it is not the model’s own judgement.</li>
+      <li><b>The game samples are small.</b> Ten or twenty runs decide little. Only wide gaps held up when we repeated them.</li>
+      <li><b>The games are beatable by design.</b> Their safety comes from the option lists. The escapes show planning, not a sense of danger.</li>
+      <li><b>Simulated payments are not real ones.</b> PaySim is generated data, and two clues give away almost every fraud in it.</li>
+      <li><b>Fairness was not measured.</b> We did not check whether mistakes fall evenly across kinds of customers.</li>
+    </ul>
+  </div>
+</section>
+
+<section class="closing" id="sources">
+  <div class="wrap">
+    <h2>Sources</h2>
+    <div class="sources">
+      <div>
+        <h3>The idea</h3>
+        <p>The idea comes from Jev, a commercial model described by TypeSafe, and from Sean Goedecke’s articles about it. This project is not Jev and does not reproduce it: we rebuilt only the publicly described trick, on open models.</p>
+        <ul>
+          <li><a href="https://www.seangoedecke.com/two-techniques-for-working-with-system-one-models/">Sean Goedecke, Two techniques for working with System One models</a></li>
+          <li><a href="https://www.seangoedecke.com/jev-means-structured-output-is-interesting-again/">Sean Goedecke, Jev means structured output is interesting again</a></li>
+          <li><a href="https://typesafe.ai/blog/introducing-system-one-models-and-jev">TypeSafe, Introducing System One models and Jev</a></li>
+        </ul>
+      </div>
+      <div>
+        <h3>Models and data</h3>
+        <ul>
+          <li>Qwen2.5 with 1.5 billion and 3 billion parameters, for the games and the simulated payments. d1-Omni-2B for the real payments.</li>
+          <li>PaySim, by E. A. Lopez-Rojas, A. Elmir and S. Axelsson: simulated mobile-money payments, CC BY-SA 4.0.</li>
+          <li>IEEE-CIS Fraud Detection: real card payments from a public competition. No payment from it appears on this page, only results per window.</li>
+        </ul>
+      </div>
+      <div>
+        <h3>The project</h3>
+        <p>Every number on this page is built from result files and recorded runs in the project’s repository, local-system-one. The write-ups there carry the full tables and the failures.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+</main>
+
+<footer class="foot"><div class="wrap">local-system-one. A recorded story: no model runs on this page.</div></footer>
+
+<script src="data.js"></script>
+<script src="vendor/gsap/gsap.min.js"></script>
+<script src="vendor/gsap/ScrollTrigger.min.js"></script>
+<script src="js/core.js"></script>
+<script src="js/figures.js"></script>
+<script src="js/replay.js"></script>
+<script src="js/main.js"></script>
+</body>
+</html>

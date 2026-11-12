@@ -3,16 +3,32 @@
 A local System One-style decision engine (`system_one/`) and two applications that exercise it.
 Start with the "Where things are" table in `README.md`; every command is in `RUN-GUIDE.md`.
 
-## Two applications, kept apart
+## Two applications, kept apart, and one story
 
 | app | where | its rules |
 |---|---|---|
 | **Game demos** (playful): grid, dungeon, shooter | `demo/`, `viewer/`, `runs/`, `bench/` | the Rules below |
 | **Fraud app** (serious): approve / review / decline on PaySim | `fraud/` (its own runs, results, viewer; write-ups at its root) | `fraud/CLAUDE.md` |
+| **The story**: one scroll page of the whole project's findings, for a newcomer | `story/` | The story below |
 
 They share only `system_one/`, `config/`, `.venv` and the pytest run. Neither imports from or writes
 for the other. The game rules below do not apply to `fraud/`, and the fraud app never appears in the
 game viewer.
+
+## The story
+
+`story/` is the one page that shows game and fraud evidence together
+(`docs/adr/0001-the-story-reads-both-applications.md`). It only reads: committed results, pinned runs
+and figures. Nothing in `demo/`, `viewer/`, `fraud/` or `slides/` imports from it or writes for it.
+
+- It runs no model and shows no IEEE-CIS row: results per window, pinned game runs, and the committed
+  PaySim trace labelled as PaySim.
+- Numbers come from `story/build_data.py` (fraud numbers through `slides/build_data.py`), never typed.
+  `tests/test_story.py` rebuilds `story/data.js` and checks every binding.
+- It uses the words in `GLOSSARY.md` → The story (trial, stamp, help, can't tell) and no phase
+  numbers, setup ids or file paths in its prose. File paths belong in "Where this comes from".
+- It needs no network: GSAP and Figtree are vendored in `story/vendor/`, each with a `SOURCE.txt`.
+- Check it at 1440 and 375 px wide, with `?reduced=1`, and after a jump from the bar.
 
 ## Rules (game demos)
 

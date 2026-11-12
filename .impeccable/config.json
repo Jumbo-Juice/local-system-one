@@ -11,6 +11,24 @@
         ],
         "createdAt": "2026-11-04T08:03:38.434Z",
         "reason": "Claude's triage: detector measured 8960px, but these are 68px takeaway headlines on reveal's fixed 1920x1080 canvas, one or two lines in the rendered PDF, same convention as the midterm deck"
+      },
+      {
+        "rule": "cramped-padding",
+        "value": "*",
+        "files": [
+          "story/index.html"
+        ],
+        "createdAt": "2026-11-12T08:39:22.633Z",
+        "reason": "Claude's triage: measured in the rendered page, every .trial and .closing section has 90px of padding above its content at 1440 wide; the detector reads the border-top and misses the clamp() padding"
+      },
+      {
+        "rule": "tight-leading",
+        "value": "*",
+        "files": [
+          "story/index.html"
+        ],
+        "createdAt": "2026-11-12T08:39:22.947Z",
+        "reason": "Claude's triage: measured in the rendered page, no text element has a line-height under 1.02 times its font size; the tightest are display headings at 1.04 to 1.1"
       }
     ]
   }

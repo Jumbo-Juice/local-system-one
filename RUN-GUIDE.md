@@ -719,6 +719,18 @@ Training on cost (Phase 25): one adapter, then its dev scores, then the comparis
 .venv/Scripts/python -m fraud.dev.verify_tabular fraud/results/eval_lm_cost/<eval id>.json
 ```
 
+## The story (`story/`)
+
+One scroll page of the whole project's findings, for a newcomer. It runs no model and needs no network. How it's built: `story/README.md`.
+
+```bash
+.venv/Scripts/python.exe story/build_data.py                                             # rebuild story/data.js from the committed results and pinned runs
+.venv/Scripts/python.exe -m http.server 8001 --bind 127.0.0.1 --directory story          # read it: http://127.0.0.1:8001 (the `story` entry of .claude/launch.json)
+.venv/Scripts/python.exe -m pytest tests/test_story.py                                   # numbers, bindings, no network, no IEEE-CIS row, the glossary's words
+```
+
+Add `?reduced=1` to see it without motion. The numbered circles in the bar jump to a trial. `story/` is plain files, so it can be hosted as it is (for example on GitHub Pages).
+
 ## Final presentation (`slides/`)
 
 The final deck, in reveal.js 6.0.2, vendored. It runs no model and needs no network. Brief: `slides-handoff.md`. How it's built: `slides/README.md`.

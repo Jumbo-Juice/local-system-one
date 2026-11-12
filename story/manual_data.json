@@ -1,0 +1,62 @@
+{
+  "_note": "Numbers that exist only in prose. Each block names its source. Everything else in data.js is read from committed JSON and pinned runs by build_data.py.",
+  "confidence": {
+    "_source": "docs/research.md, Observed, calibration table (58 items); README.md, What we found",
+    "worst_model": "Qwen3-1.7B",
+    "worst_sure": 99,
+    "worst_right": 57,
+    "chosen_model": "Qwen2.5-1.5B",
+    "chosen_sure": 77,
+    "chosen_right": 66,
+    "items": 58
+  },
+  "order": {
+    "_source": "docs/lessons-learned.md, They follow option position; README.md, The games",
+    "states_followed": 34,
+    "states": 34,
+    "escapes_before": 0,
+    "escapes_after": 7,
+    "runs": 10
+  },
+  "warned": {
+    "_source": "docs/lessons-learned.md and README.md: hits that came from a move labelled dangerous while a safe move was offered",
+    "small_hits": 29,
+    "small_all": 30,
+    "large_hits": 66,
+    "large_all": 67
+  },
+  "loop": {
+    "_source": "docs/lessons-learned.md, Re-deciding a goal too often; README.md. The looping run was pruned, so it is told and not replayed.",
+    "turns": 570,
+    "single_right_low": 97,
+    "single_right_high": 100
+  },
+  "first_dungeon": {
+    "_source": "README.md, Dungeon; docs/dungeon.md",
+    "escaped": 0,
+    "runs": 48
+  },
+  "paysim_frozen": {
+    "_source": "fraud/RESULTS.md: the untrained model on 20 PaySim test windows, on the laptop; its dev AUC of 0.903 is in fraud/RESULTS-FT.md",
+    "judged": 3800,
+    "declined": 3800,
+    "frauds": 520,
+    "genuine": 3280,
+    "windows_lost_to_rules": 20,
+    "ranked_right_pct": 90,
+    "windows": 20,
+    "p90_ms": 127
+  },
+  "paysim_trained": {
+    "_source": "fraud/RESULTS-FT.md: after 52 minutes of fine-tuning on the laptop, 20 new PaySim test windows",
+    "minutes": 52,
+    "cheaper_than_logreg": 19,
+    "cheaper_than_rules": 0,
+    "windows": 20
+  },
+  "final_machine": {
+    "_source": "fraud/RESULTS-FINAL.md; slides-handoff.md, Data and recipe",
+    "gpu": "RTX 3060 Ti",
+    "model": "d1-Omni-2B"
+  }
+}

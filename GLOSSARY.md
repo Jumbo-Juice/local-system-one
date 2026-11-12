@@ -1,7 +1,7 @@
 # local-system-one
 
 A small local AI that makes each decision with one quick multiple-choice look, exercised by game
-demos and by a fraud app on PaySim.
+demos and by a fraud app on PaySim and IEEE-CIS, and told to newcomers as one story.
 
 ## Language
 
@@ -72,8 +72,39 @@ Said of a comparison whose 95% window-bootstrap interval of the paired differenc
 The only word for this result; a comparison that fails it is "not distinguishable".
 _Avoid_: significant, "no clear difference", "may cost less"
 
+### The story
+
+**Story**:
+The scroll page that puts the whole project's findings, games and fraud together, to one question,
+for a newcomer reading alone.
+_Avoid_: site, landing page, deck (the deck is the talk's slides), viewer, console
+
+**The question**:
+"Can a model that never writes be trusted to decide?" The one question the story asks.
+
+**Trial**:
+The question narrowed to one thing ("trusted to be quick?", "trusted with a whole game?"), with its
+evidence and one stamp.
+_Avoid_: test (the final test and the test windows are eval runs), chapter, experiment
+
+**Stamp**:
+The answer a trial ends on: **yes**, **no**, **only with help** or **can't tell**.
+_Avoid_: verdict (a comparison's verdict is distinguishable or not), grade, result
+
+**Help**:
+What was added around the model or to it before it decided well: structure (tiers of decisions,
+option lists, asking in both orders, tournaments, the cost rule) or training.
+_Avoid_: scaffolding, tricks, fixes
+
+**Can't tell**:
+The stamp for a trial whose comparison is not distinguishable. It is not a "no".
+_Avoid_: tie, draw, "no difference"
+
 ## Relationships
 
+- The **Story** asks **the question** in several **Trials**; each **Trial** ends on one **Stamp**.
+- A **Trial** stamped **only with help** names the **Help** it needed.
+- A **Trial** that rests on a **Comparison** that is not **Distinguishable** is stamped **can't tell**.
 - A **Window** is decided by one **Setup**; each payment in it gets one **Action**.
 - In the hybrid **Setup**, the **Rule filter** decides first; the model decides the rest in one
   **One look** per order of the **Options**.
