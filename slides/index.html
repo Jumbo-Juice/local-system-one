@@ -259,40 +259,310 @@ Source: fraud/gbdt.py and fraud/RESULTS-TABULAR.md (the real model: {{manual.rec
 </aside>
 </section>
 
-<!-- ================================================================ 08 the language model (frame sample; Task 5 writes the slide) -->
+<!-- ================================================================ 08 method: the language model -->
 <section id="s08" data-n="8" data-steps="1">
 <div class="page">
 <span class="tag">8 · Juji</span>
 <div class="comp"><span class="num">08</span>Method: a language model as the decision maker</div>
-<h1>One payment, one lettered question, one forward pass</h1>
-<p class="sub"><b>Task:</b> three-way classification (approve · review · decline), asked as a lettered question.</p>
+<h1>Ask a lettered question, read one score per letter, write nothing</h1>
 <div class="main">
   <div class="pipe">
-    <div class="stage"><span class="lbl">Input</span><p class="what">One PaySim payment</p><p class="how">{{worked.type}} of {{worked.amount|usd2}} USD to a {{worked.to}}, hour {{worked.hour}}</p></div>
-    <div class="stage"><span class="lbl">Processing</span><p class="what">Plain facts + a lettered question</p>
-      <ol class="acts"><li><span class="bub">A</span>approve</li><li><span class="bub">B</span>review</li><li><span class="bub">C</span>decline</li></ol></div>
+    <div class="stage"><span class="lbl">Input</span><p class="what">Our PaySim transfer</p><p class="how">{{worked.type}} of {{worked.amount|usd2}} USD to a {{worked.to}}, at hour {{worked.hour}}</p></div>
+    <div class="stage"><span class="lbl">Processing</span><p class="what">Plain facts</p><p class="how">receiver known: paid {{worked.facts.receiver_before}} times before; amount not seen earlier this hour; not round</p></div>
+    <div class="stage"><span class="lbl">Question</span><p class="what">Does it match the fraud pattern?</p>
+      <ol class="acts"><li><span class="bub">A</span>no: approve it</li><li><span class="bub">B</span>unsure: review</li><li><span class="bub">C</span>yes: decline it</li></ol></div>
     <div class="stage ours"><span class="lbl">Model</span>
-      <div class="box"><p class="what">Small open language model</p><p class="how">one forward pass gives a score to each letter; it writes no words</p></div></div>
-    <div class="stage"><span class="lbl">Output</span><p class="what">Three probabilities</p><p class="how">softmax turns the three scores into shares that add up to one</p></div>
+      <div class="box"><p class="what">{{paysim.model}} <span class="cite">[10]</span></p><p class="how">one forward pass, the text read once; we take the score of each letter as the next word <span class="cite">[5]</span></p></div></div>
   </div>
   <div class="row end">
-    <div class="tile"><span class="k">Scores, shifted so the top one is 0</span>
-      <div class="chart" data-chart="bars" data-fmt="d2" data-width="850" data-label-w="170" data-title="The model's score for each letter">
-        <i data-label="approve" data-value="{{worked.logits.listed.0}}"></i><i data-label="review" data-value="{{worked.logits.listed.1}}"></i><i data-label="decline" data-value="{{worked.logits.listed.2}}" data-hl></i>
-      </div></div>
-    <div class="tile" data-from="1"><span class="k">Softmax: three probabilities</span>
-      <div class="chart" data-chart="bars" data-fmt="d2" data-max="1" data-width="850" data-label-w="170" data-title="The softmax of the three scores">
-        <i data-label="approve" data-value="{{worked.orders.listed.0}}"></i><i data-label="review" data-value="{{worked.orders.listed.1}}"></i><i data-label="decline" data-value="{{worked.orders.listed.2}}" data-hl></i>
-      </div></div>
+    <div class="tile"><span class="k">Logits: log-scores, shifted so the top is 0</span>
+      <div class="chart" data-chart="bars" data-fmt="d2" data-width="780" data-label-w="190" data-value-w="110" data-title="The model's logit for each letter">
+        <i data-label="A approve" data-value="{{worked.logits.listed.0}}"></i><i data-label="B review" data-value="{{worked.logits.listed.1}}"></i><i data-label="C decline" data-value="{{worked.logits.listed.2}}" data-hl></i>
+      </div>
+      <p>A logit is a model’s raw score for an answer, before it is a probability: higher is more likely.</p></div>
+    <div class="tile" data-from="1"><span class="k">Softmax: three probabilities that add up to one</span>
+      <div class="chart" data-chart="bars" data-fmt="d2" data-max="1" data-width="780" data-label-w="190" data-value-w="110" data-title="The softmax of the three logits">
+        <i data-label="A approve" data-value="{{worked.orders.listed.0}}"></i><i data-label="B review" data-value="{{worked.orders.listed.1}}"></i><i data-label="C decline" data-value="{{worked.orders.listed.2}}" data-hl></i>
+      </div>
+      <p>Take e<sup>logit</sup> of each, divide by their sum: decline is <span class="nowrap">{{worked.exp.listed.2|d2}} ÷ {{worked.exp.sum_listed|d2}} = <b class="hl">{{worked.orders.listed.2|d2}}</b></span>.</p></div>
   </div>
 </div>
-<p class="foot">A real payment from PaySim (simulated data), untrained model. Softmax ignores a shift, so these are the scores up to a constant.</p>
+<p class="foot">Softmax ignores a shift, so these are the logits up to a constant. A real PaySim payment (simulated data); the model is not yet trained.</p>
 </div>
 <aside class="notes">
 [Juji · 1:15]
-Frame sample: the pipeline page and two static charts on the worked payment. Click once: the softmax appears.
-The model reads the payment as plain facts and a lettered question. One forward pass gives a score to each letter; softmax turns the scores into probabilities: approve {{worked.orders.listed.0|d2}}, review {{worked.orders.listed.1|d2}}, decline {{worked.orders.listed.2|d2}}. Top answer: {{worked.top.listed}}.
-Source (Observed): fraud/runs/20261003-052030_hybrid_qwen2.5-1.5b_dev0.pinned.jsonl, payment {{worked.i}} of the model-judged rows, picked by the rule in slides/build_data.py (first model-judged TRANSFER whose two option orders disagree). Model {{paysim.model}}, untrained.
+Now the new part: a language model as the decision maker. It does not chat and it does not write. We give it our transfer as plain facts: a transfer of {{worked.amount|usd2}} dollars to a customer at hour {{worked.hour}}; the receiver is known, it was paid {{worked.facts.receiver_before}} times before; the amount was not seen earlier this hour; it is not round.
+Then one multiple-choice question: does this match the fraud pattern? A, no, approve it. B, unsure, send it to an analyst. C, yes, decline it.
+The model, Qwen 2.5 with 1.5 billion weights, reads all of that in one forward pass: the text goes through the network once. At the end it scores every possible next word. We read only three of those scores: the ones for A, B and C. Those scores are logits: raw scores, higher means more likely.
+Here they are, shifted so the top one is zero: A {{worked.logits.listed.0|d2}}, B {{worked.logits.listed.1|d2}}, C {{worked.logits.listed.2|d2}}.
+Click: softmax turns them into probabilities. Take e to each logit, and divide by the sum. e to zero is one; e to {{worked.logits.listed.0|d2}} is about {{worked.exp.listed.0|d2}}. So decline gets {{worked.exp.listed.2|d2}} over {{worked.exp.sum_listed|d2}}, which is {{worked.orders.listed.2|d2}}; approve and review get {{worked.orders.listed.0|d2}} each. Adding the same number to every logit changes nothing after softmax, which is why we can shift them so the top is zero.
+So the language model becomes a classifier: one pass, three probabilities, and it never writes a word. That is the idea from System One models, reference 13.
+Source (Observed): fraud/runs/20261003-052030_hybrid_qwen2.5-1.5b_dev0.pinned.jsonl, model-judged payment {{worked.i}}, picked by the written rule in slides/build_data.py worked_block (first model-judged TRANSFER whose two option orders disagree; Implementation choice). The probabilities are the record's orders[0], listed order; the logits are their logs shifted so the top is 0 (build_data.py, logits), and e to each and their sum are computed there too. The facts are the record's signals as fraud/brain.py describe words them; the question and options are the trace header's (the slide shortens "unsure: send it to an analyst" to "unsure: review"). Model {{paysim.model}}, untrained, from the trace header. [5] Robinson and Wingate, [10] Qwen2.5, [13] System One, as in ../midterm-proposal/PLAN.md.
+</aside>
+</section>
+
+<!-- ================================================================ 09 flip: the order of the options -->
+<section id="s09" data-n="9" data-steps="2">
+<div class="page">
+<span class="tag">9 · Juji</span>
+<div class="comp"><span class="num">09</span>From probabilities to an action</div>
+<h1>The same payment, asked twice. Does the order of the options matter?</h1>
+<div class="main">
+  <div class="three top">
+    <div class="tile"><span class="k">Asked as listed: A approve, B review, C decline</span>
+      <div class="chart" data-chart="bars" data-fmt="d2" data-max="1" data-width="520" data-label-w="190" data-value-w="90" data-title="Probabilities, options as listed">
+        <i data-label="A approve" data-value="{{worked.orders.listed.0}}"></i><i data-label="B review" data-value="{{worked.orders.listed.1}}"></i><i data-label="C decline" data-value="{{worked.orders.listed.2}}" data-hl></i>
+      </div>
+      <p>Top answer: <b class="ink">{{worked.top.listed}}</b>, letter C.</p></div>
+    <div class="tile" data-from="1"><span class="k">Reversed: A decline, B review, C approve</span>
+      <div class="chart" data-chart="bars" data-fmt="d2" data-max="1" data-width="520" data-label-w="190" data-value-w="90" data-title="Probabilities, options reversed">
+        <i data-label="A decline" data-value="{{worked.orders.reversed.2}}"></i><i data-label="B review" data-value="{{worked.orders.reversed.1}}"></i><i data-label="C approve" data-value="{{worked.orders.reversed.0}}" data-hl></i>
+      </div>
+      <p>Top answer: <b class="ink">{{worked.top.reversed}}</b>. Letter C again: it follows the position, not the meaning.</p></div>
+    <div class="tile" data-from="2"><span class="k">So we ask both ways and average</span>
+      <div class="chart" data-chart="bars" data-fmt="d2" data-max="1" data-width="520" data-label-w="190" data-value-w="90" data-title="The average of the two orders">
+        <i data-label="approve" data-value="{{worked.scores.0}}"></i><i data-label="review" data-value="{{worked.scores.1}}"></i><i data-label="decline" data-value="{{worked.scores.2}}" data-hl></i>
+      </div>
+      <p>Untrained, it takes the top: <b class="hl">{{worked.action}}</b>. The payment was genuine: a good customer turned away.</p></div>
+  </div>
+  <div class="tile wide end" data-from="2"><span class="k">After training: two cut-offs on the averaged decline score, picked on dev</span>
+    <div class="cuts"><span class="seg">below the lower cut-off: <b>approve</b></span><span class="seg mid">between the two: <b>review</b></span><span class="seg hi">above the upper: <b>decline</b></span></div></div>
+</div>
+<p class="foot">Both orders run in the same batch, so the second costs little time. On real payments the score goes through the rule instead.</p>
+</div>
+<aside class="notes">
+[Juji · 0:45]
+Same payment, same question, but this time we list the options the other way round. Does the order matter? Let the room guess.
+As listed, the model put {{worked.orders.listed.2|d2}} on C, decline.
+Click: reversed, C now means approve, and the model put {{worked.orders.reversed.0|d2}} on it. Top answer: {{worked.top.reversed}}. It picked the last letter both times: it follows the position, not the meaning. In this PaySim window the two orders gave different top answers on {{paysim.order_flips}} of the {{paysim.model_n}} payments the model judged. Small models are known to do this, reference 6.
+Click: so we always ask in both orders, in the same batch, and average: approve {{worked.scores.0|d2}}, review {{worked.scores.1|d2}}, decline {{worked.scores.2|d2}}. The untrained model then takes the top answer, {{worked.action}}. This payment was genuine, so a good customer was turned away. Untrained, it declined all {{paysim.model_declined}} of the {{paysim.model_n}} payments it judged in this window.
+After training, we don't take the top answer. The averaged decline score goes through two cut-offs picked on dev: below the lower one approve, between them review, above the upper one decline. On the real payments later, the score goes through the rule from slide 5 instead.
+Source (Observed): the same trace record as slide 08; orders[1] is the reversed read, mapped back to approve, review, decline (system_one/engine.py decide_batch), and scores is their average. The action is the record's action. Counts over the window's model-judged rows: slides/build_data.py paysim_block (order_flips, model_declined). Cut-offs: fraud/brain.py ThresholdDecider and fraud/eval_ft.py (Implementation choice). [6] Pezeshkpour and Hruschka.
+</aside>
+</section>
+
+<!-- ================================================================ 10 method: training -->
+<section id="s10" data-n="10">
+<div class="page">
+<span class="tag">10 · Juji</span>
+<div class="comp"><span class="num">10</span>Method: training</div>
+<h1>Train a small adapter, not the model, to answer with the right letter</h1>
+<div class="main">
+  <div class="duo">
+    <div class="tile"><span class="k">LoRA: a low-rank adapter <span class="cite">[11]</span></span>
+      <div class="lora">
+        <div class="w"><b>W</b><span>the model’s own weights: frozen</span></div>
+        <span class="op">+</span>
+        <div class="b"><b>B</b></div><span class="op x">×</span><div class="a"><b>A</b></div>
+      </div>
+      <p>An adapter is a small set of extra weights added to a frozen model. Here: two thin tables, B and A, only r = {{manual.recipe.lora_r}} wide, whose product corrects W. Only they are trained.</p>
+      <p class="note"><b class="ink">The lesson:</b> one payment’s question; the target is the letter for <b class="ink">approve</b> if it was genuine, <b class="ink">decline</b> if fraud.</p></div>
+    <div class="tile"><span class="k">PaySim: mean cost per window, before and after</span>
+      <table class="ruled">
+        <tbody>
+          <tr><td>untrained model</td><td class="r"><b>{{manual.paysim.mean_untrained_millions}} million USD</b></td></tr>
+          <tr><td>logistic regression</td><td class="r">{{manual.paysim.mean_logreg|int}} USD</td></tr>
+          <tr class="ours"><td>trained adapter</td><td class="r"><b>{{manual.paysim.mean_trained|int}} USD</b></td></tr>
+          <tr><td>hand-written rules</td><td class="r">{{manual.paysim.mean_rules|int}} USD</td></tr>
+        </tbody>
+      </table>
+      <p class="note">Trained for {{manual.paysim_ft.minutes}} minutes on the laptop. Cheaper than logistic regression in {{manual.paysim_ft.cheaper_than_logreg}} of {{manual.paysim_ft.windows}} new windows; same action as the rules on {{manual.paysim.matched|int}} of {{manual.paysim.decisions|int}} payments.</p></div>
+  </div>
+</div>
+<p class="foot">PaySim windows of {{manual.paysim_ft.window_rows}} payments, at PaySim’s own prices. On real payments: the same recipe on d1-Omni-2B <span class="cite">[14]</span>.</p>
+</div>
+<aside class="notes">
+[Juji · 1:00]
+Untrained, the model is useless as a decider: on PaySim it lost {{manual.paysim.mean_untrained_millions}} million dollars per window, because its top answer is decline almost every time.
+So we train it, but not the whole model. LoRA, reference 11: the model's own weights, W, stay frozen. Next to them we add an adapter: two thin tables, B and A, only {{manual.recipe.lora_r}} wide. Their product is a correction to W. Only B and A learn, a tiny share of the weights, so it trains on a laptop.
+The lesson for every training example: one payment's question, and the target is a single letter: approve if the payment was genuine, decline if it was fraud. Review is never a target; it comes from the cut-offs on the last slide.
+The result on PaySim, mean cost per window of {{manual.paysim_ft.window_rows}} payments at PaySim's own prices: untrained {{manual.paysim.mean_untrained_millions}} million, logistic regression {{manual.paysim.mean_logreg|int}}, the trained adapter {{manual.paysim.mean_trained|int}}, and the hand-written rule table {{manual.paysim.mean_rules|int}}. {{manual.paysim_ft.minutes}} minutes of training on the laptop, {{manual.paysim_ft.examples|int}} examples. It was cheaper than logistic regression in {{manual.paysim_ft.cheaper_than_logreg}} of {{manual.paysim_ft.windows}} new windows, and it wanted the same action as the rules on {{manual.paysim.matched|int}} of {{manual.paysim.decisions|int}} payments. It learned the rule book; it never beat it.
+On real payments we used the same recipe on a newer small model, d1-Omni-2B, reference 14. There too training mattered: on dev, the frozen model cost {{dev.diffs.frozen_phase12.mean|abs}} dollars more per window than the trained one, {{dev.diffs.frozen_phase12|dist}}.
+Source: PaySim costs, slides/manual_data.json paysim, from README.md and docs/media/fraud-rule-book.png, eval 20261005-022333 (Observed); training time, examples, windows and the 19 of 20: manual paysim_ft, from fraud/RESULTS-FT.md (Observed). PaySim's prices (review {{manual.paysim_ft.review_fee}} USD, friction at least {{manual.paysim_ft.friction_min}} USD) differ from IEEE-CIS's. LoRA settings: fraud/finetune.py (Qwen) and fraud/finetune_d1.py (d1), r {{manual.recipe.lora_r}}, alpha {{manual.recipe.lora_alpha}} (Implementation choice). Dev: {{dev.diffs.frozen_phase12.said}} (fraud/results/eval_lm_nuc/20261104-090217.json, Observed).
+</aside>
+</section>
+
+<!-- ================================================================ 11 results: the final test -->
+<section id="s11" data-n="11">
+<div class="page">
+<span class="tag">11 · Ryu</span>
+<div class="comp"><span class="num">11</span>Results: the final test</div>
+<h1>On the final test, no setup showed a distinguishable saving against logistic regression</h1>
+<div class="main">
+  <div class="ivl">
+    <div class="chart" data-chart="interval" data-fmt="signed" data-width="1400" data-label-w="620" data-value-w="110" data-axis="USD per window" data-title="Each setup's cost per window minus logistic regression's, with its 95% interval">
+      <i data-label="language model + tree score, rule" data-mean="{{final.diffs.signal_amt_baseline.mean}}" data-lo="{{final.diffs.signal_amt_baseline.ci.0}}" data-hi="{{final.diffs.signal_amt_baseline.ci.1}}"></i>
+      <i data-label="language model + tree score, customer line" data-mean="{{final.diffs.signal_cust_baseline.mean}}" data-lo="{{final.diffs.signal_cust_baseline.ci.0}}" data-hi="{{final.diffs.signal_cust_baseline.ci.1}}"></i>
+      <i data-label="language model alone, rule" data-mean="{{final.diffs.rich_amt_baseline.mean}}" data-lo="{{final.diffs.rich_amt_baseline.ci.0}}" data-hi="{{final.diffs.rich_amt_baseline.ci.1}}"></i>
+      <i data-label="language model alone, customer line *" data-mean="{{final.diffs.rich_cust_baseline.mean}}" data-lo="{{final.diffs.rich_cust_baseline.ci.0}}" data-hi="{{final.diffs.rich_cust_baseline.ci.1}}"></i>
+    </div>
+    <ol class="verdicts"><li>{{final.diffs.signal_amt_baseline|dist}}</li><li>{{final.diffs.signal_cust_baseline|dist}}</li><li>{{final.diffs.rich_amt_baseline|dist}}</li><li>{{final.diffs.rich_cust_baseline|dist}}</li></ol>
+  </div>
+  <p class="aside">* read after the test: asked for once the results were seen, so a read-out, not a test result.</p>
+  <div class="row end small">
+    <div class="tile"><span class="k">A row</span><p>that setup’s cost minus logistic regression’s, both deciding the same {{final.windows_n|num}} windows. Left of 0: cheaper.</p></div>
+    <div class="tile"><span class="k">The bar: an interval</span><p>the difference on the same windows, and how far it could plausibly move. Distinguishable: it stays on one side of 0.</p></div>
+    <div class="tile"><span class="k">The setups</span><p>the language model is d1-Omni-2B <span class="cite">[14]</span>, trained. Tree score: the trees’ p, given as one more fact. Customer line: each decline also pays a flat price per good customer.</p></div>
+  </div>
+</div>
+<p class="foot">Logistic regression with the rule cost {{final.setups.baseline.mean|int}} USD per window; approving everything, {{final.setups.approve_all.mean|int}}.</p>
+</div>
+<aside class="notes">
+[Ryu · 1:00]
+The final test: {{final.windows_n|num}} windows, {{final.rows|int}} real payments, locked away and scored once. Every row is one setup against our baseline, logistic regression with the rule, which cost {{final.setups.baseline.mean|int}} dollars per window. The dot is the setup's cost minus the baseline's, per window; left of zero means cheaper. The bar is the interval: the difference on the same windows, and how far it could plausibly move, at 95%. If the bar stays on one side of zero, we call the two distinguishable; that is the same test as on slide 5.
+The language model reading the tree score, with the rule: {{final.diffs.signal_amt_baseline.said}}
+With the customer line: {{final.diffs.signal_cust_baseline.said}}
+The language model alone, no tree score, with the rule: {{final.diffs.rich_amt_baseline.said}}
+And alone with the customer line, which we only read after the test: {{final.diffs.rich_cust_baseline.said}}
+So, said plainly: no setup showed a distinguishable saving against logistic regression on the final test. Every bar crosses zero.
+Source: fraud/results/eval_final/20261104-090649.json, verdict, primary and reported comparisons; the last row from fraud/results/eval_final/rich_cust_readout.json, a read-out after the test, not registered (fraud/SUMMARY.md, first paragraph). Each sentence is build_data.sentence(), the analyst console's own wording (Observed). Bootstrap over windows, {{manual.recipe.boot_reps|int}} resamples (fraud/eval_ieee.py boot_ci). Customer line: fraud/rule.py, a flat price in the decision only (Implementation choice). Tree score: fraud/lm_signal.py.
+</aside>
+</section>
+
+<!-- ================================================================ 12 flip: dev against new windows -->
+<section id="s12" data-n="12" data-steps="1">
+<div class="page">
+<span class="tag">12 · Ryu</span>
+<div class="comp"><span class="num">12</span>Results: same model, two verdicts</div>
+<h1>On dev, boosted trees were clearly cheaper than logistic regression. On new windows?</h1>
+<div class="main">
+  <div class="tile"><span class="k">Boosted trees minus logistic regression, both with the rule, USD per window</span>
+    <div class="chart" data-chart="interval" data-fmt="signed" data-width="1760" data-label-w="520" data-value-w="110" data-axis="USD per window" data-title="Boosted trees minus logistic regression, on dev and on new windows">
+      <i data-label="on dev, {{manual.tabular_dev.chains}} windows" data-mean="{{rule.phase20.dev.mean}}" data-lo="{{rule.phase20.dev.ci.0}}" data-hi="{{rule.phase20.dev.ci.1}}"></i>
+      <i data-from="1" data-label="on new windows, {{rule.phase20.windows_n}}" data-mean="{{rule.phase20.diff.mean}}" data-lo="{{rule.phase20.diff.ci.0}}" data-hi="{{rule.phase20.diff.ci.1}}"></i>
+    </div></div>
+  <div class="row end">
+    <div class="tile"><span class="k">On dev</span><span class="n">{{rule.phase20.dev.mean|signed}} USD</span><p>per window: <b class="ink">{{rule.phase20.dev|dist}}</b>. It looked like a clear win.</p></div>
+    <div class="tile" data-from="1"><span class="k">On new windows</span><span class="n">{{rule.phase20.diff.mean|signed}} USD</span><p>per window: <b class="ink">{{rule.phase20.diff|dist}}</b>. Same model, same rule.</p></div>
+    <div class="tile" data-from="1"><span class="k">Why</span><p>Dev rows sit close to the rows the trees learned from, and dev also set one of the trees’ settings. A model that fits fine detail looks best there.</p></div>
+  </div>
+</div>
+<p class="foot">That is why the final test was locked away and scored once: only data nobody tuned on can say what holds.</p>
+</div>
+<aside class="notes">
+[Ryu · 0:45]
+A second flip. Boosted trees against logistic regression, both with the rule. On dev they looked clearly cheaper: {{rule.phase20.dev.mean|signed}} dollars per window over {{manual.tabular_dev.chains}} dev windows, interval {{rule.phase20.dev.ci.0|int}} to {{rule.phase20.dev.ci.1|int}}, {{rule.phase20.dev|dist}}. Would you ship it?
+Click: on {{rule.phase20.windows_n}} new windows, the same model and the same rule: {{rule.phase20.diff.said}}
+Why: dev rows sit close to the rows the trees learned from, and on dev we also picked one of the trees' settings, the price of a review, lambda. So dev flatters a model that fits fine detail. That is why the final test was locked away before training, and scored once.
+Source: fraud/results/eval_tabular/20261103-235132.json, verdict primary (new windows, Observed) and heldout tab-all (dev, Observed; flattered because lambda for trees was picked with those rows in, fraud/RESULTS-TABULAR.md). Dev window count: slides/manual_data.json tabular_dev. The dev verdict uses the same rule as the others, its 95% CI leaving out 0 (slides/build_data.py rule_block). Earlier-test windows, never the final test.
+</aside>
+</section>
+
+<!-- ================================================================ 13 what did work -->
+<section id="s13" data-n="13">
+<div class="page">
+<span class="tag">13 · Ryu</span>
+<div class="comp"><span class="num">13</span>Results: what did work</div>
+<h1>Far fewer good customers turned away, and fast enough for a payment stream</h1>
+<div class="main">
+  <div class="duo">
+    <div class="tile"><span class="k">Good customers declined, final test</span>
+      <div class="chart" data-chart="bars" data-fmt="int" data-width="940" data-label-w="580" data-value-w="100" data-title="Good customers declined on the final test">
+        <i data-label="logistic regression, rule" data-value="{{final.setups.baseline.good_declined}}"></i><i data-label="language model + tree score, customer line" data-value="{{final.setups.signal_cust.good_declined}}" data-hl></i><i data-label="language model alone, customer line *" data-value="{{final.setups.rich_cust.good_declined}}"></i>
+      </div>
+      <p class="note">* read after the test, not a test result. The price: fewer frauds stopped, {{final.setups.signal_cust.frauds_stopped|int}} and {{final.setups.rich_cust.frauds_stopped|int}} against {{final.setups.baseline.frauds_stopped|int}} of {{final.frauds|int}}.</p>
+      <p class="note">Most of this is the customer line, not the language model: on logistic regression, in an earlier test, it cut good customers declined from {{rule.phase18.base|int}} to {{rule.phase18.customers|int}}.</p></div>
+    <div class="stack">
+      <div class="tile"><span class="k">Speed per payment</span><span class="n">{{final.latency.p90|int}} ms</span><p>for 90% of payments, against a bar of {{final.latency.bar|int}} ms set before the test</p></div>
+      <div class="tile"><span class="k">But it mostly copies the tree score</span><span class="n">{{final.rank_corr|d2}}</span><p>rank correlation of the cheapest-looking language setup with the tree score: 1 would be the same order</p></div>
+    </div>
+  </div>
+</div>
+<p class="foot">Counts, not dollars: what each setup did to customers and frauds over the {{final.windows_n|num}} final-test windows.</p>
+</div>
+<aside class="notes">
+[Ryu · 0:45]
+What did work. Good customers wrongly declined over the final test: logistic regression {{final.setups.baseline.good_declined|int}}; the language model reading the tree score, with the customer line, {{final.setups.signal_cust.good_declined|int}}; the language model alone with the customer line, read after the test, {{final.setups.rich_cust.good_declined|int}}. The price: fewer frauds stopped, {{final.setups.signal_cust.frauds_stopped|int}} and {{final.setups.rich_cust.frauds_stopped|int}} against {{final.setups.baseline.frauds_stopped|int}} of {{final.frauds|int}}.
+Be fair about where that comes from: mostly the customer line, which works on logistic regression too. In an earlier test on {{rule.phase18.windows_n}} windows, it cut logistic regression's good customers declined from {{rule.phase18.base|int}} to {{rule.phase18.customers|int}}.
+Speed: {{final.latency.p90|int}} milliseconds per payment for 90% of payments, far under the {{final.latency.bar|int}} millisecond bar we set before the test.
+And the cheapest-looking language setup mostly copies the tree score it reads: rank correlation {{final.rank_corr|d2}}, where 1 would mean the same order. The test can't show what the language model adds on top, because the tree score alone was not a registered setup.
+Source: fraud/results/eval_final/20261104-090649.json (setups, latency p90 of the language setups, the bar; Observed), fraud/results/eval_final/rich_cust_readout.json (read-out after the test, fraud/SUMMARY.md first paragraph), fraud/results/eval_final/extras.json signal_rank_corr (Observed). Earlier test: fraud/results/eval_rule/20261103-211736.json (Observed). Latency on an RTX 3060 Ti, one payment at a time, both orders.
+</aside>
+</section>
+
+<!-- ================================================================ 14 biases -->
+<section id="s14" data-n="14">
+<div class="page">
+<span class="tag">14 · Ponh</span>
+<div class="comp"><span class="num">14</span>Biases</div>
+<h1>Two biases built in: prices we assumed, and a lean towards a position</h1>
+<div class="main">
+  <div class="row">
+    <div class="tile"><span class="k">Assumed costs <span class="illus">assumed</span></span>
+      <p>Every dollar here rests on prices we chose, not measured: a wrong decline {{costs.friction_rate|pct}} of the amount, at least {{costs.friction_min|num}} USD; a review {{costs.review_fee|num}} USD.</p>
+      <span class="f">Change one price</span>
+      <p>Add a flat price for each good customer declined: the rule’s saving over two fixed cut-offs (slide 05) turns into a loss, on average, between <b class="ink">{{manual.stress.flat_low}} and {{manual.stress.flat_high}} USD</b> per customer.</p></div>
+    <div class="tile"><span class="k">Option-order bias <span class="cite">[6]</span></span>
+      <p>The model leans towards a letter’s position, not only its meaning. Our transfer (slide 09): listed, top answer <b class="ink">{{worked.top.listed}}</b>; reversed, <b class="ink">{{worked.top.reversed}}</b>. The last letter both times.</p>
+      <span class="f">{{paysim.order_flips}} of {{paysim.model_n}}</span>
+      <p>PaySim payments in that window whose top answer flipped with the order. Asking both ways and averaging cancels the position; it can’t remove every lean.</p></div>
+  </div>
+</div>
+<p class="foot">Assumed prices are a choice: change them and the dollar verdicts can change.</p>
+</div>
+<aside class="notes">
+[Ponh · 0:45]
+Two biases we built in. First, the prices. Every dollar in this talk rests on prices we assumed: a wrong decline costs {{costs.friction_rate|pct}} of the amount, at least {{costs.friction_min|num}} dollar; a review {{costs.review_fee|num}} dollars. They are not measured. Change one and verdicts move: if each good customer declined also costs a flat price, the rule's saving over two fixed cut-offs, from slide 5, turns into a loss on average somewhere between {{manual.stress.flat_low}} and {{manual.stress.flat_high}} dollars per customer.
+Second, the order of the options. Our transfer: listed, the top answer was {{worked.top.listed}}; reversed, {{worked.top.reversed}}, the last letter both times. In that PaySim window the top answer flipped with the order on {{paysim.order_flips}} of {{paysim.model_n}} payments, and every one of those flips took the last letter both times. Asking in both orders and averaging cancels the position, references 5 and 6, but it can't remove a lean the model has towards the content itself.
+Source: prices, fraud/results/eval_final/20261104-090649.json costs (Implementation choice; assumed, not measured). Flat-price edge: slides/manual_data.json stress, from fraud/RESULTS-COST-STRESS.md (Observed, on earlier-test windows, the rule as deployed). Order flips: slides/build_data.py paysim_block over the pinned PaySim trace, order_flips {{paysim.order_flips}}, last letter both times {{paysim.last_letter_both}} (Observed).
+</aside>
+</section>
+
+<!-- ================================================================ 15 takeaways -->
+<section id="s15" data-n="15">
+<div class="page">
+<span class="tag">15 · Ponh</span>
+<div class="comp"><span class="num">15</span>Takeaways</div>
+<h1>A language model can decide in one pass. On real payments, it did not save money.</h1>
+<div class="main">
+  <div class="row">
+    <div class="tile"><span class="k">What holds</span><ul>
+      <li><span data-mark="yes"></span>A language model reads as a classifier: one pass, one score per letter, no words.</li>
+      <li><span data-mark="yes"></span>A small adapter took it from useless to matching the hand-written rules on PaySim.</li>
+      <li><span data-mark="yes"></span>Fast enough: {{final.latency.p90|int}} ms per payment against a {{final.latency.bar|int}} ms bar.</li>
+      <li><span data-mark="yes"></span>Far fewer good customers declined, mostly thanks to the customer line.</li>
+    </ul></div>
+    <div class="tile"><span class="k">What doesn’t, or wasn’t checked</span><ul>
+      <li><span data-mark="no"></span>No setup showed a distinguishable saving against logistic regression on the final test.</li>
+      <li><span data-mark="no"></span>The cheapest-looking language setup mostly copies the tree score.</li>
+      <li><span data-mark="partly"></span>The prices are assumed, and the model leans towards the last letter.</li>
+      <li><span data-mark="no"></span>Fairness was not measured: who gets declined was never checked by group.</li>
+    </ul></div>
+  </div>
+</div>
+<p class="foot">The paper and the analyst console have the details.</p>
+</div>
+<aside class="notes">
+[Ponh · 0:25]
+What holds: a language model can be read as a classifier, in one pass, without writing; a small adapter made it useful on PaySim; it is fast enough; and far fewer good customers were declined, mostly thanks to the customer line.
+What doesn't: no setup showed a distinguishable saving against logistic regression on the final test; the cheapest-looking language setup mostly copies the tree score; the prices are assumed; and fairness was not measured. The paper and the analyst console have the details. Thank you; questions.
+Source: slides 08 to 14 and their sources. Fairness: no eval in fraud/ measures outcomes by group (Observed: nothing was run).
+</aside>
+</section>
+
+<!-- ================================================================ 16 references (not presented) -->
+<section id="s16" data-n="16">
+<div class="page">
+<div class="comp"><span class="num">16</span>References</div>
+<ol class="refs">
+  <li><span class="k">[1]</span><span>The Nilson Report, “Card fraud losses worldwide in 2023,” no. 1276, Dec. 2024.</span></li>
+  <li><span class="k">[2]</span><span>A. Dal Pozzolo, G. Boracchi, O. Caelen, C. Alippi, G. Bontempi, “Credit card fraud detection: a realistic modeling and a novel learning strategy,” <i>IEEE TNNLS</i>, 29(8), 3784–3797, 2018.</span></li>
+  <li><span class="k">[3]</span><span>L. Grinsztajn, E. Oyallon, G. Varoquaux, “Why do tree-based models still outperform deep learning on typical tabular data?,” <i>NeurIPS Datasets and Benchmarks</i>, 2022.</span></li>
+  <li><span class="k">[4]</span><span>S. Hegselmann et al., “TabLLM: Few-shot classification of tabular data with large language models,” <i>AISTATS</i>, PMLR 206, 5549–5581, 2023.</span></li>
+  <li><span class="k">[5]</span><span>J. Robinson, D. Wingate, “Leveraging large language models for multiple choice question answering,” <i>ICLR</i>, 2023.</span></li>
+  <li><span class="k">[6]</span><span>P. Pezeshkpour, E. Hruschka, “Large language models sensitivity to the order of options in multiple-choice questions,” <i>Findings of NAACL</i>, 2006–2017, 2024.</span></li>
+  <li><span class="k">[7]</span><span>X. Tan, Y. Ma, X. Zhang, “Understanding structured financial data with LLMs: a case study on fraud detection,” arXiv:2512.13040, 2025.</span></li>
+  <li><span class="k">[8]</span><span>E. A. Lopez-Rojas, A. Elmir, S. Axelsson, “PaySim: a financial mobile money simulator for fraud detection,” <i>EMSS</i>, 2016.</span></li>
+  <li><span class="k">[9]</span><span>IEEE-CIS and Vesta Corporation, “IEEE-CIS Fraud Detection,” Kaggle, 2019.</span></li>
+  <li><span class="k">[10]</span><span>Qwen Team, “Qwen2.5 technical report,” arXiv:2412.15115, 2024.</span></li>
+  <li><span class="k">[11]</span><span>E. J. Hu et al., “LoRA: Low-rank adaptation of large language models,” <i>ICLR</i>, 2022.</span></li>
+  <li><span class="k">[12]</span><span>R. Wirth, J. Hipp, “CRISP-DM: Towards a standard process model for data mining,” 2000.</span></li>
+  <li><span class="k">[13]</span><span>TypeSafe, “Introducing System One models &amp; Jev,” 2026; S. Goedecke, “Two techniques for working with System One models,” 2026.</span></li>
+  <li><span class="k">[14]</span><span>LiquidAI, “d1-Omni-2B,” Hugging Face model card, LiquidAI/d1-Omni-2B, 2026.</span></li>
+</ol>
+</div>
+<aside class="notes">
+References, not presented. [1]–[13] exactly as ../midterm-proposal/PLAN.md, References (verified 2026-10-28); [14] the model card of the model used on IEEE-CIS (fraud/d1torch.py).
 </aside>
 </section>
 

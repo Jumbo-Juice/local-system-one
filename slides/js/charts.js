@@ -8,6 +8,7 @@
 //   <div class="chart" data-chart="interval" data-fmt="signed" data-axis="USD per window">
 //     <i data-label="…" data-mean="{{final.diffs.x.mean}}" data-lo="{{final.diffs.x.ci.0}}" data-hi="{{final.diffs.x.ci.1}}"></i>
 // Optional on the chart: data-width (px, default 760), data-label-w (px, default 240), data-value-w (px, default 150).
+// A row with data-from="k" is drawn in a <g data-from="k">, so it appears at step k on the same axis as the others.
 (function () {
   const NS = 'http://www.w3.org/2000/svg'
   const ROW = 64
@@ -31,6 +32,10 @@
     return { svg, width, x0, x1 }
   }
 
+  // one group per row; a row with a step carries it, so core.js shows it with the slide's other steps. The class keeps the
+  // markup the same before and after a toggle (an element with no class attribute gets class="" once toggled off)
+  const rowGroup = (svg, r) => svg.appendChild(node('g', r.from ? { class: 'step-row', 'data-from': r.from } : {}))
+
   const fmtOf = name => (name && window.Deck.formats[name]) || window.Deck.formats.d2
 
   // rows: {label, value, hl}. A bar per row from zero; negatives go left of a zero line.
@@ -44,9 +49,10 @@
     rows.forEach((r, i) => {
       const y = 4 + i * ROW + ROW / 2
       const a = Math.min(x(0), x(r.value)), b = Math.max(x(0), x(r.value))
-      svg.append(node('text', { class: 'lab', x: 0, y, 'dominant-baseline': 'central' }, r.label))
-      svg.append(node('rect', { class: `bar${r.hl ? ' hl' : ''}`, x: a, y: y - 18, width: Math.max(b - a, 2), height: 36 }))
-      svg.append(node('text', { class: `val${r.hl ? ' hl' : ''}`, x: width, y, 'text-anchor': 'end', 'dominant-baseline': 'central' }, fmt(r.value)))
+      const g = rowGroup(svg, r)
+      g.append(node('text', { class: 'lab', x: 0, y, 'dominant-baseline': 'central' }, r.label))
+      g.append(node('rect', { class: `bar${r.hl ? ' hl' : ''}`, x: a, y: y - 18, width: Math.max(b - a, 2), height: 36 }))
+      g.append(node('text', { class: `val${r.hl ? ' hl' : ''}`, x: width, y, 'text-anchor': 'end', 'dominant-baseline': 'central' }, fmt(r.value)))
     })
     svg.append(node('line', { class: 'zero', x1: x(0), x2: x(0), y1: 0, y2: rows.length * ROW + 8 }))
     return svg
@@ -67,10 +73,11 @@
       const y = i * ROW + ROW / 2
       const cls = r.ci[0] > 0 || r.ci[1] < 0 || r.hl ? ' hl' : ''
       svg.append(node('line', { class: 'row-rule', x1: 0, x2: width, y1: (i + 1) * ROW, y2: (i + 1) * ROW }))
-      svg.append(node('text', { class: 'lab', x: 0, y, 'dominant-baseline': 'central' }, r.label))
-      svg.append(node('line', { class: `ci${cls}`, x1: x(r.ci[0]), x2: x(r.ci[1]), y1: y, y2: y }))
-      svg.append(node('circle', { class: `dot${cls}`, cx: x(r.mean), cy: y, r: 11 }))
-      svg.append(node('text', { class: `val${cls}`, x: width, y, 'text-anchor': 'end', 'dominant-baseline': 'central' }, fmt(r.mean)))
+      const g = rowGroup(svg, r)
+      g.append(node('text', { class: 'lab', x: 0, y, 'dominant-baseline': 'central' }, r.label))
+      g.append(node('line', { class: `ci${cls}`, x1: x(r.ci[0]), x2: x(r.ci[1]), y1: y, y2: y }))
+      g.append(node('circle', { class: `dot${cls}`, cx: x(r.mean), cy: y, r: 11 }))
+      g.append(node('text', { class: `val${cls}`, x: width, y, 'text-anchor': 'end', 'dominant-baseline': 'central' }, fmt(r.mean)))
     })
     svg.append(node('line', { class: 'zero', x1: x(0), x2: x(0), y1: 0, y2: bottom + 8 }))
     svg.append(node('text', { class: 'tick', x: x(0), y: bottom + 38, 'text-anchor': 'middle' }, '0'))
@@ -86,7 +93,7 @@
       const d = el.dataset
       const opts = { fmt: d.fmt, width: num(d.width), labelW: num(d.labelW), valueW: num(d.valueW), max: num(d.max), min: num(d.min), axis: d.axis, title: d.title }
       const rows = [...el.querySelectorAll('i')].map(i => ({
-        label: i.dataset.label, hl: 'hl' in i.dataset,
+        label: i.dataset.label, hl: 'hl' in i.dataset, from: i.dataset.from,
         value: num(i.dataset.value), mean: num(i.dataset.mean), ci: [num(i.dataset.lo), num(i.dataset.hi)],
       }))
       for (const r of rows) for (const v of [r.value, r.mean, ...r.ci]) if (v !== undefined && !Number.isFinite(v)) throw new Error(`chart row "${r.label}" has a number that is not a number`)

@@ -361,9 +361,11 @@ def test_every_manual_block_names_its_source(data):
 @pytest.mark.parametrize("n,name,time", [
     (1, "Juji", "0:25"), (2, "Juji", "0:45"), (3, "Juji", "1:00"), (4, "Juji", "0:45"),
     (5, "Swan", "0:45"), (6, "Swan", "0:50"), (7, "Swan", "0:45"),
+    (8, "Juji", "1:15"), (9, "Juji", "0:45"), (10, "Juji", "1:00"),
+    (11, "Ryu", "1:00"), (12, "Ryu", "0:45"), (13, "Ryu", "0:45"), (14, "Ponh", "0:45"), (15, "Ponh", "0:25"),
 ])
-def test_the_first_slides_follow_the_running_order(html, n, name, time):
-    """Slides 01–07 as the spec's running order: who presents, for how long, on the tag and in the notes."""
+def test_the_slides_follow_the_running_order(html, n, name, time):
+    """Slides 01–15 as the spec's running order: who presents, for how long, on the tag and in the notes."""
     s = next((s for s in sections(html) if re.match(rf'<section id="s{n:02d}" data-n="{n}"', s)), None)
     assert s, n
     assert f'<span class="tag">{n} · {name}</span>' in s
@@ -397,3 +399,56 @@ def test_illustration_numbers_are_computed_from_their_inputs(data):
     assert [tr[t]["took"] for t in ("t1", "t2", "t3")] == ["yes", "yes", "no"]  # the leaves drawn in green on the slide
     assert tr["score"] == pytest.approx(ins["trees"]["start"] + sum(ins["trees"][t][tr[t]["took"]] for t in ("t1", "t2", "t3")))
     assert tr["p"] == pytest.approx(sig(tr["score"]))
+
+
+def section(html, n):
+    return next(s for s in sections(html) if re.match(rf'<section id="s{n:02d}" data-n="{n}"', s))
+
+
+def test_references_are_the_fourteen(html):
+    """The references slide holds [1]–[13] as in the midterm plan and [14] the d1-Omni-2B model card, in order."""
+    refs = [s for s in sections(html) if 'class="refs' in s]
+    assert len(refs) == 1
+    keys = re.findall(r'<span class="k">\[(\d+)\]</span>', refs[0])
+    assert keys == [str(k) for k in range(1, 15)]
+    items = re.findall(r"<li>(.*?)</li>", refs[0], flags=re.S)
+    assert len(items) == 14 and "d1-Omni-2B" in items[13] and "LiquidAI" in items[13]
+    assert "Nilson" in items[0] and "LoRA" in items[10] and "Qwen2.5" in items[9]
+
+
+def test_flip_slides_reveal_in_two_steps(html):
+    """Slides 03, 09 and 12 show the surprising picture first and explain on the next step."""
+    for n in (3, 9, 12):
+        s = section(html, n)
+        assert 'data-from="1"' in s, n
+        assert re.search(r'data-steps="[1-9]"', s), n
+
+
+def test_the_negatives_are_said_plainly(html):
+    text = re.sub(r"\s+", " ", visible_text(html))
+    assert re.search(r"(?i)no setup showed a distinguishable saving", text)
+    assert re.search(r"(?i)fairness was not measured", text)
+
+
+def test_the_readout_is_labelled_where_it_is_shown(html):
+    """The language model with no tree score and the customer line was read after the test, not registered: every slide
+    that binds it says so where the room can read it."""
+    showing = [s for s in sections(html) if re.search(r"\{\{\s*final\.(?:setups\.rich_cust|diffs\.rich_cust_)", s.split('<aside class="notes">')[0])]
+    assert showing
+    for s in showing:
+        assert "read after the test" in visible_text(s), s[:120]
+
+
+def test_derived_keys_for_slides_08_to_14(data):
+    w = data["worked"]
+    assert w["facts"]["receiver_before"] == 4 and w["facts"]["same_amount_before"] == 0 and w["facts"]["round"] == 0
+    assert w["exp"]["listed"] == pytest.approx([math.exp(x) for x in w["logits"]["listed"]])
+    assert w["exp"]["sum_listed"] == pytest.approx(sum(w["exp"]["listed"]))
+    assert w["prompt"]["options"][0].endswith("approve it") and w["prompt"]["question"].endswith("?")
+    p = data["paysim"]
+    assert p["order_flips"] == p["last_letter_both"] == 190 and p["model_n"] == 257
+    d = data["rule"]["phase20"]["dev"]
+    assert d["distinguishable"] is (d["ci"][0] > 0 or d["ci"][1] < 0) is True
+    assert data["manual"]["tabular_dev"]["chains"] == 88
+    ft = data["manual"]["paysim_ft"]
+    assert (ft["window_rows"], ft["windows"], ft["cheaper_than_logreg"], ft["minutes"]) == (500, 20, 19, 52)

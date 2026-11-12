@@ -93,5 +93,19 @@
               "t1": {"yes": 0.9, "no": -0.3},
               "t2": {"over": 200000, "yes": 1.1, "no": -0.2},
               "t3": {"yes": 0.7, "no": -0.4}}
+  },
+  "paysim_ft": {
+    "_source": "fraud/RESULTS-FT.md (eval 20261005-022333): 20 new test windows of 500 transactions each; hybrid-ft cheaper than logistic regression in 19 of 20; cost of training from the manifest: 12,084 examples, 52 min on the laptop's iGPU. PaySim's own prices: review 50 USD, friction at least 10 USD (the pinned trace's header). Observed.",
+    "window_rows": 500,
+    "windows": 20,
+    "cheaper_than_logreg": 19,
+    "examples": 12084,
+    "minutes": 52,
+    "review_fee": 50,
+    "friction_min": 10
+  },
+  "tabular_dev": {
+    "_source": "fraud/RESULTS-TABULAR.md, 'Held-out dev, 88 chains, no bar' (fraud/tabular.py heldout_dev): the dev read of trees against logistic regression. Lambda for trees was picked with these rows in, so that read is flattered (Observed).",
+    "chains": 88
   }
 }

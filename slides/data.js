@@ -1171,6 +1171,16 @@ window.DATA = {
    "mean_trained": 830,
    "mean_untrained_millions": 5.1
   },
+  "paysim_ft": {
+   "_source": "fraud/RESULTS-FT.md (eval 20261005-022333): 20 new test windows of 500 transactions each; hybrid-ft cheaper than logistic regression in 19 of 20; cost of training from the manifest: 12,084 examples, 52 min on the laptop's iGPU. PaySim's own prices: review 50 USD, friction at least 10 USD (the pinned trace's header). Observed.",
+   "cheaper_than_logreg": 19,
+   "examples": 12084,
+   "friction_min": 10,
+   "minutes": 52,
+   "review_fee": 50,
+   "window_rows": 500,
+   "windows": 20
+  },
   "phase14": {
    "_source": "fraud/RESULTS-IEEE-AMOUNT.md, Good customers declined. Logreg with two lines, then with the rule.",
    "good_declined_lines": 655,
@@ -1251,6 +1261,10 @@ window.DATA = {
    "flat_high": 60,
    "flat_low": 50
   },
+  "tabular_dev": {
+   "_source": "fraud/RESULTS-TABULAR.md, 'Held-out dev, 88 chains, no bar' (fraud/tabular.py heldout_dev): the dev read of trees against logistic regression. Lambda for trees was picked with these rows in, so that read is flattered (Observed).",
+   "chains": 88
+  },
   "training": {
    "_source": "fraud/eval_lm_cost.py docstring, Phase 25 pre-registration",
    "fit_frauds": 11988,
@@ -1275,10 +1289,12 @@ window.DATA = {
    "truth": 0,
    "type": "TRANSFER"
   },
+  "last_letter_both": 190,
   "model": "Qwen/Qwen2.5-1.5B-Instruct",
   "model_declined": 257,
   "model_n": 257,
   "n": 500,
+  "order_flips": 190,
   "replay": [
    {
     "action": "approve",
@@ -1635,6 +1651,7 @@ window.DATA = {
      -410.808269,
      -173.117784
     ],
+    "distinguishable": true,
     "mean": -294.867665
    },
    "diff": {
@@ -1656,6 +1673,19 @@ window.DATA = {
  "worked": {
   "action": "decline",
   "amount": 305369.89,
+  "exp": {
+   "listed": [
+    0.03316464141264174,
+    0.03318406685520024,
+    1.0
+   ],
+   "sum_listed": 1.066348708267842
+  },
+  "facts": {
+   "receiver_before": 4,
+   "round": 0,
+   "same_amount_before": 0
+  },
   "hour": 16,
   "i": 2,
   "logits": {
@@ -1681,6 +1711,14 @@ window.DATA = {
     0.04793926500442517,
     0.41523067308450995
    ]
+  },
+  "prompt": {
+   "options": [
+    "no: approve it",
+    "unsure: send it to an analyst",
+    "yes: decline it"
+   ],
+   "question": "Does this transaction match the fraud pattern?"
   },
   "scores": [
    0.28396559202223726,

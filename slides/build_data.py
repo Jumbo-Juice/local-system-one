@@ -232,7 +232,9 @@ def rule_block() -> dict:
         "phase18": {"base": r["setups"]["rule-base"]["good_customers_declined"], "customers": r["setups"]["rule-customers"]["good_customers_declined"],
                     "windows_n": len(r["windows"]), "diff": diff(r["verdict"]["fourth"], "rule-customers", "window")},
         "phase20": {"windows_n": len(t["windows"]), "diff": diff(t["verdict"]["primary"], "tab-all-amt", "window"),
-                    "dev": {"mean": num(t["heldout"]["tab-all"]["diff"]), "ci": [num(v) for v in t["heldout"]["tab-all"]["diff_ci"]]}},
+                    "dev": {"mean": num(t["heldout"]["tab-all"]["diff"]), "ci": [num(v) for v in t["heldout"]["tab-all"]["diff_ci"]],
+                                    # the dev read's verdict, by the same test as every other: its CI leaves out 0
+                                    "distinguishable": t["heldout"]["tab-all"]["diff_ci"][0] > 0 or t["heldout"]["tab-all"]["diff_ci"][1] < 0}},
     }
 
 
@@ -242,9 +244,12 @@ def paysim_block() -> dict:
     tx = [r for r in rows if r.get("type") == "tx"]
     model = [r for r in tx if r["by"] == "model"]
     first = model[0]
+    tops = [[max(range(3), key=o.__getitem__) for o in r["orders"]] for r in model]
     return {
         "model": rows[0]["backend"]["model"], "window": rows[0]["window"]["id"], "n": len(tx), "model_n": len(model),
         "model_declined": sum(r["action"] == "decline" for r in model), "replay_n": REPLAY_ROWS,
+        # option-order bias: model rows whose two orders give different top answers, and those that took the last letter both times
+        "order_flips": sum(a != b for a, b in tops), "last_letter_both": sum(a == 2 and b == 0 for a, b in tops),
         "decision": {"type": first["tx"]["type"], "amount": first["tx"]["amount"], "to": first["tx"]["to"], "hour": first["tx"]["hour"],
                      "scores": {k: num(v) for k, v in first["scores"].items()}, "action": first["action"], "truth": first["truth"], "ms": num(first["ms"], 0)},
         "replay": [{"i": r["i"], "type": r["tx"]["type"], "amount": r["tx"]["amount"], "by": r["by"], "action": r["action"]} for r in tx[:REPLAY_ROWS]],
@@ -254,7 +259,9 @@ def paysim_block() -> dict:
 def worked_block() -> dict:
     """The first PaySim TRANSFER the model read in both orders and answered differently by order (reads TRACE at call time)."""
     names = ["approve", "review", "decline"]
-    for line in TRACE.read_text(encoding="utf-8").splitlines():
+    lines = TRACE.read_text(encoding="utf-8").splitlines()
+    head = json.loads(lines[0])
+    for line in lines:
         r = json.loads(line)
         if r.get("type") != "tx" or r.get("by") != "model" or r["tx"]["type"] != "TRANSFER":
             continue
@@ -275,6 +282,12 @@ def worked_block() -> dict:
             "logits": {"listed": logits(listed), "reversed": logits(reversed_)},
             "top": {"listed": names[top[0]], "reversed": names[top[1]], "averaged": max(names, key=scores.get)},
             "action": r["action"],
+            # the facts the model read (fraud/brain.py describe) and the question it was asked, for slide 08
+            "facts": {"receiver_before": r["signals"]["dest_in_before"], "same_amount_before": r["signals"]["same_amount_step_before"],
+                      "round": r["signals"]["round_amount"]},
+            "prompt": {"question": head.get("question"), "options": head.get("options")},
+            # softmax worked by hand: e to each logit, and their sum
+            "exp": {"listed": [math.exp(x) for x in logits(listed)], "sum_listed": sum(math.exp(x) for x in logits(listed))},
         }
     raise LookupError("no two-order TRANSFER that flips in the trace")
 
