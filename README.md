@@ -154,6 +154,7 @@ it: [`docs/lessons-learned.md`](docs/lessons-learned.md).
 | see the final presentation | [`slides/`](slides/README.md): the reveal.js deck on the fraud results, with its PDF export |
 | read the paper | [`paper/`](paper/README.md): the IEEE paper on turning a small language model into a fraud decision model, Typst, PDF in `paper/exports/` |
 | read the whole project as one story | [`story/`](story/README.md): a scroll page for newcomers, six trials of one question; `python -m http.server 8001 --directory story` |
+| understand the statistics behind the methods (for the presenters) | [`docs/econometrics-primer.md`](docs/econometrics-primer.md): eight topics in plain words, each with a small worked example and the slide and paper section where it appears |
 
 ## Quick start
 
