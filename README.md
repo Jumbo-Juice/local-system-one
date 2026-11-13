@@ -152,6 +152,7 @@ it: [`docs/lessons-learned.md`](docs/lessons-learned.md).
 | read or change the engine | `system_one/` (see How it works below) |
 | see the fraud app (separate, serious) | [`fraud/`](fraud/CLAUDE.md): approve / review / decline on PaySim; results in [`fraud/RESULTS.md`](fraud/RESULTS.md) and, for the fine-tuned brain, [`fraud/RESULTS-FT.md`](fraud/RESULTS-FT.md); console `python -m fraud.viewer` |
 | see the final presentation | [`slides/`](slides/README.md): the reveal.js deck on the fraud results, with its PDF export |
+| read the paper | [`paper/`](paper/README.md): the IEEE paper on turning a small language model into a fraud decision model, Typst, PDF in `paper/exports/` |
 | read the whole project as one story | [`story/`](story/README.md): a scroll page for newcomers, six trials of one question; `python -m http.server 8001 --directory story` |
 
 ## Quick start

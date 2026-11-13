@@ -53,7 +53,7 @@
  "final.diffs.rich_cust_baseline.mean|signed": "+311",
  "final.diffs.rich_cust_baseline|dist": "not distinguishable",
  "final.diffs.signal_amt_approve.ci|ci": "−4,127 to −2,422",
- "final.diffs.signal_amt_approve.mean|signed": "−3,290",
+ "final.diffs.signal_amt_approve.mean|abs": "3,290",
  "final.diffs.signal_amt_baseline.ci.0": "-462.09249",
  "final.diffs.signal_amt_baseline.ci.1": "237.893096",
  "final.diffs.signal_amt_baseline.ci|ci": "−462 to 238",
