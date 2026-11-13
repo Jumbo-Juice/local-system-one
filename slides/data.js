@@ -1117,6 +1117,11 @@ window.DATA = {
     }
    ]
   },
+  "conventions": {
+   "_source": "fraud/eval_ieee.py boot_ci (a percentile 95% interval of the mean, windows resampled); fraud/eval_final.py docstring (the latency bar is on p90: 90% of lone prompts at or under 250 ms). Implementation choice.",
+   "ci_level": 95,
+   "latency_quantile": 90
+  },
   "customer_line": {
    "_source": "fraud/eval_final.py docstring (final-signal-cust: Phase 18's flat 10 USD in the expected cost of declining, never in what it's charged); fraud/eval_combos.py FLAT. Implementation choice.",
    "flat": 10

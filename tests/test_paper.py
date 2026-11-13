@@ -70,3 +70,79 @@ def test_unresolved_key_raises():
 
 def test_keys_reads_v_calls():
     assert paper.keys('a #v("x.y|int") b #v("z") #v("x.y|int")') == ["x.y|int", "z"]
+
+
+# ---- the paper itself (paper/main.typ) ----------------------------------------------------------------------
+
+TYPST_WINGET = Path.home() / "AppData/Local/Microsoft/WinGet/Packages/Typst.Typst_Microsoft.Winget.Source_8wekyb3d8bbwe/typst-x86_64-pc-windows-msvc/typst.exe"
+MAIN = ROOT / "paper" / "main.typ"
+FOOTNOTE = re.compile(r"// code-and-data: start\n(.*?)// code-and-data: end\n", re.S)
+REFS = re.compile(r"// references: start\n(.*?)// references: end\n", re.S)
+
+slides_spec = importlib.util.spec_from_file_location("slides_build_data", ROOT / "slides" / "build_data.py")
+slides = importlib.util.module_from_spec(slides_spec)
+slides_spec.loader.exec_module(slides)
+
+
+def typst() -> str | None:
+    """Typst on PATH, or where winget put it (agent shells don't have it on PATH)."""
+    return shutil.which("typst") or (str(TYPST_WINGET) if TYPST_WINGET.exists() else None)
+
+
+def body_text(typ: str) -> str:
+    """The prose a reader sees, as source: no "Code and data" footnote, no v() keys, no import or data-file line, no comments."""
+    typ = FOOTNOTE.sub(" ", typ)
+    typ = re.sub(r'#?v\(\s*"[^"]*"\s*\)', " ", typ)
+    typ = re.sub(r'(?m)^#import .*$|json\("data\.json"\)', " ", typ)
+    return re.sub(r"(?m)//.*$", " ", typ)
+
+
+def rule_breaks(text: str) -> list[str]:
+    """The Global Constraints: phase numbers, setup ids and chain or window ids, file paths, 'econometric';
+    and the words the handoff rules out."""
+    banned = [r"(?i)\bphase \d+", r"(?i)econometric", r"fraud/", r"\.py\b", r"\.jsonl?\b", r"\b(?:dev|test)\d+\b",
+              r"(?i)slightly (?:cheaper|better)", r"(?i)beats? (?:logistic regression|logreg)", r"(?i)\d+ ?% probability",
+              r"(?i)probability of fraud"]
+    banned += [rf"(?<![\w-]){re.escape(s)}(?![\w-])" for s in slides.NAMES]
+    return [m[0] for b in banned for m in [re.search(b, text)] if m]
+
+
+def test_paper_compiles_and_is_six_to_eight_pages(tmp_path):
+    exe = typst()
+    if not exe:
+        pytest.skip("typst is not installed")
+    out = subprocess.run([exe, "compile", str(MAIN), str(tmp_path / "p{p}.png")], cwd=ROOT, capture_output=True, text=True, encoding="utf-8")
+    assert out.returncode == 0, out.stderr
+    pages = sorted(tmp_path.glob("p*.png"))
+    assert 6 <= len(pages) <= 8, len(pages)
+
+
+def test_paper_has_the_fourteen_references():
+    """[1]-[13] as in the midterm plan, in order, and [14] the d1-Omni-2B model card; each cited in the text."""
+    typ = MAIN.read_text(encoding="utf-8")
+    block = REFS.findall(typ)
+    assert len(block) == 1
+    entries = re.findall(r"(?m)^#bib\((\d+)\)\[(.*)\]\s*$", block[0])
+    assert [int(n) for n, _ in entries] == list(range(1, 15))
+    text = dict((int(n), t) for n, t in entries)
+    assert "Nilson" in text[1] and "Dal Pozzolo" in text[2] and "PaySim" in text[8] and "IEEE-CIS" in text[9]
+    assert "Qwen2.5" in text[10] and "LoRA" in text[11] and "CRISP-DM" in text[12] and "System One" in text[13]
+    assert "d1-Omni-2B" in text[14] and "LiquidAI" in text[14]
+    body = REFS.sub(" ", typ)
+    cited = {int(n) for args in re.findall(r"#cite-n\(([\d, ]+)\)", body) for n in args.split(",")}
+    assert cited == set(range(1, 15))
+
+
+def test_paper_text_follows_the_rules():
+    typ = MAIN.read_text(encoding="utf-8")
+    for bad in ["Phase 14", "econometrics", "see fraud/SUMMARY.md", "finetune.py", "a .jsonl trace", "window dev0", "final-rich-amt",
+                "slightly cheaper", "a 94% probability"]:
+        assert rule_breaks(bad), bad
+    assert not rule_breaks("a rule-based baseline, the final test, data, final-rich-amtx, a logistic regression")
+    footnotes = FOOTNOTE.findall(typ)
+    assert len(footnotes) == 1 and "footnote" in footnotes[0] and "Code and data" in footnotes[0]
+    body = body_text(typ)
+    assert rule_breaks(body) == []
+    assert body.count("multinomial logistic") <= 1
+    flat = re.sub(r"\s+", " ", body)
+    assert "no setup showed a distinguishable saving" in flat and "fairness was not measured" in flat.lower()
