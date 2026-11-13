@@ -148,7 +148,7 @@ the most of any setup. Logistic regression with the rule costs 2,106 USD per win
 **Worked example 3: the rule (from the deck, slide 05; the score is made up).** The cost of each
 action for one payment, given a score p:
 approve = p x amount; decline = (1 - p) x friction; review = fee + lambda.
-For the PaySim transfer of 305,369.89 USD with p = 0.25 (the made-up score from slide 06):
+For the PaySim transfer of 305,369.89 USD with p of about 0.2535 (the made-up score from slide 06, shown rounded as 0.25) and lambda = 10 (the deck's illustration value; so a review costs the 10 USD fee plus 10 = 20):
 approve costs 77,427.42, decline 22,794.25, review 20.00. The cheapest is review. For a 40 USD
 payment with the same p: approve 10.14, decline 2.99, review 20.00. The cheapest is decline. Same
 score, different action, because the amount decides. Two fixed cut-offs on p cannot do that.
@@ -292,7 +292,7 @@ situation when fraud is rare.
 **Worked example (from the deck, slides 03 and 04).** IEEE-CIS final test: 630 frauds in 20,000 payments
 (3.15%), so "approve everything" is 97% accurate and it is also the most expensive setup. PaySim is
 rarer still: about one fraud in 775 payments. On the final test, logistic regression with the rule
-stopped 384 frauds and declined 1,051 good customers (precision 0.18).
+stopped 384 frauds, declined 1,051 good customers and sent 652 more good customers to review. Counting every flag (declined or reviewed) as an alarm, precision is 384 / (384 + 1,051 + 652) = 0.18.
 
 So the project does not use accuracy. It prices the decision (topic 4) and reports, next to every
 cost, how many good customers were declined and how many frauds were stopped.
@@ -306,5 +306,5 @@ cost, how many good customers were declined and how many frauds were stopped.
   the fraud code (Observed: searched for it). The imbalance is handled in the decision: the rule
   prices each action. One language-model setup did weight each training row by what a mistake on
   it costs; on dev it did not help (paper: Results, "IEEE-CIS on dev"). Do not claim more.
-- "Why not AUC?" AUC is reported in the paper's final-test table, but it ranks payments and ignores amounts and
+- "Why not AUC?" AUC is reported in the paper's text under Results, "The final test" (not in a table), but it ranks payments and ignores amounts and
   prices, which is why the dollar cost is the headline.
