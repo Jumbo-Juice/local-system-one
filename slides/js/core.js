@@ -18,6 +18,7 @@
     auc4: x => x.toFixed(4).replace(/^0/, ''),
     aucrange: a => `${a[0].toFixed(3).replace(/^0/, '')}–${a[1].toFixed(3).replace(/^0/, '')}`,
     num: x => String(x),
+    short: x => String(x).split('/').pop(),  // a model id without its publisher prefix
     abs: x => group(Math.round(x)),
     pct: x => `${Math.round(x * 100)}%`,
     d2: x => (x.toFixed(2).startsWith('-') ? MINUS : '') + Math.abs(x).toFixed(2),

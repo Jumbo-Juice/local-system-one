@@ -59,6 +59,7 @@
  "final.diffs.signal_amt_baseline.ci|ci": "−462 to 238",
  "final.diffs.signal_amt_baseline.first_cheaper": "15",
  "final.diffs.signal_amt_baseline.mean": "-163.22086",
+ "final.diffs.signal_amt_baseline.mean|abs": "163",
  "final.diffs.signal_amt_baseline.mean|signed": "−163",
  "final.diffs.signal_amt_baseline|dist": "not distinguishable",
  "final.diffs.signal_cust_baseline.ci.0": "-390.565011",

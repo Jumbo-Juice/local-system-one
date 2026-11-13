@@ -42,7 +42,7 @@ nothing. Weights are only comparable when the facts are on comparable scales (se
 
 **If he asks.**
 - "Is this the logit model?" Yes, the same idea: a linear score through a sigmoid, fitted by
-  maximum likelihood. We use it as a baseline, not as the point of the project.
+  L2-penalised maximum likelihood. We use it as a baseline, not as the point of the project.
 - "Why not read the weights as effects?" The weights here are made up on the slide, and on real
   data the facts are correlated, so a weight shows what the model uses, not what causes fraud.
 
@@ -63,8 +63,8 @@ says decline with 94%. The shift does not matter: the slide's logits are the mod
 is 0, and softmax ignores adding one constant to all three scores (the deck says so).
 
 Then slide 09 asks the same question with the options in reverse order, and the model puts 0.54 on
-approve, 0.05 on review and 0.42 on decline: it follows the letter's position (the last letter
-both times), not its meaning. Averaging the two orders gives approve 0.28, review 0.04, decline
+approve, 0.05 on review and 0.42 on decline: it follows the letter's position as well as its meaning (the last letter
+both times; position does not decide everything, since the same letter C got 0.94 listed but 0.54 reversed). Averaging the two orders gives approve 0.28, review 0.04, decline
 0.68.
 
 **Where it appears.**
@@ -271,6 +271,8 @@ says so).
 - "Is the final test not tuned on at all?" The cut-offs, lambda, the prompt and which setups went
   forward were all chosen on dev; the final test was scored once. A small procedure difference
   remains: lambda for the language-model setups came from more dev windows than logistic regression's.
+- "What lambda did you use?" The final test's rule used lambda = 5 (slides/data.js, final block); the
+  deck's worked illustration uses lambda = 10, a made-up value to show the mechanism.
 - "Why not cross-validation?" Time order matters here: we split by time and never shuffle, so
   no model learns from the future, which random folds would allow.
 - "How do you know you did not peek?" The paper states the setups, comparisons and the rule for choosing a winner were committed before any setup scored a final-test row, and each was scored once. We cannot prove a negative beyond that record.
@@ -302,9 +304,12 @@ cost, how many good customers were declined and how many frauds were stopped.
 - Paper: Data and Protocol, "Two datasets, two cycles" and "Judging by dollars".
 
 **If he asks.**
-- "Did you rebalance (oversample, class weights)?" No class weighting or oversampling appears in
-  the fraud code (Observed: searched for it). The imbalance is handled in the decision: the rule
-  prices each action. One language-model setup did weight each training row by what a mistake on
+- "Did you rebalance (oversample, class weights)?" Yes, but only to train the language
+  model: its adapter saw every fit fraud and three genuine rows per fraud (undersampling the genuine
+  rows), so about 25% of its training examples were fraud (Observed: LEGIT_PER_FRAUD = 3 in the
+  fine-tuning code, for PaySim and IEEE-CIS alike). That is why its scores are refitted on dev
+  before the cost rule uses them (paper: Methods, "Training with LoRA"). The classical models and
+  the rule use no reweighting; the imbalance is handled in the decision: the rule prices each action. One language-model setup did weight each training row by what a mistake on
   it costs; on dev it did not help (paper: Results, "IEEE-CIS on dev"). Do not claim more.
 - "Why not AUC?" AUC is reported in the paper's text under Results, "The final test" (not in a table), but it ranks payments and ignores amounts and
   prices, which is why the dollar cost is the headline.
