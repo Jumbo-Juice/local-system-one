@@ -585,6 +585,19 @@ window.DATA = {
     "said": "“d1 reads trees, customer line” cost 115 USD less per window than “Baseline: logreg, rule”, but the 95% interval of the difference runs from 391 less to 273 more, so the two are not distinguishable.",
     "second": "final-logreg-amt",
     "windows": 20
+   },
+   "signal_cust_signal_amt": {
+    "ci": [
+     -46.978382,
+     159.862074
+    ],
+    "distinguishable": false,
+    "first": "final-signal-cust",
+    "first_cheaper": 9,
+    "mean": 48.67652,
+    "said": "“d1 reads trees, customer line” cost 49 USD more per window than “d1 reads trees, rule”, but the 95% interval of the difference runs from 47 less to 160 more, so the two are not distinguishable.",
+    "second": "final-signal-amt",
+    "windows": 20
    }
   },
   "eval": "20261104-090649",
@@ -1282,6 +1295,10 @@ window.DATA = {
    "fit_rows": 47952,
    "largest_weight": 7.3,
    "top10_share": 41
+  },
+  "training_loss": {
+   "_source": "fraud/finetune_d1.py docstring (IEEE-CIS and d1 training: cross-entropy over the three option scores divided by calibration.json's temperature, 3.383); fraud/finetune.py docstring and train loop (PaySim Qwen training: cross-entropy over the whole vocabulary at the answer position). Implementation choice.",
+   "d1_temperature": 3.383
   }
  },
  "paysim": {

@@ -40,7 +40,9 @@ quantile).
 
 ## Fonts
 
-The template asks for TeX Gyre Termes and TeX Gyre Cursor, which this machine doesn't have. `main.typ` adds
-`show text: set text(font: ("TeX Gyre Termes", "Times New Roman"))` before the template, so the whole paper,
-title and abstract included, is set in Windows' Times New Roman. Typst still prints three "unknown font family"
-warnings (two for Termes, one for Cursor); they are harmless.
+The template asks for TeX Gyre Termes and TeX Gyre Cursor, which this machine doesn't have. `main.typ` names
+`("TeX Gyre Termes", "Times New Roman")` in show-set rules on `text`, `place` and `footnote.entry` before the
+template, in a set rule after it, and around the abstract and index terms, so the whole paper, title and abstract
+included, is set in Windows' Times New Roman (`pdffonts` lists only Times New Roman and the math font). Typst
+still prints eight "unknown font family" warnings: seven for Termes (one from the template, six from main.typ's
+uses of the tuple) and one for Cursor (the template). They are harmless.

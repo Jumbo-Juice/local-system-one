@@ -158,6 +158,7 @@ def final_block() -> dict:
         "diffs": {"rich_amt_baseline": find(all_v, "final-rich-amt", "final-logreg-amt", "window"),
                   "signal_amt_baseline": find(all_v, "final-signal-amt", "final-logreg-amt", "window"),
                   "signal_cust_baseline": find(all_v, "final-signal-cust", "final-logreg-amt", "window"),
+                  "signal_cust_signal_amt": find(all_v, "final-signal-cust", "final-signal-amt", "window"),
                   "rich_amt_signal_amt": find(all_v, "final-rich-amt", "final-signal-amt", "window"),
                   "signal_amt_approve": find(all_v, "final-signal-amt", "ieee-approve-all", "window"),
                   "rich_cust_baseline": find(all_v, "final-rich-cust", "final-logreg-amt", "window"),

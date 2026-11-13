@@ -117,5 +117,9 @@
     "_source": "fraud/eval_ieee.py boot_ci (a percentile 95% interval of the mean, windows resampled); fraud/eval_final.py docstring (the latency bar is on p90: 90% of lone prompts at or under 250 ms). Implementation choice.",
     "ci_level": 95,
     "latency_quantile": 90
+  },
+  "training_loss": {
+    "_source": "fraud/finetune_d1.py docstring (IEEE-CIS and d1 training: cross-entropy over the three option scores divided by calibration.json's temperature, 3.383); fraud/finetune.py docstring and train loop (PaySim Qwen training: cross-entropy over the whole vocabulary at the answer position). Implementation choice.",
+    "d1_temperature": 3.383
   }
 }
