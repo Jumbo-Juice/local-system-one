@@ -462,6 +462,7 @@ window.DATA = {
   "windows_n": 88
  },
  "final": {
+  "approve_all_accuracy": 0.9685,
   "dearest": {
    "baseline": 2066.2211,
    "cost": 4936.1018,
@@ -583,6 +584,19 @@ window.DATA = {
     "mean": -114.54434,
     "said": "“d1 reads trees, customer line” cost 115 USD less per window than “Baseline: logreg, rule”, but the 95% interval of the difference runs from 391 less to 273 more, so the two are not distinguishable.",
     "second": "final-logreg-amt",
+    "windows": 20
+   },
+   "signal_cust_signal_amt": {
+    "ci": [
+     -46.978382,
+     159.862074
+    ],
+    "distinguishable": false,
+    "first": "final-signal-cust",
+    "first_cheaper": 9,
+    "mean": 48.67652,
+    "said": "“d1 reads trees, customer line” cost 49 USD more per window than “d1 reads trees, rule”, but the 95% interval of the difference runs from 47 less to 160 more, so the two are not distinguishable.",
+    "second": "final-signal-amt",
     "windows": 20
    }
   },
@@ -1013,6 +1027,72 @@ window.DATA = {
   },
   "windows_n": 20
  },
+ "illustration": {
+  "logreg": {
+   "odds_times": 4.4816890703380645,
+   "p": 0.2535528899477657,
+   "rows": {
+    "log_amount": {
+     "adds": 4.420247676213488,
+     "w": 0.35,
+     "x": 12.62927907489568
+    },
+    "night": {
+     "adds": 0.0,
+     "w": 0.8,
+     "x": 0.0
+    },
+    "round": {
+     "adds": 0.0,
+     "w": 0.6,
+     "x": 0.0
+    },
+    "transfer": {
+     "adds": 1.5,
+     "w": 1.5,
+     "x": 1.0
+    }
+   },
+   "score": -1.0797523237865123,
+   "start": -7.0
+  },
+  "rule": {
+   "big": {
+    "amount": 305369.89,
+    "approve": 77427.41811253132,
+    "decline": 22794.24718874687
+   },
+   "lam": 10,
+   "p": 0.2535528899477657,
+   "review": 20.0,
+   "small": {
+    "amount": 40,
+    "approve": 10.142115597910628,
+    "decline": 2.985788440208937
+   }
+  },
+  "trees": {
+   "p": 0.14185106490048782,
+   "score": -1.7999999999999998,
+   "start": -3.4,
+   "t1": {
+    "no": -0.3,
+    "took": "yes",
+    "yes": 0.9
+   },
+   "t2": {
+    "no": -0.2,
+    "over": 200000,
+    "took": "yes",
+    "yes": 1.1
+   },
+   "t3": {
+    "no": -0.4,
+    "took": "no",
+    "yes": 0.7
+   }
+  }
+ },
  "manual": {
   "_note": "Numbers that exist only in prose or in traces that aren't committed. Each block names its source. Everything else in data.js is read from committed JSON by build_data.py.",
   "bands": {
@@ -1050,6 +1130,60 @@ window.DATA = {
     }
    ]
   },
+  "conventions": {
+   "_source": "fraud/eval_ieee.py boot_ci (a percentile 95% interval of the mean, windows resampled); fraud/eval_final.py docstring (the latency bar is on p90: 90% of lone prompts at or under 250 ms). Implementation choice.",
+   "ci_level": 95,
+   "latency_quantile": 90
+  },
+  "customer_line": {
+   "_source": "fraud/eval_final.py docstring (final-signal-cust: Phase 18's flat 10 USD in the expected cost of declining, never in what it's charged); fraud/eval_combos.py FLAT. Implementation choice.",
+   "flat": 10
+  },
+  "data": {
+   "_source": "fraud/DATA.md (PaySim: 6,362,620 rows, 8,213 fraud, steps 1-743 = 31 days; one fraud in 775 is 6,362,620 / 8,213 rounded); fraud/eval_ieee.py WINDOW_SIZE (rows per window). Observed; the window size is an Implementation choice.",
+   "paysim_days": 31,
+   "paysim_frauds": 8213,
+   "paysim_one_in": 775,
+   "paysim_rows": 6362620,
+   "window_rows": 1000
+  },
+  "illustration": {
+   "_source": "Implementation choice: made-up inputs to show the mechanism on the worked PaySim payment; no rule, logistic regression or tree scored this payment, and the slides label these numbers 'illustration'. Only the inputs are here (logistic-regression start and weights, the tree start, questions and leaves, lambda, the small payment's amount); slides/build_data.py illustration_block derives every other number from them, worked and costs.",
+   "logreg": {
+    "start": -7.0,
+    "w": {
+     "log_amount": 0.35,
+     "night": 0.8,
+     "round": 0.6,
+     "transfer": 1.5
+    }
+   },
+   "rule": {
+    "lam": 10,
+    "small_amount": 40
+   },
+   "trees": {
+    "start": -3.4,
+    "t1": {
+     "no": -0.3,
+     "yes": 0.9
+    },
+    "t2": {
+     "no": -0.2,
+     "over": 200000,
+     "yes": 1.1
+    },
+    "t3": {
+     "no": -0.4,
+     "yes": 0.7
+    }
+   }
+  },
+  "nilson": {
+   "_source": "../midterm-proposal/PLAN.md, References [1]: The Nilson Report, \"Card fraud losses worldwide in 2023,\" no. 1276, Dec. 2024. Documented.",
+   "usd_billions": 33.83,
+   "year": 2023
+  },
   "paysim": {
    "_source": "README.md, docs/media/fraud-rule-book.png. Simulated data and a different cost setup from IEEE-CIS.",
    "decisions": 3862,
@@ -1058,6 +1192,16 @@ window.DATA = {
    "mean_rules": 808,
    "mean_trained": 830,
    "mean_untrained_millions": 5.1
+  },
+  "paysim_ft": {
+   "_source": "fraud/RESULTS-FT.md (eval 20261005-022333): 20 new test windows of 500 transactions each; hybrid-ft cheaper than logistic regression in 19 of 20; cost of training from the manifest: 12,084 examples, 52 min on the laptop's iGPU. PaySim's own prices: review 50 USD, friction at least 10 USD (the pinned trace's header). Observed.",
+   "cheaper_than_logreg": 19,
+   "examples": 12084,
+   "friction_min": 10,
+   "minutes": 52,
+   "review_fee": 50,
+   "window_rows": 500,
+   "windows": 20
   },
   "phase14": {
    "_source": "fraud/RESULTS-IEEE-AMOUNT.md, Good customers declined. Logreg with two lines, then with the rule.",
@@ -1134,6 +1278,16 @@ window.DATA = {
    "rows": 590540,
    "test": 118108
   },
+  "stress": {
+   "_source": "fraud/RESULTS-COST-STRESS.md, flat price per good customer declined: not distinguishable up to 30 USD; the mean flips between 50 and 60 USD",
+   "flat_high": 60,
+   "flat_low": 50,
+   "not_distinguishable_from": 30
+  },
+  "tabular_dev": {
+   "_source": "fraud/RESULTS-TABULAR.md, 'Held-out dev, 88 chains, no bar' (fraud/tabular.py heldout_dev): the dev read of trees against logistic regression. Lambda for trees was picked with these rows in, so that read is flattered (Observed).",
+   "chains": 88
+  },
   "training": {
    "_source": "fraud/eval_lm_cost.py docstring, Phase 25 pre-registration",
    "fit_frauds": 11988,
@@ -1141,6 +1295,10 @@ window.DATA = {
    "fit_rows": 47952,
    "largest_weight": 7.3,
    "top10_share": 41
+  },
+  "training_loss": {
+   "_source": "fraud/finetune_d1.py docstring (IEEE-CIS and d1 training: cross-entropy over the three option scores divided by calibration.json's temperature, 3.383); fraud/finetune.py docstring and train loop (PaySim Qwen training: cross-entropy over the whole vocabulary at the answer position). Implementation choice.",
+   "d1_temperature": 3.383
   }
  },
  "paysim": {
@@ -1158,10 +1316,12 @@ window.DATA = {
    "truth": 0,
    "type": "TRANSFER"
   },
+  "last_letter_both": 190,
   "model": "Qwen/Qwen2.5-1.5B-Instruct",
   "model_declined": 257,
   "model_n": 257,
   "n": 500,
+  "order_flips": 190,
   "replay": [
    {
     "action": "approve",
@@ -1518,6 +1678,7 @@ window.DATA = {
      -410.808269,
      -173.117784
     ],
+    "distinguishable": true,
     "mean": -294.867665
    },
    "diff": {
@@ -1535,5 +1696,69 @@ window.DATA = {
    },
    "windows_n": 10
   }
+ },
+ "worked": {
+  "action": "decline",
+  "amount": 305369.89,
+  "exp": {
+   "listed": [
+    0.03316464141264174,
+    0.03318406685520024,
+    1.0
+   ],
+   "sum_listed": 1.066348708267842
+  },
+  "facts": {
+   "receiver_before": 4,
+   "round": 0,
+   "same_amount_before": 0
+  },
+  "hour": 16,
+  "i": 2,
+  "logits": {
+   "listed": [
+    -3.4062709882855415,
+    -3.405685432255268,
+    0.0
+   ],
+   "reversed": [
+    0.0,
+    -2.4157466888427734,
+    -0.2568473815917969
+   ]
+  },
+  "orders": {
+   "listed": [
+    0.031101122133409622,
+    0.031119338915976045,
+    0.9377795389506143
+   ],
+   "reversed": [
+    0.5368300619110649,
+    0.04793926500442517,
+    0.41523067308450995
+   ]
+  },
+  "prompt": {
+   "options": [
+    "no: approve it",
+    "unsure: send it to an analyst",
+    "yes: decline it"
+   ],
+   "question": "Does this transaction match the fraud pattern?"
+  },
+  "scores": [
+   0.28396559202223726,
+   0.03952930196020061,
+   0.6765051060175621
+  ],
+  "to": "customer",
+  "top": {
+   "averaged": "decline",
+   "listed": "decline",
+   "reversed": "approve"
+  },
+  "truth": 0,
+  "type": "TRANSFER"
  }
 };

@@ -1,6 +1,6 @@
 // Walks the live deck at 1920 x 1080: node slides/check_deck.mjs [folder for screenshots]
 // Forward through every step, then backward, then re-entry, and fails if a state doesn't match itself. Also
-// presses keys faster than the animations, which must still land on the same final state. No network, 0 console errors.
+// presses keys faster than the fades, which must still land on the same final state. No network, 0 console errors.
 import fs from 'node:fs'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
@@ -8,28 +8,21 @@ import { launch, serve, sleep } from './cdp.mjs'
 
 const ROOT = path.dirname(fileURLToPath(import.meta.url))
 const SHOTS = process.argv[2]
-const SETTLE = 1000 // longer than any token's duration
+const SETTLE = 500 // longer than the step fade
 
-// What a slide currently shows: which steps are in, every bar, every number, and whether the race and replay are at rest
+// What a slide currently shows: which steps are in and how opaque each is, the page's text, and every chart's SVG
 const signature = `(() => {
   const sec = Reveal.getCurrentSlide()
-  const bits = [...sec.querySelectorAll('[data-from]')].map(n => n.classList.contains('shown') ? 1 : 0).join('')
-  const bars = [...sec.querySelectorAll('.hbar-fill, .wbar')].map(n => getComputedStyle(n).transform).join('|')
-  const on = [...sec.querySelectorAll('.on, .dots, .ivals, .judged, .locked')].length
-  const vals = [...sec.querySelectorAll('.val, .v, .per, [data-corr], [data-p90], [data-answer], [data-seen], [data-declined]')].map(n => n.textContent).join('|')
-  const seg = [...sec.querySelectorAll('.seg, .needle, .replay-rows')].map(n => getComputedStyle(n).transform).join('|')
-  const lines = [...sec.querySelectorAll('polyline')].map(n => n.getAttribute('points')).join('|')
-  return JSON.stringify({ bits, bars, on, vals, seg, lines })
+  const bits = [...sec.querySelectorAll('[data-from]')].map(n => (n.classList.contains('shown') ? 1 : 0) + ':' + getComputedStyle(n).opacity).join(' ')
+  const text = sec.querySelector('.page')?.textContent.replace(/\\s+/g, ' ').trim() ?? ''
+  const charts = [...sec.querySelectorAll('.chart-svg')].map(n => n.outerHTML).join('|')
+  return JSON.stringify({ bits, text, charts })
 })()`
 const where = `(() => { const i = Reveal.getIndices(); return i.h + '.' + i.v + '.' + (i.f ?? -1) })()`
 
 const server = await serve(ROOT)
 const edge = await launch()
-const settle = async () => {
-  await sleep(SETTLE)
-  for (let i = 0; i < 200 && await edge.evaluate('__deck.busy()'); i++) await sleep(100)
-  await sleep(100)
-}
+const settle = () => sleep(SETTLE)
 const failures = []
 const states = new Map()
 

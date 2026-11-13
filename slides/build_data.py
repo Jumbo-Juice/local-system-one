@@ -148,6 +148,7 @@ def final_block() -> dict:
     latency = s["final-rich-amt"]["latency_ms"]
     return {
         "eval": d["eval"], "windows_n": len(d["windows"]), "rows": d["test_rows"], "frauds": d["test_fraud"],
+        "approve_all_accuracy": 1 - d["test_fraud"] / d["test_rows"],
         "fraud_usd": num(s["final-logreg-amt"]["fraud_usd"]),
         "window_rows": {k: v_ for k, v_ in d["windows"].items()},
         "latency": {"p50": num(latency["p50"], 1), "p90": num(latency["p90"], 1), "bar": d["latency_bar_ms"]},
@@ -157,6 +158,7 @@ def final_block() -> dict:
         "diffs": {"rich_amt_baseline": find(all_v, "final-rich-amt", "final-logreg-amt", "window"),
                   "signal_amt_baseline": find(all_v, "final-signal-amt", "final-logreg-amt", "window"),
                   "signal_cust_baseline": find(all_v, "final-signal-cust", "final-logreg-amt", "window"),
+                  "signal_cust_signal_amt": find(all_v, "final-signal-cust", "final-signal-amt", "window"),
                   "rich_amt_signal_amt": find(all_v, "final-rich-amt", "final-signal-amt", "window"),
                   "signal_amt_approve": find(all_v, "final-signal-amt", "ieee-approve-all", "window"),
                   "rich_cust_baseline": find(all_v, "final-rich-cust", "final-logreg-amt", "window"),
@@ -231,7 +233,9 @@ def rule_block() -> dict:
         "phase18": {"base": r["setups"]["rule-base"]["good_customers_declined"], "customers": r["setups"]["rule-customers"]["good_customers_declined"],
                     "windows_n": len(r["windows"]), "diff": diff(r["verdict"]["fourth"], "rule-customers", "window")},
         "phase20": {"windows_n": len(t["windows"]), "diff": diff(t["verdict"]["primary"], "tab-all-amt", "window"),
-                    "dev": {"mean": num(t["heldout"]["tab-all"]["diff"]), "ci": [num(v) for v in t["heldout"]["tab-all"]["diff_ci"]]}},
+                    "dev": {"mean": num(t["heldout"]["tab-all"]["diff"]), "ci": [num(v) for v in t["heldout"]["tab-all"]["diff_ci"]],
+                                    # the dev read's verdict, by the same test as every other: its CI leaves out 0
+                                    "distinguishable": t["heldout"]["tab-all"]["diff_ci"][0] > 0 or t["heldout"]["tab-all"]["diff_ci"][1] < 0}},
     }
 
 
@@ -241,21 +245,91 @@ def paysim_block() -> dict:
     tx = [r for r in rows if r.get("type") == "tx"]
     model = [r for r in tx if r["by"] == "model"]
     first = model[0]
+    tops = [[max(range(3), key=o.__getitem__) for o in r["orders"]] for r in model]
     return {
         "model": rows[0]["backend"]["model"], "window": rows[0]["window"]["id"], "n": len(tx), "model_n": len(model),
         "model_declined": sum(r["action"] == "decline" for r in model), "replay_n": REPLAY_ROWS,
+        # option-order bias: model rows whose two orders give different top answers, and those that took the last letter both times
+        "order_flips": sum(a != b for a, b in tops), "last_letter_both": sum(a == 2 and b == 0 for a, b in tops),
         "decision": {"type": first["tx"]["type"], "amount": first["tx"]["amount"], "to": first["tx"]["to"], "hour": first["tx"]["hour"],
                      "scores": {k: num(v) for k, v in first["scores"].items()}, "action": first["action"], "truth": first["truth"], "ms": num(first["ms"], 0)},
         "replay": [{"i": r["i"], "type": r["tx"]["type"], "amount": r["tx"]["amount"], "by": r["by"], "action": r["action"]} for r in tx[:REPLAY_ROWS]],
     }
 
 
+def worked_block() -> dict:
+    """The first PaySim TRANSFER the model read in both orders and answered differently by order (reads TRACE at call time)."""
+    names = ["approve", "review", "decline"]
+    lines = TRACE.read_text(encoding="utf-8").splitlines()
+    head = json.loads(lines[0])
+    for line in lines:
+        r = json.loads(line)
+        if r.get("type") != "tx" or r.get("by") != "model" or r["tx"]["type"] != "TRANSFER":
+            continue
+        listed, reversed_ = r["orders"]
+        top = [max(range(3), key=o.__getitem__) for o in (listed, reversed_)]
+        if top[0] == top[1]:
+            continue
+
+        def logits(p):
+            ls = [math.log(x) for x in p]
+            return [x - max(ls) for x in ls]
+
+        scores = r["scores"]
+        return {
+            "i": r["i"], "type": r["tx"]["type"], "amount": r["tx"]["amount"], "to": r["tx"]["to"], "hour": r["tx"]["hour"],
+            "truth": r["truth"], "orders": {"listed": listed, "reversed": reversed_},
+            "scores": [scores[n] for n in names],
+            "logits": {"listed": logits(listed), "reversed": logits(reversed_)},
+            "top": {"listed": names[top[0]], "reversed": names[top[1]], "averaged": max(names, key=scores.get)},
+            "action": r["action"],
+            # the facts the model read (fraud/brain.py describe) and the question it was asked, for slide 08
+            "facts": {"receiver_before": r["signals"]["dest_in_before"], "same_amount_before": r["signals"]["same_amount_step_before"],
+                      "round": r["signals"]["round_amount"]},
+            "prompt": {"question": head.get("question"), "options": head.get("options")},
+            # softmax worked by hand: e to each logit, and their sum
+            "exp": {"listed": [math.exp(x) for x in logits(listed)], "sum_listed": sum(math.exp(x) for x in logits(listed))},
+        }
+    raise LookupError("no two-order TRANSFER that flips in the trace")
+
+
+def illustration_block(ins: dict, worked: dict, costs: dict) -> dict:
+    """The mechanism slides' numbers, derived from the made-up inputs in manual_data.json (illustration), the worked
+    PaySim payment and the cost model, so they can't drift apart. The rule prices the payment at the p that
+    logistic regression gives it. Features as fraud/baselines.py: night is hours 1-6, round is a whole multiple of 1,000."""
+    sig = lambda s: 1 / (1 + math.exp(-s))
+    amount, hour = worked["amount"], worked["hour"]
+    x = {"transfer": 1.0 if worked["type"] == "TRANSFER" else 0.0, "log_amount": math.log(amount),
+         "night": 1.0 if 1 <= hour <= 6 else 0.0, "round": 1.0 if amount % 1000 == 0 else 0.0}
+    lr_in = ins["logreg"]
+    rows = {k: {"x": x[k], "w": lr_in["w"][k], "adds": lr_in["w"][k] * x[k]} for k in x}
+    score = lr_in["start"] + sum(r["adds"] for r in rows.values())
+    p = sig(score)
+    logreg = {"start": lr_in["start"], "rows": rows, "score": score, "p": p, "odds_times": math.exp(lr_in["w"]["transfer"])}
+
+    def priced(a: float) -> dict:
+        return {"amount": a, "approve": p * a, "decline": (1 - p) * max(costs["friction_rate"] * a, costs["friction_min"])}
+    rule = {"p": p, "lam": ins["rule"]["lam"], "review": costs["review_fee"] + ins["rule"]["lam"],
+            "big": priced(amount), "small": priced(ins["rule"]["small_amount"])}
+
+    t_in = ins["trees"]
+    asks = {"t1": x["transfer"] == 1, "t2": amount > t_in["t2"]["over"], "t3": x["night"] == 1}
+    trees = {"start": t_in["start"]}
+    for t, yes in asks.items():
+        trees[t] = t_in[t] | {"took": "yes" if yes else "no"}
+    trees["score"] = t_in["start"] + sum(t_in[t][trees[t]["took"]] for t in asks)
+    trees["p"] = sig(trees["score"])
+    return {"logreg": logreg, "rule": rule, "trees": trees}
+
+
 def build() -> dict:
     manual = json.loads((HERE / "manual_data.json").read_text(encoding="utf-8"))
     costs = load("final")["costs"]
+    worked = worked_block()
     return {
         "_sources": {k: f"fraud/results/{v}" for k, v in SOURCES.items()} | {"paysim_trace": f"fraud/runs/{TRACE.name}", "manual": "slides/manual_data.json"},
-        "costs": costs, "final": final_block(), "dev": dev_block(), "cost": cost_block(), "rule": rule_block(), "paysim": paysim_block(), "manual": manual,
+        "costs": costs, "final": final_block(), "dev": dev_block(), "cost": cost_block(), "rule": rule_block(), "paysim": paysim_block(), "worked": worked, "manual": manual,
+        "illustration": illustration_block(manual["illustration"], worked, costs),
     }
 
 

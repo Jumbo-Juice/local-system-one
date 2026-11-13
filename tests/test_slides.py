@@ -1,8 +1,9 @@
 """The final deck (slides/): data.js rebuilds from the committed files and says what the handoff's tables say,
-every binding on a slide resolves, nothing reaches the network, and the talk fits 15 minutes."""
+every binding on a slide resolves, nothing reaches the network, the deck is static, and the talk fits 15 minutes."""
 
 import importlib.util
 import json
+import math
 import re
 from pathlib import Path
 
@@ -14,6 +15,7 @@ build_data = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(build_data)
 
 MAX_TALK_S = 12 * 60  # 15 minutes everything included (owner, 2026-11-04), so 3:00 is left for questions
+TIMING = re.compile(r"\[(\w+) · (\d+):(\d\d)\]")
 
 
 @pytest.fixture(scope="module")
@@ -154,21 +156,61 @@ def test_reveal_is_pinned_and_licensed():
 
 
 def test_every_slide_has_notes_and_the_talk_fits(html):
+    """15 presented slides, each with notes and a [Name · m:ss] timing, and one references slide with no timing."""
     total = 0
     leaves = [s for s in sections(html) if 'class="page' in s]
-    assert len(leaves) >= 19
+    assert len(leaves) == 16
+    refs = [s for s in leaves if 'class="refs' in s]
+    assert len(refs) == 1 and not TIMING.search(refs[0]), "one references slide, not presented"
     for s in leaves:
         assert '<aside class="notes">' in s, s[:120]
-        m = re.search(r"\[(\w+) · (\d+):(\d\d)\]", s)
-        if m:
-            total += int(m[2]) * 60 + int(m[3])
+        if s in refs:
+            continue
+        m = TIMING.search(s)
+        assert m, s[:120]
+        total += int(m[2]) * 60 + int(m[3])
     assert 0 < total <= MAX_TALK_S, total
 
 
-def test_every_result_slide_has_a_status_badge(html):
-    for s in sections(html):
-        if "data-result" in s:
-            assert re.search(r'class="badge\b', s), s[:120]
+def test_no_scenes(html):
+    """The deck is static: no scene machinery, no Auto-Animate, no backup sub-slides."""
+    assert "data-scene" not in html and "scenes.js" not in html
+    assert not (SLIDES / "js" / "scenes.js").exists()
+    assert "data-auto-animate" not in html and "data-print-skip" not in html
+    assert not re.search(r"<section\b[^>]*>\s*<section\b", html), "no vertical stacks: no backup sub-slides"
+    for f in SLIDES.glob("js/*.js"):
+        assert "scenes" not in f.read_text(encoding="utf-8"), f
+
+
+def visible_text(html):
+    """What the room reads: no notes, comments, tags or {{bindings}} (a binding is a number from data, not prose)."""
+    text = re.sub(r"<aside class=\"notes\">.*?</aside>", " ", html, flags=re.S)
+    text = re.sub(r"<!--.*?-->|<head>.*?</head>|<script\b.*?</script>", " ", text, flags=re.S)
+    text = re.sub(r"\{\{.*?\}\}", " ", text)
+    return re.sub(r"<[^>]+>", " ", text)
+
+
+def rule_breaks(text):
+    """Phase numbers, setup ids (case-sensitive, whole words), chain and window ids, file paths, 'econometric'."""
+    banned = [r"(?i)\bphase \d+", r"(?i)econometric", r"fraud/", r"\.py\b", r"\.jsonl?\b", r"\b(?:dev|test)\d+\b"]
+    banned += [rf"(?<![\w-]){re.escape(s)}(?![\w-])" for s in build_data.NAMES]
+    return [m[0] for b in banned for m in [re.search(b, text)] if m]
+
+
+def test_visible_text_follows_the_rules(html):
+    for bad in ["Phase 14", "econometrics", "see fraud/SUMMARY.md", "finetune.py", "a .jsonl trace", "window dev0", "final-rich-amt"]:
+        assert rule_breaks(bad), bad
+    assert not rule_breaks("a rule-based baseline on the test windows, the final test, data.js, final-rich-amtx")
+    assert rule_breaks(visible_text(html)) == []
+
+
+def test_print_shows_every_step():
+    """?print-pdf is one page per slide in its final state: core.js shows every [data-from] element when printing."""
+    core = (SLIDES / "js" / "core.js").read_text(encoding="utf-8")
+    assert re.search(r"const PRINT = /print-pdf/\.test\(location\.search\)", core)
+    assert re.search(r"if \(PRINT\)[^\n]*querySelectorAll\('\[data-from\]'\)[^\n]*classList\.add\('shown'\)", core)
+    main = (SLIDES / "js" / "main.js").read_text(encoding="utf-8")
+    assert "pdfSeparateFragments: false" in main
 
 
 @pytest.mark.parametrize("banned", [r"slightly (?:cheaper|better)", r"beats? (?:logistic regression|logreg)", r"\d+ ?% probability", r"probability of fraud"])
@@ -204,21 +246,6 @@ def test_operating_points_and_the_sign_test_in_the_notes(data):
     assert round(f["prompt_tokens"]) == 345
 
 
-def test_the_recipe_slide_says_what_the_code_does(data):
-    fraud = SLIDES.parent / "fraud"
-    r, t = data["manual"]["recipe"], data["manual"]["training"]
-    src = (fraud / "finetune.py").read_text(encoding="utf-8")
-    lr, warm, batch, epochs = re.search(r"^LR, WARMUP_STEPS, BATCH, EPOCHS = ([\w.-]+), (\d+), (\d+), (\d+)", src, flags=re.M).groups()
-    assert (float(lr), int(warm), int(batch), int(epochs)) == (float(r["lr"]), r["warmup_steps"], r["batch"], 1)
-    lora = re.search(r'^LORA = \{"r": (\d+), "lora_alpha": (\d+), "lora_dropout": ([\d.]+)', (fraud / "finetune_d1.py").read_text(encoding="utf-8"), flags=re.M).groups()
-    assert (int(lora[0]), int(lora[1]), float(lora[2])) == (r["lora_r"], r["lora_alpha"], r["lora_dropout"])
-    assert t["fit_frauds"] * 4 == t["fit_rows"] == t["fit_frauds"] + t["fit_legit"] and r["batches"] * r["batch"] == t["fit_rows"]
-    ev = (fraud / "eval_ieee.py").read_text(encoding="utf-8")
-    assert re.search(rf"^SEED = {r['boot_seed']}$", ev, flags=re.M)
-    assert f"def boot_ci(values: np.ndarray, seed: int = SEED, reps: int = {r['boot_reps']})" in ev
-    assert f"def boot_auc(v: dict, seed: int = SEED, reps: int = {r['auc_boot_reps']})" in ev
-    assert r["trees"] in (fraud / "RESULTS-TABULAR.md").read_text(encoding="utf-8")
-
 
 def test_every_format_on_a_slide_exists(html):
     core = (SLIDES / "js" / "core.js").read_text(encoding="utf-8")
@@ -227,11 +254,6 @@ def test_every_format_on_a_slide_exists(html):
     used = set(re.findall(r"\{\{\s*[\w.]+\|(\w+)", html))
     assert used and used <= known, used - known
 
-
-def test_the_readme_counts_the_slides(html):
-    leaves = [s for s in sections(html) if 'class="page' in s]
-    backups = sum('data-main="no"' in s and "backup" in s for s in leaves)
-    assert f"{backups} backup sub-slides" in " ".join((SLIDES / "README.md").read_text(encoding="utf-8").split())
 
 
 def all_diffs(data):
@@ -285,33 +307,176 @@ def test_every_comparison_runs_in_its_registered_order(data):
     assert {"frozen_phase12", "rich_phase12"} <= set(data["dev"]["diffs"]) and "rich_amt_signal_amt" in data["final"]["diffs"]
 
 
-def test_the_speed_backup_draws_the_consoles_points_and_says_its_sentence(data):
-    """s11b and the console's Cost and speed panel: the same points, the same ideal corner, the same sentence."""
-    import shutil
-    import subprocess
-
-    sp = data["final"]["speed"]
-    assert {p["key"] for p in sp["points"] if p["ideal"]} == {"baseline", "signal_amt", "signal_cust"}
-    lr = next(p for p in sp["points"] if p["cpu"])
-    assert lr["key"] == "baseline" and lr["ms"] < 1 and lr["dist_from_cheapest"] is False and sp["bar"] == 250
-    assert all(p["ms"] < sp["bar"] for p in sp["points"])
-    node = shutil.which("node")
-    if not node:
-        pytest.skip("node is not installed")
-    js = (SLIDES.parent / "fraud" / "viewer" / "console.js").read_text(encoding="utf-8")
-    names = js[js.index("const SETUP_NAME = {"):js.index("function setupLegend")]
-    helpers = "\n".join(re.search(rf"^const {h} = .*$", js, flags=re.M)[0] for h in ("money", "ms"))
-    say = js[js.index("function speedSentence("):js.index("function speedPanel(")]
-    fastest = min(p["ms"] for p in sp["points"] if not p["cpu"])
-    cheapest = next(p for p in sp["points"] if p["key"] == sp["cheapest"])
-    script = ("const el = (tag, attrs, ...kids) => kids.join('');\n" + names + "\n" + helpers + "\n" + say +
-              f"\nprocess.stdout.write(speedSentence({{s: {json.dumps(lr['id'])}, ms: {lr['ms']}}}, {fastest}, {json.dumps(cheapest['id'])}, false).join(''));")
-    out = subprocess.run([node, "-e", script], capture_output=True, text=True, encoding="utf-8", check=True).stdout
-    assert out == sp["said"]
 
 
-def test_scene_names_are_unique_and_every_scene_on_a_slide_exists(html):
-    """A second scenes.<name> silently replaces the first, and its slide draws nothing (s11b once lost to s16 this way)."""
-    names = re.findall(r"^\s+scenes\.(\w+) = \{", (SLIDES / "js" / "scenes.js").read_text(encoding="utf-8"), flags=re.M)
-    assert len(names) == len(set(names)), sorted(n for n in names if names.count(n) > 1)
-    assert set(re.findall(r'data-scene="(\w+)"', html)) <= set(names)
+def test_worked_payment_is_paysim_and_its_orders_disagree(data):
+    w = data["worked"]
+    assert w["type"] == "TRANSFER"
+    assert w["top"]["listed"] != w["top"]["reversed"]
+    for k in ("listed", "reversed"):
+        assert abs(sum(w["orders"][k]) - 1) < 1e-6
+        assert max(w["logits"][k]) == 0
+        e = [math.exp(x) for x in w["logits"][k]]
+        s = sum(e)
+        assert all(abs(a / s - b) < 1e-9 for a, b in zip(e, w["orders"][k]))
+
+
+def test_worked_rule_raises_when_nothing_matches(monkeypatch, tmp_path):
+    p = tmp_path / "t.jsonl"
+    p.write_text(json.dumps({"type": "header"}) + "\n" + json.dumps({"type": "tx", "by": "filter", "tx": {"type": "TRANSFER"}}) + "\n", encoding="utf-8")
+    monkeypatch.setattr(build_data, "TRACE", p)
+    with pytest.raises(LookupError):
+        build_data.worked_block()
+
+
+def test_approve_all_accuracy(data):
+    f = data["final"]
+    assert f["approve_all_accuracy"] == 1 - f["frauds"] / f["rows"]
+    assert 0.9 < f["approve_all_accuracy"] < 1
+
+
+def test_cost_stress_edge_is_in_the_manual_data(data):
+    s = data["manual"]["stress"]
+    assert (s["flat_low"], s["flat_high"]) == (50, 60)
+    assert "RESULTS-COST-STRESS" in s["_source"]
+
+
+def test_illustration_numbers_are_labelled(html):
+    """Rules, logistic regression and trees recorded no score for the worked payment, so their numbers are made up
+    (manual_data.json → illustration), and every slide that shows one says "illustration" where the room can read it."""
+    showing = [s for s in sections(html) if re.search(r"\{\{\s*(?:manual\.)?illustration\.", s)]
+    assert len(showing) >= 3, "the rule, logistic regression and trees slides show the mechanism on illustration numbers"
+    for s in showing:
+        assert re.search(r"\billustration\b", visible_text(s), flags=re.I), s[:120]
+
+
+def test_every_manual_block_names_its_source(data):
+    for key, block in data["manual"].items():
+        if isinstance(block, dict):
+            assert block.get("_source"), key
+    assert "Implementation choice" in data["manual"]["illustration"]["_source"]
+    assert "[1]" in data["manual"]["nilson"]["_source"]
+
+
+@pytest.mark.parametrize("n,name,time", [
+    (1, "Juji", "0:25"), (2, "Juji", "0:45"), (3, "Juji", "1:00"), (4, "Juji", "0:45"),
+    (5, "Swan", "0:45"), (6, "Swan", "0:50"), (7, "Swan", "0:45"),
+    (8, "Juji", "1:15"), (9, "Juji", "0:45"), (10, "Juji", "1:00"),
+    (11, "Ryu", "1:00"), (12, "Ryu", "0:45"), (13, "Ryu", "0:45"), (14, "Ponh", "0:45"), (15, "Ponh", "0:25"),
+])
+def test_the_slides_follow_the_running_order(html, n, name, time):
+    """Slides 01–15 as the spec's running order: who presents, for how long, on the tag and in the notes."""
+    s = next((s for s in sections(html) if re.match(rf'<section id="s{n:02d}" data-n="{n}"', s)), None)
+    assert s, n
+    assert f'<span class="tag">{n} · {name}</span>' in s
+    assert f"[{name} · {time}]" in s
+
+
+def test_illustration_numbers_are_computed_from_their_inputs(data):
+    """Only the made-up inputs (weights, starts, leaves, lambda, the small amount) are typed in manual_data.json;
+    build_data.illustration_block() derives the rest from them, worked.amount and costs, so nothing can drift.
+    The rule slide's p is the logistic regression's p."""
+    ins, out, w, c = data["manual"]["illustration"], data["illustration"], data["worked"], data["costs"]
+    sig = lambda s: 1 / (1 + math.exp(-s))
+    lr = out["logreg"]
+    assert lr["rows"]["log_amount"]["x"] == pytest.approx(math.log(w["amount"]))
+    assert lr["rows"]["transfer"]["x"] == (1 if w["type"] == "TRANSFER" else 0)
+    for k, row in lr["rows"].items():
+        assert row["w"] == ins["logreg"]["w"][k] and row["adds"] == pytest.approx(row["w"] * row["x"])
+    assert lr["score"] == pytest.approx(ins["logreg"]["start"] + sum(r["adds"] for r in lr["rows"].values()))
+    assert lr["p"] == pytest.approx(sig(lr["score"])) and lr["odds_times"] == pytest.approx(math.exp(ins["logreg"]["w"]["transfer"]))
+    rule = out["rule"]
+    assert rule["p"] == lr["p"]
+    assert rule["review"] == c["review_fee"] + ins["rule"]["lam"]
+    for case, amount in (("big", w["amount"]), ("small", ins["rule"]["small_amount"])):
+        assert rule[case]["amount"] == amount
+        assert rule[case]["approve"] == pytest.approx(rule["p"] * amount)
+        assert rule[case]["decline"] == pytest.approx((1 - rule["p"]) * max(c["friction_rate"] * amount, c["friction_min"]))
+    # the slide says review for the transfer and decline for the small payment: the arithmetic must agree
+    assert rule["review"] < min(rule["big"]["approve"], rule["big"]["decline"])
+    assert rule["small"]["decline"] < min(rule["small"]["approve"], rule["review"])
+    tr = out["trees"]
+    assert [tr[t]["took"] for t in ("t1", "t2", "t3")] == ["yes", "yes", "no"]  # the leaves drawn in green on the slide
+    assert tr["score"] == pytest.approx(ins["trees"]["start"] + sum(ins["trees"][t][tr[t]["took"]] for t in ("t1", "t2", "t3")))
+    assert tr["p"] == pytest.approx(sig(tr["score"]))
+
+
+def section(html, n):
+    return next(s for s in sections(html) if re.match(rf'<section id="s{n:02d}" data-n="{n}"', s))
+
+
+def test_references_are_the_fourteen(html):
+    """The references slide holds [1]–[13] as in the midterm plan and [14] the d1-Omni-2B model card, in order."""
+    refs = [s for s in sections(html) if 'class="refs' in s]
+    assert len(refs) == 1
+    keys = re.findall(r'<span class="k">\[(\d+)\]</span>', refs[0])
+    assert keys == [str(k) for k in range(1, 15)]
+    items = re.findall(r"<li>(.*?)</li>", refs[0], flags=re.S)
+    assert len(items) == 14 and "d1-Omni-2B" in items[13] and "LiquidAI" in items[13]
+    assert "Nilson" in items[0] and "LoRA" in items[10] and "Qwen2.5" in items[9]
+
+
+def test_flip_slides_reveal_in_two_steps(html):
+    """Slides 03, 09 and 12 show the surprising picture first and explain on the next step."""
+    for n in (3, 9, 12):
+        s = section(html, n)
+        assert 'data-from="1"' in s, n
+        assert re.search(r'data-steps="[1-9]"', s), n
+
+
+def test_the_negatives_are_said_plainly(html):
+    text = re.sub(r"\s+", " ", visible_text(html))
+    assert re.search(r"(?i)no setup showed a distinguishable saving", text)
+    assert re.search(r"(?i)fairness was not measured", text)
+
+
+def test_the_readout_is_labelled_where_it_is_shown(html):
+    """The language model with no tree score and the customer line was read after the test, not registered: every slide
+    that binds it says so where the room can read it."""
+    showing = [s for s in sections(html) if re.search(r"\{\{\s*final\.(?:setups\.rich_cust|diffs\.rich_cust_)", s.split('<aside class="notes">')[0])]
+    assert showing
+    for s in showing:
+        assert "read after the test" in visible_text(s), s[:120]
+
+
+def test_derived_keys_for_slides_08_to_14(data):
+    w = data["worked"]
+    assert w["facts"]["receiver_before"] == 4 and w["facts"]["same_amount_before"] == 0 and w["facts"]["round"] == 0
+    assert w["exp"]["listed"] == pytest.approx([math.exp(x) for x in w["logits"]["listed"]])
+    assert w["exp"]["sum_listed"] == pytest.approx(sum(w["exp"]["listed"]))
+    assert w["prompt"]["options"][0].endswith("approve it") and w["prompt"]["question"].endswith("?")
+    p = data["paysim"]
+    assert p["order_flips"] == p["last_letter_both"] == 190 and p["model_n"] == 257
+    d = data["rule"]["phase20"]["dev"]
+    assert d["distinguishable"] is (d["ci"][0] > 0 or d["ci"][1] < 0) is True
+    assert data["manual"]["tabular_dev"]["chains"] == 88
+    ft = data["manual"]["paysim_ft"]
+    assert (ft["window_rows"], ft["windows"], ft["cheaper_than_logreg"], ft["minutes"]) == (500, 20, 19, 52)
+
+
+def test_order_bias_is_the_untrained_paysim_models(html):
+    """The 190-of-257 lean is the untrained PaySim model's. On real payments the trained d1 read one order, chosen on dev
+    (fraud/eval_final.py), so no slide may say real payments were asked both ways, and 14/15 name the PaySim model."""
+    text = re.sub(r"\s+", " ", visible_text(html))
+    assert not re.search(r"(?i)real payments[^.]*both (?:orders|ways)|both (?:orders|ways)[^.]*real payments", text)
+    for n in (14, 15):
+        assert "untrained PaySim model" in visible_text(section(html, n)), n
+    assert re.search(r"one order, chosen on dev", visible_text(section(html, 14)))
+    notes = " ".join(re.findall(r'<aside class="notes">(.*?)</aside>', html, flags=re.S))
+    assert not re.search(r"(?i)both orders\.\s*$|one payment at a time, both orders", notes)
+
+
+def test_results_say_what_they_measured(html, data):
+    """The latency is the language model's alone; the customer line is a price in the decision, never charged; the
+    flat-price edge is where the mean flips; the h1s don't overstate."""
+    s13 = visible_text(section(html, 13))
+    assert "language model only" in s13 and "not timed" in s13
+    s11 = section(html, 11)
+    assert "{{manual.customer_line.flat" in s11.split('<aside class="notes">')[0] and "never charged" in visible_text(s11)
+    s14 = section(html, 14).split('<aside class="notes">')[0]
+    assert "{{manual.stress.not_distinguishable_from" in s14 and "mean saving" in s14
+    assert data["manual"]["customer_line"]["flat"] == 10 and data["manual"]["stress"]["not_distinguishable_from"] == 30
+    h15 = re.search(r"<h1>(.*?)</h1>", section(html, 15), flags=re.S)[1]
+    assert "distinguishable" in h15 and "did not save money" not in h15
+    s12 = visible_text(section(html, 12))
+    assert "trees’ settings" not in s12 and "was locked away" not in s12

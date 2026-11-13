@@ -704,7 +704,7 @@ Then Phase 21's comparison, Phase 22's combinations, and the final test. The fin
 
 Logreg's time per payment, which the final test didn't record (it scored logreg a window at a time). One payment at a time on the
 30 dev windows, not FINAL rows; about a minute, most of it the fit. Needs `python -m fraud.history` first. Result:
-`fraud/results/time_logreg/<time>.json`, read by the final test's console page and the deck's backup 11b.
+`fraud/results/time_logreg/<time>.json`, read by the final test's console page.
 
 ```bash
 .venv/Scripts/python -m fraud.time_logreg
@@ -739,17 +739,30 @@ push. Once, on GitHub: Settings → Pages → Source: GitHub Actions.
 
 ## Final presentation (`slides/`)
 
-The final deck, in reveal.js 6.0.2, vendored. It runs no model and needs no network. Brief: `slides-handoff.md`. How it's built: `slides/README.md`.
+The final deck, in reveal.js 6.0.2, vendored: 15 static slides and an unpresented references slide, 12:00 of talk. It runs no model and needs no network. How it's built and the running order: `slides/README.md`.
 
 ```bash
 .venv/Scripts/python.exe slides/build_data.py                                            # rebuild slides/data.js from the committed results
 .venv/Scripts/python.exe -m http.server 8000 --bind 127.0.0.1 --directory slides         # show it: http://127.0.0.1:8000 (S for the speaker view)
 node slides/export_pdf.mjs                                                               # slides/exports/FrogWatch(Group 13)_Final_128-331.pdf, plus exports/png/p-NN.png
-node slides/check_deck.mjs [folder for screenshots]                                      # walk the live deck: forward, backward, re-entry, rapid keys; about 10 min
-.venv/Scripts/python.exe -m pytest tests/test_slides.py                                  # numbers, bindings, no network, 15-minute budget
+node slides/check_deck.mjs [folder for screenshots]                                      # walk the live deck: forward, backward, re-entry, rapid keys; a few minutes
+.venv/Scripts/python.exe -m pytest tests/test_slides.py                                  # numbers, bindings, no network, the running order, 12:00 of talk
 ```
 
-Keys: space, N, the right arrow and a clicker's page keys walk the talk. At the end of a slide's steps, the down arrow opens its backup sub-slide. Both Node scripts use headless Edge; set `EDGE` to use another Chromium. `export_pdf.mjs` makes the PNGs with `pdftoppm` from the PDF. To print by hand instead, open `http://127.0.0.1:8000/?print-pdf` in Edge or Chrome: landscape, margins none, background graphics on. Add `?reduced=1` to see the deck without motion. `slides/exports/` is git-ignored.
+Keys: space, N, the right arrow and a clicker's page keys walk the talk, one step at a time; left goes back. There are no backup sub-slides. Both Node scripts use headless Edge; set `EDGE` to use another Chromium. `export_pdf.mjs` makes the PNGs with `pdftoppm` from the PDF. To print by hand instead, open `http://127.0.0.1:8000/?print-pdf` in Edge or Chrome: landscape, margins none, background graphics on. Every slide prints at its last step. Add `?reduced=1` to see the deck without fades. `slides/exports/` is git-ignored.
+
+## Paper (`paper/`)
+
+The IEEE two-column paper, *Transforming LLMs into classifiers for fraud detection*, in Typst 0.15.1 with the vendored `charged-ieee` template (`paper/vendor/`). Every number comes from `paper/data.json`, built from the deck's build. It runs no model and needs no network. How it's built: `paper/README.md`.
+
+```bash
+.venv/Scripts/python.exe paper/build_data.py                                             # rewrite paper/data.json: every key main.typ reads, from slides/build_data.py
+typst compile paper/main.typ paper/exports/transforming-llms-fraud.pdf                   # the PDF (committed)
+typst compile paper/main.typ <folder>/p{p}.png                                           # one PNG per page, to read every page
+.venv/Scripts/python.exe -m pytest tests/test_paper.py                                   # formats as the deck's, every key resolves, compiles to 6-8 pages, 14 references, body-text rules
+```
+
+Typst isn't on PATH in every shell; winget put it at `%LOCALAPPDATA%\Microsoft\WinGet\Packages\Typst.Typst_Microsoft.Winget.Source_8wekyb3d8bbwe\typst-x86_64-pc-windows-msvc\typst.exe` (the test finds it there too). It warns that TeX Gyre Termes and TeX Gyre Cursor aren't installed; the paper falls back to Windows' Times New Roman. After adding a `v("...")` key to `main.typ`, run `paper/build_data.py` again; a number the deck's build lacks goes into `slides/build_data.py` (additive) or `slides/manual_data.json` with a `_source`.
 
 ## Where things land
 

@@ -1,0 +1,18 @@
+charged-ieee 0.1.4, vendored 2026-11-12
+Package:    @preview/charged-ieee:0.1.4 (Typst Universe)
+Repository: https://github.com/typst/templates
+Licence:    MIT-0 (see LICENSE)
+Fetched:    once, with `typst init @preview/charged-ieee:0.1.4` (Typst package cache)
+Files copied: lib.typ, LICENSE only. Sample paper (template/), README, typst.toml not copied.
+Rewrites:   none. lib.typ imports no other package; no @preview import remains.
+Fonts:      lib.typ asks for "TeX Gyre Termes" and "TeX Gyre Cursor". Not installed on this machine:
+            Typst warns and falls back. Install them for the final look.
+
+sha256
+874df44320b3c60b9b09be60cf9e7ed006726ef502af39b0f4cdda5a30141ffc  lib.typ
+dfe79207335c6df3c4b77acad796b204e713d9c3f16c2247f2d5ce4ca66d57b0  LICENSE
+
+Typst compiler used to build: 0.15.1 (9dfd3a08), Apache-2.0
+  winget id Typst.Typst
+  https://github.com/typst/typst/releases/download/v0.15.1/typst-x86_64-pc-windows-msvc.zip
+  sha256 19ce3551153c2fe7ee9fa2f95208310c8f4d3209fedb699e0333faf8913f6736
