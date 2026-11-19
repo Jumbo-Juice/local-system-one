@@ -103,6 +103,13 @@ The dev reads of the LM setups and of `tab-all` are flattered, because λ was pi
   setup row carries its label: `read-out` for this setup, `held-out (pre-registered)` for the Phase 23 setups it is compared
   with.
 
+## Known asymmetries
+
+- LR's λ comes from dev30 only, as in Phase 14. `tab-all`'s λ comes from all 118 dev windows, as in Phase 21. This may
+  flatter GBDT against LR, and the paper says so next to the secondary comparison.
+- After this run, `fraud/eval_final.py:refuse_second_run` sees the `final-tab-all-amt` traces and refuses a `--resume` of
+  Phase 23. Phase 23 is finished, and its `--report` still works.
+
 ## Stated before running (Inferred)
 
 - GBDT alone is cheaper than LR on FINAL, by less than its dev gap of 295, and not distinguishable: the MDE is 356.

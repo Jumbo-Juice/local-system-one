@@ -170,3 +170,34 @@ Observed, from `fraud/eval_ieee.py:features_all`, `fraud/eval_tabular.py:SETS` a
   - The reviewer's list named only GBDT vs LR. The prompt's primary (LM + tree vs GBDT) is kept as primary, since the
     fallback exists to supply the GBDT number for it.
 - `RUN-GUIDE.md` has the new command.
+
+### Standing decision from Juji (2026-11-19)
+
+Juji, verbatim: "You guys make your own best judgement. Dont come to me unless truly plan flipping question comes up."
+
+- From now on, the worker and paper-driver decide escalations themselves. That covers the pre-scoring check before the FINAL
+  read-out, whose recipe Juji already approved.
+- Juji is asked only about a question that would flip the plan, such as:
+  - a result that overturns the paper's story;
+  - a change to a settled decision;
+  - new models or data;
+  - money or credentials;
+  - pushing or publishing;
+  - deleting results, adapters or history.
+
+### paper-driver verdicts (continued)
+
+- **Stage 1 pre-scoring, round 1 (2026-11-19): ESCALATE.** The reviewer verified all of the following:
+  - the registration commit precedes any scoring;
+  - the sha256;
+  - 800 trees and the Phase 21 code path;
+  - the reproduction thresholds, the windows and the MDEs, which it recomputed.
+  - It also accepted keeping LM + tree vs GBDT as primary.
+  - Fixes, made before scoring: a "Known asymmetries" section in the registration (the λ asymmetry LR vs tab-all, and that
+    Phase 23 `--resume` is blocked afterwards).
+  - It escalated because it saw the standing decision only through the worker's message.
+  - **Resolved by the worker under Juji's direct instruction.** Juji typed it in this session's chat, after approving this
+    exact recipe twice (answers A, then "tab-all, 800 trees"): "You guys make your own best judgement. Dont come to me unless
+    truly plan flipping question comes up."
+    - Scoring an already-approved, registered read-out does not flip the plan, so Juji is not asked again.
+    - The reviewer keeps rule 1's spirit: the registration is committed first, and the reproduction check gates FINAL.
