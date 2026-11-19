@@ -1,0 +1,968 @@
+{
+ "created": "2026-11-19T22:12:15",
+ "script": "fraud/dev/window_audit.py",
+ "label": "audit (no label read)",
+ "dataset": "IEEE-CIS train_transaction.csv, time split by row count (fraud/ieee_data.py)",
+ "split_rows": {
+  "fit": [
+   0,
+   354324
+  ],
+  "dev": [
+   354324,
+   472432
+  ],
+  "test": [
+   472432,
+   590540
+  ]
+ },
+ "window_size": 1000,
+ "test": {
+  "rows": 118108,
+  "full_windows_possible": 118,
+  "windows_scored": 118,
+  "rows_scored": 118000,
+  "rows_scored_twice": 0,
+  "rows_never_scored": 108,
+  "never_scored_runs": [
+   [
+    590432,
+    590540
+   ]
+  ],
+  "untouched_windows": 0,
+  "untouched_windows_if_chains_allowed": 0
+ },
+ "dev": {
+  "rows": 118108,
+  "windows_used": {
+   "dev30 (rule and line fits)": 30,
+   "heldout_dev (hdev, the 88 dev chains)": 88
+  },
+  "rows_never_used": 108
+ },
+ "sources": [
+  {
+   "name": "phase11",
+   "phase": "Phase 11",
+   "script": "fraud/eval_ieee.py",
+   "results": "fraud/results/eval_ieee/20261102-183431.json",
+   "windows_n": 20,
+   "rows_n": 20000,
+   "matches_recorded": true,
+   "windows": [
+    {
+     "id": "test0",
+     "rows_n": 1000,
+     "first_row": 473833,
+     "last_row": 474832,
+     "contiguous": true
+    },
+    {
+     "id": "test1",
+     "rows_n": 1000,
+     "first_row": 481367,
+     "last_row": 482366,
+     "contiguous": true
+    },
+    {
+     "id": "test2",
+     "rows_n": 1000,
+     "first_row": 485162,
+     "last_row": 486161,
+     "contiguous": true
+    },
+    {
+     "id": "test3",
+     "rows_n": 1000,
+     "first_row": 494677,
+     "last_row": 495676,
+     "contiguous": true
+    },
+    {
+     "id": "test4",
+     "rows_n": 1000,
+     "first_row": 496873,
+     "last_row": 497872,
+     "contiguous": true
+    },
+    {
+     "id": "test5",
+     "rows_n": 1000,
+     "first_row": 503152,
+     "last_row": 504151,
+     "contiguous": true
+    },
+    {
+     "id": "test6",
+     "rows_n": 1000,
+     "first_row": 512641,
+     "last_row": 513640,
+     "contiguous": true
+    },
+    {
+     "id": "test7",
+     "rows_n": 1000,
+     "first_row": 515286,
+     "last_row": 516285,
+     "contiguous": true
+    },
+    {
+     "id": "test8",
+     "rows_n": 1000,
+     "first_row": 522002,
+     "last_row": 523001,
+     "contiguous": true
+    },
+    {
+     "id": "test9",
+     "rows_n": 1000,
+     "first_row": 525772,
+     "last_row": 526771,
+     "contiguous": true
+    },
+    {
+     "id": "test10",
+     "rows_n": 1000,
+     "first_row": 533530,
+     "last_row": 534529,
+     "contiguous": true
+    },
+    {
+     "id": "test11",
+     "rows_n": 1000,
+     "first_row": 541819,
+     "last_row": 542818,
+     "contiguous": true
+    },
+    {
+     "id": "test12",
+     "rows_n": 1000,
+     "first_row": 543947,
+     "last_row": 544946,
+     "contiguous": true
+    },
+    {
+     "id": "test13",
+     "rows_n": 1000,
+     "first_row": 549969,
+     "last_row": 550968,
+     "contiguous": true
+    },
+    {
+     "id": "test14",
+     "rows_n": 1000,
+     "first_row": 558059,
+     "last_row": 559058,
+     "contiguous": true
+    },
+    {
+     "id": "test15",
+     "rows_n": 1000,
+     "first_row": 563010,
+     "last_row": 564009,
+     "contiguous": true
+    },
+    {
+     "id": "test16",
+     "rows_n": 1000,
+     "first_row": 568590,
+     "last_row": 569589,
+     "contiguous": true
+    },
+    {
+     "id": "test17",
+     "rows_n": 1000,
+     "first_row": 577574,
+     "last_row": 578573,
+     "contiguous": true
+    },
+    {
+     "id": "test18",
+     "rows_n": 1000,
+     "first_row": 582291,
+     "last_row": 583290,
+     "contiguous": true
+    },
+    {
+     "id": "test19",
+     "rows_n": 1000,
+     "first_row": 585908,
+     "last_row": 586907,
+     "contiguous": true
+    }
+   ]
+  },
+  {
+   "name": "phase12",
+   "phase": "Phase 12",
+   "script": "fraud/eval_ieee_full.py",
+   "results": "fraud/results/eval_ieee_full/20261103-142622.json",
+   "windows_n": 20,
+   "rows_n": 20000,
+   "matches_recorded": true,
+   "windows": [
+    {
+     "id": "new0",
+     "rows_n": 1000,
+     "first_row": 476668,
+     "last_row": 477667,
+     "contiguous": true
+    },
+    {
+     "id": "new1",
+     "rows_n": 1000,
+     "first_row": 479775,
+     "last_row": 480774,
+     "contiguous": true
+    },
+    {
+     "id": "new2",
+     "rows_n": 1000,
+     "first_row": 488493,
+     "last_row": 489492,
+     "contiguous": true
+    },
+    {
+     "id": "new3",
+     "rows_n": 1000,
+     "first_row": 493373,
+     "last_row": 494372,
+     "contiguous": true
+    },
+    {
+     "id": "new4",
+     "rows_n": 1000,
+     "first_row": 497910,
+     "last_row": 498909,
+     "contiguous": true
+    },
+    {
+     "id": "new5",
+     "rows_n": 1000,
+     "first_row": 506709,
+     "last_row": 507708,
+     "contiguous": true
+    },
+    {
+     "id": "new6",
+     "rows_n": 1000,
+     "first_row": 508584,
+     "last_row": 509583,
+     "contiguous": true
+    },
+    {
+     "id": "new7",
+     "rows_n": 1000,
+     "first_row": 518360,
+     "last_row": 519359,
+     "contiguous": true
+    },
+    {
+     "id": "new8",
+     "rows_n": 1000,
+     "first_row": 520122,
+     "last_row": 521121,
+     "contiguous": true
+    },
+    {
+     "id": "new9",
+     "rows_n": 1000,
+     "first_row": 527835,
+     "last_row": 528834,
+     "contiguous": true
+    },
+    {
+     "id": "new10",
+     "rows_n": 1000,
+     "first_row": 536208,
+     "last_row": 537207,
+     "contiguous": true
+    },
+    {
+     "id": "new11",
+     "rows_n": 1000,
+     "first_row": 538348,
+     "last_row": 539347,
+     "contiguous": true
+    },
+    {
+     "id": "new12",
+     "rows_n": 1000,
+     "first_row": 546597,
+     "last_row": 547596,
+     "contiguous": true
+    },
+    {
+     "id": "new13",
+     "rows_n": 1000,
+     "first_row": 553623,
+     "last_row": 554622,
+     "contiguous": true
+    },
+    {
+     "id": "new14",
+     "rows_n": 1000,
+     "first_row": 555449,
+     "last_row": 556448,
+     "contiguous": true
+    },
+    {
+     "id": "new15",
+     "rows_n": 1000,
+     "first_row": 564736,
+     "last_row": 565735,
+     "contiguous": true
+    },
+    {
+     "id": "new16",
+     "rows_n": 1000,
+     "first_row": 571084,
+     "last_row": 572083,
+     "contiguous": true
+    },
+    {
+     "id": "new17",
+     "rows_n": 1000,
+     "first_row": 574805,
+     "last_row": 575804,
+     "contiguous": true
+    },
+    {
+     "id": "new18",
+     "rows_n": 1000,
+     "first_row": 579384,
+     "last_row": 580383,
+     "contiguous": true
+    },
+    {
+     "id": "new19",
+     "rows_n": 1000,
+     "first_row": 588265,
+     "last_row": 589264,
+     "contiguous": true
+    }
+   ]
+  },
+  {
+   "name": "phase14",
+   "phase": "Phase 14 (and Phase 16 cost stress, re-priced from Phase 14's traces)",
+   "script": "fraud/eval_ieee_amount.py",
+   "results": "fraud/results/eval_ieee_amount/20261103-164830.json",
+   "windows_n": 20,
+   "rows_n": 20000,
+   "matches_recorded": true,
+   "windows": [
+    {
+     "id": "amt0",
+     "rows_n": 1000,
+     "first_row": 475476,
+     "last_row": 476475,
+     "contiguous": true
+    },
+    {
+     "id": "amt1",
+     "rows_n": 1000,
+     "first_row": 478343,
+     "last_row": 479342,
+     "contiguous": true
+    },
+    {
+     "id": "amt2",
+     "rows_n": 1000,
+     "first_row": 486655,
+     "last_row": 487654,
+     "contiguous": true
+    },
+    {
+     "id": "amt3",
+     "rows_n": 1000,
+     "first_row": 490917,
+     "last_row": 491916,
+     "contiguous": true
+    },
+    {
+     "id": "amt4",
+     "rows_n": 1000,
+     "first_row": 500950,
+     "last_row": 501949,
+     "contiguous": true
+    },
+    {
+     "id": "amt5",
+     "rows_n": 1000,
+     "first_row": 504972,
+     "last_row": 505971,
+     "contiguous": true
+    },
+    {
+     "id": "amt6",
+     "rows_n": 1000,
+     "first_row": 510626,
+     "last_row": 511625,
+     "contiguous": true
+    },
+    {
+     "id": "amt7",
+     "rows_n": 1000,
+     "first_row": 516391,
+     "last_row": 517390,
+     "contiguous": true
+    },
+    {
+     "id": "amt8",
+     "rows_n": 1000,
+     "first_row": 524295,
+     "last_row": 525294,
+     "contiguous": true
+    },
+    {
+     "id": "amt9",
+     "rows_n": 1000,
+     "first_row": 530415,
+     "last_row": 531414,
+     "contiguous": true
+    },
+    {
+     "id": "amt10",
+     "rows_n": 1000,
+     "first_row": 532335,
+     "last_row": 533334,
+     "contiguous": true
+    },
+    {
+     "id": "amt11",
+     "rows_n": 1000,
+     "first_row": 540436,
+     "last_row": 541435,
+     "contiguous": true
+    },
+    {
+     "id": "amt12",
+     "rows_n": 1000,
+     "first_row": 545087,
+     "last_row": 546086,
+     "contiguous": true
+    },
+    {
+     "id": "amt13",
+     "rows_n": 1000,
+     "first_row": 551085,
+     "last_row": 552084,
+     "contiguous": true
+    },
+    {
+     "id": "amt14",
+     "rows_n": 1000,
+     "first_row": 559395,
+     "last_row": 560394,
+     "contiguous": true
+    },
+    {
+     "id": "amt15",
+     "rows_n": 1000,
+     "first_row": 561687,
+     "last_row": 562686,
+     "contiguous": true
+    },
+    {
+     "id": "amt16",
+     "rows_n": 1000,
+     "first_row": 569850,
+     "last_row": 570849,
+     "contiguous": true
+    },
+    {
+     "id": "amt17",
+     "rows_n": 1000,
+     "first_row": 572883,
+     "last_row": 573882,
+     "contiguous": true
+    },
+    {
+     "id": "amt18",
+     "rows_n": 1000,
+     "first_row": 583307,
+     "last_row": 584306,
+     "contiguous": true
+    },
+    {
+     "id": "amt19",
+     "rows_n": 1000,
+     "first_row": 587053,
+     "last_row": 588052,
+     "contiguous": true
+    }
+   ]
+  },
+  {
+   "name": "audit",
+   "phase": "Phase 17 column audit",
+   "script": "fraud/eval_column_audit.py",
+   "results": "fraud/results/eval_column_audit/20261103-210600.json",
+   "windows_n": 8,
+   "rows_n": 8000,
+   "matches_recorded": true,
+   "windows": [
+    {
+     "id": "audit0",
+     "rows_n": 1000,
+     "first_row": 479432,
+     "last_row": 482431,
+     "contiguous": false
+    },
+    {
+     "id": "audit1",
+     "rows_n": 1000,
+     "first_row": 496432,
+     "last_row": 500431,
+     "contiguous": false
+    },
+    {
+     "id": "audit2",
+     "rows_n": 1000,
+     "first_row": 508432,
+     "last_row": 512431,
+     "contiguous": false
+    },
+    {
+     "id": "audit3",
+     "rows_n": 1000,
+     "first_row": 521432,
+     "last_row": 525431,
+     "contiguous": false
+    },
+    {
+     "id": "audit4",
+     "rows_n": 1000,
+     "first_row": 531432,
+     "last_row": 533431,
+     "contiguous": false
+    },
+    {
+     "id": "audit5",
+     "rows_n": 1000,
+     "first_row": 560432,
+     "last_row": 561431,
+     "contiguous": true
+    },
+    {
+     "id": "audit6",
+     "rows_n": 1000,
+     "first_row": 564432,
+     "last_row": 568431,
+     "contiguous": false
+    },
+    {
+     "id": "audit7",
+     "rows_n": 1000,
+     "first_row": 576432,
+     "last_row": 577431,
+     "contiguous": true
+    }
+   ]
+  },
+  {
+   "name": "rule",
+   "phase": "Phase 18 rule tests",
+   "script": "fraud/eval_rule.py",
+   "results": "fraud/results/eval_rule/20261103-211736.json",
+   "windows_n": 10,
+   "rows_n": 10000,
+   "matches_recorded": true,
+   "windows": [
+    {
+     "id": "rule0",
+     "rows_n": 1000,
+     "first_row": 472432,
+     "last_row": 475431,
+     "contiguous": false
+    },
+    {
+     "id": "rule1",
+     "rows_n": 1000,
+     "first_row": 486432,
+     "last_row": 488431,
+     "contiguous": false
+    },
+    {
+     "id": "rule2",
+     "rows_n": 1000,
+     "first_row": 500432,
+     "last_row": 504431,
+     "contiguous": false
+    },
+    {
+     "id": "rule3",
+     "rows_n": 1000,
+     "first_row": 506432,
+     "last_row": 508431,
+     "contiguous": false
+    },
+    {
+     "id": "rule4",
+     "rows_n": 1000,
+     "first_row": 517432,
+     "last_row": 519431,
+     "contiguous": false
+    },
+    {
+     "id": "rule5",
+     "rows_n": 1000,
+     "first_row": 525432,
+     "last_row": 529431,
+     "contiguous": false
+    },
+    {
+     "id": "rule6",
+     "rows_n": 1000,
+     "first_row": 548432,
+     "last_row": 552431,
+     "contiguous": false
+    },
+    {
+     "id": "rule7",
+     "rows_n": 1000,
+     "first_row": 561432,
+     "last_row": 564431,
+     "contiguous": false
+    },
+    {
+     "id": "rule8",
+     "rows_n": 1000,
+     "first_row": 580432,
+     "last_row": 584431,
+     "contiguous": false
+    },
+    {
+     "id": "rule9",
+     "rows_n": 1000,
+     "first_row": 584432,
+     "last_row": 589431,
+     "contiguous": false
+    }
+   ]
+  },
+  {
+   "name": "features",
+   "phase": "Phase 19 feature tests",
+   "script": "fraud/eval_features.py",
+   "results": "fraud/results/eval_features/20261103-212822.json",
+   "windows_n": 10,
+   "rows_n": 10000,
+   "matches_recorded": true,
+   "windows": [
+    {
+     "id": "features0",
+     "rows_n": 1000,
+     "first_row": 484432,
+     "last_row": 486431,
+     "contiguous": false
+    },
+    {
+     "id": "features1",
+     "rows_n": 1000,
+     "first_row": 488432,
+     "last_row": 494431,
+     "contiguous": false
+    },
+    {
+     "id": "features2",
+     "rows_n": 1000,
+     "first_row": 504432,
+     "last_row": 506431,
+     "contiguous": false
+    },
+    {
+     "id": "features3",
+     "rows_n": 1000,
+     "first_row": 519432,
+     "last_row": 521431,
+     "contiguous": false
+    },
+    {
+     "id": "features4",
+     "rows_n": 1000,
+     "first_row": 529432,
+     "last_row": 531431,
+     "contiguous": false
+    },
+    {
+     "id": "features5",
+     "rows_n": 1000,
+     "first_row": 540432,
+     "last_row": 546431,
+     "contiguous": false
+    },
+    {
+     "id": "features6",
+     "rows_n": 1000,
+     "first_row": 546432,
+     "last_row": 548431,
+     "contiguous": false
+    },
+    {
+     "id": "features7",
+     "rows_n": 1000,
+     "first_row": 572432,
+     "last_row": 574431,
+     "contiguous": false
+    },
+    {
+     "id": "features8",
+     "rows_n": 1000,
+     "first_row": 574432,
+     "last_row": 576431,
+     "contiguous": false
+    },
+    {
+     "id": "features9",
+     "rows_n": 1000,
+     "first_row": 589432,
+     "last_row": 590431,
+     "contiguous": true
+    }
+   ]
+  },
+  {
+   "name": "tabular",
+   "phase": "Phase 20 tabular tests (and its first run, deleted unread, on the same chains)",
+   "script": "fraud/eval_tabular.py",
+   "results": "fraud/results/eval_tabular/20261103-235132.json",
+   "windows_n": 10,
+   "rows_n": 10000,
+   "matches_recorded": true,
+   "windows": [
+    {
+     "id": "tabular0",
+     "rows_n": 1000,
+     "first_row": 475432,
+     "last_row": 479431,
+     "contiguous": false
+    },
+    {
+     "id": "tabular1",
+     "rows_n": 1000,
+     "first_row": 482432,
+     "last_row": 484431,
+     "contiguous": false
+    },
+    {
+     "id": "tabular2",
+     "rows_n": 1000,
+     "first_row": 494432,
+     "last_row": 496431,
+     "contiguous": false
+    },
+    {
+     "id": "tabular3",
+     "rows_n": 1000,
+     "first_row": 512432,
+     "last_row": 517431,
+     "contiguous": false
+    },
+    {
+     "id": "tabular4",
+     "rows_n": 1000,
+     "first_row": 533432,
+     "last_row": 537431,
+     "contiguous": false
+    },
+    {
+     "id": "tabular5",
+     "rows_n": 1000,
+     "first_row": 537432,
+     "last_row": 540431,
+     "contiguous": false
+    },
+    {
+     "id": "tabular6",
+     "rows_n": 1000,
+     "first_row": 552432,
+     "last_row": 555431,
+     "contiguous": false
+    },
+    {
+     "id": "tabular7",
+     "rows_n": 1000,
+     "first_row": 555432,
+     "last_row": 560431,
+     "contiguous": false
+    },
+    {
+     "id": "tabular8",
+     "rows_n": 1000,
+     "first_row": 568432,
+     "last_row": 572431,
+     "contiguous": false
+    },
+    {
+     "id": "tabular9",
+     "rows_n": 1000,
+     "first_row": 577432,
+     "last_row": 580431,
+     "contiguous": false
+    }
+   ]
+  },
+  {
+   "name": "final",
+   "phase": "Phase 23 final test (and the read-outs after it)",
+   "script": "fraud/eval_final.py",
+   "results": "fraud/results/eval_final/20261104-090649.json",
+   "windows_n": 20,
+   "rows_n": 20000,
+   "matches_recorded": true,
+   "windows": [
+    {
+     "id": "final0",
+     "rows_n": 1000,
+     "first_row": 472752,
+     "last_row": 473751,
+     "contiguous": true
+    },
+    {
+     "id": "final1",
+     "rows_n": 1000,
+     "first_row": 482973,
+     "last_row": 483972,
+     "contiguous": true
+    },
+    {
+     "id": "final2",
+     "rows_n": 1000,
+     "first_row": 489742,
+     "last_row": 490741,
+     "contiguous": true
+    },
+    {
+     "id": "final3",
+     "rows_n": 1000,
+     "first_row": 492355,
+     "last_row": 493354,
+     "contiguous": true
+    },
+    {
+     "id": "final4",
+     "rows_n": 1000,
+     "first_row": 498948,
+     "last_row": 499947,
+     "contiguous": true
+    },
+    {
+     "id": "final5",
+     "rows_n": 1000,
+     "first_row": 502141,
+     "last_row": 503140,
+     "contiguous": true
+    },
+    {
+     "id": "final6",
+     "rows_n": 1000,
+     "first_row": 509607,
+     "last_row": 510606,
+     "contiguous": true
+    },
+    {
+     "id": "final7",
+     "rows_n": 1000,
+     "first_row": 514028,
+     "last_row": 515027,
+     "contiguous": true
+    },
+    {
+     "id": "final8",
+     "rows_n": 1000,
+     "first_row": 523003,
+     "last_row": 524002,
+     "contiguous": true
+    },
+    {
+     "id": "final9",
+     "rows_n": 1000,
+     "first_row": 526783,
+     "last_row": 527782,
+     "contiguous": true
+    },
+    {
+     "id": "final10",
+     "rows_n": 1000,
+     "first_row": 534565,
+     "last_row": 535564,
+     "contiguous": true
+    },
+    {
+     "id": "final11",
+     "rows_n": 1000,
+     "first_row": 539368,
+     "last_row": 540367,
+     "contiguous": true
+    },
+    {
+     "id": "final12",
+     "rows_n": 1000,
+     "first_row": 542838,
+     "last_row": 543837,
+     "contiguous": true
+    },
+    {
+     "id": "final13",
+     "rows_n": 1000,
+     "first_row": 548871,
+     "last_row": 549870,
+     "contiguous": true
+    },
+    {
+     "id": "final14",
+     "rows_n": 1000,
+     "first_row": 552509,
+     "last_row": 553508,
+     "contiguous": true
+    },
+    {
+     "id": "final15",
+     "rows_n": 1000,
+     "first_row": 556970,
+     "last_row": 557969,
+     "contiguous": true
+    },
+    {
+     "id": "final16",
+     "rows_n": 1000,
+     "first_row": 566087,
+     "last_row": 567086,
+     "contiguous": true
+    },
+    {
+     "id": "final17",
+     "rows_n": 1000,
+     "first_row": 567087,
+     "last_row": 568086,
+     "contiguous": true
+    },
+    {
+     "id": "final18",
+     "rows_n": 1000,
+     "first_row": 581157,
+     "last_row": 582156,
+     "contiguous": true
+    },
+    {
+     "id": "final19",
+     "rows_n": 1000,
+     "first_row": 584622,
+     "last_row": 585621,
+     "contiguous": true
+    }
+   ]
+  }
+ ],
+ "notes": [
+  "Phases 11, 12, 14 and FINAL use 1,000 contiguous rows. Phases 17-20 use chains: 1,000 untouched rows in arrival order that skip rows used earlier, so a chain spans more than 1,000 rows (fraud/final_test.py).",
+  "Not counted as scored: fraud/data/ieee-cis/signal.npz holds the Phase 20 tree score (tab-all) for every fit and dev row and for the FINAL rows, about 16.9% of test rows; no label is read to make it.",
+  "Not counted as scored: fraud/history.py reads feature columns of every row to build history for later rows.",
+  "Phase 16 (fraud/eval_cost_stress.py) and the post-FINAL read-outs (fraud/results/eval_final/rich_cust_readout.json, extras.json) re-price saved traces of Phase 14 and FINAL windows; they add no window.",
+  "Phases 1-10 ran on PaySim and are outside this audit."
+ ]
+}
