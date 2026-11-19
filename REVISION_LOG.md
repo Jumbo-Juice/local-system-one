@@ -339,3 +339,28 @@ Juji, verbatim: "You guys make your own best judgement. Dont come to me unless t
 - **Against the prediction stated before running:**
   - "par-logreg about ties LM alone" was wrong: LM alone is cheaper.
   - "par-trees cheaper than LM alone": not distinguishable.
+
+### 2.1 Option-order bias (dev), eval 20261120-045604
+
+- Scoring took 4 passes of about 81–85 min each (118,000 rows per pass).
+- **Check:** rev reproduced Phase 21's saved decline scores exactly (max gap 0.0) for both setups.
+
+| setup | flip rate | rev | fwd | fwd − rev (95% CI) | averaged | avg − rev (95% CI) |
+|---|---:|---:|---:|---|---:|---|
+| LM alone (`lm-rich`) | 0.50% | 2,112 | 2,069 | **−43 (−88 to −6)** | 2,089 | −23 (−59 to 6) |
+| LM + tree (`lm-signal`) | 0.97% | 1,920 | 1,893 | −27 (−95 to 15) | not triggered | |
+
+- **The top answer barely depends on order.** "Approve" is the top answer for 92–93% of rows in both orders, and "review" is
+  never top.
+- **The decline score moves a little.** Its rank correlation across orders is 0.997 (LM alone) and 0.999 (LM + tree). AUC
+  is unchanged to 3 decimals, and λ is the same per order.
+- **The registered rule triggered the averaged run for LM alone,** because its fwd − rev interval excludes zero. Averaging
+  the two orders moves its cost by −23, not distinguishable.
+- **Reading:**
+  - There is a measurable but small option-order bias in cost: about 40 USD/window, under the ~±100 seed-noise floor.
+  - The order the setups were scored in (rev) was, if anything, slightly the dearer one, so the reported LM costs are not
+    flattered by order.
+  - No verdict changes.
+- **Against the prediction stated before running:** "the top answer is decline for nearly every row" was wrong. It is
+  approve, which is the IEEE-CIS adapters' behaviour, unlike PaySim. The flip rate was small, as predicted. The cost gap was
+  within ±150, as predicted.

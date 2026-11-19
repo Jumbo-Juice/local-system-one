@@ -1,0 +1,125 @@
+{
+ "eval": "20261120-045604",
+ "script": "fraud/eval_order_bias.py",
+ "label": "dev",
+ "created": "2026-11-20T04:56:24",
+ "costs": {
+  "friction_rate": 0.1,
+  "friction_min": 1.0,
+  "review_fee": 10.0,
+  "review_share": 0.05
+ },
+ "windows": 88,
+ "flip_bar": 0.1,
+ "setups": {
+  "lm-rich": {
+   "flip_rate": 0.0049886363636363635,
+   "top_answer_share": {
+    "rev": {
+     "approve": 0.9261022727272727,
+     "review": 0.0,
+     "decline": 0.07389772727272727
+    },
+    "fwd": {
+     "approve": 0.9242272727272727,
+     "review": 0.0,
+     "decline": 0.07577272727272727
+    }
+   },
+   "rev_reproduces_phase21": {
+    "max_gap": 0.0,
+    "mean_gap": 0.0
+   },
+   "fwd_minus_rev": {
+    "cheaper": 44,
+    "dearer": 43,
+    "ties": 1,
+    "sign_p": 1.0,
+    "mean_diff": -43.18053522727271,
+    "mean_diff_ci95": [
+     -88.08645553977269,
+     -5.961719971590921
+    ]
+   },
+   "averaged_run": true,
+   "avg_minus_rev": {
+    "cheaper": 33,
+    "dearer": 46,
+    "ties": 9,
+    "sign_p": 0.17661055306016413,
+    "mean_diff": -23.40967727272727,
+    "mean_diff_ci95": [
+     -59.275848664772695,
+     6.413644062499964
+    ]
+   },
+   "orders": {
+    "rev": {
+     "mean_cost": 2111.9473170454544,
+     "auc": 0.893205826837086,
+     "lambda": 5,
+     "label": "dev"
+    },
+    "fwd": {
+     "mean_cost": 2068.7667818181817,
+     "auc": 0.8934477619414611,
+     "lambda": 5,
+     "label": "dev"
+    },
+    "avg": {
+     "mean_cost": 2088.5376397727273,
+     "auc": 0.8934086334888945,
+     "lambda": 5,
+     "label": "dev"
+    }
+   },
+   "decline_score_rank_corr": 0.9966642799266097
+  },
+  "lm-signal": {
+   "flip_rate": 0.00975,
+   "top_answer_share": {
+    "rev": {
+     "approve": 0.9325909090909091,
+     "review": 0.0,
+     "decline": 0.0674090909090909
+    },
+    "fwd": {
+     "approve": 0.9229090909090909,
+     "review": 0.0,
+     "decline": 0.07709090909090908
+    }
+   },
+   "rev_reproduces_phase21": {
+    "max_gap": 0.0,
+    "mean_gap": 0.0
+   },
+   "fwd_minus_rev": {
+    "cheaper": 36,
+    "dearer": 52,
+    "ties": 0,
+    "sign_p": 0.10929542977731425,
+    "mean_diff": -26.580850000000034,
+    "mean_diff_ci95": [
+     -95.38910761363641,
+     15.45770105113632
+    ]
+   },
+   "averaged_run": false,
+   "orders": {
+    "rev": {
+     "mean_cost": 1919.987993181818,
+     "auc": 0.9102332785736127,
+     "lambda": 10,
+     "label": "dev"
+    },
+    "fwd": {
+     "mean_cost": 1893.4071431818184,
+     "auc": 0.9100062929759523,
+     "lambda": 10,
+     "label": "dev"
+    }
+   },
+   "decline_score_rank_corr": 0.9987597513277595
+  }
+ }
+}
