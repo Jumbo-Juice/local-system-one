@@ -3,7 +3,7 @@
  "script": "fraud/eval_gbdt_readout.py",
  "label": "read-out",
  "prereg": "fraud/prereg/final_gbdt_readout.md",
- "created": "2026-11-19T23:18:33",
+ "created": "2026-11-19T23:20:40",
  "others_from": "fraud/results/eval_final/20261104-090649.json",
  "costs": {
   "friction_rate": 0.1,
@@ -450,6 +450,24 @@
    "good_customers_declined": 0,
    "good_reviewed": 0,
    "label": "held-out (pre-registered)"
+  }
+ },
+ "mde_realised": {
+  "label": "read-out",
+  "formula": "2.8 * paired SD / sqrt(20): 80% power, two-sided 5%, normal approximation; SD from these FINAL windows (the registered MDE used dev SDs)",
+  "pairs": {
+   "final-signal-amt - final-tab-all-amt": {
+    "sd": 969.2167416714382,
+    "mde": 606.8256654062928
+   },
+   "final-tab-all-amt - final-logreg-amt": {
+    "sd": 570.0677883333012,
+    "mde": 356.91889141894245
+   },
+   "final-rich-amt - final-tab-all-amt": {
+    "sd": 769.2645292459424,
+    "mde": 481.6357784205246
+   }
   }
  },
  "test_rows": 20000,

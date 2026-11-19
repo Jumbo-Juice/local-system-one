@@ -234,3 +234,29 @@ Juji, verbatim: "You guys make your own best judgement. Dont come to me unless t
   undercutting result, and the paper reports it as one.
 - **Wording.** The shared `report_table` header calls the rows "new test rows". They are not new. The JSON's `label`
   ("read-out") is authoritative, and the paper will say "the same 20 windows, read again".
+- **Realised MDE on FINAL (read-out).** From the FINAL per-window paired SDs, now in the results JSON → `mde_realised`, same
+  formula:
+
+  | comparison | FINAL paired SD | realised MDE | registered (dev) MDE |
+  |---|---:|---:|---:|
+  | LM + tree − GBDT | 969 | **≈ 607** | 250 |
+  | GBDT − LR | 570 | ≈ 357 | 356 |
+  | LM alone − GBDT | 769 | ≈ 482 | 411 |
+
+  - The registered dev-based MDE of 250 for the primary was optimistic: FINAL windows vary far more between the two
+    setups than dev chains did. The registration file is left as committed.
+  - In Stage 3.1 and in the paper, the primary reads: "no difference detectable; effects below roughly 600 USD/window
+    cannot be ruled out". The number is piped from the JSON through `build_data.py` and `data.json`.
+- **Scored without asking first.** The GBDT read-out on FINAL was scored without asking Juji first, under Juji's standing
+  instruction. It used the recipe Juji approved twice. Juji was told in the next message and may object.
+- **Carry forward to Stage 4.** The paper must say:
+  - that no clean data remained for a new test;
+  - that these are the same 20 windows read again;
+  - that GBDT vs LR is flattered by the λ asymmetry.
+- **Stage 1 post-scoring, round 1 (2026-11-19): APPROVE WITH FIXES.**
+  - The reviewer verified that the traces were created after both registration commits, that there was exactly one run,
+    and that there was no retraining (the pickle's mtime and sha are unchanged). It recomputed every difference and interval
+    from the JSON, and found the Phase 23 means unchanged.
+  - Fixes: log the realised MDEs and the "scored without asking" sentence (both above).
+  - It will still escalate push or publish, deletions, money or credentials, results that overturn the story, and changes
+    to settled decisions. Those go to Juji directly.
