@@ -29,7 +29,8 @@ Observed:
 - 108 rows (590,432 to 590,539, the split's tail) were never scored.
 - **Untouched 1,000-row windows: 0.** Allowing non-contiguous chains doesn't change this: 108 rows are not one window.
 - Not counted as scored, because no label was read:
-  - the Phase 20 tree score cached in `fraud/data/ieee-cis/signal.npz` (fit, dev, the FINAL rows and about 17% of test rows);
+  - the tree score cached in `fraud/data/ieee-cis/signal.npz` (fit, dev, the FINAL rows and about 17% of test rows). It is the
+    400-tree prefix of Phase 20's `tab-all`, the score that LM + tree reads, not `tab-all` itself (corrected; see the verdicts);
   - the history features that `fraud/history.py` builds from every row.
 - The dev split is used up in the same way: 30 dev windows fitted the rule and the lines, and the 88 held-out dev chains are
   the rest. 108 dev rows are left over.
@@ -38,13 +39,14 @@ Observed:
 read-out, and the paper says that no clean data remained for a new test.
 
 - The FINAL pre-registration excluded trees ("Trees alone aren't run here", `fraud/eval_final.py`), so this is a new number.
-- No inference is needed: `signal.npz` already holds the Phase 20 `tab-all` score for every FINAL row (Observed: 100% non-missing).
+- ~~No inference is needed~~ (corrected): `signal.npz` holds only the 400-tree prefix of `tab-all` for the FINAL rows. Juji chose
+  the 800-tree `tab-all`, so the read-out needs one inference pass of the saved model over the FINAL rows.
 
 ### 2. Feature sets of the baselines
 
 Observed, from `fraud/eval_ieee.py:features_all`, `fraud/eval_tabular.py:SETS` and `fraud/ieee_brain.py`.
 
-- **LR on FINAL** (`final-logreg-amt` = `tab-logreg` = `ieee-logreg-all`) and **GBDT** (`tab-all`, 400 trees, `fraud/gbdt.py`)
+- **LR on FINAL** (`final-logreg-amt` = `tab-logreg` = `ieee-logreg-all`) and **GBDT** (`tab-all`, 800 trees, `fraud/eval_tabular.py` PARAMS; model code `fraud/gbdt.py`)
   were fitted on the same 583 features, on fit rows only:
   - log amount and the hour (24 one-hots);
   - one-hots of the 15 text columns: ProductCD, card4, card6, P_emaildomain, R_emaildomain, M1 to M9, DeviceType;
@@ -92,7 +94,8 @@ Observed, from `fraud/eval_ieee.py:features_all`, `fraud/eval_tabular.py:SETS` a
   - `eval_ieee_amount.pick_lambda` takes the lowest total dev cost over the grid 0, 1, 2, 5, … 1000.
   - `tabular.fit_policy` fits p (a logistic fit of the score's logit) and λ on the 30 dev windows (`dev30`).
   - `eval_tabular.lambda_on` re-picks λ on all 118 dev windows (dev30 + 88 held-out). It applies to every setup except LR:
-    the LM setups and also `tab-all` (`fraud/eval_lm_nuc.py:199`, `fraud/eval_final.py:policies`).
+    the LM setups (`fraud/eval_lm_nuc.py:199`; on FINAL, `fraud/eval_final.py:policies`) and also `tab-all` (`fraud/eval_lm_nuc.py:199`
+    only: `eval_final.policies` never fitted `tab-all`).
   - LR keeps Phase 14's λ from dev30, so the baseline doesn't move.
 
 ### 4. Licences (information only; no adapter is published)
@@ -144,3 +147,10 @@ Observed, from `fraud/eval_ieee.py:features_all`, `fraud/eval_tabular.py:SETS` a
     - p is fitted on dev30 and λ on all 118 dev windows, as in Phase 21.
     - The recipe is committed in `fraud/prereg/` first, and the result is labelled `read-out`.
     - This replaces "from the cached score" in the answer above, and is settled from now on.
+- **Stage 0, round 2 (2026-11-19): APPROVE WITH FIXES.** The reviewer recounted 0 untouched windows a second time, from the
+  row ranges alone, and confirmed the 400/800-tree correction. Fixes, all made in the commit that logs this verdict:
+  - section 2: `tab-all` has 800 trees, not 400;
+  - section 1 and the `window_audit.json` notes: the cache is the 400-tree prefix of `tab-all`;
+  - section 3: the `tab-all` λ re-pick is at `fraud/eval_lm_nuc.py:199`, not in `eval_final.policies`.
+  - Process note from the reviewer: every material finding goes into the report sent to it.
+  - Instruction: proceed to Stage 1 only up to the registration commit, then call paper-driver again before scoring FINAL.

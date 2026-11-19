@@ -101,7 +101,7 @@ def main() -> None:
         "sources": sources,
         "notes": [
             "Phases 11, 12, 14 and FINAL use 1,000 contiguous rows. Phases 17-20 use chains: 1,000 untouched rows in arrival order that skip rows used earlier, so a chain spans more than 1,000 rows (fraud/final_test.py).",
-            "Not counted as scored: fraud/data/ieee-cis/signal.npz holds the Phase 20 tree score (tab-all) for every fit and dev row and for the FINAL rows, about 16.9% of test rows; no label is read to make it.",
+            "Not counted as scored: fraud/data/ieee-cis/signal.npz holds a tree score for every fit and dev row and for the FINAL rows, about 16.9% of test rows; no label is read to make it. On dev and test rows it is the 400-tree prefix of Phase 20's tab-all (fraud/lm_signal.py, TREES = 400), the score LM + tree reads, not tab-all itself (800 trees).",
             "Not counted as scored: fraud/history.py reads feature columns of every row to build history for later rows.",
             "Phase 16 (fraud/eval_cost_stress.py) and the post-FINAL read-outs (fraud/results/eval_final/rich_cust_readout.json, extras.json) re-price saved traces of Phase 14 and FINAL windows; they add no window.",
             "Phases 1-10 ran on PaySim and are outside this audit.",
