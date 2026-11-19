@@ -154,3 +154,19 @@ Observed, from `fraud/eval_ieee.py:features_all`, `fraud/eval_tabular.py:SETS` a
   - section 3: the `tab-all` λ re-pick is at `fraud/eval_lm_nuc.py:199`, not in `eval_final.policies`.
   - Process note from the reviewer: every material finding goes into the report sent to it.
   - Instruction: proceed to Stage 1 only up to the registration commit, then call paper-driver again before scoring FINAL.
+
+## Stage 1: GBDT read-out on FINAL (fallback branch)
+
+- **Registration.** `fraud/prereg/final_gbdt_readout.md` and the script `fraud/eval_gbdt_readout.py`, committed together
+  before any FINAL row is scored. It fixes:
+  - the model: `tabular_tab-all.pkl`, all 800 trees, checked by sha256;
+  - the policy: Phase 21's recipe, with a dev reproduction check against Phase 21 that must pass before FINAL;
+  - the windows;
+  - the comparisons. Primary: LM + tree vs GBDT, the prompt's primary. Secondary: GBDT vs LR. Reported: LM alone vs GBDT;
+  - the decision rule, and the MDE from the dev paired SD.
+- **Assumed:**
+  - The prompt's other held-out comparisons (LR with two cut-offs; LR + rule + customer line) are not part of the fallback,
+    which names GBDT alone only. So they get no FINAL number.
+  - The reviewer's list named only GBDT vs LR. The prompt's primary (LM + tree vs GBDT) is kept as primary, since the
+    fallback exists to supply the GBDT number for it.
+- `RUN-GUIDE.md` has the new command.

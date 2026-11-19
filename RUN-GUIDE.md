@@ -702,6 +702,16 @@ Then Phase 21's comparison, Phase 22's combinations, and the final test. The fin
 .venv/Scripts/python -m fraud.dev.final_extras <eval id>
 ```
 
+Boosted trees alone on the FINAL windows, the paper revision's read-out (registration: `fraud/prereg/final_gbdt_readout.md`).
+It scores the saved 800-tree `tab-all` once. Before scoring any FINAL row, it checks the model's hash, the windows, and that
+the dev fit reproduces Phase 21. It refuses a second run. Needs `python -m fraud.history`. Traces go to `fraud/runs/`, and
+results to `fraud/results/eval_gbdt_readout/<eval id>.json`, labelled `read-out`.
+
+```bash
+.venv/Scripts/python -m fraud.eval_gbdt_readout
+.venv/Scripts/python -m fraud.eval_gbdt_readout --report <eval id>
+```
+
 Logreg's time per payment, which the final test didn't record (it scored logreg a window at a time). One payment at a time on the
 30 dev windows, not FINAL rows; about a minute, most of it the fit. Needs `python -m fraud.history` first. Result:
 `fraud/results/time_logreg/<time>.json`, read by the final test's console page.
