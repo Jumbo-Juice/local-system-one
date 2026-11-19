@@ -307,3 +307,35 @@ Juji, verbatim: "You guys make your own best judgement. Dont come to me unless t
 - LM + tree gets no no-C variant: that would be a second retrain, and the prompt allows one. Logged as a gap.
 - Every setup here uses p on dev30 and λ on all 118 dev windows (as parity), so LR's with-C number differs slightly from the
   paper's dev30-λ LR.
+
+### 2.2 Feature parity (dev), eval 20261119-232618
+
+- `fraud/eval_parity.py`, registered in its docstring. 204 features: the rich prompt's fields and its history, nothing else.
+- p on dev30 and λ on 118 for every setup.
+- Check: `lm-rich` 2,112 and `lm-signal` 1,920 equal Phase 21's dev reads.
+
+| setup | USD/window | AUC |
+|---|---:|---:|
+| trees, all columns (`tab-all`) | 1,830 | 0.914 |
+| LM + tree (`lm-signal`) | 1,920 | 0.910 |
+| trees, prompt's fields (`par-trees`) | 2,034 | 0.908 |
+| LM alone (`lm-rich`) | 2,112 | 0.893 |
+| LR, all columns (`tab-logreg`, λ on 118 here) | 2,117 | 0.888 |
+| LR, prompt's fields (`par-logreg`) | 2,327 | 0.874 |
+
+- **LM alone − LR at parity:** −215, interval −353 to −73. **Distinguishable: LM alone is cheaper.**
+- **LM alone − trees at parity:** +77, interval −90 to 235. Not distinguishable.
+- **LM + tree − trees at parity:** −114, interval −240 to 4. Not distinguishable.
+- **Parity − all columns:** LR +210 (83 to 329), trees +204 (82 to 341). Both are distinguishable: the prompt leaves out
+  information that both baselines use.
+- **Answer to "modelling or information" (dev):**
+  - Mostly information. Given only what the prompt shows, the fine-tuned LM models as well as boosted trees and better than
+    LR.
+  - Its gap to the all-column trees (+282 on these chains) is about what the trees themselves lose when cut to the prompt's
+    fields (+204).
+  - This is a result in the LM's favour, and it is reported as such. It does not change the headline, which compares with
+    the all-column baselines the paper registered. It does change the interpretation: the LM's loss comes from the prompt's
+    information budget.
+- **Against the prediction stated before running:**
+  - "par-logreg about ties LM alone" was wrong: LM alone is cheaper.
+  - "par-trees cheaper than LM alone": not distinguishable.

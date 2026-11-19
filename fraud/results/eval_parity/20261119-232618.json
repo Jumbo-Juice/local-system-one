@@ -1,0 +1,166 @@
+{
+ "eval": "20261119-232618",
+ "script": "fraud/eval_parity.py",
+ "label": "dev",
+ "created": "2026-11-19T23:34:07",
+ "costs": {
+  "friction_rate": 0.1,
+  "friction_min": 1.0,
+  "review_fee": 10.0,
+  "review_share": 0.05
+ },
+ "windows": 88,
+ "lambda": "p on dev30, lambda on all 118 dev windows, for every setup here",
+ "setups": {
+  "par-logreg": {
+   "mean_cost": 2326.9385159090907,
+   "auc": 0.8740250670179867,
+   "lambda": 10,
+   "lambda_on_30": 10,
+   "frauds": 3409,
+   "frauds_stopped": 2224,
+   "fraud_usd": 584340.81,
+   "fraud_usd_stopped": 450836.38,
+   "good_customers_declined": 4773,
+   "good_reviewed": 2793,
+   "label": "dev"
+  },
+  "par-trees": {
+   "mean_cost": 2034.4753272727276,
+   "auc": 0.9079918270065416,
+   "lambda": 5,
+   "lambda_on_30": 5,
+   "frauds": 3409,
+   "frauds_stopped": 2362,
+   "fraud_usd": 584340.81,
+   "fraud_usd_stopped": 464903.01,
+   "good_customers_declined": 3179,
+   "good_reviewed": 2997,
+   "label": "dev"
+  },
+  "lm-rich": {
+   "mean_cost": 2111.9473170454544,
+   "auc": 0.893205826837086,
+   "lambda": 5,
+   "lambda_on_30": 10,
+   "frauds": 3409,
+   "frauds_stopped": 2324,
+   "fraud_usd": 584340.81,
+   "fraud_usd_stopped": 465486.09,
+   "good_customers_declined": 3459,
+   "good_reviewed": 3362,
+   "label": "dev"
+  },
+  "lm-signal": {
+   "mean_cost": 1919.987993181818,
+   "auc": 0.9102332785736127,
+   "lambda": 10,
+   "lambda_on_30": 10,
+   "frauds": 3409,
+   "frauds_stopped": 2410,
+   "fraud_usd": 584340.81,
+   "fraud_usd_stopped": 475508.34,
+   "good_customers_declined": 3241,
+   "good_reviewed": 2613,
+   "label": "dev"
+  },
+  "tab-logreg": {
+   "mean_cost": 2117.0365954545455,
+   "auc": 0.888189740235034,
+   "lambda": 5,
+   "lambda_on_30": 10,
+   "frauds": 3409,
+   "frauds_stopped": 2379,
+   "fraud_usd": 584340.81,
+   "fraud_usd_stopped": 469278.68,
+   "good_customers_declined": 3743,
+   "good_reviewed": 3420,
+   "label": "dev"
+  },
+  "tab-all": {
+   "mean_cost": 1830.1517238636363,
+   "auc": 0.9138783990062459,
+   "lambda": 5,
+   "lambda_on_30": 5,
+   "frauds": 3409,
+   "frauds_stopped": 2445,
+   "fraud_usd": 584340.81,
+   "fraud_usd_stopped": 484173.29,
+   "good_customers_declined": 3003,
+   "good_reviewed": 3157,
+   "label": "dev"
+  }
+ },
+ "comparisons": [
+  {
+   "cheaper": 57,
+   "dearer": 31,
+   "ties": 0,
+   "sign_p": 0.0073434087237081265,
+   "mean_diff": -214.99119886363636,
+   "mean_diff_ci95": [
+    -352.60506531249996,
+    -72.56999869318187
+   ],
+   "a": "lm-rich",
+   "b": "par-logreg",
+   "label": "dev"
+  },
+  {
+   "cheaper": 32,
+   "dearer": 56,
+   "ties": 0,
+   "sign_p": 0.01375038573850291,
+   "mean_diff": 77.47198977272727,
+   "mean_diff_ci95": [
+    -89.70695769886365,
+    234.91140505681807
+   ],
+   "a": "lm-rich",
+   "b": "par-trees",
+   "label": "dev"
+  },
+  {
+   "cheaper": 47,
+   "dearer": 41,
+   "ties": 0,
+   "sign_p": 0.5942882951469405,
+   "mean_diff": -114.48733409090904,
+   "mean_diff_ci95": [
+    -240.18355718749996,
+    4.189602897727315
+   ],
+   "a": "lm-signal",
+   "b": "par-trees",
+   "label": "dev"
+  },
+  {
+   "cheaper": 28,
+   "dearer": 60,
+   "ties": 0,
+   "sign_p": 0.0008464960856166748,
+   "mean_diff": 209.90192045454543,
+   "mean_diff_ci95": [
+    82.88029468749998,
+    329.4677707670454
+   ],
+   "a": "par-logreg",
+   "b": "tab-logreg",
+   "label": "dev"
+  },
+  {
+   "cheaper": 32,
+   "dearer": 56,
+   "ties": 0,
+   "sign_p": 0.01375038573850291,
+   "mean_diff": 204.3236034090909,
+   "mean_diff_ci95": [
+    81.98416389204552,
+    340.68613585227274
+   ],
+   "a": "par-trees",
+   "b": "tab-all",
+   "label": "dev"
+  }
+ ]
+}
