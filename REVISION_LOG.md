@@ -260,3 +260,16 @@ Juji, verbatim: "You guys make your own best judgement. Dont come to me unless t
   - Fixes: log the realised MDEs and the "scored without asking" sentence (both above).
   - It will still escalate push or publish, deletions, money or credentials, results that overturn the story, and changes
     to settled decisions. Those go to Juji directly.
+
+## Stage 2: dev experiments
+
+### 2.1 Option-order bias: registration
+
+- `fraud/eval_order_bias.py` (its docstring is the registration), committed before scoring.
+- It covers LM alone (`lm-rich`) and LM + tree (`lm-signal`), scored in both orders, rev and fwd, on dev30 plus the 88
+  held-out chains, keeping all three option scores. It then reports the flip rate, the cost of each order with a paired
+  interval, and the averaged orders if the flip rate is above 10% or the interval excludes zero.
+- **Smoke test (dev, 32 rows).** Rev reproduced Phase 21's saved decline score exactly (max gap 0.0). In fwd, 1 of 32 top
+  answers changed.
+- **Assumed:** the revision prompt says "options reversed (A decline, B review, C approve)". That is the order already used,
+  so the new order is fwd (Stage 0 finding). Both orders are refitted the same way: p on dev30, λ on 118.

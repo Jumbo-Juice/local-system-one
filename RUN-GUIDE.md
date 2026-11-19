@@ -712,6 +712,16 @@ results to `fraud/results/eval_gbdt_readout/<eval id>.json`, labelled `read-out`
 .venv/Scripts/python -m fraud.eval_gbdt_readout --report <eval id>
 ```
 
+The paper revision's option-order check (Stage 2.1, dev only). Both option orders for LM alone and LM + tree, with all three
+option scores kept; about 85 min per order per setup on the RTX 3060 Ti. Scores go to
+`fraud/data/ieee-cis/lm_scores/order/` (git-ignored), and results to `fraud/results/eval_order_bias/<eval id>.json`.
+
+```bash
+.venv/Scripts/python -m fraud.eval_order_bias --score lm-rich
+.venv/Scripts/python -m fraud.eval_order_bias --score lm-signal
+.venv/Scripts/python -m fraud.eval_order_bias --report
+```
+
 Logreg's time per payment, which the final test didn't record (it scored logreg a window at a time). One payment at a time on the
 30 dev windows, not FINAL rows; about a minute, most of it the fit. Needs `python -m fraud.history` first. Result:
 `fraud/results/time_logreg/<time>.json`, read by the final test's console page.
