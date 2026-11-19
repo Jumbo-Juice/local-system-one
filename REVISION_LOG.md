@@ -114,3 +114,16 @@ Observed, from `fraud/eval_ieee.py:features_all`, `fraud/eval_tabular.py:SETS` a
   involving an LM setup is flattered. The paper already says this, and Stage 2 will say it again.
 - **The GBDT read-out on FINAL** will use Phase 21's recipe for `tab-all`: p fitted on dev30 and λ on all 118 dev windows.
 - **`fraud/prereg/` doesn't exist yet.** Stage 1 or 2 creates it.
+
+### paper-driver verdicts
+
+- **Stage 0, round 1 (2026-11-19): ESCALATE.** The reviewer recounted the windows itself, from the results JSONs and
+  `final_test.phase_windows`, and got the same 0 untouched windows. It found no problems in the audit, but always-escalate
+  rule 2 (fewer than 20 untouched windows) applies.
+  - **Juji's answer: A, the fallback as specified, from the cached score.**
+    - Setup: `tab-all` GBDT, read from `fraud/data/ieee-cis/signal.npz`. No new inference and no retraining.
+    - The Phase 21 recipe stays fixed: p fitted on dev30, λ picked on all 118 dev windows.
+    - It is applied once to the 20 FINAL windows and compared with LR by the 95% paired window-bootstrap percentile interval
+      (10,000 resamples). Every result is labelled `read-out`.
+    - A short note fixing this recipe is committed in `fraud/prereg/` before anything is computed.
+  - This is a settled decision from now on.
