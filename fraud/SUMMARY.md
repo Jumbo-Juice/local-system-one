@@ -12,20 +12,20 @@ Be clear about what this is: a language model that mostly agrees with a tree sco
 
 ## What it costs against the Phase 14 baseline (logreg with the amount-aware rule)
 
-| per window, FINAL | baseline | recommended | difference |
-|---|---:|---:|---|
-| mean cost, USD | 2,106 | 1,992 | **-115, CI -391 to 273: not distinguishable** |
+| per window, FINAL | baseline | recommended | difference                                    |
+| ----------------- | -------: | ----------: | --------------------------------------------- |
+| mean cost, USD    |    2,106 |       1,992 | **-115, CI -391 to 273: not distinguishable** |
 
 No candidate shows a distinguishable saving. The registered primary, the same setup without the customer line, is -163, CI -462 to 238. (Observed)
 
 ## What it does to good customers (20 windows)
 
-| | baseline | recommended | change |
-|---|---:|---:|---:|
-| good customers declined | 1,051 | **247** | -76% |
-| good customers declined or reviewed | 1,703 | 962 | -44% |
-| frauds stopped, of 630 | 384 | 335 | -49 |
-| fraud USD let through | 26,105 | 29,338 | +3,233, 3% of all fraud dollars |
+|                                     | baseline | recommended |                          change |
+| ----------------------------------- | -------: | ----------: | ------------------------------: |
+| good customers declined             |    1,051 |     **247** |                            -76% |
+| good customers declined or reviewed |    1,703 |         962 |                            -44% |
+| frauds stopped, of 630              |      384 |         335 |                             -49 |
+| fraud USD let through               |   26,105 |      29,338 | +3,233, 3% of all fraud dollars |
 
 If a wrongly declined customer truly costs 10 USD more, the difference becomes -517, CI -796 to -130. That read-out is outside the registration and the 10 USD is an assumption. (Observed arithmetic)
 

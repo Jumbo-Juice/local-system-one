@@ -29,6 +29,21 @@
         ],
         "createdAt": "2026-11-12T08:39:22.947Z",
         "reason": "Claude's triage: measured in the rendered page, no text element has a line-height under 1.02 times its font size; the tightest are display headings at 1.04 to 1.1"
+      },
+      {
+        "rule": "design-system-font",
+        "value": "archivo",
+        "createdAt": "2026-11-13T07:45:14.411Z",
+        "reason": "same: the deck's vendored Archivo font path, midterm style requested by the owner"
+      },
+      {
+        "rule": "side-tab",
+        "value": "*",
+        "files": [
+          "slides/deck.css"
+        ],
+        "createdAt": "2026-11-13T07:45:14.889Z",
+        "reason": "deck.css:195 is a 4px page-coloured gap between the three cut-off bands on slide 09, not an accent border"
       }
     ]
   }
