@@ -127,3 +127,20 @@ Observed, from `fraud/eval_ieee.py:features_all`, `fraud/eval_tabular.py:SETS` a
       (10,000 resamples). Every result is labelled `read-out`.
     - A short note fixing this recipe is committed in `fraud/prereg/` before anything is computed.
   - This is a settled decision from now on.
+  - **Correction to Stage 0 (found 2026-11-19, after the answer, before anything was computed on FINAL).** Section 1 says
+    that `signal.npz` holds the Phase 20 `tab-all` score. That is wrong.
+    - `fraud/lm_signal.py` scores dev and test rows with the saved `tab-all` model, but only its first 400 trees:
+      `predict(..., TREES)` with `TREES = 400`.
+    - `tab-all` itself uses all 800 trees (`fraud/eval_tabular.py` PARAMS).
+    - On the 88 held-out dev chains (Phase 21, `eval_lm_nuc/20261104-090217.json`):
+      - `tab-all-amt` (800 trees): AUC 0.914, 1,830 USD/window, λ 5;
+      - `signal-alone-amt` (the cache, 400 trees): AUC 0.911, 1,853 USD/window, λ 5.
+    - The paper's "boosted trees" is `tab-all`. The cache is the paper's "tree score used alone", the score that LM + tree
+      reads.
+    - So option A, as approved, would report the 400-tree score under the GBDT name. Back to Juji.
+  - **Juji's revised answer: `tab-all`, 800 trees.**
+    - The saved model `fraud/models/tabular_tab-all.pkl` is scored once, deterministically, on the 20,000 FINAL rows. No
+      retraining.
+    - p is fitted on dev30 and λ on all 118 dev windows, as in Phase 21.
+    - The recipe is committed in `fraud/prereg/` first, and the result is labelled `read-out`.
+    - This replaces "from the cached score" in the answer above, and is settled from now on.
