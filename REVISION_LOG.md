@@ -273,3 +273,24 @@ Juji, verbatim: "You guys make your own best judgement. Dont come to me unless t
   answers changed.
 - **Assumed:** the revision prompt says "options reversed (A decline, B review, C approve)". That is the order already used,
   so the new order is fwd (Stage 0 finding). Both orders are refitted the same way: p on dev30, λ on 118.
+
+### 2.4 Customer-line trade-off curve (dev), eval 20261119-232409
+
+- `fraud/eval_customer_line.py`, registered in its docstring and committed before running. CPU only; no model pass.
+- **Checks:**
+  - LR at 0 USD costs 2,125, Phase 21's `tab-logreg-amt`.
+  - LM + tree at 0 USD costs 1,920, Phase 21's `lm-signal-amt`.
+  - LM + tree at 10 USD: +63 USD/window, and good customers declined fall from 3,241 to 827 (−74%). Both match Phase 22's
+    dev figures.
+- **Results (dev, 88 held-out chains):**
+  - **LR:**
+    - At 10 USD, cost moves +3 (−33 to 44), good customers declined fall from 4,003 to 933, and frauds stopped fall from
+      2,347 to 1,973.
+    - At 5 USD, cost is −28 (−55 to 4).
+    - From 15 USD up, LR is distinguishably dearer, by +71 at 15 and +299 at 60.
+  - **LM + tree:** from 10 USD up, it is distinguishably dearer, by +63 at 10 and +203 at 60.
+  - Good customers declined fall steeply up to about 20 USD, then flatten.
+  - **A trade-off, not a gain**, as the revision prompt frames it. The price moves the operating point: fewer good customers
+    declined and fewer frauds stopped, for the same or more dollars.
+- **Implementation choice:** the policy (p, λ) is fixed across prices, as on FINAL. The figure (frauds stopped against good
+  customers declined, with cost annotated) is built in Stage 4 from this JSON.

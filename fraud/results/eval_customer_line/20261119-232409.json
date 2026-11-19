@@ -1,0 +1,514 @@
+{
+ "eval": "20261119-232409",
+ "script": "fraud/eval_customer_line.py",
+ "label": "dev",
+ "created": "2026-11-19T23:24:09",
+ "costs": {
+  "friction_rate": 0.1,
+  "friction_min": 1.0,
+  "review_fee": 10.0,
+  "review_share": 0.05
+ },
+ "windows": 88,
+ "prices": [
+  0,
+  5,
+  10,
+  15,
+  20,
+  25,
+  30,
+  35,
+  40,
+  45,
+  50,
+  55,
+  60
+ ],
+ "setups": {
+  "logreg": {
+   "lambda": 10,
+   "curve": {
+    "0": {
+     "price": 0,
+     "mean_cost": 2125.0193886363636,
+     "frauds_stopped": 2347,
+     "frauds": 3409,
+     "good_customers_declined": 4003,
+     "vs_price_0": null,
+     "label": "dev"
+    },
+    "5": {
+     "price": 5,
+     "mean_cost": 2097.3478170454546,
+     "frauds_stopped": 2099,
+     "frauds": 3409,
+     "good_customers_declined": 1635,
+     "vs_price_0": {
+      "cheaper": 56,
+      "dearer": 32,
+      "ties": 0,
+      "sign_p": 0.01375038573850291,
+      "mean_diff": -27.671571590909142,
+      "mean_diff_ci95": [
+       -54.51963400568184,
+       3.912984573863565
+      ]
+     },
+     "label": "dev"
+    },
+    "10": {
+     "price": 10,
+     "mean_cost": 2127.645528409091,
+     "frauds_stopped": 1973,
+     "frauds": 3409,
+     "good_customers_declined": 933,
+     "vs_price_0": {
+      "cheaper": 48,
+      "dearer": 40,
+      "ties": 0,
+      "sign_p": 0.45574127943791326,
+      "mean_diff": 2.626139772727258,
+      "mean_diff_ci95": [
+       -33.19850309659091,
+       43.51480988636362
+      ]
+     },
+     "label": "dev"
+    },
+    "15": {
+     "price": 15,
+     "mean_cost": 2196.2113863636364,
+     "frauds_stopped": 1906,
+     "frauds": 3409,
+     "good_customers_declined": 563,
+     "vs_price_0": {
+      "cheaper": 41,
+      "dearer": 47,
+      "ties": 0,
+      "sign_p": 0.5942882951469405,
+      "mean_diff": 71.19199772727269,
+      "mean_diff_ci95": [
+       14.248931676136332,
+       140.16232701704533
+      ]
+     },
+     "label": "dev"
+    },
+    "20": {
+     "price": 20,
+     "mean_cost": 2257.2394090909092,
+     "frauds_stopped": 1845,
+     "frauds": 3409,
+     "good_customers_declined": 380,
+     "vs_price_0": {
+      "cheaper": 34,
+      "dearer": 54,
+      "ties": 0,
+      "sign_p": 0.04221061162240416,
+      "mean_diff": 132.22002045454542,
+      "mean_diff_ci95": [
+       60.915084886363594,
+       213.2483626704545
+      ]
+     },
+     "label": "dev"
+    },
+    "25": {
+     "price": 25,
+     "mean_cost": 2277.956972727273,
+     "frauds_stopped": 1807,
+     "frauds": 3409,
+     "good_customers_declined": 281,
+     "vs_price_0": {
+      "cheaper": 33,
+      "dearer": 55,
+      "ties": 0,
+      "sign_p": 0.02462283158179103,
+      "mean_diff": 152.9375840909091,
+      "mean_diff_ci95": [
+       79.22420116477268,
+       236.37538352272728
+      ]
+     },
+     "label": "dev"
+    },
+    "30": {
+     "price": 30,
+     "mean_cost": 2318.2361636363635,
+     "frauds_stopped": 1789,
+     "frauds": 3409,
+     "good_customers_declined": 237,
+     "vs_price_0": {
+      "cheaper": 29,
+      "dearer": 59,
+      "ties": 0,
+      "sign_p": 0.001824028645627199,
+      "mean_diff": 193.21677499999998,
+      "mean_diff_ci95": [
+       103.87398701704547,
+       295.42674869318176
+      ]
+     },
+     "label": "dev"
+    },
+    "35": {
+     "price": 35,
+     "mean_cost": 2328.6591215909093,
+     "frauds_stopped": 1763,
+     "frauds": 3409,
+     "good_customers_declined": 204,
+     "vs_price_0": {
+      "cheaper": 29,
+      "dearer": 59,
+      "ties": 0,
+      "sign_p": 0.001824028645627199,
+      "mean_diff": 203.63973295454542,
+      "mean_diff_ci95": [
+       112.55229710227269,
+       308.64390173295453
+      ]
+     },
+     "label": "dev"
+    },
+    "40": {
+     "price": 40,
+     "mean_cost": 2340.9042863636364,
+     "frauds_stopped": 1750,
+     "frauds": 3409,
+     "good_customers_declined": 187,
+     "vs_price_0": {
+      "cheaper": 26,
+      "dearer": 62,
+      "ties": 0,
+      "sign_p": 0.00015714867103001833,
+      "mean_diff": 215.8848977272727,
+      "mean_diff_ci95": [
+       125.39006963068181,
+       319.8408605113636
+      ]
+     },
+     "label": "dev"
+    },
+    "45": {
+     "price": 45,
+     "mean_cost": 2359.570290909091,
+     "frauds_stopped": 1737,
+     "frauds": 3409,
+     "good_customers_declined": 168,
+     "vs_price_0": {
+      "cheaper": 26,
+      "dearer": 62,
+      "ties": 0,
+      "sign_p": 0.00015714867103001833,
+      "mean_diff": 234.55090227272723,
+      "mean_diff_ci95": [
+       137.57841249999996,
+       345.83529264204543
+      ]
+     },
+     "label": "dev"
+    },
+    "50": {
+     "price": 50,
+     "mean_cost": 2373.5023431818186,
+     "frauds_stopped": 1726,
+     "frauds": 3409,
+     "good_customers_declined": 155,
+     "vs_price_0": {
+      "cheaper": 27,
+      "dearer": 61,
+      "ties": 0,
+      "sign_p": 0.0003740220149449215,
+      "mean_diff": 248.4829545454545,
+      "mean_diff_ci95": [
+       143.03037002840912,
+       371.64709289772713
+      ]
+     },
+     "label": "dev"
+    },
+    "55": {
+     "price": 55,
+     "mean_cost": 2396.504051136364,
+     "frauds_stopped": 1716,
+     "frauds": 3409,
+     "good_customers_declined": 147,
+     "vs_price_0": {
+      "cheaper": 25,
+      "dearer": 63,
+      "ties": 0,
+      "sign_p": 6.27038277122379e-05,
+      "mean_diff": 271.4846625,
+      "mean_diff_ci95": [
+       156.4884721590909,
+       411.17061448863626
+      ]
+     },
+     "label": "dev"
+    },
+    "60": {
+     "price": 60,
+     "mean_cost": 2423.818403409091,
+     "frauds_stopped": 1703,
+     "frauds": 3409,
+     "good_customers_declined": 139,
+     "vs_price_0": {
+      "cheaper": 25,
+      "dearer": 63,
+      "ties": 0,
+      "sign_p": 6.27038277122379e-05,
+      "mean_diff": 298.7990147727272,
+      "mean_diff_ci95": [
+       178.03134659090912,
+       442.02663383522713
+      ]
+     },
+     "label": "dev"
+    }
+   }
+  },
+  "lm-signal": {
+   "lambda": 10,
+   "curve": {
+    "0": {
+     "price": 0,
+     "mean_cost": 1919.987993181818,
+     "frauds_stopped": 2410,
+     "frauds": 3409,
+     "good_customers_declined": 3241,
+     "vs_price_0": null,
+     "label": "dev"
+    },
+    "5": {
+     "price": 5,
+     "mean_cost": 1930.260181818182,
+     "frauds_stopped": 2155,
+     "frauds": 3409,
+     "good_customers_declined": 1338,
+     "vs_price_0": {
+      "cheaper": 51,
+      "dearer": 37,
+      "ties": 0,
+      "sign_p": 0.1654405129339897,
+      "mean_diff": 10.272188636363616,
+      "mean_diff_ci95": [
+       -22.294263409091005,
+       45.27043619318177
+      ]
+     },
+     "label": "dev"
+    },
+    "10": {
+     "price": 10,
+     "mean_cost": 1983.3319477272728,
+     "frauds_stopped": 2049,
+     "frauds": 3409,
+     "good_customers_declined": 827,
+     "vs_price_0": {
+      "cheaper": 43,
+      "dearer": 45,
+      "ties": 0,
+      "sign_p": 0.9151865048428769,
+      "mean_diff": 63.343954545454515,
+      "mean_diff_ci95": [
+       17.738257556818155,
+       111.19688042613629
+      ]
+     },
+     "label": "dev"
+    },
+    "15": {
+     "price": 15,
+     "mean_cost": 2016.0835772727273,
+     "frauds_stopped": 2001,
+     "frauds": 3409,
+     "good_customers_declined": 579,
+     "vs_price_0": {
+      "cheaper": 39,
+      "dearer": 49,
+      "ties": 0,
+      "sign_p": 0.3373990368531191,
+      "mean_diff": 96.09558409090906,
+      "mean_diff_ci95": [
+       40.52751463068182,
+       159.63532076704539
+      ]
+     },
+     "label": "dev"
+    },
+    "20": {
+     "price": 20,
+     "mean_cost": 2040.5731965909092,
+     "frauds_stopped": 1963,
+     "frauds": 3409,
+     "good_customers_declined": 447,
+     "vs_price_0": {
+      "cheaper": 37,
+      "dearer": 51,
+      "ties": 0,
+      "sign_p": 0.1654405129339897,
+      "mean_diff": 120.5852034090909,
+      "mean_diff_ci95": [
+       63.27905025568176,
+       184.86759832386363
+      ]
+     },
+     "label": "dev"
+    },
+    "25": {
+     "price": 25,
+     "mean_cost": 2055.7679625,
+     "frauds_stopped": 1947,
+     "frauds": 3409,
+     "good_customers_declined": 377,
+     "vs_price_0": {
+      "cheaper": 33,
+      "dearer": 55,
+      "ties": 0,
+      "sign_p": 0.02462283158179103,
+      "mean_diff": 135.77996931818177,
+      "mean_diff_ci95": [
+       77.4539290056818,
+       204.48534610795448
+      ]
+     },
+     "label": "dev"
+    },
+    "30": {
+     "price": 30,
+     "mean_cost": 2065.9528284090907,
+     "frauds_stopped": 1929,
+     "frauds": 3409,
+     "good_customers_declined": 320,
+     "vs_price_0": {
+      "cheaper": 29,
+      "dearer": 59,
+      "ties": 0,
+      "sign_p": 0.001824028645627199,
+      "mean_diff": 145.9648352272727,
+      "mean_diff_ci95": [
+       83.99695076704543,
+       220.56655437499992
+      ]
+     },
+     "label": "dev"
+    },
+    "35": {
+     "price": 35,
+     "mean_cost": 2085.2667340909093,
+     "frauds_stopped": 1920,
+     "frauds": 3409,
+     "good_customers_declined": 282,
+     "vs_price_0": {
+      "cheaper": 27,
+      "dearer": 61,
+      "ties": 0,
+      "sign_p": 0.0003740220149449215,
+      "mean_diff": 165.27874090909089,
+      "mean_diff_ci95": [
+       99.99326164772721,
+       242.04836124999994
+      ]
+     },
+     "label": "dev"
+    },
+    "40": {
+     "price": 40,
+     "mean_cost": 2086.747430681818,
+     "frauds_stopped": 1915,
+     "frauds": 3409,
+     "good_customers_declined": 248,
+     "vs_price_0": {
+      "cheaper": 27,
+      "dearer": 61,
+      "ties": 0,
+      "sign_p": 0.0003740220149449215,
+      "mean_diff": 166.7594375,
+      "mean_diff_ci95": [
+       102.3523453125,
+       244.06942909090907
+      ]
+     },
+     "label": "dev"
+    },
+    "45": {
+     "price": 45,
+     "mean_cost": 2087.7043125,
+     "frauds_stopped": 1905,
+     "frauds": 3409,
+     "good_customers_declined": 240,
+     "vs_price_0": {
+      "cheaper": 28,
+      "dearer": 60,
+      "ties": 0,
+      "sign_p": 0.0008464960856166748,
+      "mean_diff": 167.7163193181818,
+      "mean_diff_ci95": [
+       103.17411928977275,
+       244.7732514488636
+      ]
+     },
+     "label": "dev"
+    },
+    "50": {
+     "price": 50,
+     "mean_cost": 2100.243930681818,
+     "frauds_stopped": 1895,
+     "frauds": 3409,
+     "good_customers_declined": 227,
+     "vs_price_0": {
+      "cheaper": 26,
+      "dearer": 62,
+      "ties": 0,
+      "sign_p": 0.00015714867103001833,
+      "mean_diff": 180.25593749999996,
+      "mean_diff_ci95": [
+       114.33824017045451,
+       257.8550085795453
+      ]
+     },
+     "label": "dev"
+    },
+    "55": {
+     "price": 55,
+     "mean_cost": 2120.6642556818183,
+     "frauds_stopped": 1878,
+     "frauds": 3409,
+     "good_customers_declined": 215,
+     "vs_price_0": {
+      "cheaper": 25,
+      "dearer": 63,
+      "ties": 0,
+      "sign_p": 6.27038277122379e-05,
+      "mean_diff": 200.67626249999995,
+      "mean_diff_ci95": [
+       124.93298062499993,
+       296.54617488636353
+      ]
+     },
+     "label": "dev"
+    },
+    "60": {
+     "price": 60,
+     "mean_cost": 2123.2773352272725,
+     "frauds_stopped": 1868,
+     "frauds": 3409,
+     "good_customers_declined": 200,
+     "vs_price_0": {
+      "cheaper": 25,
+      "dearer": 63,
+      "ties": 0,
+      "sign_p": 6.27038277122379e-05,
+      "mean_diff": 203.2893420454545,
+      "mean_diff_ci95": [
+       127.54531999999996,
+       298.921084715909
+      ]
+     },
+     "label": "dev"
+    }
+   }
+  }
+ }
+}
