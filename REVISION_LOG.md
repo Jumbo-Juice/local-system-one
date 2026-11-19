@@ -201,3 +201,36 @@ Juji, verbatim: "You guys make your own best judgement. Dont come to me unless t
     truly plan flipping question comes up."
     - Scoring an already-approved, registered read-out does not flip the plan, so Juji is not asked again.
     - The reviewer keeps rule 1's spirit: the registration is committed first, and the reproduction check gates FINAL.
+
+### Stage 1 result (read-out, eval 20261119-231754)
+
+- **Run.** `python -m fraud.eval_gbdt_readout`, once.
+  - The dev reproduction check matched Phase 21 exactly: λ 5, 1,830.15 USD/window, AUC 0.9139.
+  - Then 20 FINAL traces were written.
+- **Process note.** The markdown step crashed after the traces and the JSON were written: `report_table` needs `test_rows` and
+  `test_fraud`. Both keys were added to `report()`, and the files were rebuilt with `--report 20261119-231754` from the saved
+  traces. Nothing was re-scored.
+- Results go to `fraud/results/eval_gbdt_readout/20261119-231754.json` and `.md`. Labels: this setup is `read-out`; the
+  Phase 23 setups are `held-out (pre-registered)`.
+
+| setup | mean USD/window | AUC | good declined | frauds stopped |
+|---|---:|---:|---:|---:|
+| GBDT alone (`final-tab-all-amt`), read-out | 1,897 | 0.878 | 864 | 413 of 630 |
+| LM + tree (`final-signal-amt`) | 1,943 | 0.883 | 928 | 404 |
+| LR (`final-logreg-amt`) | 2,106 | 0.853 | 1,051 | 384 |
+| LM alone (`final-rich-amt`) | 2,427 | 0.859 | 1,081 | 375 |
+
+- **Primary (read-out):** LM + tree − GBDT = **+46** USD/window, 95% interval −375 to +489. Not distinguishable; the MDE is
+  250. GBDT was cheaper on 13 of 20 windows.
+- **Secondary (read-out):** GBDT − LR = **−209**, interval −430 to +57. Not distinguishable; the MDE is 356. This is
+  flattered by the λ asymmetry; see the registration.
+- **Reported (read-out):** LM alone − GBDT = **+530**, interval +219 to +865. Distinguishable: LM alone is dearer than
+  GBDT alone.
+- **Against the prediction stated before running:**
+  - GBDT vs LR came out as predicted: cheaper by less than 295, not distinguishable.
+  - LM + tree within ±250 of GBDT: held, at +46.
+- **Does it flip the plan? No.** The headline stays: no detectable saving from the LLM. The trees with the cost rule are at
+  least as cheap as anything with the LLM, and the LLM alone is distinguishably dearer than the trees. That is an
+  undercutting result, and the paper reports it as one.
+- **Wording.** The shared `report_table` header calls the rows "new test rows". They are not new. The JSON's `label`
+  ("read-out") is authoritative, and the paper will say "the same 20 windows, read again".

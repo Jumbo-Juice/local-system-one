@@ -89,7 +89,7 @@ def report(eval_id: str, log=print) -> dict:
     out = {"eval": eval_id, "script": "fraud/eval_gbdt_readout.py", "label": LABEL, "prereg": "fraud/prereg/final_gbdt_readout.md", "created": time.strftime("%Y-%m-%dT%H:%M:%S"),
            "others_from": f"fraud/results/eval_final/{FINAL_EVAL}.json", "costs": ev.COSTS.as_dict(), "windows": {w.id: [int(w.rows[0]), int(w.rows[-1])] for w in windows},
            "setups": {s: {**tb.row(v, s != ev.APPROVE_ALL), "label": LABEL if s == SETUP else "held-out (pre-registered)"} for s, v in tr.items()},
-           "verdict": verdict}
+           "test_rows": int(sum(len(w.rows) for w in windows)), "test_fraud": int(sum(t.is_fraud[w.rows].sum() for w in windows)), "verdict": verdict}
     RESULTS.mkdir(parents=True, exist_ok=True)
     (RESULTS / f"{eval_id}.json").write_text(json.dumps(out, indent=1), encoding="utf-8")
     md = tb.report_table({**out, "heldout": {}}, "GBDT alone on FINAL (read-out)", "fraud/eval_gbdt_readout.py")
