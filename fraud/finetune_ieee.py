@@ -6,6 +6,7 @@
     python -m fraud.finetune_ieee --train --full # Phase 12: every fit fraud (--dry-run and --steps take --full too)
     python -m fraud.finetune_ieee --train --full --seed 1     # Phase 21: a second seed; or --passes 2; or --rich for the longer prompt
     python -m fraud.finetune_ieee --train --full --rich --weighted   # Phase 25: each row's loss counts by what a mistake on it costs
+    python -m fraud.finetune_ieee --train --full --rich --noc        # revision Stage 2.3: the rich prompt with no C column (fraud/eval_noc.py)
 
 What it trains (pre-registered in fraud/eval_ieee.py, Phase 11 of fraud/ROADMAP.md). Owner, 2026-11-02: "train on ieee cis, compare
 paysim fine tune with ieee cis fine tune". Everything but the data matches the PaySim adapter 20261102-152745_lora-d1, so the
@@ -100,7 +101,10 @@ def main() -> None:
     ap.add_argument("--rich", action="store_true", help="Phase 21: the longer prompt, ieee_brain.describe_rich")
     ap.add_argument("--signal", action="store_true", help="Phase 21: the longer prompt and the tabular risk score (fraud.lm_signal)")
     ap.add_argument("--weighted", action="store_true", help="Phase 25: each row's loss counts by what a mistake on it costs")
+    ap.add_argument("--noc", action="store_true", help="revision Stage 2.3: with --rich, no C column in the prompt or its context")
     args = ap.parse_args()
+    if args.noc and not args.rich:
+        ap.error("--noc goes with --rich")
 
     t = ieee_data.load()
     rows = training_rows(t, seed=args.seed, full=args.full)
@@ -121,6 +125,8 @@ def main() -> None:
         from . import history
 
         hist = history.load()
+        if args.noc:
+            hist["noc"] = True
         if args.signal:
             from .lm_signal import load
 
@@ -135,7 +141,7 @@ def main() -> None:
     print(f"encoded {len(enc)} examples, {info['reversed']} reversed, {info['prompt_tokens_mean']:.0f} tokens mean / "
           f"{info['prompt_tokens_max']} max ({time.perf_counter() - t_process:.0f} s since start)", flush=True)
 
-    extra = f"{'-seed' + str(args.seed) if args.seed != SEED else ''}{'-pass' + str(args.passes) if args.passes != 1 else ''}{'-rich' if args.rich else ''}{'-signal' if args.signal else ''}{'-weighted' if args.weighted else ''}"
+    extra = f"{'-seed' + str(args.seed) if args.seed != SEED else ''}{'-pass' + str(args.passes) if args.passes != 1 else ''}{'-rich' if args.rich else ''}{'-signal' if args.signal else ''}{'-weighted' if args.weighted else ''}{'-noc' if args.noc else ''}"
     out = MODELS / f"{stamp()}_lora-d1-ieee{'-full' if args.full else ''}{extra}{'-smoke' if args.steps else ''}"
     out.mkdir(parents=True, exist_ok=True)
     deadline = t_process + cap - SAVE_MARGIN_S if args.train else math.inf
@@ -148,7 +154,7 @@ def main() -> None:
         info["weights"] = {"cap_pct": WEIGHT_CAP_PCT, "max": float(weights.max()), "effective_share": float(weights.sum() ** 2 / (weights ** 2).sum() / len(weights))}
         print(json.dumps(info["weights"]), flush=True)
     info.update(train(model, enc, out, steps, deadline=deadline, log=lambda m: print(m, flush=True), lora=LORA, checkpoint_every=every, seed=args.seed, weights=weights))
-    info.update(passes=args.passes, rich=args.rich or args.signal, signal=args.signal, weighted=args.weighted)
+    info.update(passes=args.passes, rich=args.rich or args.signal, signal=args.signal, weighted=args.weighted, noc=args.noc)
     info["process_s"] = time.perf_counter() - t_process
     info["cap_s"] = cap
     info["created"] = time.strftime("%Y-%m-%dT%H:%M:%S")

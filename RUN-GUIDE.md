@@ -722,6 +722,18 @@ option scores kept; about 85 min per order per setup on the RTX 3060 Ti. Scores 
 .venv/Scripts/python -m fraud.eval_order_bias --report
 ```
 
+The paper revision's other dev experiments (Stage 2). Feature parity is CPU only: LR and trees on exactly the rich prompt's
+fields. The customer-line curve uses existing dev scores. The no-C variants take one LoRA retrain (~2 h), then its dev scores
+(~85 min), then LR and trees without C. Results go to `fraud/results/eval_parity/`, `eval_customer_line/` and `eval_noc/`.
+
+```bash
+.venv/Scripts/python -m fraud.eval_parity
+.venv/Scripts/python -m fraud.eval_customer_line
+.venv/Scripts/python -m fraud.finetune_ieee --train --full --rich --noc
+.venv/Scripts/python -m fraud.eval_noc --score fraud/models/<time>_lora-d1-ieee-full-rich-noc
+.venv/Scripts/python -m fraud.eval_noc
+```
+
 Logreg's time per payment, which the final test didn't record (it scored logreg a window at a time). One payment at a time on the
 30 dev windows, not FINAL rows; about a minute, most of it the fit. Needs `python -m fraud.history` first. Result:
 `fraud/results/time_logreg/<time>.json`, read by the final test's console page.

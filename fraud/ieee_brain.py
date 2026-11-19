@@ -20,6 +20,8 @@ CONTEXT = (
     "cards, when a device is recorded (mobile most of all), when a recipient email is given, between hours 4:00 "
     "and 10:00, with match code M4 = M2, with counters C4 or C8 above 0, and when D1 is 0. Most payments are legitimate."
 )
+# The revision's no-C variant (Stage 2.3): CONTEXT without its C clause, and no C column in the state. Asked for by hist["noc"].
+CONTEXT_NOC = CONTEXT.replace(", with counters C4 or C8 above 0", "")
 COUNTERS = ("C1", "C4", "C8", "C13")
 MORE_COUNTERS = ("C2", "C5", "C6", "C9", "C11", "C14")
 DAYS = ("D2", "D3", "D4", "D10", "D15")
@@ -34,8 +36,8 @@ def _value(v: float) -> str:
     return "none" if math.isnan(v) else f"{v:g}"
 
 
-def describe(t: Ieee, i: int) -> str:
-    """The state the model reads: named fields and four counters, no card ids, no V columns."""
+def describe(t: Ieee, i: int, noc: bool = False) -> str:
+    """The state the model reads: named fields and four counters, no card ids, no V columns. noc: no C column."""
     card = " ".join(k for k in (t.text("card4", i), t.text("card6", i)) if k) or "unknown"
     counters = ", ".join(f"{k} {_value(float(t.col_at(k, i)))}" for k in COUNTERS)
     return "\n".join([
@@ -44,7 +46,7 @@ def describe(t: Ieee, i: int) -> str:
         f"Purchaser email: {t.text('P_emaildomain', i) or 'none'}. Recipient email: {t.text('R_emaildomain', i) or 'none'}.",
         f"Device: {t.text('DeviceType', i) or 'none recorded'}.",
         f"Match codes: M4 {t.text('M4', i) or 'none'}, M6 {t.text('M6', i) or 'none'}.",
-        f"Counters: {counters}. D1: {_value(float(t.col_at('D1', i)))}.",
+        f"D1: {_value(float(t.col_at('D1', i)))}." if noc else f"Counters: {counters}. D1: {_value(float(t.col_at('D1', i)))}.",
     ])
 
 
@@ -66,8 +68,9 @@ def describe_rich(t: Ieee, i: int, hist: dict) -> str:
         card = "no earlier payments."
     more = ", ".join(f"{k} {_value(float(t.col_at(k, i)))}" for k in MORE_COUNTERS)
     days = ", ".join(f"{k} {_value(float(t.col_at(k, i)))}" for k in DAYS)
-    lines = [describe(t, i), f"Card history: {card}", f"Address: {count('addr_log_distinct_card')} other cards seen there before. Distance: {_value(float(t.col_at('dist1', i)))}.",
-             f"More counters: {more}. More days: {days}."]
+    noc = bool(hist.get("noc"))
+    lines = [describe(t, i, noc), f"Card history: {card}", f"Address: {count('addr_log_distinct_card')} other cards seen there before. Distance: {_value(float(t.col_at('dist1', i)))}.",
+             f"More days: {days}." if noc else f"More counters: {more}. More days: {days}."]
     if "signal" in hist:
         risk = float(hist["signal"][i])
         if math.isnan(risk):
@@ -77,7 +80,7 @@ def describe_rich(t: Ieee, i: int, hist: dict) -> str:
 
 
 def decision(t: Ieee, i: int, hist: dict | None = None) -> Decision:
-    return Decision(QUESTION, OPTIONS, state=describe_rich(t, i, hist) if hist else describe(t, i), context=CONTEXT)
+    return Decision(QUESTION, OPTIONS, state=describe_rich(t, i, hist) if hist else describe(t, i), context=CONTEXT_NOC if hist and hist.get("noc") else CONTEXT)
 
 
 def request(t: Ieee, i: int, orders: str, hist: dict | None = None) -> dict:

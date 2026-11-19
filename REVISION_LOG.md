@@ -294,3 +294,16 @@ Juji, verbatim: "You guys make your own best judgement. Dont come to me unless t
     declined and fewer frauds stopped, for the same or more dollars.
 - **Implementation choice:** the policy (p, λ) is fixed across prices, as on FINAL. The figure (frauds stopped against good
   customers declined, with cost annotated) is built in Stage 4 from this JSON.
+
+### 2.3 No-C variants: registration
+
+- `fraud/eval_noc.py` (its docstring is the registration), the `--noc` flag in `fraud/finetune_ieee.py`, and `hist["noc"]` in
+  `fraud/ieee_brain.py`. All committed before the retrain and before any no-C model was fitted. The default prompts are unchanged.
+- **Assumed:** "without the C counter columns" means no C column anywhere.
+  - The revision prompt names C1/C4/C8/C13, the plain prompt's four. The rich prompt that LM alone reads also shows C2, C5,
+    C6, C9, C11 and C14, and its context block cites "counters C4 or C8".
+  - Leaving those in would make the LM the only no-C setup still reading C. So the retrain removes all ten, and the C clause
+    of the context. LR and trees drop C1-C14 and their missing flags.
+- LM + tree gets no no-C variant: that would be a second retrain, and the prompt allows one. Logged as a gap.
+- Every setup here uses p on dev30 and λ on all 118 dev windows (as parity), so LR's with-C number differs slightly from the
+  paper's dev30-λ LR.
