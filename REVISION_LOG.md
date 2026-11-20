@@ -361,6 +361,10 @@ Juji, verbatim: "You guys make your own best judgement. Dont come to me unless t
   - The order the setups were scored in (rev) was, if anything, slightly the dearer one, so the reported LM costs are not
     flattered by order.
   - No verdict changes.
+- **Note (paper-driver, Stage 2 round 1).** The registration docstring says "committed before any row was scored here". In
+  fact the 32-row dev smoke test (rev reproduction, and 1 of 32 top answers changing in fwd) ran before registration commit
+  d0a9f1e and is logged in it. It was dev-only and a pipeline check, so no rule breaks, but the docstring's claim is
+  inaccurate. The committed docstring is left unchanged.
 - **Against the prediction stated before running:** "the top answer is decline for nearly every row" was wrong. It is
   approve, which is the IEEE-CIS adapters' behaviour, unlike PaySim. The flip rate was small, as predicted. The cost gap was
   within ±150, as predicted.
@@ -393,6 +397,11 @@ Juji, verbatim: "You guys make your own best judgement. Dont come to me unless t
     its tie with LR depends partly on columns whose timing Phase 17 could not clear.
   - This is one retrain on dev, and +140 is just above the ~±100 seed-noise floor.
   - Trees stay cheapest either way.
+- **No-C scope.**
+  - Not run without C: LM + tree. It would need a second retrain, and the prompt allows one.
+  - Left out: LR with two fixed cut-offs, and LR + rule + customer line. They would reuse `noc-logreg`'s scores with a
+    different policy, so they add no new model. The ranking question is about the three models.
+  - Stage 4 lists all three as gaps of the no-C check.
 - **Does it flip the plan? Worker's judgement: no.**
   - The swap is LM alone and LR, from a tie to LM dearer. That strengthens "no detectable saving from the LLM" instead of
     overturning it.
@@ -401,3 +410,38 @@ Juji, verbatim: "You guys make your own best judgement. Dont come to me unless t
   - "Every setup gets dearer, trees and LM alone more than LR": held.
   - "The ranking trees < LR ≤ LM alone holds": with C, LM alone was 5 USD cheaper than LR, a tie. Without C, the predicted
     order held strictly.
+
+### Stage 2 verdict and carry-forward
+
+- **Stage 2, round 1 (2026-11-20): APPROVE WITH FIXES.**
+  - The reviewer verified:
+    - every registration commit precedes its results;
+    - no FINAL contact (only hdev traces);
+    - exactly one LM retrain, with all 33 hyperparameter and data keys matching the rich adapter;
+    - the parity and no-C feature lists, against the code;
+    - all labels `dev`;
+    - two numbers recomputed from traces.
+  - **Rulings:**
+    - the no-C ranking change is **not plan-flipping**: trees stay cheapest, and LM alone vs LR goes from a tie to LM dearer,
+      which strengthens the headline;
+    - parity is **not plan-flipping**: it answers "model or information" in the LM's favour, and the headline compares with
+      the all-column baselines.
+    - Neither goes to Juji under the standing decision.
+  - Fixes, made in this commit: the 2.1 smoke-test note, the 2.3 scope note, and this carry-forward list.
+- **Carry forward to Stage 4.** The paper must:
+  - (a) state that the dev ranking changed without C. With C: trees < LM alone ≈ LR. Without C: trees < LR < LM alone, with
+    LM alone − LR +140 (17 to 259). LM alone's tie with LR depends on C columns whose timing Phase 17 could not clear, and +140
+    is only just above the ~±100 noise floor;
+  - (b) report parity as evidence that the LM's gap was mostly information, and as a result in the LM's favour. LM alone −
+    parity LR: −215 (−353 to −73). LM alone − parity trees: +77, not distinguishable;
+  - (c) report order bias as small but measurable for LM alone: fwd − rev −43 (−88 to −6); averaged −23, not
+    distinguishable. Say the setups were scored A decline / B review / C approve, with the forward order as the check;
+  - (d) note that Stage 2's LR uses λ on 118 windows (2,117), against the paper's dev30-λ LR (2,125);
+  - (e) state that every dev comparison involving an LM setup is flattered by λ on 118 windows;
+  - (f) label every one of these numbers `dev`;
+  - (g) list the no-C gaps: LM + tree; LR with two cut-offs; LR + rule + customer line.
+- **Stage 3 constraints:**
+  - no new scoring of FINAL;
+  - read-outs only from saved traces 20261104-090649 and 20261119-231754;
+  - the registered percentile intervals stay the headline;
+  - every analysis is labelled `read-out` in its JSON.
