@@ -62,6 +62,10 @@ personal Gmail address. The refs are `main`, `paper-revision`, `origin/claude/re
 - **Publish:** force-pushed `main` (now the revision) and the tags `fraud-phase-0..5`, and deleted the stale branch
   `claude/remove-coauthored-by-3y241l` on GitHub. It was never merged.
 
+**Checked after the push:**
+- A fresh clone from GitHub has 258 commits and no student ID, local path or Gmail address anywhere.
+- GitHub still serves old commits by their old IDs (for example `ca1e107`, HTTP 200 from the API).
+
 **After publishing:**
 - The old commits stay reachable on GitHub by their old hashes until GitHub garbage-collects them. GitHub Support can be
   asked to purge cached views.

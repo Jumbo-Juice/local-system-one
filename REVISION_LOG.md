@@ -736,3 +736,12 @@ floor used is about ±100 USD/window.
   from 259 to 258, because the two GitHub "Initial commit"s now coincide.
 - **Commit IDs.** From here on, IDs are new. Every older ID in this log is an old ID: look it up in
   `docs/commit-map.txt`. For example, the Stage 5 commits 28fbd03 → 86fe05d and 49ab841 → 9580ac9.
+- **Published (2026-11-20).**
+  - Juji ran the three pushes; this session has no GitHub login.
+  - `git ls-remote` gives `main` = 82c89b9, the six rewritten tags, and no stale branch.
+  - A fresh mirror clone from GitHub was scanned: 258 commits, 0 student IDs, 0 local paths and 0 Gmail addresses in any
+    blob, message or author line. Every author email is the no-reply address.
+  - **Not purged:** GitHub still serves the old commits by their old IDs, for example ca1e107 and d9a3dac (API HTTP 200).
+    Removing them needs a GitHub Support request (Juji's action).
+  - The repo's `user.email` is now set to the no-reply address, so new commits stay clean.
+  - Commits after 82c89b9 reach GitHub only when Juji pushes.
