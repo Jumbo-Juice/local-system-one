@@ -2,7 +2,7 @@
 
 For a new session. Build the final presentation of this project as a **reveal.js** deck with **polished animations**, **as dynamic as possible**, that also **exports to a static PDF** with nothing lost. It's a separate deck from the midterm proposal, and it builds on that deck's content.
 
-Written 2026-11-04, after Phase 25. Repo: `<home>\Desktop\local-system-one` on the NUC, branch `main`.
+Written 2026-11-04, after Phase 25. Repo: `local-system-one` on the NUC, branch `main`.
 
 ## Start here: ask the owner first
 

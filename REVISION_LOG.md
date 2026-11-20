@@ -686,3 +686,43 @@ floor used is about ±100 USD/window.
 - **The owner's personal email** is in the author and committer fields of all 193 commits.
 - Nothing in the tree or history was changed for these: removing them from history rewrites every commit hash, which is
   Juji's decision.
+
+### Stage 5 verdict
+
+- **Stage 5, round 1 (2026-11-20): ESCALATE** (publishing is Juji's decision).
+- The reviewer verified:
+  - nothing pushed (`paper-revision` has no upstream);
+  - no raw data files in any commit;
+  - no secrets;
+  - the environment versions and lockfile;
+  - footnote 1 and the PDF.
+- **New facts:**
+  - **The GitHub repo `Jumbo-Juice/local-system-one` is already public**: the unauthenticated GitHub API returns 200,
+    `"visibility": "public"`, 0 forks, 0 stars. `origin/main` (169 commits) already holds the co-authors' student IDs and
+    the owner's Gmail address in every commit, as do the remote branch `origin/claude/remove-coauthored-by-3y241l` and
+    probably the tags `fraud-phase-0..5`.
+  - `fraud/results/prompt_example.json` and Appendix H hold one real (anonymised) IEEE-CIS fit row, as the contract
+    requires.
+- **Fixes to make after Juji answers:**
+  - footnote "Code and data" → "Code and results";
+  - `docs/public-release.md`:
+    - list itself as a file that contains local paths;
+    - correct the counts: 194 commits on the branch, 257 across all refs;
+    - name the prompt-example row;
+    - record that `origin/main` is already public.
+- **Juji's answers (2026-11-20, AskUserQuestion):**
+  1. **"Clean, then publish (Recommended)":**
+     - remove the student IDs and local paths from the tree and from history;
+     - rewrite the commit email to the GitHub no-reply address;
+     - keep the dates;
+     - add an old-to-new hash map;
+     - force-push to the same repo.
+     Every rewrite or push is repeated to Juji for a final yes before it runs.
+  2. **"Keep the real row (Recommended)":** the IEEE-CIS fit row stays in the prompt appendix.
+- **Done in this commit:**
+  - footnote "Code and data:" → "Code and results:";
+  - `docs/public-release.md` rewritten: the repo is already public, the counts are corrected (194 / 257), the example row
+    is named, and the decision is recorded;
+  - student IDs removed from the title slide and the plan doc (names kept);
+  - local paths redacted in the two bench JSONs and `slides-handoff.md`.
+  - Tests pass and the PDF is rebuilt.
