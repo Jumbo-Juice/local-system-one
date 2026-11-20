@@ -734,6 +734,21 @@ fields. The customer-line curve uses existing dev scores. The no-C variants take
 .venv/Scripts/python -m fraud.eval_noc
 ```
 
+The paper revision's analyses of the saved FINAL outputs (Stage 3). There are no model runs and nothing new is scored. It
+covers:
+- MDEs, block and BCa bootstraps;
+- ROC-AUC and PR-AUC intervals;
+- the AUC-vs-cost diagnostic;
+- the 27-cell price grid, with λ re-picked on dev;
+- the proxy-group disparity check;
+- seed noise.
+
+It takes about 30 min on the CPU. Results go to `fraud/results/eval_readouts/<eval id>.json`.
+
+```bash
+.venv/Scripts/python -m fraud.eval_readouts
+```
+
 Logreg's time per payment, which the final test didn't record (it scored logreg a window at a time). One payment at a time on the
 30 dev windows, not FINAL rows; about a minute, most of it the fit. Needs `python -m fraud.history` first. Result:
 `fraud/results/time_logreg/<time>.json`, read by the final test's console page.

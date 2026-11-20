@@ -445,3 +445,14 @@ Juji, verbatim: "You guys make your own best judgement. Dont come to me unless t
   - read-outs only from saved traces 20261104-090649 and 20261119-231754;
   - the registered percentile intervals stay the headline;
   - every analysis is labelled `read-out` in its JSON.
+
+## Stage 3: analyses on existing outputs
+
+- **Registration.** `fraud/eval_readouts.py` (its docstring is the registration), committed before running.
+- It reads only the saved FINAL traces, from 20261104-090649 and the read-out 20261119-231754, plus dev scores for the
+  price grid's λ.
+- **Assumed:** the price grid's customer price is a charged cost per good customer declined (`Costs.decline_flat`, as in
+  Phase 16's stress), which the rule therefore also prices.
+  - Reason: the grid varies assumed prices, and a price that is never charged would not be a price.
+  - The decision-only customer-line setup is left out of the grid, because the grid's customer price replaces its knob.
+- **Check built in:** the base cell (10%, 10 USD, 0) must reproduce every setup's saved FINAL cost exactly, or the run stops.
