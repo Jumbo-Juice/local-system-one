@@ -364,3 +364,40 @@ Juji, verbatim: "You guys make your own best judgement. Dont come to me unless t
 - **Against the prediction stated before running:** "the top answer is decline for nearly every row" was wrong. It is
   approve, which is the IEEE-CIS adapters' behaviour, unlike PaySim. The flip rate was small, as predicted. The cost gap was
   within ±150, as predicted.
+
+### 2.3 No-C variants (dev), eval 20261120-074245
+
+- **One LM retrain:** `fraud/models/20261120-045629_lora-d1-ieee-full-rich-noc` (sha256 73f809b8…).
+  - The same rows (sha e6d057cc…), steps (5,994), learning rate, seed and LoRA as the rich adapter. Its manifest differs only
+    in the prompt-length, loss and timing fields.
+  - Final training loss 0.382, against the rich adapter's 0.313.
+  - 101 min to train, plus 65 min to score dev.
+- The no-C trees (`parity_noc-trees.pkl`) took 918 s to fit. All setups use p on dev30 and λ on 118.
+
+| setup | with C | without C | without − with (95% CI) |
+|---|---:|---:|---|
+| trees | 1,830 (AUC .914) | 2,091 (.898) | +261 (176 to 351) |
+| LM alone | 2,112 (.893) | 2,423 (.858) | **+311 (163 to 437)** |
+| LR | 2,117 (.888) | 2,284 (.874) | +167 (53 to 267) |
+
+- **The ranking by dev cost changed.**
+  - With C: trees < LM alone < LR. LM alone and LR are tied: 5 USD apart, and Phase 21 found them indistinguishable.
+  - Without C: trees < LR < LM alone.
+  - Without C, all three gaps are distinguishable:
+    - trees − LR: −193 (−312 to −64);
+    - LM alone − LR: **+140 (17 to 259)**;
+    - LM alone − trees: +332 (181 to 470).
+- **Reading:**
+  - The C counters help every setup. The fine-tuned LM leans on them most: it loses 311 without them, LR 167.
+  - Without C, the LM is distinguishably dearer than LR, where with C it tied. So the C-column threat bears hardest on the LM:
+    its tie with LR depends partly on columns whose timing Phase 17 could not clear.
+  - This is one retrain on dev, and +140 is just above the ~±100 seed-noise floor.
+  - Trees stay cheapest either way.
+- **Does it flip the plan? Worker's judgement: no.**
+  - The swap is LM alone and LR, from a tie to LM dearer. That strengthens "no detectable saving from the LLM" instead of
+    overturning it.
+  - Put to paper-driver explicitly at the Stage 2 gate.
+- **Against the prediction stated before running:**
+  - "Every setup gets dearer, trees and LM alone more than LR": held.
+  - "The ranking trees < LR ≤ LM alone holds": with C, LM alone was 5 USD cheaper than LR, a tie. Without C, the predicted
+    order held strictly.

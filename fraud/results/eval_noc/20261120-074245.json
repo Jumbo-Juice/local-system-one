@@ -1,0 +1,206 @@
+{
+ "eval": "20261120-074245",
+ "script": "fraud/eval_noc.py",
+ "label": "dev",
+ "created": "2026-11-20T07:44:01",
+ "costs": {
+  "friction_rate": 0.1,
+  "friction_min": 1.0,
+  "review_fee": 10.0,
+  "review_share": 0.05
+ },
+ "windows": 88,
+ "lambda": "p on dev30, lambda on all 118 dev windows, for every setup here",
+ "setups": {
+  "noc-logreg": {
+   "mean_cost": 2283.619715909091,
+   "auc": 0.8738386680653246,
+   "lambda": 10,
+   "lambda_on_30": 10,
+   "frauds": 3409,
+   "frauds_stopped": 2240,
+   "fraud_usd": 584340.81,
+   "fraud_usd_stopped": 451406.13,
+   "good_customers_declined": 4543,
+   "good_reviewed": 2705,
+   "label": "dev"
+  },
+  "noc-trees": {
+   "mean_cost": 2091.0657238636363,
+   "auc": 0.8979033755504143,
+   "lambda": 5,
+   "lambda_on_30": 10,
+   "frauds": 3409,
+   "frauds_stopped": 2351,
+   "fraud_usd": 584340.81,
+   "fraud_usd_stopped": 468171.15,
+   "good_customers_declined": 3782,
+   "good_reviewed": 3360,
+   "label": "dev"
+  },
+  "lm-rich-noc": {
+   "mean_cost": 2423.2986602272726,
+   "auc": 0.8578193890760456,
+   "lambda": 10,
+   "lambda_on_30": 10,
+   "frauds": 3409,
+   "frauds_stopped": 2102,
+   "fraud_usd": 584340.81,
+   "fraud_usd_stopped": 450465.8,
+   "good_customers_declined": 5930,
+   "good_reviewed": 2657,
+   "label": "dev"
+  },
+  "lm-rich": {
+   "mean_cost": 2111.9473170454544,
+   "auc": 0.893205826837086,
+   "lambda": 5,
+   "lambda_on_30": 10,
+   "frauds": 3409,
+   "frauds_stopped": 2324,
+   "fraud_usd": 584340.81,
+   "fraud_usd_stopped": 465486.09,
+   "good_customers_declined": 3459,
+   "good_reviewed": 3362,
+   "label": "dev"
+  },
+  "lm-signal": {
+   "mean_cost": 1919.987993181818,
+   "auc": 0.9102332785736127,
+   "lambda": 10,
+   "lambda_on_30": 10,
+   "frauds": 3409,
+   "frauds_stopped": 2410,
+   "fraud_usd": 584340.81,
+   "fraud_usd_stopped": 475508.34,
+   "good_customers_declined": 3241,
+   "good_reviewed": 2613,
+   "label": "dev"
+  },
+  "tab-logreg": {
+   "mean_cost": 2117.0365954545455,
+   "auc": 0.888189740235034,
+   "lambda": 5,
+   "lambda_on_30": 10,
+   "frauds": 3409,
+   "frauds_stopped": 2379,
+   "fraud_usd": 584340.81,
+   "fraud_usd_stopped": 469278.68,
+   "good_customers_declined": 3743,
+   "good_reviewed": 3420,
+   "label": "dev"
+  },
+  "tab-all": {
+   "mean_cost": 1830.1517238636363,
+   "auc": 0.9138783990062459,
+   "lambda": 5,
+   "lambda_on_30": 5,
+   "frauds": 3409,
+   "frauds_stopped": 2445,
+   "fraud_usd": 584340.81,
+   "fraud_usd_stopped": 484173.29,
+   "good_customers_declined": 3003,
+   "good_reviewed": 3157,
+   "label": "dev"
+  }
+ },
+ "comparisons": [
+  {
+   "cheaper": 20,
+   "dearer": 68,
+   "ties": 0,
+   "sign_p": 2.770265657008097e-07,
+   "mean_diff": 166.58312045454545,
+   "mean_diff_ci95": [
+    53.41273778409095,
+    266.77937249999997
+   ],
+   "a": "noc-logreg",
+   "b": "tab-logreg",
+   "label": "dev"
+  },
+  {
+   "cheaper": 23,
+   "dearer": 65,
+   "ties": 0,
+   "sign_p": 8.50110761369032e-06,
+   "mean_diff": 260.914,
+   "mean_diff_ci95": [
+    176.0658383806818,
+    350.9016173011363
+   ],
+   "a": "noc-trees",
+   "b": "tab-all",
+   "label": "dev"
+  },
+  {
+   "cheaper": 16,
+   "dearer": 72,
+   "ties": 0,
+   "sign_p": 1.1915233414863414e-09,
+   "mean_diff": 311.35134318181815,
+   "mean_diff_ci95": [
+    162.9927764488636,
+    437.0181743181817
+   ],
+   "a": "lm-rich-noc",
+   "b": "lm-rich",
+   "label": "dev"
+  },
+  {
+   "cheaper": 64,
+   "dearer": 24,
+   "ties": 0,
+   "sign_p": 2.3726590787439643e-05,
+   "mean_diff": -192.55399204545458,
+   "mean_diff_ci95": [
+    -312.18538840909093,
+    -64.31461460227284
+   ],
+   "a": "noc-trees",
+   "b": "noc-logreg",
+   "label": "dev"
+  },
+  {
+   "cheaper": 31,
+   "dearer": 57,
+   "ties": 0,
+   "sign_p": 0.0073434087237081265,
+   "mean_diff": 139.6789443181818,
+   "mean_diff_ci95": [
+    17.167843494318145,
+    258.7208371306818
+   ],
+   "a": "lm-rich-noc",
+   "b": "noc-logreg",
+   "label": "dev"
+  },
+  {
+   "cheaper": 20,
+   "dearer": 68,
+   "ties": 0,
+   "sign_p": 2.770265657008097e-07,
+   "mean_diff": 332.2329363636364,
+   "mean_diff_ci95": [
+    181.22829301136363,
+    469.9898251136364
+   ],
+   "a": "lm-rich-noc",
+   "b": "noc-trees",
+   "label": "dev"
+  }
+ ],
+ "ranking": {
+  "with_c": [
+   "tab-all",
+   "lm-rich",
+   "tab-logreg"
+  ],
+  "without_c": [
+   "noc-trees",
+   "noc-logreg",
+   "lm-rich-noc"
+  ],
+  "changed": true
+ }
+}
