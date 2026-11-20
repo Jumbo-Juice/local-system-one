@@ -481,6 +481,8 @@ be ruled out".
 **3.2 Robustness (read-out).**
 - Block bootstraps (2 and 4) and BCa agree with the registered percentile intervals on every verdict except one: GBDT − LR
   with blocks of 4 gives −349 to −1, which just excludes zero. Percentile, block-2 and BCa all include zero.
+- That block-4 bound sits at the Monte Carlo margin: another seed gives an upper bound of about +1. The paper reports it as
+  borderline, not as distinguishable.
 - The headline stays the registered percentile: not distinguishable. The block-4 result is reported as such.
 - LM alone − LM + tree is distinguishable under every method: 103 to 972; BCa 154 to 1,088.
 
@@ -503,8 +505,10 @@ Base rate 3.15%. LM alone's PR-AUC is below LR's even though its ROC-AUC is abov
   - The gap is in all three parts, mostly missed fraud.
 - **The largest frauds by amount are not the cause.**
   - The two largest FINAL frauds (2,480 and 1,651 USD) were reviewed by both setups. Removing them leaves +321 (−74 to 774).
-  - The 1 and 2 frauds LM alone priced worst against LR (1,504 and 1,045 USD) were approved by LM alone and reviewed by LR.
-    Removing them leaves +246 (−107 to 666) and +194 (−151 to 607).
+  - **Post-hoc, added after the registered result; not registered.** The 1 and 2 frauds LM alone priced worst against LR
+    (1,504 and 1,045 USD) were approved by LM alone and reviewed by LR. Removing them leaves +246 (−107 to 666) and +194
+    (−151 to 607).
+  - The registered result is the by-amount removal: +321, unchanged.
   - So the gap is spread across many payments, not one or two.
 - **Reliability tables and amount bands** are in the JSON, for the figure. The likely mechanism (Inferred): PR-AUC shows the
   LM's top ranks are worse, so the review budget and declines are spent on the wrong payments, and the costliest misses are
@@ -515,18 +519,49 @@ Base rate 3.15%. LM alone's PR-AUC is below LR's even though its ROC-AUC is abov
 - In those 3 cells, LM + tree minus GBDT is −175 (5%, 10, 30), −26 (20%, 5, 10) and −48 (20%, 5, 30). The registration
   computed no interval for these, so they are mean gaps only. (Corrected: an earlier line called them "within noise",
   which was not checked.)
-- The cheapest setup is distinguishable from LR in **7 of 27** cells, all of them GBDT, at review fees of 5 or 10.
-- **No cell has an LM setup distinguishably cheaper than LR.**
+- The cheapest setup is distinguishable from LR in **6 of 27** cells, all of them GBDT: (5%, 5, 0), (5%, 5, 10), (5%, 10, 10),
+  (10%, 5, 0), (10%, 5, 10) and (10%, 10, 10). (Corrected from "7" by paper-driver.)
+- In the 3 cells where LM + tree is cheapest, it is not distinguishable from LR: −319, −178, −74, with intervals that
+  include zero.
+- LM setups were not compared with LR by interval in the other 24 cells. That comparison was not registered, so no claim is
+  made there.
+- The d8a3246 commit message's "no LM cell beats LR" is superseded by this.
 - This replaces the "+7 USD tie" sentence.
 
 **3.6 Disparity check on proxies (read-out, not a fairness audit).**
 - The groups differ far more than the setups do:
-  - frauds missed are highest on debit cards (41–53%), on payments with no device recorded (49–61%) and on yahoo.com
-    (52–64%), for every setup;
-  - good customers declined are highest on credit cards (9–14%) and on mobile (15–20%) or desktop (8–17%) devices.
-- Within a group, setups differ by a few points. Notable: LM alone declines 17.1% of good desktop customers, against LR's
-  10.4%.
+  - frauds missed are highest on debit cards (41–56%), on payments with no device recorded (49–64%) and on yahoo.com
+    (52–65%), with every setup included;
+  - good customers declined are highest on credit cards (9–14%) and on mobile (15–20%) or desktop (8–17%) devices,
+    excluding the customer-line setup. That setup declines only 2–5% of good customers in those groups (credit 3.1%,
+    mobile 5.1%, desktop 2.2%) and misses more fraud.
+- Among the setups without the customer line, the groups differ more than the setups do. The customer line moves the
+  good-declined rate by far more than any model choice. Notable: LM alone declines 17.1% of good desktop customers,
+  against LR's 10.4%.
 - Small groups have wide intervals: American Express has 5 frauds; aol.com has 15.
 
 **3.7 Seed noise (dev).** Two seeds of the same LM recipe differ by −102 USD/window (−205 to 6), from Phase 21. The noise
 floor used is about ±100 USD/window.
+
+### Stage 3 verdict and carry-forward
+
+- **Stage 3, round 1 (2026-11-20): APPROVE WITH FIXES.**
+  - The reviewer verified:
+    - registration before results, and no FINAL scoring (120 FINAL traces, unchanged);
+    - the registered intervals, unchanged;
+    - the base-cell reproduction;
+    - the labels.
+  - It recomputed independently: LM alone − LR, MDEs, AUC and PR-AUC, cost by action, and the largest-gap frauds.
+  - Fixes, all made in this commit (nothing recomputed): 7 → 6 grid cells; the unsupported "no LM cell beats LR" replaced; the
+    largest-gap variant flagged as post-hoc; the block-4 bound called borderline; the disparity ranges corrected.
+  - Not plan-flipping.
+- **Carry forward to Stage 4.** The paper must:
+  - use the MDE wording: "effects below about 520 USD/window (LM + tree vs LR) cannot be ruled out"; about 600 for LM + tree
+    vs GBDT; about 630 for LM alone vs LR;
+  - keep the registered percentile intervals as the headline; block-4 GBDT − LR is borderline;
+  - let the price grid replace the "+7 USD tie" sentence. The grid's customer price is a charged cost, not the
+    customer-line knob. Make no claim about LM vs LR in cells where it wasn't tested;
+  - label the largest-gap removal post-hoc and unregistered;
+  - call the disparity section a check on proxies, not a fairness audit;
+  - use a seed-noise floor of ±100 USD/window (dev);
+  - pass every Stage 3 number through the JSON → `build_data.py` → `data.json`, with its label.
