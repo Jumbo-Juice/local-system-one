@@ -626,3 +626,37 @@ floor used is about ±100 USD/window.
   results files.
 - **The PDF file name** (`transforming-llms-fraud.pdf`) predates the new title. It is kept because earlier plan documents
   link to it.
+
+### Stage 4 verdict and fixes
+
+- **Stage 4, round 1 (2026-11-20): APPROVE WITH FIXES.**
+  - The reviewer read all 10 pages and confirmed `data.json` equals `render()`.
+  - It traced 9 numbers to the source JSONs: 1,897, 524, .346, +140, 24 of 27, 825, 3,853, 0.98, 56.
+  - It found no change to `fraud/results` other than the fit-row prompt example.
+  - It confirmed every settled decision and every carry-forward is present.
+- **Fixes, all made in this commit:**
+  - **Abstract:**
+    - "no change of model was distinguishable" was false: LM alone − LM + tree is +484 and distinguishable, and LM alone −
+      GBDT +530. It now reads "no model was distinguishably cheaper than logistic regression".
+    - The 825 is said to come from earlier test windows.
+    - The 524 is labelled read-out.
+    - "tied boosted trees" became "not distinguishable from boosted trees".
+  - **VI-A:** "several times larger than any difference between models" was false.
+    - It is replaced by a comparison through `v()`: the rule's 825 against the largest model difference from LR on the
+      final test, with the different windows stated.
+    - The mechanism is now marked as inferred.
+  - **Conclusion:** reordered to rule (earlier test windows, the customer line as a trade-off), then the held-out null,
+    then the GBDT read-out, then dev parity, stated as "not distinguishable … mostly information".
+  - **V-E and VI-C:** "tied" and "as well as" became "not distinguishable", with the note that this is not evidence of
+    equality.
+  - **III-B:** the three labels now cover final-test and revision numbers. Numbers from earlier test windows are marked as
+    such; V-B, V-F and VII-A already say so.
+  - **Appendix preamble:** the analyses were registered in their scripts. Only the Appendix A percentile intervals belong
+    to the locked test.
+  - **MDE constants:** 2.8, 80% and 5% now pass through `paper/revision_manual.json` (with its source) into `data.json`.
+  - **Fig. 2 (craft):** the LM + tree 60 USD note is dropped, so it no longer sits on the LR curve.
+- **Rulings, settled from now on:**
+  - The main-text length is accepted, without padding. It is listed in the Stage 6 not-implemented list.
+  - Footnote 1 as a repo link is deferred to Stage 5, and required there.
+  - The PDF file name is kept.
+  - The Discussion section is accepted.

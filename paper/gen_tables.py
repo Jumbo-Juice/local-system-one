@@ -135,7 +135,7 @@ def tradeoff() -> str:
     for k, name, color, dash, square, shift in (("logreg", "LR", "luma(60)", "solid", "false", "3pt"), ("lm-signal", "LM + tree", 'rgb("#2f6db5")', "dashed", "true", "-9pt")):
         pts = []
         for i in range(13):
-            note = f'[{v(f"rev.custline.{k}.points.{i}.price")} USD: {v(f"rev.custline.{k}.points.{i}.cost|int")}]' if i in (0, 2, 12) else "none"
+            note = f'[{v(f"rev.custline.{k}.points.{i}.price")} USD: {v(f"rev.custline.{k}.points.{i}.cost|int")}]' if i in (0, 2) or (i == 12 and k == "logreg") else "none"
             pts.append(f'(x: float({v(f"rev.custline.{k}.points.{i}.declined")[1:]}), y: float({v(f"rev.custline.{k}.points.{i}.stopped")[1:]}), note: {note})')
         series.append(f"(name: [{name}], color: {color}, dash: \"{dash}\", square: {square}, shift: {shift}, pts: ({', '.join(pts)}))")
     return f"""#let fig-tradeoff = [#figure(

@@ -1,9 +1,12 @@
 {
  "_note": "Prose-only numbers for the revised paper that no results JSON holds, each with its source. Everything else comes from fraud/results/.",
  "protocol": {
-  "_source": "REVISION_LOG.md Stage 0 section 2 (fraud/eval_ieee.py features_all, counted on the fit rows); fraud/tabular.py dev30 (30 windows) and heldout_dev (88 chains), so lambda on dev30 + held-out = 118 (fraud/eval_tabular.py lambda_on).",
+  "_source": "REVISION_LOG.md Stage 0 section 2 (fraud/eval_ieee.py features_all, counted on the fit rows); fraud/tabular.py dev30 (30 windows) and heldout_dev (88 chains), so lambda on dev30 + held-out = 118 (fraud/eval_tabular.py lambda_on). MDE constants: 2.8 = z(0.975) + z(0.80) = 1.96 + 0.84, i.e. 80% power for a two-sided test at 5% (normal approximation); fraud/eval_readouts.py mde() and fraud/eval_gbdt_readout.py use the same 2.8.",
   "lr_features": 583,
   "dev_windows_30": 30,
-  "dev_windows_all": 118
+  "dev_windows_all": 118,
+  "mde_factor": 2.8,
+  "mde_power_pct": 80,
+  "mde_alpha_pct": 5
  }
 }
