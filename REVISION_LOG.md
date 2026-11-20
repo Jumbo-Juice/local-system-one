@@ -845,6 +845,7 @@ So the GBDT read-out was used (Stage 1 fallback).
 | LM + tree | 1,943 (1,651–2,338) | −163 (−462 to 238), n.d. | 524 |
 | LM alone | 2,427 (2,023–2,896) | +321 (−74 to 774), n.d. | 626 |
 | LM + tree + customer line | 1,992 (1,683–2,383) | −115 (−391 to 273), n.d. | 498 |
+| LM alone + customer line | 2,417 (2,030–2,867) | +311 (−75 to 746), n.d. | — (not a registered comparison; no MDE computed) |
 | approve all | 5,233 (4,312–6,121) | | |
 | GBDT alone (read-out) | 1,897 (1,640–2,212) | −209 (−430 to 57), n.d. | 357 |
 
@@ -898,3 +899,24 @@ So the GBDT read-out was used (Stage 1 fallback).
      it.
    - So does the local branch `claude/remove-coauthored-by-3y241l`, rewritten and kept only locally.
    - `CLAUDE.md` shows as modified, but only its line endings changed. Left untouched.
+
+### Stage 6 verdict
+
+paper-driver: **APPROVE WITH FIXES**.
+- It checked:
+  - every number in the report against `data.json`, and the flip rates against the results JSON;
+  - the 8 label fixes in the PDF;
+  - that the build is identical;
+  - the settled terms;
+  - the not-implemented list.
+- **Fixes, all made in this commit:**
+  - **Labels.** Registered final-test numbers still lacked the label word. Added:
+    - V-D: "registered (held-out) result", and ", held-out" on the primary comparison;
+    - V-F: "(held-out)" after LR's 2,106, and after "+321 on the final test";
+    - Fig. 3: "registered (held-out) results".
+  - **Appendix preamble** was false after the Stage 6 fix. It now says that the registered percentile intervals
+    (Appendix A, and the LM alone − LR difference repeated in Appendix B) belong to the locked test, and that numbers are
+    labelled dev, held-out or read-out.
+  - **Final-report table:** added the registered setup LM alone + customer line: 2,417 (2,030–2,867), +311 (−75 to
+    746), n.d.
+- No further review is needed. Stage 6 is the last stage.
