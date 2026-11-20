@@ -511,7 +511,10 @@ Base rate 3.15%. LM alone's PR-AUC is below LR's even though its ROC-AUC is abov
   mid-to-large frauds it approves outright.
 
 **3.5 Price grid (read-out, 27 cells, λ re-picked on dev per cell).**
-- GBDT alone is cheapest in **24 of 27** cells and LM + tree in 3 (all within noise of GBDT).
+- GBDT alone is cheapest in **24 of 27** cells and LM + tree in 3.
+- In those 3 cells, LM + tree minus GBDT is −175 (5%, 10, 30), −26 (20%, 5, 10) and −48 (20%, 5, 30). The registration
+  computed no interval for these, so they are mean gaps only. (Corrected: an earlier line called them "within noise",
+  which was not checked.)
 - The cheapest setup is distinguishable from LR in **7 of 27** cells, all of them GBDT, at review fees of 5 or 10.
 - **No cell has an LM setup distinguishably cheaper than LR.**
 - This replaces the "+7 USD tie" sentence.
