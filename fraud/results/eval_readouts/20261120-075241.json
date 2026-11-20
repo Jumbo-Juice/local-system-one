@@ -1,0 +1,3556 @@
+{
+ "eval": "20261120-075241",
+ "script": "fraud/eval_readouts.py",
+ "label": "read-out",
+ "created": "2026-11-20T07:52:41",
+ "sources": {
+  "phase23": "20261104-090649",
+  "gbdt_readout": "20261119-231754"
+ },
+ "names": {
+  "final-logreg-amt": "LR",
+  "final-signal-amt": "LM + tree",
+  "final-signal-cust": "LM + tree + customer line",
+  "final-rich-amt": "LM alone",
+  "final-tab-all-amt": "GBDT alone",
+  "ieee-approve-all": "approve all"
+ },
+ "mean_cost": {
+  "final-logreg-amt": 2106.1117700000004,
+  "final-signal-amt": 1942.89091,
+  "final-signal-cust": 1991.5674299999998,
+  "final-rich-amt": 2426.7515,
+  "ieee-approve-all": 5232.5666,
+  "final-tab-all-amt": 1896.735815
+ },
+ "comparisons": {
+  "p23_primary": {
+   "a": "final-signal-amt",
+   "b": "final-logreg-amt",
+   "label": "held-out (pre-registered)",
+   "mean_diff_a_minus_b": -163.22086000000004,
+   "registered_percentile": [
+    -462.0924905,
+    237.89309599999964
+   ],
+   "registered_check": [
+    -462.0924905,
+    237.89309599999964
+   ],
+   "block2": [
+    -438.609856875,
+    247.92893437499998
+   ],
+   "block4": [
+    -388.2364988750001,
+    206.39793624999996
+   ],
+   "bca": [
+    -398.46249214179846,
+    446.8351646463212
+   ],
+   "paired_sd": 836.2059105912763,
+   "mde": 523.5477125953773,
+   "mde_label": "read-out",
+   "robustness_label": "read-out"
+  },
+  "p23_second": {
+   "a": "final-signal-cust",
+   "b": "final-signal-amt",
+   "label": "held-out (pre-registered)",
+   "mean_diff_a_minus_b": 48.67651999999996,
+   "registered_percentile": [
+    -46.978381750000054,
+    159.86207362499985
+   ],
+   "registered_check": [
+    -159.86207362499988,
+    46.97838175000004
+   ],
+   "block2": [
+    -32.09744225000012,
+    136.4381612499998
+   ],
+   "block4": [
+    -14.581375000000083,
+    137.631072625
+   ],
+   "bca": [
+    -39.09294778393044,
+    175.12736885530353
+   ],
+   "paired_sd": 244.44881336873087,
+   "mde": 153.04916583925964,
+   "mde_label": "read-out",
+   "robustness_label": "read-out"
+  },
+  "p23_third": {
+   "a": "final-rich-amt",
+   "b": "final-logreg-amt",
+   "label": "held-out (pre-registered)",
+   "mean_diff_a_minus_b": 320.63973,
+   "registered_percentile": [
+    -73.7394892499999,
+    773.8453504999995
+   ],
+   "registered_check": [
+    -773.8453504999998,
+    73.73948924999989
+   ],
+   "block2": [
+    -140.945508875,
+    909.608232125
+   ],
+   "block4": [
+    -152.60770225000013,
+    1062.858716125
+   ],
+   "bca": [
+    -46.389345463913386,
+    815.0377384587719
+   ],
+   "paired_sd": 999.288511792883,
+   "mde": 625.6535716209762,
+   "mde_label": "read-out",
+   "robustness_label": "read-out"
+  },
+  "p23_cust_vs_lr": {
+   "a": "final-signal-cust",
+   "b": "final-logreg-amt",
+   "label": "held-out (pre-registered)",
+   "mean_diff_a_minus_b": -114.54434000000008,
+   "registered_percentile": [
+    -390.5650105000001,
+    273.17298312500003
+   ],
+   "registered_check": [
+    -390.5650105000001,
+    273.17298312500003
+   ],
+   "block2": [
+    -370.7947485000002,
+    285.22860950000006
+   ],
+   "block4": [
+    -338.39487275000016,
+    290.68071
+   ],
+   "bca": [
+    -337.5027506295008,
+    460.83231547877085
+   ],
+   "paired_sd": 795.6600408455998,
+   "mde": 498.16198272708573,
+   "mde_label": "read-out",
+   "robustness_label": "read-out"
+  },
+  "p23_rich_vs_signal": {
+   "a": "final-rich-amt",
+   "b": "final-signal-amt",
+   "label": "held-out (pre-registered)",
+   "mean_diff_a_minus_b": 483.8605899999999,
+   "registered_percentile": [
+    103.3565286249999,
+    972.0767089999998
+   ],
+   "registered_check": [
+    -972.0767089999999,
+    -103.35652862499998
+   ],
+   "block2": [
+    72.82931562500004,
+    1044.9443991249998
+   ],
+   "block4": [
+    60.32745999999988,
+    1066.2021344999998
+   ],
+   "bca": [
+    154.23413547836034,
+    1088.3422420395814
+   ],
+   "paired_sd": 1013.4750384599332,
+   "mde": 634.5357422587748,
+   "mde_label": "read-out",
+   "robustness_label": "read-out"
+  },
+  "p23_signal_vs_all": {
+   "a": "final-signal-amt",
+   "b": "ieee-approve-all",
+   "label": "held-out (pre-registered)",
+   "mean_diff_a_minus_b": -3289.67569,
+   "registered_percentile": [
+    -4126.772145625,
+    -2422.3101493749996
+   ],
+   "registered_check": [
+    -4126.772145625,
+    -2422.3101493749996
+   ],
+   "block2": [
+    -4097.1868775,
+    -2205.9864584999996
+   ],
+   "block4": [
+    -4094.728663625,
+    -2148.5820706249997
+   ],
+   "bca": [
+    -4116.500724604238,
+    -2408.3981851770486
+   ],
+   "paired_sd": 2023.7200412942361,
+   "mde": 1267.049162333526,
+   "mde_label": "read-out",
+   "robustness_label": "read-out"
+  },
+  "ro_primary": {
+   "a": "final-signal-amt",
+   "b": "final-tab-all-amt",
+   "label": "read-out",
+   "mean_diff_a_minus_b": 46.155094999999996,
+   "registered_percentile": [
+    -374.716797875,
+    488.69175625
+   ],
+   "registered_check": [
+    -488.69175625,
+    374.71679787499994
+   ],
+   "block2": [
+    -371.313719,
+    487.93613812499996
+   ],
+   "block4": [
+    -256.9333926249999,
+    384.63962
+   ],
+   "bca": [
+    -352.65037623725703,
+    507.88279878178616
+   ],
+   "paired_sd": 969.2167416714382,
+   "mde": 606.8256654062928,
+   "mde_label": "read-out",
+   "robustness_label": "read-out"
+  },
+  "ro_secondary": {
+   "a": "final-tab-all-amt",
+   "b": "final-logreg-amt",
+   "label": "read-out",
+   "mean_diff_a_minus_b": -209.37595500000006,
+   "registered_percentile": [
+    -430.24115425,
+    56.68875137499985
+   ],
+   "registered_check": [
+    -430.24115425,
+    56.68875137499985
+   ],
+   "block2": [
+    -358.1390041250001,
+    38.95730724999999
+   ],
+   "block4": [
+    -348.7574681250001,
+    -1.452406250000328
+   ],
+   "bca": [
+    -402.31721556031266,
+    118.49130767611517
+   ],
+   "paired_sd": 570.0677883333012,
+   "mde": 356.91889141894245,
+   "mde_label": "read-out",
+   "robustness_label": "read-out"
+  },
+  "ro_rich_vs_gbdt": {
+   "a": "final-rich-amt",
+   "b": "final-tab-all-amt",
+   "label": "read-out",
+   "mean_diff_a_minus_b": 530.0156850000001,
+   "registered_percentile": [
+    219.20866787500012,
+    864.7892927499998
+   ],
+   "registered_check": [
+    -864.7892927499998,
+    -219.20866787500012
+   ],
+   "block2": [
+    142.58792500000007,
+    990.3856109999997
+   ],
+   "block4": [
+    148.3175173750001,
+    1128.5064999999995
+   ],
+   "bca": [
+    233.43056428796254,
+    880.8218892300683
+   ],
+   "paired_sd": 769.2645292459424,
+   "mde": 481.6357784205246,
+   "mde_label": "read-out",
+   "robustness_label": "read-out"
+  }
+ },
+ "ranking": {
+  "final-logreg-amt": {
+   "roc_auc": 0.8533126418696888,
+   "roc_auc_ci": [
+    0.8204973664516519,
+    0.8804895236163349
+   ],
+   "pr_auc": 0.3743341548171902,
+   "pr_auc_ci": [
+    0.2704200881539846,
+    0.47385376477508556
+   ],
+   "base_rate": 0.0315,
+   "label": "read-out"
+  },
+  "final-signal-amt": {
+   "roc_auc": 0.8831814047250289,
+   "roc_auc_ci": [
+    0.8595160988968059,
+    0.904728519239495
+   ],
+   "pr_auc": 0.4461214594825663,
+   "pr_auc_ci": [
+    0.3392862950381101,
+    0.5444034768427377
+   ],
+   "base_rate": 0.0315,
+   "label": "read-out"
+  },
+  "final-signal-cust": {
+   "roc_auc": 0.8831814047250289,
+   "roc_auc_ci": [
+    0.8595160988968059,
+    0.904728519239495
+   ],
+   "pr_auc": 0.4461214594825663,
+   "pr_auc_ci": [
+    0.3392862950381101,
+    0.5444034768427377
+   ],
+   "base_rate": 0.0315,
+   "label": "read-out"
+  },
+  "final-rich-amt": {
+   "roc_auc": 0.8592569101293933,
+   "roc_auc_ci": [
+    0.8303202973685504,
+    0.8848037516062491
+   ],
+   "pr_auc": 0.345583292923503,
+   "pr_auc_ci": [
+    0.2381221738191102,
+    0.45569409610322487
+   ],
+   "base_rate": 0.0315,
+   "label": "read-out"
+  },
+  "final-tab-all-amt": {
+   "roc_auc": 0.8779393350869861,
+   "roc_auc_ci": [
+    0.85200770453739,
+    0.9019551919755545
+   ],
+   "pr_auc": 0.4477340118691773,
+   "pr_auc_ci": [
+    0.3370807339216279,
+    0.5478394522521337
+   ],
+   "base_rate": 0.0315,
+   "label": "read-out"
+  }
+ },
+ "diagnostic": {
+  "final-logreg-amt": {
+   "reliability": [
+    {
+     "mean_p": 0.002189765870816429,
+     "fraud_rate": 0.0035,
+     "n": 2000
+    },
+    {
+     "mean_p": 0.00411255258430235,
+     "fraud_rate": 0.007,
+     "n": 2000
+    },
+    {
+     "mean_p": 0.006056296538022485,
+     "fraud_rate": 0.006,
+     "n": 2000
+    },
+    {
+     "mean_p": 0.008590622973915591,
+     "fraud_rate": 0.007,
+     "n": 2000
+    },
+    {
+     "mean_p": 0.011789219013421346,
+     "fraud_rate": 0.0065,
+     "n": 2000
+    },
+    {
+     "mean_p": 0.01563413959228565,
+     "fraud_rate": 0.0135,
+     "n": 2000
+    },
+    {
+     "mean_p": 0.02155549016761425,
+     "fraud_rate": 0.012,
+     "n": 2000
+    },
+    {
+     "mean_p": 0.03204902422490064,
+     "fraud_rate": 0.025,
+     "n": 2000
+    },
+    {
+     "mean_p": 0.05479839989352233,
+     "fraud_rate": 0.0435,
+     "n": 2000
+    },
+    {
+     "mean_p": 0.2385747413352811,
+     "fraud_rate": 0.191,
+     "n": 2000
+    }
+   ],
+   "by_action_per_window": {
+    "fraud_let_through": 1305.2275000000002,
+    "good_declined": 436.38800000000003,
+    "review_fees": 364.5,
+    "fraud_declined": 0.0
+   },
+   "by_amount_band": [
+    {
+     "band": [
+      0,
+      50
+     ],
+     "rows": 6364,
+     "frauds": 213,
+     "cost_per_window": 162.701,
+     "fraud_let_through": 104.90549999999999,
+     "good_declined": 57.795500000000004,
+     "review_fees": 0.0
+    },
+    {
+     "band": [
+      50,
+      200
+     ],
+     "rows": 10222,
+     "frauds": 279,
+     "cost_per_window": 872.8399999999999,
+     "fraud_let_through": 586.9395000000001,
+     "good_declined": 285.9005,
+     "review_fees": 0.0
+    },
+    {
+     "band": [
+      200,
+      1000
+     ],
+     "rows": 3081,
+     "frauds": 126,
+     "cost_per_window": 887.8745000000001,
+     "fraud_let_through": 558.1825000000001,
+     "good_declined": 92.69199999999998,
+     "review_fees": 237.0
+    },
+    {
+     "band": [
+      1000,
+      null
+     ],
+     "rows": 333,
+     "frauds": 12,
+     "cost_per_window": 182.7,
+     "fraud_let_through": 55.2,
+     "good_declined": 0.0,
+     "review_fees": 127.5
+    }
+   ],
+   "label": "read-out"
+  },
+  "final-signal-amt": {
+   "reliability": [
+    {
+     "mean_p": 0.0026499505523585685,
+     "fraud_rate": 0.004,
+     "n": 2000
+    },
+    {
+     "mean_p": 0.003505128909823117,
+     "fraud_rate": 0.0035,
+     "n": 2000
+    },
+    {
+     "mean_p": 0.004441244638716187,
+     "fraud_rate": 0.0035,
+     "n": 2000
+    },
+    {
+     "mean_p": 0.00612817080808358,
+     "fraud_rate": 0.0015,
+     "n": 2000
+    },
+    {
+     "mean_p": 0.008026956617142414,
+     "fraud_rate": 0.006,
+     "n": 2000
+    },
+    {
+     "mean_p": 0.011602510210281167,
+     "fraud_rate": 0.012,
+     "n": 2000
+    },
+    {
+     "mean_p": 0.01730923017838252,
+     "fraud_rate": 0.014,
+     "n": 2000
+    },
+    {
+     "mean_p": 0.028408157278393388,
+     "fraud_rate": 0.02,
+     "n": 2000
+    },
+    {
+     "mean_p": 0.05632078374365693,
+     "fraud_rate": 0.0405,
+     "n": 2000
+    },
+    {
+     "mean_p": 0.24649055773958292,
+     "fraud_rate": 0.21,
+     "n": 2000
+    }
+   ],
+   "by_action_per_window": {
+    "fraud_let_through": 1178.0974999999999,
+    "good_declined": 413.79400000000004,
+    "review_fees": 351.0,
+    "fraud_declined": 0.0
+   },
+   "by_amount_band": [
+    {
+     "band": [
+      0,
+      50
+     ],
+     "rows": 6364,
+     "frauds": 213,
+     "cost_per_window": 145.955,
+     "fraud_let_through": 97.027,
+     "good_declined": 48.928,
+     "review_fees": 0.0
+    },
+    {
+     "band": [
+      50,
+      200
+     ],
+     "rows": 10222,
+     "frauds": 279,
+     "cost_per_window": 832.9045000000002,
+     "fraud_let_through": 570.2434999999999,
+     "good_declined": 262.661,
+     "review_fees": 0.0
+    },
+    {
+     "band": [
+      200,
+      1000
+     ],
+     "rows": 3081,
+     "frauds": 126,
+     "cost_per_window": 604.1375,
+     "fraud_let_through": 252.93250000000003,
+     "good_declined": 102.205,
+     "review_fees": 249.0
+    },
+    {
+     "band": [
+      1000,
+      null
+     ],
+     "rows": 333,
+     "frauds": 12,
+     "cost_per_window": 359.8945,
+     "fraud_let_through": 257.8945,
+     "good_declined": 0.0,
+     "review_fees": 102.0
+    }
+   ],
+   "label": "read-out"
+  },
+  "final-signal-cust": {
+   "reliability": [
+    {
+     "mean_p": 0.0026499505523585685,
+     "fraud_rate": 0.004,
+     "n": 2000
+    },
+    {
+     "mean_p": 0.003505128909823117,
+     "fraud_rate": 0.0035,
+     "n": 2000
+    },
+    {
+     "mean_p": 0.004441244638716187,
+     "fraud_rate": 0.0035,
+     "n": 2000
+    },
+    {
+     "mean_p": 0.00612817080808358,
+     "fraud_rate": 0.0015,
+     "n": 2000
+    },
+    {
+     "mean_p": 0.008026956617142414,
+     "fraud_rate": 0.006,
+     "n": 2000
+    },
+    {
+     "mean_p": 0.011602510210281167,
+     "fraud_rate": 0.012,
+     "n": 2000
+    },
+    {
+     "mean_p": 0.01730923017838252,
+     "fraud_rate": 0.014,
+     "n": 2000
+    },
+    {
+     "mean_p": 0.028408157278393388,
+     "fraud_rate": 0.02,
+     "n": 2000
+    },
+    {
+     "mean_p": 0.05632078374365693,
+     "fraud_rate": 0.0405,
+     "n": 2000
+    },
+    {
+     "mean_p": 0.24649055773958292,
+     "fraud_rate": 0.21,
+     "n": 2000
+    }
+   ],
+   "by_action_per_window": {
+    "fraud_let_through": 1466.886,
+    "good_declined": 122.68350000000001,
+    "review_fees": 402.0,
+    "fraud_declined": 0.0
+   },
+   "by_amount_band": [
+    {
+     "band": [
+      0,
+      50
+     ],
+     "rows": 6364,
+     "frauds": 213,
+     "cost_per_window": 143.4815,
+     "fraud_let_through": 131.838,
+     "good_declined": 11.643499999999998,
+     "review_fees": 0.0
+    },
+    {
+     "band": [
+      50,
+      200
+     ],
+     "rows": 10222,
+     "frauds": 279,
+     "cost_per_window": 867.2584999999999,
+     "fraud_let_through": 765.721,
+     "good_declined": 80.0375,
+     "review_fees": 21.5
+    },
+    {
+     "band": [
+      200,
+      1000
+     ],
+     "rows": 3081,
+     "frauds": 126,
+     "cost_per_window": 620.935,
+     "fraud_let_through": 311.4325,
+     "good_declined": 31.002499999999998,
+     "review_fees": 278.5
+    },
+    {
+     "band": [
+      1000,
+      null
+     ],
+     "rows": 333,
+     "frauds": 12,
+     "cost_per_window": 359.8945,
+     "fraud_let_through": 257.8945,
+     "good_declined": 0.0,
+     "review_fees": 102.0
+    }
+   ],
+   "label": "read-out"
+  },
+  "final-rich-amt": {
+   "reliability": [
+    {
+     "mean_p": 0.0038328546274550793,
+     "fraud_rate": 0.003,
+     "n": 2000
+    },
+    {
+     "mean_p": 0.004995701781688421,
+     "fraud_rate": 0.0065,
+     "n": 2000
+    },
+    {
+     "mean_p": 0.006223440485976014,
+     "fraud_rate": 0.005,
+     "n": 2000
+    },
+    {
+     "mean_p": 0.007790089522036076,
+     "fraud_rate": 0.0045,
+     "n": 2000
+    },
+    {
+     "mean_p": 0.010002403390881456,
+     "fraud_rate": 0.006,
+     "n": 2000
+    },
+    {
+     "mean_p": 0.0134167760397997,
+     "fraud_rate": 0.0105,
+     "n": 2000
+    },
+    {
+     "mean_p": 0.01897041504497158,
+     "fraud_rate": 0.017,
+     "n": 2000
+    },
+    {
+     "mean_p": 0.028581785391741034,
+     "fraud_rate": 0.0275,
+     "n": 2000
+    },
+    {
+     "mean_p": 0.050681292149412256,
+     "fraud_rate": 0.044,
+     "n": 2000
+    },
+    {
+     "mean_p": 0.28293908627202424,
+     "fraud_rate": 0.191,
+     "n": 2000
+    }
+   ],
+   "by_action_per_window": {
+    "fraud_let_through": 1508.048,
+    "good_declined": 471.2045,
+    "review_fees": 447.5,
+    "fraud_declined": 0.0
+   },
+   "by_amount_band": [
+    {
+     "band": [
+      0,
+      50
+     ],
+     "rows": 6364,
+     "frauds": 213,
+     "cost_per_window": 147.57599999999996,
+     "fraud_let_through": 94.902,
+     "good_declined": 52.674,
+     "review_fees": 0.0
+    },
+    {
+     "band": [
+      50,
+      200
+     ],
+     "rows": 10222,
+     "frauds": 279,
+     "cost_per_window": 1036.414,
+     "fraud_let_through": 702.856,
+     "good_declined": 327.558,
+     "review_fees": 6.0
+    },
+    {
+     "band": [
+      200,
+      1000
+     ],
+     "rows": 3081,
+     "frauds": 126,
+     "cost_per_window": 990.2915,
+     "fraud_let_through": 582.8190000000001,
+     "good_declined": 90.9725,
+     "review_fees": 316.5
+    },
+    {
+     "band": [
+      1000,
+      null
+     ],
+     "rows": 333,
+     "frauds": 12,
+     "cost_per_window": 252.471,
+     "fraud_let_through": 127.471,
+     "good_declined": 0.0,
+     "review_fees": 125.0
+    }
+   ],
+   "label": "read-out"
+  },
+  "final-tab-all-amt": {
+   "reliability": [
+    {
+     "mean_p": 0.0019403747614113475,
+     "fraud_rate": 0.006,
+     "n": 2000
+    },
+    {
+     "mean_p": 0.0035605575171883375,
+     "fraud_rate": 0.002,
+     "n": 2000
+    },
+    {
+     "mean_p": 0.005140495314413363,
+     "fraud_rate": 0.0015,
+     "n": 2000
+    },
+    {
+     "mean_p": 0.007021682332698077,
+     "fraud_rate": 0.005,
+     "n": 2000
+    },
+    {
+     "mean_p": 0.009298073780414612,
+     "fraud_rate": 0.0105,
+     "n": 2000
+    },
+    {
+     "mean_p": 0.012239941369964173,
+     "fraud_rate": 0.0085,
+     "n": 2000
+    },
+    {
+     "mean_p": 0.016683611623137733,
+     "fraud_rate": 0.015,
+     "n": 2000
+    },
+    {
+     "mean_p": 0.02486341123891469,
+     "fraud_rate": 0.02,
+     "n": 2000
+    },
+    {
+     "mean_p": 0.046062622015536035,
+     "fraud_rate": 0.032,
+     "n": 2000
+    },
+    {
+     "mean_p": 0.25154461231486724,
+     "fraud_rate": 0.2145,
+     "n": 2000
+    }
+   ],
+   "by_action_per_window": {
+    "fraud_let_through": 1150.115,
+    "good_declined": 322.12300000000005,
+    "review_fees": 424.5,
+    "fraud_declined": 0.0
+   },
+   "by_amount_band": [
+    {
+     "band": [
+      0,
+      50
+     ],
+     "rows": 6364,
+     "frauds": 213,
+     "cost_per_window": 148.13150000000002,
+     "fraud_let_through": 94.4175,
+     "good_declined": 53.714,
+     "review_fees": 0.0
+    },
+    {
+     "band": [
+      50,
+      200
+     ],
+     "rows": 10222,
+     "frauds": 279,
+     "cost_per_window": 773.404,
+     "fraud_let_through": 528.9675,
+     "good_declined": 233.43650000000002,
+     "review_fees": 11.0
+    },
+    {
+     "band": [
+      200,
+      1000
+     ],
+     "rows": 3081,
+     "frauds": 126,
+     "cost_per_window": 754.7549999999999,
+     "fraud_let_through": 419.28249999999997,
+     "good_declined": 34.9725,
+     "review_fees": 300.5
+    },
+    {
+     "band": [
+      1000,
+      null
+     ],
+     "rows": 333,
+     "frauds": 12,
+     "cost_per_window": 220.4475,
+     "fraud_let_through": 107.44749999999999,
+     "good_declined": 0.0,
+     "review_fees": 113.0
+    }
+   ],
+   "label": "read-out"
+  },
+  "lm_alone_minus_lr_without_largest_frauds": {
+   "0": {
+    "removed_amounts": [],
+    "lm_alone_action": [],
+    "lr_action": [],
+    "mean_diff": 320.637,
+    "ci": [
+     -73.73837499999995,
+     773.8403874999997
+    ],
+    "label": "read-out"
+   },
+   "1": {
+    "removed_amounts": [
+     2480.06
+    ],
+    "lm_alone_action": [
+     "review"
+    ],
+    "lr_action": [
+     "review"
+    ],
+    "mean_diff": 320.637,
+    "ci": [
+     -73.73837499999995,
+     773.8403874999997
+    ],
+    "label": "read-out"
+   },
+   "2": {
+    "removed_amounts": [
+     2480.06,
+     1651.0
+    ],
+    "lm_alone_action": [
+     "review",
+     "review"
+    ],
+    "lr_action": [
+     "review",
+     "review"
+    ],
+    "mean_diff": 320.637,
+    "ci": [
+     -73.73837499999995,
+     773.8403874999997
+    ],
+    "label": "read-out"
+   }
+  }
+ },
+ "disparity": {
+  "card4": {
+   "american express": {
+    "final-logreg-amt": {
+     "good_declined": {
+      "rate": 0.05555555555555555,
+      "ci": [
+       0.027932960893854747,
+       0.08974358974358974
+      ],
+      "n": 180
+     },
+     "fraud_missed": {
+      "rate": 0.4,
+      "ci": [
+       0.0,
+       1.0
+      ],
+      "n": 5
+     },
+     "label": "read-out"
+    },
+    "final-signal-amt": {
+     "good_declined": {
+      "rate": 0.022222222222222223,
+      "ci": [
+       0.005847953216374269,
+       0.03867403314917127
+      ],
+      "n": 180
+     },
+     "fraud_missed": {
+      "rate": 0.2,
+      "ci": [
+       0.0,
+       0.6666666666666666
+      ],
+      "n": 5
+     },
+     "label": "read-out"
+    },
+    "final-signal-cust": {
+     "good_declined": {
+      "rate": 0.016666666666666666,
+      "ci": [
+       0.0,
+       0.03398058252427184
+      ],
+      "n": 180
+     },
+     "fraud_missed": {
+      "rate": 0.4,
+      "ci": [
+       0.0,
+       1.0
+      ],
+      "n": 5
+     },
+     "label": "read-out"
+    },
+    "final-rich-amt": {
+     "good_declined": {
+      "rate": 0.05,
+      "ci": [
+       0.010638297872340425,
+       0.10994895287958113
+      ],
+      "n": 180
+     },
+     "fraud_missed": {
+      "rate": 0.2,
+      "ci": [
+       0.0,
+       0.6666666666666666
+      ],
+      "n": 5
+     },
+     "label": "read-out"
+    },
+    "final-tab-all-amt": {
+     "good_declined": {
+      "rate": 0.044444444444444446,
+      "ci": [
+       0.016483516483516484,
+       0.07262569832402235
+      ],
+      "n": 180
+     },
+     "fraud_missed": {
+      "rate": 0.2,
+      "ci": [
+       0.0,
+       0.6666666666666666
+      ],
+      "n": 5
+     },
+     "label": "read-out"
+    }
+   },
+   "discover": {
+    "final-logreg-amt": {
+     "good_declined": {
+      "rate": 0.14646464646464646,
+      "ci": [
+       0.09268292682926829,
+       0.19780366692131396
+      ],
+      "n": 198
+     },
+     "fraud_missed": {
+      "rate": 0.42105263157894735,
+      "ci": [
+       0.0,
+       0.6666666666666666
+      ],
+      "n": 19
+     },
+     "label": "read-out"
+    },
+    "final-signal-amt": {
+     "good_declined": {
+      "rate": 0.14646464646464646,
+      "ci": [
+       0.085362389135255,
+       0.20202020202020202
+      ],
+      "n": 198
+     },
+     "fraud_missed": {
+      "rate": 0.47368421052631576,
+      "ci": [
+       0.0,
+       0.7037037037037037
+      ],
+      "n": 19
+     },
+     "label": "read-out"
+    },
+    "final-signal-cust": {
+     "good_declined": {
+      "rate": 0.050505050505050504,
+      "ci": [
+       0.01694915254237288,
+       0.08427135508325434
+      ],
+      "n": 198
+     },
+     "fraud_missed": {
+      "rate": 0.47368421052631576,
+      "ci": [
+       0.0,
+       0.7037037037037037
+      ],
+      "n": 19
+     },
+     "label": "read-out"
+    },
+    "final-rich-amt": {
+     "good_declined": {
+      "rate": 0.10101010101010101,
+      "ci": [
+       0.05649717514124294,
+       0.15346534653465346
+      ],
+      "n": 198
+     },
+     "fraud_missed": {
+      "rate": 0.3684210526315789,
+      "ci": [
+       0.0,
+       0.6452561669829208
+      ],
+      "n": 19
+     },
+     "label": "read-out"
+    },
+    "final-tab-all-amt": {
+     "good_declined": {
+      "rate": 0.07575757575757576,
+      "ci": [
+       0.03296703296703297,
+       0.11923076923076924
+      ],
+      "n": 198
+     },
+     "fraud_missed": {
+      "rate": 0.47368421052631576,
+      "ci": [
+       0.0,
+       0.7037037037037037
+      ],
+      "n": 19
+     },
+     "label": "read-out"
+    }
+   },
+   "mastercard": {
+    "final-logreg-amt": {
+     "good_declined": {
+      "rate": 0.056752083005816696,
+      "ci": [
+       0.048681518511204176,
+       0.06562786309264496
+      ],
+      "n": 6361
+     },
+     "fraud_missed": {
+      "rate": 0.3383084577114428,
+      "ci": [
+       0.24102409638554217,
+       0.45549738219895286
+      ],
+      "n": 201
+     },
+     "label": "read-out"
+    },
+    "final-signal-amt": {
+     "good_declined": {
+      "rate": 0.05187863543468008,
+      "ci": [
+       0.043235674362955695,
+       0.061609935721008306
+      ],
+      "n": 6361
+     },
+     "fraud_missed": {
+      "rate": 0.30845771144278605,
+      "ci": [
+       0.2180079596548791,
+       0.41477377946127947
+      ],
+      "n": 201
+     },
+     "label": "read-out"
+    },
+    "final-signal-cust": {
+     "good_declined": {
+      "rate": 0.015091966671906933,
+      "ci": [
+       0.011081782242273141,
+       0.01952145340735626
+      ],
+      "n": 6361
+     },
+     "fraud_missed": {
+      "rate": 0.4079601990049751,
+      "ci": [
+       0.2915115244117265,
+       0.5370419621749409
+      ],
+      "n": 201
+     },
+     "label": "read-out"
+    },
+    "final-rich-amt": {
+     "good_declined": {
+      "rate": 0.07184404967772363,
+      "ci": [
+       0.04570017595915988,
+       0.11457549796550985
+      ],
+      "n": 6361
+     },
+     "fraud_missed": {
+      "rate": 0.3283582089552239,
+      "ci": [
+       0.23404255319148937,
+       0.44210790796085686
+      ],
+      "n": 201
+     },
+     "label": "read-out"
+    },
+    "final-tab-all-amt": {
+     "good_declined": {
+      "rate": 0.04653356390504638,
+      "ci": [
+       0.03964679525127915,
+       0.05384859305004825
+      ],
+      "n": 6361
+     },
+     "fraud_missed": {
+      "rate": 0.2835820895522388,
+      "ci": [
+       0.1875,
+       0.3954802259887006
+      ],
+      "n": 201
+     },
+     "label": "read-out"
+    }
+   },
+   "visa": {
+    "final-logreg-amt": {
+     "good_declined": {
+      "rate": 0.05153986224368617,
+      "ci": [
+       0.044782000996553085,
+       0.05943030985333488
+      ],
+      "n": 12631
+     },
+     "fraud_missed": {
+      "rate": 0.4148148148148148,
+      "ci": [
+       0.34222981604496683,
+       0.49624199387357276
+      ],
+      "n": 405
+     },
+     "label": "read-out"
+    },
+    "final-signal-amt": {
+     "good_declined": {
+      "rate": 0.04473121684743884,
+      "ci": [
+       0.03957011273630932,
+       0.050734471543105245
+      ],
+      "n": 12631
+     },
+     "fraud_missed": {
+      "rate": 0.3802469135802469,
+      "ci": [
+       0.3046674910913322,
+       0.46285714285714286
+      ],
+      "n": 405
+     },
+     "label": "read-out"
+    },
+    "final-signal-cust": {
+     "good_declined": {
+      "rate": 0.010925500752117805,
+      "ci": [
+       0.008056821957199698,
+       0.013891087992773658
+      ],
+      "n": 12631
+     },
+     "fraud_missed": {
+      "rate": 0.49876543209876545,
+      "ci": [
+       0.41067051610980265,
+       0.5920679886685553
+      ],
+      "n": 405
+     },
+     "label": "read-out"
+    },
+    "final-rich-amt": {
+     "good_declined": {
+      "rate": 0.047106325706594884,
+      "ci": [
+       0.03781216306765314,
+       0.05850368687521074
+      ],
+      "n": 12631
+     },
+     "fraud_missed": {
+      "rate": 0.4469135802469136,
+      "ci": [
+       0.3707088889765644,
+       0.5256081165685815
+      ],
+      "n": 405
+     },
+     "label": "read-out"
+    },
+    "final-tab-all-amt": {
+     "good_declined": {
+      "rate": 0.04314781094133481,
+      "ci": [
+       0.037932974363095714,
+       0.04874369974754122
+      ],
+      "n": 12631
+     },
+     "fraud_missed": {
+      "rate": 0.37037037037037035,
+      "ci": [
+       0.3085560373806643,
+       0.44134121318711633
+      ],
+      "n": 405
+     },
+     "label": "read-out"
+    }
+   }
+  },
+  "card6": {
+   "credit": {
+    "final-logreg-amt": {
+     "good_declined": {
+      "rate": 0.11475791433891992,
+      "ci": [
+       0.10305795896999065,
+       0.12773112113697938
+      ],
+      "n": 4296
+     },
+     "fraud_missed": {
+      "rate": 0.2656826568265683,
+      "ci": [
+       0.21180453431372548,
+       0.3198384287925697
+      ],
+      "n": 271
+     },
+     "label": "read-out"
+    },
+    "final-signal-amt": {
+     "good_declined": {
+      "rate": 0.09706703910614525,
+      "ci": [
+       0.08602373725305093,
+       0.10965940144588653
+      ],
+      "n": 4296
+     },
+     "fraud_missed": {
+      "rate": 0.25092250922509224,
+      "ci": [
+       0.1861292649804787,
+       0.32014388489208634
+      ],
+      "n": 271
+     },
+     "label": "read-out"
+    },
+    "final-signal-cust": {
+     "good_declined": {
+      "rate": 0.031424581005586594,
+      "ci": [
+       0.025434609864994153,
+       0.038321417695257855
+      ],
+      "n": 4296
+     },
+     "fraud_missed": {
+      "rate": 0.34317343173431736,
+      "ci": [
+       0.260866230994932,
+       0.4339622641509434
+      ],
+      "n": 271
+     },
+     "label": "read-out"
+    },
+    "final-rich-amt": {
+     "good_declined": {
+      "rate": 0.1371042830540037,
+      "ci": [
+       0.09943026420631963,
+       0.19282408790275943
+      ],
+      "n": 4296
+     },
+     "fraud_missed": {
+      "rate": 0.24354243542435425,
+      "ci": [
+       0.1649122807017544,
+       0.3355498793974423
+      ],
+      "n": 271
+     },
+     "label": "read-out"
+    },
+    "final-tab-all-amt": {
+     "good_declined": {
+      "rate": 0.08612662942271881,
+      "ci": [
+       0.07492442434937735,
+       0.09721594827311023
+      ],
+      "n": 4296
+     },
+     "fraud_missed": {
+      "rate": 0.25461254612546125,
+      "ci": [
+       0.19298245614035087,
+       0.31640625
+      ],
+      "n": 271
+     },
+     "label": "read-out"
+    }
+   },
+   "debit": {
+    "final-logreg-amt": {
+     "good_declined": {
+      "rate": 0.037017380920790766,
+      "ci": [
+       0.031668277248352146,
+       0.04297135440951166
+      ],
+      "n": 15074
+     },
+     "fraud_missed": {
+      "rate": 0.48467966573816157,
+      "ci": [
+       0.3865735877684407,
+       0.5948075861815239
+      ],
+      "n": 359
+     },
+     "label": "read-out"
+    },
+    "final-signal-amt": {
+     "good_declined": {
+      "rate": 0.03389942948122595,
+      "ci": [
+       0.029727873053803658,
+       0.03851995007325942
+      ],
+      "n": 15074
+     },
+     "fraud_missed": {
+      "rate": 0.4401114206128134,
+      "ci": [
+       0.3380549692924914,
+       0.5552562922038059
+      ],
+      "n": 359
+     },
+     "label": "read-out"
+    },
+    "final-signal-cust": {
+     "good_declined": {
+      "rate": 0.00743001194109062,
+      "ci": [
+       0.005321572569243704,
+       0.00961417982192743
+      ],
+      "n": 15074
+     },
+     "fraud_missed": {
+      "rate": 0.5626740947075209,
+      "ci": [
+       0.4484517075692607,
+       0.6788998496517443
+      ],
+      "n": 359
+     },
+     "label": "read-out"
+    },
+    "final-rich-amt": {
+     "good_declined": {
+      "rate": 0.03263898102693379,
+      "ci": [
+       0.02573443585364957,
+       0.041361361677074784
+      ],
+      "n": 15074
+     },
+     "fraud_missed": {
+      "rate": 0.5264623955431755,
+      "ci": [
+       0.40937378562176163,
+       0.6504891237556839
+      ],
+      "n": 359
+     },
+     "label": "read-out"
+    },
+    "final-tab-all-amt": {
+     "good_declined": {
+      "rate": 0.032771659811596125,
+      "ci": [
+       0.028822606426182833,
+       0.03702214007395461
+      ],
+      "n": 15074
+     },
+     "fraud_missed": {
+      "rate": 0.41225626740947074,
+      "ci": [
+       0.3113450241449694,
+       0.5236493544380035
+      ],
+      "n": 359
+     },
+     "label": "read-out"
+    }
+   }
+  },
+  "DeviceType": {
+   "desktop": {
+    "final-logreg-amt": {
+     "good_declined": {
+      "rate": 0.10399257195914577,
+      "ci": [
+       0.07600690033491164,
+       0.14111007783218135
+      ],
+      "n": 2154
+     },
+     "fraud_missed": {
+      "rate": 0.2127659574468085,
+      "ci": [
+       0.13422443852873908,
+       0.32432432432432434
+      ],
+      "n": 141
+     },
+     "label": "read-out"
+    },
+    "final-signal-amt": {
+     "good_declined": {
+      "rate": 0.07799442896935933,
+      "ci": [
+       0.056407877525522704,
+       0.10749949653037504
+      ],
+      "n": 2154
+     },
+     "fraud_missed": {
+      "rate": 0.20567375886524822,
+      "ci": [
+       0.13571125907990314,
+       0.30894678492239463
+      ],
+      "n": 141
+     },
+     "label": "read-out"
+    },
+    "final-signal-cust": {
+     "good_declined": {
+      "rate": 0.022284122562674095,
+      "ci": [
+       0.012915109295303026,
+       0.03344335178947556
+      ],
+      "n": 2154
+     },
+     "fraud_missed": {
+      "rate": 0.2553191489361702,
+      "ci": [
+       0.18181818181818182,
+       0.3627450980392157
+      ],
+      "n": 141
+     },
+     "label": "read-out"
+    },
+    "final-rich-amt": {
+     "good_declined": {
+      "rate": 0.17084493964716807,
+      "ci": [
+       0.08499718577408802,
+       0.2799152539507791
+      ],
+      "n": 2154
+     },
+     "fraud_missed": {
+      "rate": 0.18439716312056736,
+      "ci": [
+       0.12432432432432433,
+       0.26531063752934797
+      ],
+      "n": 141
+     },
+     "label": "read-out"
+    },
+    "final-tab-all-amt": {
+     "good_declined": {
+      "rate": 0.08588672237697308,
+      "ci": [
+       0.06553656118757822,
+       0.11198701462228007
+      ],
+      "n": 2154
+     },
+     "fraud_missed": {
+      "rate": 0.1773049645390071,
+      "ci": [
+       0.10067114093959731,
+       0.28205645161290316
+      ],
+      "n": 141
+     },
+     "label": "read-out"
+    }
+   },
+   "mobile": {
+    "final-logreg-amt": {
+     "good_declined": {
+      "rate": 0.1949640287769784,
+      "ci": [
+       0.16136527322922783,
+       0.23430716721775116
+      ],
+      "n": 1390
+     },
+     "fraud_missed": {
+      "rate": 0.2303370786516854,
+      "ci": [
+       0.13218390804597702,
+       0.36875110815602835
+      ],
+      "n": 178
+     },
+     "label": "read-out"
+    },
+    "final-signal-amt": {
+     "good_declined": {
+      "rate": 0.15035971223021583,
+      "ci": [
+       0.12552505293842645,
+       0.17474407684637036
+      ],
+      "n": 1390
+     },
+     "fraud_missed": {
+      "rate": 0.24719101123595505,
+      "ci": [
+       0.14378889280263002,
+       0.39333606557377043
+      ],
+      "n": 178
+     },
+     "label": "read-out"
+    },
+    "final-signal-cust": {
+     "good_declined": {
+      "rate": 0.05107913669064748,
+      "ci": [
+       0.03090450915465524,
+       0.07300770235477577
+      ],
+      "n": 1390
+     },
+     "fraud_missed": {
+      "rate": 0.33707865168539325,
+      "ci": [
+       0.2173828783282777,
+       0.49624465840861137
+      ],
+      "n": 178
+     },
+     "label": "read-out"
+    },
+    "final-rich-amt": {
+     "good_declined": {
+      "rate": 0.15467625899280577,
+      "ci": [
+       0.1202791696492484,
+       0.19181757209926223
+      ],
+      "n": 1390
+     },
+     "fraud_missed": {
+      "rate": 0.21348314606741572,
+      "ci": [
+       0.11570247933884298,
+       0.35652589310440314
+      ],
+      "n": 178
+     },
+     "label": "read-out"
+    },
+    "final-tab-all-amt": {
+     "good_declined": {
+      "rate": 0.14892086330935253,
+      "ci": [
+       0.12056550459402308,
+       0.18047679882284082
+      ],
+      "n": 1390
+     },
+     "fraud_missed": {
+      "rate": 0.21348314606741572,
+      "ci": [
+       0.10988675958188153,
+       0.35366061058569764
+      ],
+      "n": 178
+     },
+     "label": "read-out"
+    }
+   },
+   "none": {
+    "final-logreg-amt": {
+     "good_declined": {
+      "rate": 0.03513206116517124,
+      "ci": [
+       0.031683168316831684,
+       0.03884286231244411
+      ],
+      "n": 15826
+     },
+     "fraud_missed": {
+      "rate": 0.5627009646302251,
+      "ci": [
+       0.49574949065318147,
+       0.63321826425573
+      ],
+      "n": 311
+     },
+     "label": "read-out"
+    },
+    "final-signal-amt": {
+     "good_declined": {
+      "rate": 0.03481612536332617,
+      "ci": [
+       0.03139596626979883,
+       0.03860651384822612
+      ],
+      "n": 15826
+     },
+     "fraud_missed": {
+      "rate": 0.4919614147909968,
+      "ci": [
+       0.42104870384917514,
+       0.5661786853295535
+      ],
+      "n": 311
+     },
+     "label": "read-out"
+    },
+    "final-signal-cust": {
+     "good_declined": {
+      "rate": 0.008087956527233667,
+      "ci": [
+       0.006199157202500624,
+       0.010232803383280024
+      ],
+      "n": 15826
+     },
+     "fraud_missed": {
+      "rate": 0.639871382636656,
+      "ci": [
+       0.5828025477707006,
+       0.6985839086938143
+      ],
+      "n": 311
+     },
+     "label": "read-out"
+    },
+    "final-rich-amt": {
+     "good_declined": {
+      "rate": 0.031467205863768485,
+      "ci": [
+       0.027706418612543422,
+       0.03525929027880189
+      ],
+      "n": 15826
+     },
+     "fraud_missed": {
+      "rate": 0.6141479099678456,
+      "ci": [
+       0.5322023986519973,
+       0.6908517350157729
+      ],
+      "n": 311
+     },
+     "label": "read-out"
+    },
+    "final-tab-all-amt": {
+     "good_declined": {
+      "rate": 0.029824339694174144,
+      "ci": [
+       0.026405556374640694,
+       0.03354409992957737
+      ],
+      "n": 15826
+     },
+     "fraud_missed": {
+      "rate": 0.49517684887459806,
+      "ci": [
+       0.4222222222222222,
+       0.56875
+      ],
+      "n": 311
+     },
+     "label": "read-out"
+    }
+   }
+  },
+  "P_emaildomain": {
+   "anonymous.com": {
+    "final-logreg-amt": {
+     "good_declined": {
+      "rate": 0.04209690230341541,
+      "ci": [
+       0.02871205906480722,
+       0.05792527663352041
+      ],
+      "n": 1259
+     },
+     "fraud_missed": {
+      "rate": 0.21212121212121213,
+      "ci": [
+       0.03842592592592596,
+       0.48866279069767016
+      ],
+      "n": 33
+     },
+     "label": "read-out"
+    },
+    "final-signal-amt": {
+     "good_declined": {
+      "rate": 0.03812549642573471,
+      "ci": [
+       0.028526116680034668,
+       0.04941176470588235
+      ],
+      "n": 1259
+     },
+     "fraud_missed": {
+      "rate": 0.24242424242424243,
+      "ci": [
+       0.05,
+       0.5185185185185185
+      ],
+      "n": 33
+     },
+     "label": "read-out"
+    },
+    "final-signal-cust": {
+     "good_declined": {
+      "rate": 0.005559968228752979,
+      "ci": [
+       0.0007961783439490446,
+       0.013158436660019068
+      ],
+      "n": 1259
+     },
+     "fraud_missed": {
+      "rate": 0.3333333333333333,
+      "ci": [
+       0.09090909090909091,
+       0.6896551724137931
+      ],
+      "n": 33
+     },
+     "label": "read-out"
+    },
+    "final-rich-amt": {
+     "good_declined": {
+      "rate": 0.02779984114376489,
+      "ci": [
+       0.015944852948196295,
+       0.04121327152066292
+      ],
+      "n": 1259
+     },
+     "fraud_missed": {
+      "rate": 0.24242424242424243,
+      "ci": [
+       0.0625,
+       0.5333333333333333
+      ],
+      "n": 33
+     },
+     "label": "read-out"
+    },
+    "final-tab-all-amt": {
+     "good_declined": {
+      "rate": 0.03494837172359015,
+      "ci": [
+       0.023790794838715754,
+       0.0476575287094646
+      ],
+      "n": 1259
+     },
+     "fraud_missed": {
+      "rate": 0.18181818181818182,
+      "ci": [
+       0.0,
+       0.43333333333333335
+      ],
+      "n": 33
+     },
+     "label": "read-out"
+    }
+   },
+   "aol.com": {
+    "final-logreg-amt": {
+     "good_declined": {
+      "rate": 0.01945945945945946,
+      "ci": [
+       0.008592910848549946,
+       0.031833681124019526
+      ],
+      "n": 925
+     },
+     "fraud_missed": {
+      "rate": 0.13333333333333333,
+      "ci": [
+       0.0,
+       0.3333333333333333
+      ],
+      "n": 15
+     },
+     "label": "read-out"
+    },
+    "final-signal-amt": {
+     "good_declined": {
+      "rate": 0.021621621621621623,
+      "ci": [
+       0.01096704404330867,
+       0.03444656842730409
+      ],
+      "n": 925
+     },
+     "fraud_missed": {
+      "rate": 0.4666666666666667,
+      "ci": [
+       0.09090909090909091,
+       0.8181818181818182
+      ],
+      "n": 15
+     },
+     "label": "read-out"
+    },
+    "final-signal-cust": {
+     "good_declined": {
+      "rate": 0.004324324324324324,
+      "ci": [
+       0.0010384215991692627,
+       0.0088008800880088
+      ],
+      "n": 925
+     },
+     "fraud_missed": {
+      "rate": 0.5333333333333333,
+      "ci": [
+       0.125,
+       0.9
+      ],
+      "n": 15
+     },
+     "label": "read-out"
+    },
+    "final-rich-amt": {
+     "good_declined": {
+      "rate": 0.010810810810810811,
+      "ci": [
+       0.004287130689837989,
+       0.017894736842105262
+      ],
+      "n": 925
+     },
+     "fraud_missed": {
+      "rate": 0.4666666666666667,
+      "ci": [
+       0.16666666666666666,
+       0.8
+      ],
+      "n": 15
+     },
+     "label": "read-out"
+    },
+    "final-tab-all-amt": {
+     "good_declined": {
+      "rate": 0.022702702702702703,
+      "ci": [
+       0.011518324607329843,
+       0.036240271704090776
+      ],
+      "n": 925
+     },
+     "fraud_missed": {
+      "rate": 0.4666666666666667,
+      "ci": [
+       0.09090909090909091,
+       0.8181818181818182
+      ],
+      "n": 15
+     },
+     "label": "read-out"
+    }
+   },
+   "gmail.com": {
+    "final-logreg-amt": {
+     "good_declined": {
+      "rate": 0.0752070531659097,
+      "ci": [
+       0.0637594683721289,
+       0.08786561584741197
+      ],
+      "n": 7486
+     },
+     "fraud_missed": {
+      "rate": 0.32075471698113206,
+      "ci": [
+       0.23602310000697885,
+       0.42264594149677087
+      ],
+      "n": 318
+     },
+     "label": "read-out"
+    },
+    "final-signal-amt": {
+     "good_declined": {
+      "rate": 0.06358535933742987,
+      "ci": [
+       0.05359535629150745,
+       0.0741138035396663
+      ],
+      "n": 7486
+     },
+     "fraud_missed": {
+      "rate": 0.2893081761006289,
+      "ci": [
+       0.20460212741222972,
+       0.3907659927439609
+      ],
+      "n": 318
+     },
+     "label": "read-out"
+    },
+    "final-signal-cust": {
+     "good_declined": {
+      "rate": 0.01856799358803099,
+      "ci": [
+       0.013765151841172843,
+       0.023685021333859062
+      ],
+      "n": 7486
+     },
+     "fraud_missed": {
+      "rate": 0.3805031446540881,
+      "ci": [
+       0.28461436170212767,
+       0.489286191749427
+      ],
+      "n": 318
+     },
+     "label": "read-out"
+    },
+    "final-rich-amt": {
+     "good_declined": {
+      "rate": 0.06612343040341971,
+      "ci": [
+       0.05407210142599064,
+       0.07969151099869047
+      ],
+      "n": 7486
+     },
+     "fraud_missed": {
+      "rate": 0.3238993710691824,
+      "ci": [
+       0.22950819672131148,
+       0.43038757989723014
+      ],
+      "n": 318
+     },
+     "label": "read-out"
+    },
+    "final-tab-all-amt": {
+     "good_declined": {
+      "rate": 0.059444296019235905,
+      "ci": [
+       0.050631019036943656,
+       0.0687267488541252
+      ],
+      "n": 7486
+     },
+     "fraud_missed": {
+      "rate": 0.27358490566037735,
+      "ci": [
+       0.1940275893260968,
+       0.36253806526161214
+      ],
+      "n": 318
+     },
+     "label": "read-out"
+    }
+   },
+   "hotmail.com": {
+    "final-logreg-amt": {
+     "good_declined": {
+      "rate": 0.05138339920948617,
+      "ci": [
+       0.03580335129285907,
+       0.06728075804528144
+      ],
+      "n": 1265
+     },
+     "fraud_missed": {
+      "rate": 0.3018867924528302,
+      "ci": [
+       0.16666666666666666,
+       0.46512630312750586
+      ],
+      "n": 53
+     },
+     "label": "read-out"
+    },
+    "final-signal-amt": {
+     "good_declined": {
+      "rate": 0.06007905138339921,
+      "ci": [
+       0.0416326360685823,
+       0.0777248475609756
+      ],
+      "n": 1265
+     },
+     "fraud_missed": {
+      "rate": 0.3018867924528302,
+      "ci": [
+       0.14814814814814814,
+       0.46939548546691395
+      ],
+      "n": 53
+     },
+     "label": "read-out"
+    },
+    "final-signal-cust": {
+     "good_declined": {
+      "rate": 0.022134387351778657,
+      "ci": [
+       0.012305168170631665,
+       0.03205629397967162
+      ],
+      "n": 1265
+     },
+     "fraud_missed": {
+      "rate": 0.37735849056603776,
+      "ci": [
+       0.21052631578947367,
+       0.5806639159789945
+      ],
+      "n": 53
+     },
+     "label": "read-out"
+    },
+    "final-rich-amt": {
+     "good_declined": {
+      "rate": 0.06324110671936758,
+      "ci": [
+       0.044924928114293355,
+       0.08140442264426291
+      ],
+      "n": 1265
+     },
+     "fraud_missed": {
+      "rate": 0.3584905660377358,
+      "ci": [
+       0.18421052631578946,
+       0.5625284090909087
+      ],
+      "n": 53
+     },
+     "label": "read-out"
+    },
+    "final-tab-all-amt": {
+     "good_declined": {
+      "rate": 0.062450592885375494,
+      "ci": [
+       0.04501323918799647,
+       0.07864240006229352
+      ],
+      "n": 1265
+     },
+     "fraud_missed": {
+      "rate": 0.24528301886792453,
+      "ci": [
+       0.1,
+       0.4218836805555554
+      ],
+      "n": 53
+     },
+     "label": "read-out"
+    }
+   },
+   "none": {
+    "final-logreg-amt": {
+     "good_declined": {
+      "rate": 0.05303030303030303,
+      "ci": [
+       0.04069751237976719,
+       0.06599472836275096
+      ],
+      "n": 3432
+     },
+     "fraud_missed": {
+      "rate": 0.5483870967741935,
+      "ci": [
+       0.4235294117647059,
+       0.7011494252873564
+      ],
+      "n": 93
+     },
+     "label": "read-out"
+    },
+    "final-signal-amt": {
+     "good_declined": {
+      "rate": 0.05652680652680653,
+      "ci": [
+       0.04598042406932953,
+       0.06803863199162344
+      ],
+      "n": 3432
+     },
+     "fraud_missed": {
+      "rate": 0.45161290322580644,
+      "ci": [
+       0.3364485981308411,
+       0.5882352941176471
+      ],
+      "n": 93
+     },
+     "label": "read-out"
+    },
+    "final-signal-cust": {
+     "good_declined": {
+      "rate": 0.011655011655011656,
+      "ci": [
+       0.007196263714417068,
+       0.01694533875891826
+      ],
+      "n": 3432
+     },
+     "fraud_missed": {
+      "rate": 0.6559139784946236,
+      "ci": [
+       0.5533980582524272,
+       0.7619047619047619
+      ],
+      "n": 93
+     },
+     "label": "read-out"
+    },
+    "final-rich-amt": {
+     "good_declined": {
+      "rate": 0.09498834498834499,
+      "ci": [
+       0.04802899889341043,
+       0.17133533324743097
+      ],
+      "n": 3432
+     },
+     "fraud_missed": {
+      "rate": 0.5483870967741935,
+      "ci": [
+       0.4444444444444444,
+       0.6626541047912581
+      ],
+      "n": 93
+     },
+     "label": "read-out"
+    },
+    "final-tab-all-amt": {
+     "good_declined": {
+      "rate": 0.04924242424242424,
+      "ci": [
+       0.03769535626313308,
+       0.06169043471256175
+      ],
+      "n": 3432
+     },
+     "fraud_missed": {
+      "rate": 0.45161290322580644,
+      "ci": [
+       0.3263100686498856,
+       0.5882352941176471
+      ],
+      "n": 93
+     },
+     "label": "read-out"
+    }
+   },
+   "other": {
+    "final-logreg-amt": {
+     "good_declined": {
+      "rate": 0.04069119286510591,
+      "ci": [
+       0.024460558159296063,
+       0.06123537171985498
+      ],
+      "n": 1794
+     },
+     "fraud_missed": {
+      "rate": 0.4897959183673469,
+      "ci": [
+       0.306443383805135,
+       0.7142857142857143
+      ],
+      "n": 49
+     },
+     "label": "read-out"
+    },
+    "final-signal-amt": {
+     "good_declined": {
+      "rate": 0.023411371237458192,
+      "ci": [
+       0.016042542583865765,
+       0.03138540271387805
+      ],
+      "n": 1794
+     },
+     "fraud_missed": {
+      "rate": 0.4897959183673469,
+      "ci": [
+       0.3023255813953488,
+       0.6792452830188679
+      ],
+      "n": 49
+     },
+     "label": "read-out"
+    },
+    "final-signal-cust": {
+     "good_declined": {
+      "rate": 0.004459308807134894,
+      "ci": [
+       0.0015345799780493526,
+       0.008460236886632826
+      ],
+      "n": 1794
+     },
+     "fraud_missed": {
+      "rate": 0.5918367346938775,
+      "ci": [
+       0.4,
+       0.78
+      ],
+      "n": 49
+     },
+     "label": "read-out"
+    },
+    "final-rich-amt": {
+     "good_declined": {
+      "rate": 0.03567447045707915,
+      "ci": [
+       0.01831847254185071,
+       0.06048922377535198
+      ],
+      "n": 1794
+     },
+     "fraud_missed": {
+      "rate": 0.6326530612244898,
+      "ci": [
+       0.46511627906976744,
+       0.7727272727272727
+      ],
+      "n": 49
+     },
+     "label": "read-out"
+    },
+    "final-tab-all-amt": {
+     "good_declined": {
+      "rate": 0.024526198439241916,
+      "ci": [
+       0.016505021475598534,
+       0.0328232062462048
+      ],
+      "n": 1794
+     },
+     "fraud_missed": {
+      "rate": 0.5306122448979592,
+      "ci": [
+       0.375,
+       0.68
+      ],
+      "n": 49
+     },
+     "label": "read-out"
+    }
+   },
+   "yahoo.com": {
+    "final-logreg-amt": {
+     "good_declined": {
+      "rate": 0.03022748519788096,
+      "ci": [
+       0.022005658597925182,
+       0.03860407659048796
+      ],
+      "n": 3209
+     },
+     "fraud_missed": {
+      "rate": 0.6376811594202898,
+      "ci": [
+       0.5402298850574713,
+       0.7580645161290323
+      ],
+      "n": 69
+     },
+     "label": "read-out"
+    },
+    "final-signal-amt": {
+     "good_declined": {
+      "rate": 0.02243689622935494,
+      "ci": [
+       0.01621444398785159,
+       0.028750075665859565
+      ],
+      "n": 3209
+     },
+     "fraud_missed": {
+      "rate": 0.5362318840579711,
+      "ci": [
+       0.4166666666666667,
+       0.6470588235294118
+      ],
+      "n": 69
+     },
+     "label": "read-out"
+    },
+    "final-signal-cust": {
+     "good_declined": {
+      "rate": 0.006544094733561857,
+      "ci": [
+       0.002787240631774543,
+       0.010850053926221537
+      ],
+      "n": 3209
+     },
+     "fraud_missed": {
+      "rate": 0.6521739130434783,
+      "ci": [
+       0.532258064516129,
+       0.7796610169491526
+      ],
+      "n": 69
+     },
+     "label": "read-out"
+    },
+    "final-rich-amt": {
+     "good_declined": {
+      "rate": 0.0221252726706139,
+      "ci": [
+       0.01701195837220007,
+       0.027465715018918774
+      ],
+      "n": 3209
+     },
+     "fraud_missed": {
+      "rate": 0.5217391304347826,
+      "ci": [
+       0.3815632832080201,
+       0.6476257545271629
+      ],
+      "n": 69
+     },
+     "label": "read-out"
+    },
+    "final-tab-all-amt": {
+     "good_declined": {
+      "rate": 0.019320660641944532,
+      "ci": [
+       0.013374578836672719,
+       0.02544699814738117
+      ],
+      "n": 3209
+     },
+     "fraud_missed": {
+      "rate": 0.5217391304347826,
+      "ci": [
+       0.4117647058823529,
+       0.6271186440677966
+      ],
+      "n": 69
+     },
+     "label": "read-out"
+    }
+   }
+  }
+ },
+ "seed_noise": {
+  "source": "fraud/results/eval_lm_nuc/20261104-090217.json \u2192 verdict.among_lm",
+  "comparison": {
+   "a": "lm-seed1-amt",
+   "b": "lm-phase12-amt",
+   "better": "lm-seed1-amt",
+   "other": "lm-phase12-amt",
+   "cheaper": 55,
+   "dearer": 33,
+   "ties": 0,
+   "sign_p": 0.02462283158179103,
+   "mean_diff": -101.9680556818182,
+   "mean_diff_ci95": [
+    -204.65506397727273,
+    5.953184232954506
+   ],
+   "distinguishable": false
+  },
+  "label": "dev",
+  "noise_floor_usd_per_window": 100,
+  "note": "two seeds of the same recipe differ by about 100 USD/window on dev; differences of that size are read as noise"
+ },
+ "price_grid": {
+  "cells": [
+   {
+    "r": 0.05,
+    "c_r": 5.0,
+    "customer": 0.0,
+    "lambda": {
+     "final-logreg-amt": 10,
+     "final-signal-amt": 5,
+     "final-rich-amt": 5,
+     "final-tab-all-amt": 5
+    },
+    "mean_cost": {
+     "final-logreg-amt": 1664.3498325,
+     "final-signal-amt": 1629.3258225,
+     "final-rich-amt": 1879.9816575,
+     "final-tab-all-amt": 1438.6904799999998
+    },
+    "cheapest": "final-tab-all-amt",
+    "cheapest_vs_lr": {
+     "a": "final-tab-all-amt",
+     "b": "final-logreg-amt",
+     "better": "final-tab-all-amt",
+     "other": "final-logreg-amt",
+     "cheaper": 14,
+     "dearer": 6,
+     "ties": 0,
+     "sign_p": 0.11531829833984375,
+     "mean_diff": -225.65935249999993,
+     "mean_diff_ci95": [
+      -392.71554037499993,
+      -82.77347437499992
+     ],
+     "distinguishable": true
+    },
+    "distinguishable_from_lr": true,
+    "label": "read-out"
+   },
+   {
+    "r": 0.05,
+    "c_r": 5.0,
+    "customer": 10.0,
+    "lambda": {
+     "final-logreg-amt": 10,
+     "final-signal-amt": 10,
+     "final-rich-amt": 10,
+     "final-tab-all-amt": 10
+    },
+    "mean_cost": {
+     "final-logreg-amt": 1921.030985,
+     "final-signal-amt": 1795.7465975000002,
+     "final-rich-amt": 2240.0082875,
+     "final-tab-all-amt": 1725.9958775
+    },
+    "cheapest": "final-tab-all-amt",
+    "cheapest_vs_lr": {
+     "a": "final-tab-all-amt",
+     "b": "final-logreg-amt",
+     "better": "final-tab-all-amt",
+     "other": "final-logreg-amt",
+     "cheaper": 15,
+     "dearer": 5,
+     "ties": 0,
+     "sign_p": 0.04138946533203125,
+     "mean_diff": -195.03510749999998,
+     "mean_diff_ci95": [
+      -372.36044875,
+      -23.156449187500062
+     ],
+     "distinguishable": true
+    },
+    "distinguishable_from_lr": true,
+    "label": "read-out"
+   },
+   {
+    "r": 0.05,
+    "c_r": 5.0,
+    "customer": 30.0,
+    "lambda": {
+     "final-logreg-amt": 20,
+     "final-signal-amt": 10,
+     "final-rich-amt": 10,
+     "final-tab-all-amt": 10
+    },
+    "mean_cost": {
+     "final-logreg-amt": 2174.73644,
+     "final-signal-amt": 1949.0162400000002,
+     "final-rich-amt": 2588.4702350000002,
+     "final-tab-all-amt": 1920.007385
+    },
+    "cheapest": "final-tab-all-amt",
+    "cheapest_vs_lr": {
+     "a": "final-tab-all-amt",
+     "b": "final-logreg-amt",
+     "better": "final-tab-all-amt",
+     "other": "final-logreg-amt",
+     "cheaper": 18,
+     "dearer": 2,
+     "ties": 0,
+     "sign_p": 0.0004024505615234375,
+     "mean_diff": -254.72905500000002,
+     "mean_diff_ci95": [
+      -611.9913911250002,
+      233.66072693749993
+     ],
+     "distinguishable": false
+    },
+    "distinguishable_from_lr": false,
+    "label": "read-out"
+   },
+   {
+    "r": 0.05,
+    "c_r": 10.0,
+    "customer": 0.0,
+    "lambda": {
+     "final-logreg-amt": 5,
+     "final-signal-amt": 5,
+     "final-rich-amt": 1,
+     "final-tab-all-amt": 2
+    },
+    "mean_cost": {
+     "final-logreg-amt": 1844.8498325,
+     "final-signal-amt": 1825.6149725,
+     "final-rich-amt": 2086.3694625,
+     "final-tab-all-amt": 1684.2783299999999
+    },
+    "cheapest": "final-tab-all-amt",
+    "cheapest_vs_lr": {
+     "a": "final-tab-all-amt",
+     "b": "final-logreg-amt",
+     "better": "final-tab-all-amt",
+     "other": "final-logreg-amt",
+     "cheaper": 14,
+     "dearer": 6,
+     "ties": 0,
+     "sign_p": 0.11531829833984375,
+     "mean_diff": -160.57150250000004,
+     "mean_diff_ci95": [
+      -368.31286087500007,
+      43.153094874999994
+     ],
+     "distinguishable": false
+    },
+    "distinguishable_from_lr": false,
+    "label": "read-out"
+   },
+   {
+    "r": 0.05,
+    "c_r": 10.0,
+    "customer": 10.0,
+    "lambda": {
+     "final-logreg-amt": 5,
+     "final-signal-amt": 5,
+     "final-rich-amt": 5,
+     "final-tab-all-amt": 5
+    },
+    "mean_cost": {
+     "final-logreg-amt": 2149.5309850000003,
+     "final-signal-amt": 2023.9965975,
+     "final-rich-amt": 2464.7582875,
+     "final-tab-all-amt": 1939.2458775
+    },
+    "cheapest": "final-tab-all-amt",
+    "cheapest_vs_lr": {
+     "a": "final-tab-all-amt",
+     "b": "final-logreg-amt",
+     "better": "final-tab-all-amt",
+     "other": "final-logreg-amt",
+     "cheaper": 15,
+     "dearer": 5,
+     "ties": 0,
+     "sign_p": 0.04138946533203125,
+     "mean_diff": -210.28510749999995,
+     "mean_diff_ci95": [
+      -385.85351618749996,
+      -39.12645612500016
+     ],
+     "distinguishable": true
+    },
+    "distinguishable_from_lr": true,
+    "label": "read-out"
+   },
+   {
+    "r": 0.05,
+    "c_r": 10.0,
+    "customer": 30.0,
+    "lambda": {
+     "final-logreg-amt": 10,
+     "final-signal-amt": 10,
+     "final-rich-amt": 10,
+     "final-tab-all-amt": 10
+    },
+    "mean_cost": {
+     "final-logreg-amt": 2417.4978,
+     "final-signal-amt": 2098.7310425000005,
+     "final-rich-amt": 2662.5973175000004,
+     "final-tab-all-amt": 2273.8886624999996
+    },
+    "cheapest": "final-signal-amt",
+    "cheapest_vs_lr": {
+     "a": "final-signal-amt",
+     "b": "final-logreg-amt",
+     "better": "final-signal-amt",
+     "other": "final-logreg-amt",
+     "cheaper": 17,
+     "dearer": 3,
+     "ties": 0,
+     "sign_p": 0.0025768280029296875,
+     "mean_diff": -318.76675750000015,
+     "mean_diff_ci95": [
+      -755.4848281875002,
+      148.99948231249985
+     ],
+     "distinguishable": false
+    },
+    "distinguishable_from_lr": false,
+    "label": "read-out"
+   },
+   {
+    "r": 0.05,
+    "c_r": 25.0,
+    "customer": 0.0,
+    "lambda": {
+     "final-logreg-amt": 1,
+     "final-signal-amt": 0,
+     "final-rich-amt": 0,
+     "final-tab-all-amt": 0
+    },
+    "mean_cost": {
+     "final-logreg-amt": 2256.6189825,
+     "final-signal-amt": 2180.9073975,
+     "final-rich-amt": 2409.5802125,
+     "final-tab-all-amt": 2027.2909299999997
+    },
+    "cheapest": "final-tab-all-amt",
+    "cheapest_vs_lr": {
+     "a": "final-tab-all-amt",
+     "b": "final-logreg-amt",
+     "better": "final-tab-all-amt",
+     "other": "final-logreg-amt",
+     "cheaper": 17,
+     "dearer": 3,
+     "ties": 0,
+     "sign_p": 0.0025768280029296875,
+     "mean_diff": -229.32805250000007,
+     "mean_diff_ci95": [
+      -557.925197375,
+      180.83547387499985
+     ],
+     "distinguishable": false
+    },
+    "distinguishable_from_lr": false,
+    "label": "read-out"
+   },
+   {
+    "r": 0.05,
+    "c_r": 25.0,
+    "customer": 10.0,
+    "lambda": {
+     "final-logreg-amt": 1,
+     "final-signal-amt": 0,
+     "final-rich-amt": 0,
+     "final-tab-all-amt": 0
+    },
+    "mean_cost": {
+     "final-logreg-amt": 2678.1843725,
+     "final-signal-amt": 2459.0371125000006,
+     "final-rich-amt": 2850.3426575000003,
+     "final-tab-all-amt": 2384.6941100000004
+    },
+    "cheapest": "final-tab-all-amt",
+    "cheapest_vs_lr": {
+     "a": "final-tab-all-amt",
+     "b": "final-logreg-amt",
+     "better": "final-tab-all-amt",
+     "other": "final-logreg-amt",
+     "cheaper": 16,
+     "dearer": 4,
+     "ties": 0,
+     "sign_p": 0.01181793212890625,
+     "mean_diff": -293.4902624999999,
+     "mean_diff_ci95": [
+      -621.4949385624999,
+      118.7406093749997
+     ],
+     "distinguishable": false
+    },
+    "distinguishable_from_lr": false,
+    "label": "read-out"
+   },
+   {
+    "r": 0.05,
+    "c_r": 25.0,
+    "customer": 30.0,
+    "lambda": {
+     "final-logreg-amt": 1,
+     "final-signal-amt": 0,
+     "final-rich-amt": 0,
+     "final-tab-all-amt": 0
+    },
+    "mean_cost": {
+     "final-logreg-amt": 2864.166725,
+     "final-signal-amt": 2699.8030350000004,
+     "final-rich-amt": 3185.4974975,
+     "final-tab-all-amt": 2610.10406
+    },
+    "cheapest": "final-tab-all-amt",
+    "cheapest_vs_lr": {
+     "a": "final-tab-all-amt",
+     "b": "final-logreg-amt",
+     "better": "final-tab-all-amt",
+     "other": "final-logreg-amt",
+     "cheaper": 15,
+     "dearer": 5,
+     "ties": 0,
+     "sign_p": 0.04138946533203125,
+     "mean_diff": -254.06266499999998,
+     "mean_diff_ci95": [
+      -619.5463138125,
+      194.0864362499999
+     ],
+     "distinguishable": false
+    },
+    "distinguishable_from_lr": false,
+    "label": "read-out"
+   },
+   {
+    "r": 0.1,
+    "c_r": 5.0,
+    "customer": 0.0,
+    "lambda": {
+     "final-logreg-amt": 10,
+     "final-signal-amt": 10,
+     "final-rich-amt": 10,
+     "final-tab-all-amt": 10
+    },
+    "mean_cost": {
+     "final-logreg-amt": 1897.402895,
+     "final-signal-amt": 1764.07966,
+     "final-rich-amt": 2203.0015000000003,
+     "final-tab-all-amt": 1684.485815
+    },
+    "cheapest": "final-tab-all-amt",
+    "cheapest_vs_lr": {
+     "a": "final-tab-all-amt",
+     "b": "final-logreg-amt",
+     "better": "final-tab-all-amt",
+     "other": "final-logreg-amt",
+     "cheaper": 16,
+     "dearer": 4,
+     "ties": 0,
+     "sign_p": 0.01181793212890625,
+     "mean_diff": -212.91708,
+     "mean_diff_ci95": [
+      -388.9984375000002,
+      -38.80766925000007
+     ],
+     "distinguishable": true
+    },
+    "distinguishable_from_lr": true,
+    "label": "read-out"
+   },
+   {
+    "r": 0.1,
+    "c_r": 5.0,
+    "customer": 10.0,
+    "lambda": {
+     "final-logreg-amt": 10,
+     "final-signal-amt": 10,
+     "final-rich-amt": 10,
+     "final-tab-all-amt": 10
+    },
+    "mean_cost": {
+     "final-logreg-amt": 2321.2403499999996,
+     "final-signal-amt": 1976.3589499999998,
+     "final-rich-amt": 2395.1733499999996,
+     "final-tab-all-amt": 1872.7783649999997
+    },
+    "cheapest": "final-tab-all-amt",
+    "cheapest_vs_lr": {
+     "a": "final-tab-all-amt",
+     "b": "final-logreg-amt",
+     "better": "final-tab-all-amt",
+     "other": "final-logreg-amt",
+     "cheaper": 17,
+     "dearer": 3,
+     "ties": 0,
+     "sign_p": 0.0025768280029296875,
+     "mean_diff": -448.4619850000001,
+     "mean_diff_ci95": [
+      -691.3799459999999,
+      -220.44354237500036
+     ],
+     "distinguishable": true
+    },
+    "distinguishable_from_lr": true,
+    "label": "read-out"
+   },
+   {
+    "r": 0.1,
+    "c_r": 5.0,
+    "customer": 30.0,
+    "lambda": {
+     "final-logreg-amt": 20,
+     "final-signal-amt": 20,
+     "final-rich-amt": 20,
+     "final-tab-all-amt": 10
+    },
+    "mean_cost": {
+     "final-logreg-amt": 2142.0734449999995,
+     "final-signal-amt": 1991.4410349999998,
+     "final-rich-amt": 2493.8203200000003,
+     "final-tab-all-amt": 1980.3864099999998
+    },
+    "cheapest": "final-tab-all-amt",
+    "cheapest_vs_lr": {
+     "a": "final-tab-all-amt",
+     "b": "final-logreg-amt",
+     "better": "final-tab-all-amt",
+     "other": "final-logreg-amt",
+     "cheaper": 15,
+     "dearer": 5,
+     "ties": 0,
+     "sign_p": 0.04138946533203125,
+     "mean_diff": -161.687035,
+     "mean_diff_ci95": [
+      -524.1731965,
+      322.97678012499995
+     ],
+     "distinguishable": false
+    },
+    "distinguishable_from_lr": false,
+    "label": "read-out"
+   },
+   {
+    "r": 0.1,
+    "c_r": 10.0,
+    "customer": 0.0,
+    "lambda": {
+     "final-logreg-amt": 10,
+     "final-signal-amt": 10,
+     "final-rich-amt": 5,
+     "final-tab-all-amt": 5
+    },
+    "mean_cost": {
+     "final-logreg-amt": 2106.1117700000004,
+     "final-signal-amt": 1942.89091,
+     "final-rich-amt": 2426.7515,
+     "final-tab-all-amt": 1896.735815
+    },
+    "cheapest": "final-tab-all-amt",
+    "cheapest_vs_lr": {
+     "a": "final-tab-all-amt",
+     "b": "final-logreg-amt",
+     "better": "final-tab-all-amt",
+     "other": "final-logreg-amt",
+     "cheaper": 15,
+     "dearer": 5,
+     "ties": 0,
+     "sign_p": 0.04138946533203125,
+     "mean_diff": -209.37595500000006,
+     "mean_diff_ci95": [
+      -430.24115425,
+      56.68875137499985
+     ],
+     "distinguishable": false
+    },
+    "distinguishable_from_lr": false,
+    "label": "read-out"
+   },
+   {
+    "r": 0.1,
+    "c_r": 10.0,
+    "customer": 10.0,
+    "lambda": {
+     "final-logreg-amt": 10,
+     "final-signal-amt": 10,
+     "final-rich-amt": 10,
+     "final-tab-all-amt": 5
+    },
+    "mean_cost": {
+     "final-logreg-amt": 2372.974625,
+     "final-signal-amt": 2115.06743,
+     "final-rich-amt": 2366.6129000000005,
+     "final-tab-all-amt": 2103.278365
+    },
+    "cheapest": "final-tab-all-amt",
+    "cheapest_vs_lr": {
+     "a": "final-tab-all-amt",
+     "b": "final-logreg-amt",
+     "better": "final-tab-all-amt",
+     "other": "final-logreg-amt",
+     "cheaper": 17,
+     "dearer": 3,
+     "ties": 0,
+     "sign_p": 0.0025768280029296875,
+     "mean_diff": -269.69626000000017,
+     "mean_diff_ci95": [
+      -437.1634411250001,
+      -96.43413237500012
+     ],
+     "distinguishable": true
+    },
+    "distinguishable_from_lr": true,
+    "label": "read-out"
+   },
+   {
+    "r": 0.1,
+    "c_r": 10.0,
+    "customer": 30.0,
+    "lambda": {
+     "final-logreg-amt": 10,
+     "final-signal-amt": 10,
+     "final-rich-amt": 10,
+     "final-tab-all-amt": 10
+    },
+    "mean_cost": {
+     "final-logreg-amt": 2543.68113,
+     "final-signal-amt": 2284.5151849999997,
+     "final-rich-amt": 2707.79145,
+     "final-tab-all-amt": 2262.8684349999994
+    },
+    "cheapest": "final-tab-all-amt",
+    "cheapest_vs_lr": {
+     "a": "final-tab-all-amt",
+     "b": "final-logreg-amt",
+     "better": "final-tab-all-amt",
+     "other": "final-logreg-amt",
+     "cheaper": 16,
+     "dearer": 4,
+     "ties": 0,
+     "sign_p": 0.01181793212890625,
+     "mean_diff": -280.81269500000013,
+     "mean_diff_ci95": [
+      -644.1374935,
+      162.1580283749999
+     ],
+     "distinguishable": false
+    },
+    "distinguishable_from_lr": false,
+    "label": "read-out"
+   },
+   {
+    "r": 0.1,
+    "c_r": 25.0,
+    "customer": 0.0,
+    "lambda": {
+     "final-logreg-amt": 1,
+     "final-signal-amt": 0,
+     "final-rich-amt": 0,
+     "final-tab-all-amt": 0
+    },
+    "mean_cost": {
+     "final-logreg-amt": 2611.1069199999997,
+     "final-signal-amt": 2384.9129000000003,
+     "final-rich-amt": 2727.71224,
+     "final-tab-all-amt": 2283.0929650000003
+    },
+    "cheapest": "final-tab-all-amt",
+    "cheapest_vs_lr": {
+     "a": "final-tab-all-amt",
+     "b": "final-logreg-amt",
+     "better": "final-tab-all-amt",
+     "other": "final-logreg-amt",
+     "cheaper": 16,
+     "dearer": 4,
+     "ties": 0,
+     "sign_p": 0.01181793212890625,
+     "mean_diff": -328.01395499999984,
+     "mean_diff_ci95": [
+      -685.6230728749999,
+      96.44349737499977
+     ],
+     "distinguishable": false
+    },
+    "distinguishable_from_lr": false,
+    "label": "read-out"
+   },
+   {
+    "r": 0.1,
+    "c_r": 25.0,
+    "customer": 10.0,
+    "lambda": {
+     "final-logreg-amt": 1,
+     "final-signal-amt": 0,
+     "final-rich-amt": 0,
+     "final-tab-all-amt": 0
+    },
+    "mean_cost": {
+     "final-logreg-amt": 2789.3368499999997,
+     "final-signal-amt": 2592.9087400000003,
+     "final-rich-amt": 2992.103615,
+     "final-tab-all-amt": 2523.43993
+    },
+    "cheapest": "final-tab-all-amt",
+    "cheapest_vs_lr": {
+     "a": "final-tab-all-amt",
+     "b": "final-logreg-amt",
+     "better": "final-tab-all-amt",
+     "other": "final-logreg-amt",
+     "cheaper": 16,
+     "dearer": 4,
+     "ties": 0,
+     "sign_p": 0.01181793212890625,
+     "mean_diff": -265.89692000000014,
+     "mean_diff_ci95": [
+      -612.9402462500001,
+      151.8920509999991
+     ],
+     "distinguishable": false
+    },
+    "distinguishable_from_lr": false,
+    "label": "read-out"
+   },
+   {
+    "r": 0.1,
+    "c_r": 25.0,
+    "customer": 30.0,
+    "lambda": {
+     "final-logreg-amt": 1,
+     "final-signal-amt": 0,
+     "final-rich-amt": 0,
+     "final-tab-all-amt": 0
+    },
+    "mean_cost": {
+     "final-logreg-amt": 2881.7326549999993,
+     "final-signal-amt": 2697.4410350000003,
+     "final-rich-amt": 3237.8203200000003,
+     "final-tab-all-amt": 2610.8731450000005
+    },
+    "cheapest": "final-tab-all-amt",
+    "cheapest_vs_lr": {
+     "a": "final-tab-all-amt",
+     "b": "final-logreg-amt",
+     "better": "final-tab-all-amt",
+     "other": "final-logreg-amt",
+     "cheaper": 15,
+     "dearer": 5,
+     "ties": 0,
+     "sign_p": 0.04138946533203125,
+     "mean_diff": -270.8595099999999,
+     "mean_diff_ci95": [
+      -643.0241417499998,
+      173.398419125
+     ],
+     "distinguishable": false
+    },
+    "distinguishable_from_lr": false,
+    "label": "read-out"
+   },
+   {
+    "r": 0.2,
+    "c_r": 5.0,
+    "customer": 0.0,
+    "lambda": {
+     "final-logreg-amt": 20,
+     "final-signal-amt": 10,
+     "final-rich-amt": 10,
+     "final-tab-all-amt": 10
+    },
+    "mean_cost": {
+     "final-logreg-amt": 2109.07019,
+     "final-signal-amt": 2152.2734,
+     "final-rich-amt": 2436.9456400000004,
+     "final-tab-all-amt": 1967.29056
+    },
+    "cheapest": "final-tab-all-amt",
+    "cheapest_vs_lr": {
+     "a": "final-tab-all-amt",
+     "b": "final-logreg-amt",
+     "better": "final-tab-all-amt",
+     "other": "final-logreg-amt",
+     "cheaper": 16,
+     "dearer": 4,
+     "ties": 0,
+     "sign_p": 0.01181793212890625,
+     "mean_diff": -141.77963000000005,
+     "mean_diff_ci95": [
+      -466.09183100000007,
+      245.70899024999997
+     ],
+     "distinguishable": false
+    },
+    "distinguishable_from_lr": false,
+    "label": "read-out"
+   },
+   {
+    "r": 0.2,
+    "c_r": 5.0,
+    "customer": 10.0,
+    "lambda": {
+     "final-logreg-amt": 20,
+     "final-signal-amt": 20,
+     "final-rich-amt": 10,
+     "final-tab-all-amt": 10
+    },
+    "mean_cost": {
+     "final-logreg-amt": 2159.7462100000002,
+     "final-signal-amt": 1981.4954999999998,
+     "final-rich-amt": 2718.8282699999995,
+     "final-tab-all-amt": 2007.8496200000002
+    },
+    "cheapest": "final-signal-amt",
+    "cheapest_vs_lr": {
+     "a": "final-signal-amt",
+     "b": "final-logreg-amt",
+     "better": "final-signal-amt",
+     "other": "final-logreg-amt",
+     "cheaper": 16,
+     "dearer": 4,
+     "ties": 0,
+     "sign_p": 0.01181793212890625,
+     "mean_diff": -178.25070999999997,
+     "mean_diff_ci95": [
+      -513.6087259999999,
+      262.3830865
+     ],
+     "distinguishable": false
+    },
+    "distinguishable_from_lr": false,
+    "label": "read-out"
+   },
+   {
+    "r": 0.2,
+    "c_r": 5.0,
+    "customer": 30.0,
+    "lambda": {
+     "final-logreg-amt": 20,
+     "final-signal-amt": 20,
+     "final-rich-amt": 20,
+     "final-tab-all-amt": 10
+    },
+    "mean_cost": {
+     "final-logreg-amt": 2149.15147,
+     "final-signal-amt": 2074.74418,
+     "final-rich-amt": 2640.0490499999996,
+     "final-tab-all-amt": 2122.5942399999994
+    },
+    "cheapest": "final-signal-amt",
+    "cheapest_vs_lr": {
+     "a": "final-signal-amt",
+     "b": "final-logreg-amt",
+     "better": "final-signal-amt",
+     "other": "final-logreg-amt",
+     "cheaper": 11,
+     "dearer": 9,
+     "ties": 0,
+     "sign_p": 0.8238029479980469,
+     "mean_diff": -74.40728999999997,
+     "mean_diff_ci95": [
+      -427.4140992499999,
+      369.3918944999996
+     ],
+     "distinguishable": false
+    },
+    "distinguishable_from_lr": false,
+    "label": "read-out"
+   },
+   {
+    "r": 0.2,
+    "c_r": 10.0,
+    "customer": 0.0,
+    "lambda": {
+     "final-logreg-amt": 10,
+     "final-signal-amt": 10,
+     "final-rich-amt": 10,
+     "final-tab-all-amt": 10
+    },
+    "mean_cost": {
+     "final-logreg-amt": 2423.0219300000003,
+     "final-signal-amt": 2175.4772700000003,
+     "final-rich-amt": 2328.8546300000003,
+     "final-tab-all-amt": 2014.18222
+    },
+    "cheapest": "final-tab-all-amt",
+    "cheapest_vs_lr": {
+     "a": "final-tab-all-amt",
+     "b": "final-logreg-amt",
+     "better": "final-tab-all-amt",
+     "other": "final-logreg-amt",
+     "cheaper": 15,
+     "dearer": 5,
+     "ties": 0,
+     "sign_p": 0.04138946533203125,
+     "mean_diff": -408.8397099999999,
+     "mean_diff_ci95": [
+      -931.4261717499996,
+      20.437867000000058
+     ],
+     "distinguishable": false
+    },
+    "distinguishable_from_lr": false,
+    "label": "read-out"
+   },
+   {
+    "r": 0.2,
+    "c_r": 10.0,
+    "customer": 10.0,
+    "lambda": {
+     "final-logreg-amt": 10,
+     "final-signal-amt": 10,
+     "final-rich-amt": 10,
+     "final-tab-all-amt": 10
+    },
+    "mean_cost": {
+     "final-logreg-amt": 2542.16051,
+     "final-signal-amt": 2297.809419999999,
+     "final-rich-amt": 2500.08639,
+     "final-tab-all-amt": 2205.0314200000003
+    },
+    "cheapest": "final-tab-all-amt",
+    "cheapest_vs_lr": {
+     "a": "final-tab-all-amt",
+     "b": "final-logreg-amt",
+     "better": "final-tab-all-amt",
+     "other": "final-logreg-amt",
+     "cheaper": 16,
+     "dearer": 4,
+     "ties": 0,
+     "sign_p": 0.01181793212890625,
+     "mean_diff": -337.12909,
+     "mean_diff_ci95": [
+      -673.51668,
+      41.27512550000002
+     ],
+     "distinguishable": false
+    },
+    "distinguishable_from_lr": false,
+    "label": "read-out"
+   },
+   {
+    "r": 0.2,
+    "c_r": 10.0,
+    "customer": 30.0,
+    "lambda": {
+     "final-logreg-amt": 20,
+     "final-signal-amt": 10,
+     "final-rich-amt": 10,
+     "final-tab-all-amt": 10
+    },
+    "mean_cost": {
+     "final-logreg-amt": 2366.0703,
+     "final-signal-amt": 2325.5402,
+     "final-rich-amt": 2858.0794199999996,
+     "final-tab-all-amt": 2267.4919499999996
+    },
+    "cheapest": "final-tab-all-amt",
+    "cheapest_vs_lr": {
+     "a": "final-tab-all-amt",
+     "b": "final-logreg-amt",
+     "better": "final-tab-all-amt",
+     "other": "final-logreg-amt",
+     "cheaper": 15,
+     "dearer": 5,
+     "ties": 0,
+     "sign_p": 0.04138946533203125,
+     "mean_diff": -98.57834999999996,
+     "mean_diff_ci95": [
+      -477.3844822499999,
+      358.67651924999984
+     ],
+     "distinguishable": false
+    },
+    "distinguishable_from_lr": false,
+    "label": "read-out"
+   },
+   {
+    "r": 0.2,
+    "c_r": 25.0,
+    "customer": 0.0,
+    "lambda": {
+     "final-logreg-amt": 1,
+     "final-signal-amt": 0,
+     "final-rich-amt": 0,
+     "final-tab-all-amt": 0
+    },
+    "mean_cost": {
+     "final-logreg-amt": 2765.7901900000006,
+     "final-signal-amt": 2586.70092,
+     "final-rich-amt": 2957.3793400000004,
+     "final-tab-all-amt": 2516.5479399999995
+    },
+    "cheapest": "final-tab-all-amt",
+    "cheapest_vs_lr": {
+     "a": "final-tab-all-amt",
+     "b": "final-logreg-amt",
+     "better": "final-tab-all-amt",
+     "other": "final-logreg-amt",
+     "cheaper": 15,
+     "dearer": 5,
+     "ties": 0,
+     "sign_p": 0.04138946533203125,
+     "mean_diff": -249.24224999999996,
+     "mean_diff_ci95": [
+      -608.0935042499999,
+      172.8477175000001
+     ],
+     "distinguishable": false
+    },
+    "distinguishable_from_lr": false,
+    "label": "read-out"
+   },
+   {
+    "r": 0.2,
+    "c_r": 25.0,
+    "customer": 10.0,
+    "lambda": {
+     "final-logreg-amt": 2,
+     "final-signal-amt": 0,
+     "final-rich-amt": 0,
+     "final-tab-all-amt": 0
+    },
+    "mean_cost": {
+     "final-logreg-amt": 2863.6471099999994,
+     "final-signal-amt": 2666.4954999999995,
+     "final-rich-amt": 3121.6140700000005,
+     "final-tab-all-amt": 2590.0900300000003
+    },
+    "cheapest": "final-tab-all-amt",
+    "cheapest_vs_lr": {
+     "a": "final-tab-all-amt",
+     "b": "final-logreg-amt",
+     "better": "final-tab-all-amt",
+     "other": "final-logreg-amt",
+     "cheaper": 15,
+     "dearer": 5,
+     "ties": 0,
+     "sign_p": 0.04138946533203125,
+     "mean_diff": -273.55708000000004,
+     "mean_diff_ci95": [
+      -643.6102924999999,
+      169.9005404999999
+     ],
+     "distinguishable": false
+    },
+    "distinguishable_from_lr": false,
+    "label": "read-out"
+   },
+   {
+    "r": 0.2,
+    "c_r": 25.0,
+    "customer": 30.0,
+    "lambda": {
+     "final-logreg-amt": 1,
+     "final-signal-amt": 0,
+     "final-rich-amt": 0,
+     "final-tab-all-amt": 0
+    },
+    "mean_cost": {
+     "final-logreg-amt": 2888.59147,
+     "final-signal-amt": 2798.74418,
+     "final-rich-amt": 3429.04905,
+     "final-tab-all-amt": 2623.7300399999995
+    },
+    "cheapest": "final-tab-all-amt",
+    "cheapest_vs_lr": {
+     "a": "final-tab-all-amt",
+     "b": "final-logreg-amt",
+     "better": "final-tab-all-amt",
+     "other": "final-logreg-amt",
+     "cheaper": 14,
+     "dearer": 6,
+     "ties": 0,
+     "sign_p": 0.11531829833984375,
+     "mean_diff": -264.8614300000001,
+     "mean_diff_ci95": [
+      -645.7039275000002,
+      185.80631874999978
+     ],
+     "distinguishable": false
+    },
+    "distinguishable_from_lr": false,
+    "label": "read-out"
+   }
+  ],
+  "base_cell_check": {
+   "final-logreg-amt": {
+    "grid": 2106.1117700000004,
+    "saved": 2106.1117700000004
+   },
+   "final-signal-amt": {
+    "grid": 1942.89091,
+    "saved": 1942.89091
+   },
+   "final-rich-amt": {
+    "grid": 2426.7515,
+    "saved": 2426.7515
+   },
+   "final-tab-all-amt": {
+    "grid": 1896.735815,
+    "saved": 1896.735815
+   }
+  },
+  "note": "customer price charged per good customer declined (Costs.decline_flat) and priced by the rule; lambda re-picked on dev per cell"
+ }
+}

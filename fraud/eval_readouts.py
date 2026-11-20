@@ -220,6 +220,16 @@ def section_diagnostic(tr: dict, t) -> dict:
         drop[str(k)] = {"removed_amounts": [float(x[0]) for x in frauds[:k]], "lm_alone_action": [a[wi][ri]["action"] for _, wi, ri in frauds[:k]],
                         "lr_action": [b[wi][ri]["action"] for _, wi, ri in frauds[:k]], "mean_diff": float(d.mean()), "ci": percentile(d), "label": "read-out"}
     out["lm_alone_minus_lr_without_largest_frauds"] = drop
+    # Added after the first read (REVISION_LOG.md, Stage 3): the largest frauds by amount were reviewed by both setups, so removing
+    # them can't move the gap. Also remove the frauds whose cost differs most between the two (LM alone's cost minus LR's).
+    gaps = sorted(((r["cost"] - b[wi][ri]["cost"], wi, ri) for wi, w in enumerate(a) for ri, r in enumerate(w) if r["truth"]), reverse=True)
+    by_gap = {}
+    for k in (0, 1, 2):
+        gone = {(wi, ri) for _, wi, ri in gaps[:k]}
+        d = np.array([sum(r["cost"] - b[wi][ri]["cost"] for ri, r in enumerate(w) if (wi, ri) not in gone) for wi, w in enumerate(a)])
+        by_gap[str(k)] = {"removed": [{"amount": float(a[wi][ri]["tx"]["amount"]), "gap": float(g), "lm_alone_action": a[wi][ri]["action"], "lr_action": b[wi][ri]["action"]} for g, wi, ri in gaps[:k]],
+                          "mean_diff": float(d.mean()), "ci": percentile(d), "label": "read-out"}
+    out["lm_alone_minus_lr_without_largest_gap_frauds"] = by_gap
     return out
 
 
@@ -296,7 +306,7 @@ def section_disparity(tr: dict, t) -> dict:
 def section_seed() -> dict:
     src = ROOT / "results" / "eval_lm_nuc" / "20261104-090217.json"
     d = json.loads(src.read_text(encoding="utf-8"))
-    pair = next(p for p in d["verdict"]["among_lm"] if {p["a"], p["b"]} == {"lm-seed1", "lm-phase12"})
+    pair = next(p for p in d["verdict"]["among_lm"] if {p["a"], p["b"]} == {"lm-seed1-amt", "lm-phase12-amt"})
     return {"source": "fraud/results/eval_lm_nuc/20261104-090217.json → verdict.among_lm", "comparison": pair, "label": "dev",
             "noise_floor_usd_per_window": 100, "note": "two seeds of the same recipe differ by about 100 USD/window on dev; differences of that size are read as noise"}
 
@@ -344,6 +354,9 @@ def markdown(r: dict) -> str:
     L += ["", "## LM alone − LR without the largest frauds (read-out)", ""]
     for k, x in r["diagnostic"]["lm_alone_minus_lr_without_largest_frauds"].items():
         L.append(f"- {k} removed {x['removed_amounts']} (LM alone {x['lm_alone_action']}, LR {x['lr_action']}): {x['mean_diff']:+,.0f}, {ci(x['ci'])}")
+    L += ["", "## LM alone − LR without the frauds it priced worst (read-out)", ""]
+    for k, x in r["diagnostic"]["lm_alone_minus_lr_without_largest_gap_frauds"].items():
+        L.append(f"- {k} removed {[(e['amount'], e['lm_alone_action'], e['lr_action']) for e in x['removed']]}: {x['mean_diff']:+,.0f}, {ci(x['ci'])}")
     g = r["price_grid"]["cells"]
     L += ["", "## Price grid (read-out)", "", "| r | review fee | customer | cheapest | vs LR | distinguishable |", "|---:|---:|---:|---|---:|---|"]
     for c in g:
