@@ -565,3 +565,64 @@ floor used is about ±100 USD/window.
   - call the disparity section a check on proxies, not a fairness audit;
   - use a seed-noise floor of ±100 USD/window (dev);
   - pass every Stage 3 number through the JSON → `build_data.py` → `data.json`, with its label.
+
+## Stage 4: rewrite of the paper
+
+**What changed.**
+- `paper/main.typ` is rewritten against the settled decisions:
+  - **framing:** the new title, the narrowed research question, the three contributions, and the honest gap statement;
+  - **the headline:** rule, then null, then read-out, in the abstract (195 words, 3 numbers) and in the conclusion;
+  - **PaySim** is a short pipeline-development subsection. The 190,910 USD LR figure is gone, and PaySim is out of the
+    abstract and the contributions;
+  - **related work:** four themed subsections;
+  - **technical details:** the temperature, the loss, the model change and the λ asymmetry;
+  - **results:** the trade-off framing, the GBDT read-out, MDE wording, parity, no-C, order bias, AUC/PR-AUC and the
+    AUC–cost diagnosis;
+  - **limitations:** generalisability, the context block and the C columns rewritten;
+  - **future work**, and an **acknowledgement**.
+- A Discussion section is added, as an Implementation choice, to carry the interpretation the prompt asks for.
+- **Numbers:**
+  - every new number passes from its results JSON through the `rev` block of `paper/build_data.py` into `data.json`;
+  - `paper/revision_manual.json` holds three sourced protocol constants;
+  - `fraud/dev/prompt_example.py` writes `fraud/results/prompt_example.json`, a fit row for the prompt appendix;
+  - `paper/gen_tables.py` writes the trade-off figure and the appendix tables with literal `v()` keys.
+- **Tests:** `tests/test_paper.py` is updated to the new contract:
+  - 8–14 pages;
+  - 30 references in order of first citation;
+  - the settled phrases and terms;
+  - no course traces;
+  - the generated block current.
+  - 492 tests pass.
+- **Typst:** 0.15.1 had gone from this machine and was reinstalled with winget (`RUN-GUIDE.md`).
+- **Length:** 10 pages in all. The main text runs to page 6, references to page 7, and appendices A–H follow on pages 8–10.
+  - The main text is shorter than "about 8 pages". I did not pad it.
+  - The prompt puts the robustness, diagnostic, grid, disparity, parity, no-C and order-bias material in the appendices.
+
+**References: 30, each verified against a primary source** (2026-11-20).
+- **Crossref metadata:** Dal Pozzolo 2018, Correa Bahnsen 2013, Nosek 2018, Efron 1987, Künsch 1989, Kaufman 2012.
+- **ACL Anthology:** PET (EACL 2021, pp. 255–269), LM-BFF (pp. 3816–3830), Pezeshkpour (pp. 2006–2017), Dror (pp. 1383–1392),
+  and Tan, Ma, Zhang (now ACL 2026, pp. 23375–23390; earlier cited as arXiv:2512.13040).
+- **PMLR:** TabLLM (PMLR 206, pp. 5549–5581) and Guo (PMLR 70, pp. 1321–1330).
+- **IJCAI proceedings page:** Elkan, pp. 973–977. Many secondary sources say 973–978; the official page is used.
+- **ICLR virtual pages:** Robinson & Wingate (ICLR lists two authors; arXiv adds Rytting), TabPFN, Zheng, LoRA.
+- **NeurIPS pages:** LIFT (nine authors), Grinsztajn.
+- **Project Euclid:** Friedman 2001.
+- **Springer and Birkbeck:** Whitrow 2009.
+- **TMLR via MLAnthology:** Fang 2024. TMLR lists eight authors; arXiv v4 lists ten. The TMLR list is used.
+- **EMSS 2016 proceedings page:** PaySim. No page range is given there, so none is cited.
+- **Platt:** MIT Press volume; sources give 1999 or 2000, and 2000 (the book's year) is used.
+- **Other primary sources:**
+  - Wirth & Hipp: the proceedings listing, pp. 29–39, 2000;
+  - Nilson Report no. 1276 (Dec. 2024): the issue PDF;
+  - Qwen2.5: arXiv 2412.15115;
+  - d1-Omni-2B: the Hugging Face model card (LiquidAI, LFM Open License v1.0);
+  - IEEE-CIS: the Kaggle competition (IEEE CIS and Vesta, 2019).
+- **Unverified references: none.**
+- **Moved:** System One (TypeSafe; Goedecke) is now a footnote crediting the inspiration, not a numbered reference.
+
+**Decisions not fully met, with the reason.**
+- **"About 8 pages of main text":** about 6.5 including references. See above.
+- **Footnote 1 as a link to the public repo:** deferred to Stage 5, which prepares that repo. The footnote still lists the
+  results files.
+- **The PDF file name** (`transforming-llms-fraud.pdf`) predates the new title. It is kept because earlier plan documents
+  link to it.

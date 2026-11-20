@@ -800,16 +800,35 @@ Keys: space, N, the right arrow and a clicker's page keys walk the talk, one ste
 
 ## Paper (`paper/`)
 
-The IEEE two-column paper, *Transforming LLMs into classifiers for fraud detection*, in Typst 0.15.1 with the vendored `charged-ieee` template (`paper/vendor/`). Every number comes from `paper/data.json`, built from the deck's build. It runs no model and needs no network. How it's built: `paper/README.md`.
+The IEEE two-column paper, *Can a Small Fine-Tuned LLM Make Fraud Decisions? A Locked, Cost-Based Evaluation*, in Typst 0.15.1 with the vendored `charged-ieee` template (`paper/vendor/`).
+- Every number comes from `paper/data.json`.
+- `data.json` is built from the deck's build plus the revision's results files (the `rev` block in `paper/build_data.py`).
+- The build runs no model and needs no network.
+
+How it's built: `paper/README.md`. The revision itself: `REVISION_PROMPT.md` and `REVISION_LOG.md`.
 
 ```bash
-.venv/Scripts/python.exe paper/build_data.py                                             # rewrite paper/data.json: every key main.typ reads, from slides/build_data.py
-typst compile paper/main.typ paper/exports/transforming-llms-fraud.pdf                   # the PDF (committed)
+.venv/Scripts/python.exe -m fraud.dev.prompt_example                                     # fraud/results/prompt_example.json: the prompts verbatim for one fit row (needs the IEEE-CIS cache)
+.venv/Scripts/python.exe paper/gen_tables.py                                              # rewrite the generated tables and figures in main.typ (layout only, literal v() keys)
+.venv/Scripts/python.exe paper/build_data.py                                             # rewrite paper/data.json: every key main.typ reads
+typst compile paper/main.typ paper/exports/transforming-llms-fraud.pdf                   # the PDF (committed; the file name predates the new title)
 typst compile paper/main.typ <folder>/p{p}.png                                           # one PNG per page, to read every page
-.venv/Scripts/python.exe -m pytest tests/test_paper.py                                   # formats as the deck's, every key resolves, compiles to 6-8 pages, 14 references, body-text rules
+.venv/Scripts/python.exe -m pytest tests/test_paper.py                                   # formats, every key resolves, compiles to 8-14 pages, 30 verified references in citation order, body-text rules, generated block current
 ```
 
-Typst isn't on PATH in every shell; winget put it at `%LOCALAPPDATA%\Microsoft\WinGet\Packages\Typst.Typst_Microsoft.Winget.Source_8wekyb3d8bbwe\typst-x86_64-pc-windows-msvc\typst.exe` (the test finds it there too). It warns that TeX Gyre Termes and TeX Gyre Cursor aren't installed; the paper falls back to Windows' Times New Roman. After adding a `v("...")` key to `main.typ`, run `paper/build_data.py` again; a number the deck's build lacks goes into `slides/build_data.py` (additive) or `slides/manual_data.json` with a `_source`.
+Typst isn't on PATH in every shell. winget puts it at `%LOCALAPPDATA%\Microsoft\WinGet\Packages\Typst.Typst_Microsoft.Winget.Source_8wekyb3d8bbwe\typst-x86_64-pc-windows-msvc\typst.exe`, and the test finds it there too. To install it:
+
+```bash
+winget install --id Typst.Typst --version 0.15.1 --exact
+```
+
+The build warns that TeX Gyre Termes and TeX Gyre Cursor aren't installed; the paper falls back to Windows' Times New Roman.
+
+When adding numbers:
+- After adding a `v("...")` key to `main.typ`, run `paper/build_data.py` again.
+- A number the deck's build lacks goes into `slides/build_data.py` (additive) or `slides/manual_data.json` with a `_source`.
+- A revision number goes into its results JSON under `fraud/results/`, then the `rev` block of `paper/build_data.py`.
+- Prose-only revision constants go in `paper/revision_manual.json`, with a `_source`.
 
 ## Where things land
 

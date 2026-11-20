@@ -1,0 +1,9 @@
+{
+ "_note": "Prose-only numbers for the revised paper that no results JSON holds, each with its source. Everything else comes from fraud/results/.",
+ "protocol": {
+  "_source": "REVISION_LOG.md Stage 0 section 2 (fraud/eval_ieee.py features_all, counted on the fit rows); fraud/tabular.py dev30 (30 windows) and heldout_dev (88 chains), so lambda on dev30 + held-out = 118 (fraud/eval_tabular.py lambda_on).",
+  "lr_features": 583,
+  "dev_windows_30": 30,
+  "dev_windows_all": 118
+ }
+}

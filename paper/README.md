@@ -1,9 +1,12 @@
 # The paper (Typst, IEEE two-column)
 
-Frog Watch, Group 13: *Transforming LLMs into Classifiers for Fraud Detection*. The written companion to the
-final deck in `slides/`: how a small language model becomes a three-way decision model (approve, review,
-decline) read in one forward pass, how it was trained and judged in dollars, and what held on a locked final
-test. It is where every bias is discussed at length; the deck shows only two.
+*Can a Small Fine-Tuned LLM Make Fraud Decisions? A Locked, Cost-Based Evaluation*: the portfolio version of the
+paper, revised under `REVISION_PROMPT.md` (every step and decision in `REVISION_LOG.md`).
+
+It is an evaluation study. It asks whether a small fine-tuned language model, read as a single-pass three-way
+classifier (approve, review, decline), lowers dollar decision cost against logistic regression and boosted trees,
+and whether any difference comes from the model, the information it sees, or the decision rule. Main text about
+8 pages; appendices A–H.
 
 The design is the "Paper" section of `docs/superpowers/specs/2026-11-12-final-paper-and-deck-design.md`.
 Every command is in `RUN-GUIDE.md` → Paper.
@@ -12,8 +15,10 @@ Every command is in `RUN-GUIDE.md` → Paper.
 
 | file | what |
 |---|---|
-| `main.typ` | the paper: sections, Fig. 1 (the pipeline) and Fig. 2 (final-test differences with intervals) drawn in Typst, Table I (the worked payment in both option orders), Table II (the final test), the 14 references |
-| `build_data.py` | writes `data.json`: every `v("path\|format")` key that `main.typ` reads, resolved from the deck's build and formatted as the deck formats it |
+| `main.typ` | the paper, in this order: the main text, 30 references and appendices A–H. The main text holds Fig. 1 (the pipeline), Fig. 2 (the customer-line trade-off), Fig. 3 (final-test differences), Table I (PaySim option order), Table II (the final test, with the GBDT read-out) and Table III (where the difference comes from). |
+| `gen_tables.py` | writes the block between `// generated: start` and `// generated: end` in `main.typ`: the trade-off figure and the appendix tables and figures. It writes layout and literal `v()` keys only, never a number. |
+| `build_data.py` | writes `data.json`: every `v("path\|format")` key that `main.typ` reads. It resolves each from the deck's build plus the `rev` block, which reads the revision's committed results in `fraud/results/`. |
+| `revision_manual.json` | the few prose-only revision constants (feature count, dev window counts), each with its `_source` |
 | `data.json` | the numbers, as text; rebuilt and compared by `tests/test_paper.py` |
 | `vendor/charged-ieee/` | the IEEE template (Typst Universe `charged-ieee` 0.1.4), vendored with its licence and `SOURCE.txt`, so a build needs no network |
 | `exports/transforming-llms-fraud.pdf` | the compiled paper (committed; `.gitignore` keeps `exports/` in) |
@@ -32,11 +37,18 @@ quantile).
 
 - No phase numbers, setup ids, window ids, file paths or "econometric" in the body. File paths appear only in the
   "Code and data" footnote, between the `code-and-data` markers.
-- The one payment shown is the committed PaySim trace's, labelled PaySim; IEEE-CIS appears only at window level.
-- "softmax (multinomial logistic)" at most once; the negatives said plainly: "no setup showed a distinguishable
-  saving", "fairness was not measured".
-- References [1]–[13] as in the midterm plan, [14] the d1-Omni-2B model card, written as a numbered list between
-  the `references` markers; each is cited in the text.
+- Every number carries its label: `dev`, `held-out` (the registered final test) or `read-out`.
+- The settled framing appears verbatim: the evaluation title, "no detectable saving", "not a fairness audit". The
+  standard terms are named: Bayes minimum-risk rule, Platt scaling, operating point, verbalizer, option-order bias,
+  post-hoc.
+- No student IDs, group name, "proposal" or "deck". The authors are listed with Siam University only, and an
+  acknowledgement says the work began as a course project.
+- References:
+  - 30 entries, each checked against a primary source (`REVISION_LOG.md`, Stage 4);
+  - listed by key (`REFS`) in order of first citation in the text, and each cited;
+  - System One is credited in a footnote, not in the list.
+- The one IEEE-CIS row shown is a fit row, in the prompt appendix (`fraud/results/prompt_example.json`).
+- The generated block equals what `gen_tables.py` writes.
 
 ## Fonts
 

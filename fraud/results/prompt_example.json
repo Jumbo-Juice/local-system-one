@@ -1,0 +1,20 @@
+{
+ "script": "fraud/dev/prompt_example.py",
+ "label": "fit row (illustration)",
+ "row_rule": "first fit row with earlier card payments and a recorded device type",
+ "row": 57,
+ "is_fraud": 0,
+ "options_order": "rev (A decline, B review, C approve)",
+ "context": "Online card payments in US dollars. About 4 in 100 are fraud. Fraud is more common on product C, on credit cards, when a device is recorded (mobile most of all), when a recipient email is given, between hours 4:00 and 10:00, with match code M4 = M2, with counters C4 or C8 above 0, and when D1 is 0. Most payments are legitimate.",
+ "question": "Does this transaction match the fraud pattern?",
+ "options": [
+  "yes: decline it",
+  "unsure: send it to an analyst",
+  "no: approve it"
+ ],
+ "state_plain": "Payment of 50.00 USD, product H, hour 0:00.\nCard: visa debit.\nPurchaser email: gmail.com. Recipient email: none.\nDevice: mobile.\nMatch codes: M4 none, M6 none.\nCounters: C1 1, C4 0, C8 1, C13 1. D1: 0.",
+ "state_rich": "Payment of 50.00 USD, product H, hour 0:00.\nCard: visa debit.\nPurchaser email: gmail.com. Recipient email: none.\nDevice: mobile.\nMatch codes: M4 none, M6 none.\nCounters: C1 1, C4 0, C8 1, C13 1. D1: 0.\nCard history: 1 earlier payments, the last one 14 minutes ago, 1 in the last day, 1 in the last 7 days; this amount is 4.4 times its usual.\nAddress: 5 other cards seen there before. Distance: none.\nMore counters: C2 1, C5 0, C6 1, C9 0, C11 1, C14 1. More days: D2 none, D3 none, D4 0, D10 none, D15 0.",
+ "signal_line": "Risk score from a tabular model: 0.006 (uncalibrated; higher is more suspicious).",
+ "full_plain": "<|im_start|>user\nOnline card payments in US dollars. About 4 in 100 are fraud. Fraud is more common on product C, on credit cards, when a device is recorded (mobile most of all), when a recipient email is given, between hours 4:00 and 10:00, with match code M4 = M2, with counters C4 or C8 above 0, and when D1 is 0. Most payments are legitimate.\n\nPayment of 50.00 USD, product H, hour 0:00.\nCard: visa debit.\nPurchaser email: gmail.com. Recipient email: none.\nDevice: mobile.\nMatch codes: M4 none, M6 none.\nCounters: C1 1, C4 0, C8 1, C13 1. D1: 0.\n\n\nQUESTION:\nDoes this transaction match the fraud pattern?\n\nOptions:\nA yes: decline it\nB unsure: send it to an analyst\nC no: approve it\n\nReply with the option code only.<|im_end|>\n<|im_start|>assistant\n<think></think>",
+ "full_rich": "<|im_start|>user\nOnline card payments in US dollars. About 4 in 100 are fraud. Fraud is more common on product C, on credit cards, when a device is recorded (mobile most of all), when a recipient email is given, between hours 4:00 and 10:00, with match code M4 = M2, with counters C4 or C8 above 0, and when D1 is 0. Most payments are legitimate.\n\nPayment of 50.00 USD, product H, hour 0:00.\nCard: visa debit.\nPurchaser email: gmail.com. Recipient email: none.\nDevice: mobile.\nMatch codes: M4 none, M6 none.\nCounters: C1 1, C4 0, C8 1, C13 1. D1: 0.\nCard history: 1 earlier payments, the last one 14 minutes ago, 1 in the last day, 1 in the last 7 days; this amount is 4.4 times its usual.\nAddress: 5 other cards seen there before. Distance: none.\nMore counters: C2 1, C5 0, C6 1, C9 0, C11 1, C14 1. More days: D2 none, D3 none, D4 0, D10 none, D15 0.\n\n\nQUESTION:\nDoes this transaction match the fraud pattern?\n\nOptions:\nA yes: decline it\nB unsure: send it to an analyst\nC no: approve it\n\nReply with the option code only.<|im_end|>\n<|im_start|>assistant\n<think></think>"
+}

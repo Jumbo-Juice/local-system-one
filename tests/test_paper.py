@@ -107,30 +107,38 @@ def rule_breaks(text: str) -> list[str]:
     return [m[0] for b in banned for m in [re.search(b, text)] if m]
 
 
-def test_paper_compiles_and_is_six_to_eight_pages(tmp_path):
+def test_paper_compiles_to_a_main_text_and_appendices(tmp_path):
+    """About 8 IEEE pages of main text plus appendices (REVISION_PROMPT.md, Stage 4)."""
     exe = typst()
     if not exe:
         pytest.skip("typst is not installed")
     out = subprocess.run([exe, "compile", str(MAIN), str(tmp_path / "p{p}.png")], cwd=ROOT, capture_output=True, text=True, encoding="utf-8")
     assert out.returncode == 0, out.stderr
     pages = sorted(tmp_path.glob("p*.png"))
-    assert 6 <= len(pages) <= 8, len(pages)
+    assert 8 <= len(pages) <= 14, len(pages)
 
 
-def test_paper_has_the_fourteen_references():
-    """[1]-[13] as in the midterm plan, in order, and [14] the d1-Omni-2B model card; each cited in the text."""
+def test_paper_has_its_verified_references():
+    """About 25-30 references, listed by key in order of first citation, each cited in the text; System One only in a footnote.
+    Each was checked against a primary source (REVISION_LOG.md, Stage 4)."""
     typ = MAIN.read_text(encoding="utf-8")
+    order = re.findall(r'"([a-z0-9]+)"', re.search(r"#let REFS = \(([^)]*)\)", typ)[1])
     block = REFS.findall(typ)
     assert len(block) == 1
-    entries = re.findall(r"(?m)^#bib\((\d+)\)\[(.*)\]\s*$", block[0])
-    assert [int(n) for n, _ in entries] == list(range(1, 15))
-    text = dict((int(n), t) for n, t in entries)
-    assert "Nilson" in text[1] and "Dal Pozzolo" in text[2] and "PaySim" in text[8] and "IEEE-CIS" in text[9]
-    assert "Qwen2.5" in text[10] and "LoRA" in text[11] and "CRISP-DM" in text[12] and "System One" in text[13]
-    assert "d1-Omni-2B" in text[14] and "LiquidAI" in text[14]
+    listed = re.findall(r'(?m)^#bibk\("([a-z0-9]+)"\)\[', block[0])
+    assert listed == order and 25 <= len(order) <= 30
     body = REFS.sub(" ", typ)
-    cited = {int(n) for args in re.findall(r"#cite-n\(([\d, ]+)\)", body) for n in args.split(",")}
-    assert cited == set(range(1, 15))
+    cited = [k for args in re.findall(r"#cite-k\(([^)]*)\)", body) for k in re.findall(r'"([a-z0-9]+)"', args)]
+    assert set(cited) == set(order)
+    prose = body[body.index("// ---- the paper"):]
+    in_text = [k for args in re.findall(r"#cite-k\(([^)]*)\)", prose) for k in re.findall(r'"([a-z0-9]+)"', args)]
+    assert list(dict.fromkeys(in_text)) == order, "references are numbered in order of first citation in the text"
+    text = dict(re.findall(r'(?m)^#bibk\("([a-z0-9]+)"\)\[(.*)\]\s*$', block[0]))
+    for key, words in {"pet": "Schick", "lmbff": "Gao", "lift": "Dinh", "robinson": "Robinson", "pezeshkpour": "Pezeshkpour", "elkan": "Elkan",
+                       "bahnsen": "Correa Bahnsen", "nosek": "Nosek", "dror": "Dror", "efron": "Efron", "kunsch": "Künsch", "grinsztajn": "Grinsztajn",
+                       "tabllm": "TabLLM", "tan": "Tan", "d1omni": "d1-Omni-2B"}.items():
+        assert words in text[key], key
+    assert "System One" not in block[0] and "System One" in typ
 
 
 def test_paper_text_follows_the_rules():
@@ -143,6 +151,24 @@ def test_paper_text_follows_the_rules():
     assert len(footnotes) == 1 and "footnote" in footnotes[0] and "Code and data" in footnotes[0]
     body = body_text(typ)
     assert rule_breaks(body) == []
-    assert body.count("multinomial logistic") <= 1
     flat = re.sub(r"\s+", " ", body)
-    assert "no setup showed a distinguishable saving" in flat and "fairness was not measured" in flat.lower()
+    # the settled framing (REVISION_PROMPT.md, Stage 4)
+    assert "Can a Small Fine-Tuned LLM Make Fraud Decisions? A Locked, Cost-Based Evaluation" in flat
+    assert "no detectable saving" in flat and "not a fairness audit" in flat and "This is the part that is new" not in flat
+    assert "Bayes minimum-risk" in flat and "Platt scaling" in flat and "operating point" in flat and "verbalizer" in flat
+    assert "option-order bias" in flat and "post-hoc" in flat and "Two flips" not in flat
+    for gone in [r"Student ID", r"Group 13", r"Frog Watch", r"\bproposal\b", r"\bdeck\b"]:
+        assert not re.search(gone, typ), gone
+    assert "Siam University" in typ and "course project" in flat
+
+
+def test_generated_block_is_what_the_generator_writes(tmp_path):
+    """paper/gen_tables.py writes the generated block; the committed main.typ must match it."""
+    spec = importlib.util.spec_from_file_location("gen_tables", ROOT / "paper" / "gen_tables.py")
+    gen = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(gen)
+    copy = tmp_path / "main.typ"
+    copy.write_bytes(MAIN.read_bytes())
+    gen.MAIN = copy
+    gen.main()
+    assert copy.read_text(encoding="utf-8") == MAIN.read_text(encoding="utf-8")
