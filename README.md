@@ -9,6 +9,10 @@ report what worked and what didn't.
 *The Qwen2.5 3B model plays the shooter, replayed from a recorded run. Every move, target and
 shot is a multiple-choice question the model answered in one forward pass.*
 
+**The paper:** *Can a Small Fine-Tuned LLM Make Fraud Decisions? A Locked, Cost-Based Evaluation*.
+- The PDF is `paper/exports/transforming-llms-fraud.pdf`.
+- How to get the data and rebuild it: `REPRODUCE.md`.
+
 ## The idea
 
 Most AI tools think by writing: they produce an answer word by word. A **System One** model, after

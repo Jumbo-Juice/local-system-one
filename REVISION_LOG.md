@@ -660,3 +660,29 @@ floor used is about ±100 USD/window.
   - Footnote 1 as a repo link is deferred to Stage 5, and required there.
   - The PDF file name is kept.
   - The Discussion section is accepted.
+
+## Stage 5: public repository (prepared; nothing pushed or published)
+
+**Prepared:**
+- `REPRODUCE.md`:
+  - what is and is not included;
+  - IEEE-CIS Kaggle download steps (accept the rules; `kaggle competitions download -c ieee-fraud-detection`; the two
+    `train_*` files) and the PaySim download;
+  - the pinned model revisions;
+  - the environment: RTX 3060 Ti, driver 616.92 (CUDA UMD 13.4), PyTorch 2.11.0+cu128 (CUDA 12.8, cuDNN 9.19), Python
+    3.13.15, Windows 11, Typst 0.15.1;
+  - rebuilding the paper with and without the data;
+  - a warning not to re-run the spent final test: the run-once guard sees only local traces.
+- `requirements-lock.txt`: the exact 42 package versions, from `uv pip freeze`.
+- `README.md`: a link to the paper and to `REPRODUCE.md`.
+- `paper/main.typ`: footnote 1 now links `github.com/Jumbo-Juice/local-system-one` (the only remote) and `REPRODUCE.md`.
+  The PDF is rebuilt.
+- `docs/public-release.md`: the full scan and the decisions left to the owner.
+
+**Scan results** (tree and all history):
+- **No raw data was ever committed.** No secrets were found.
+- **Local Windows user paths:** two bench results files and `slides-handoff.md` in the tree, plus 5 occurrences in history.
+- **Co-authors' student IDs:** in `slides/index.html`, a plan doc, and history (including the pre-revision paper).
+- **The owner's personal email** is in the author and committer fields of all 193 commits.
+- Nothing in the tree or history was changed for these: removing them from history rewrites every commit hash, which is
+  Juji's decision.
