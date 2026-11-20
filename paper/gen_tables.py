@@ -67,7 +67,7 @@ def ranking() -> str:
                     "table-ranking", "6.5pt", True)
     drop = f"""#let ranking-drop = block(inset: (y: 3pt))[#set text(8pt)
 #set par(first-line-indent: 0pt)
-LM alone − LR on the final test is {v("rev.drop_amount.0.mean|signed")} USD per window ({v("rev.drop_amount.0.ci|ci")}). Removing the largest 1 and 2 frauds by amount ({v("rev.drop_amount.2.amounts.0|usd2")} and {v("rev.drop_amount.2.amounts.1|usd2")} USD), which both setups reviewed, leaves {v("rev.drop_amount.1.mean|signed")} and {v("rev.drop_amount.2.mean|signed")}. Post-hoc and not registered: removing the 1 and 2 frauds with the largest cost gap ({v("rev.drop_gap.2.amounts.0|usd2")} and {v("rev.drop_gap.2.amounts.1|usd2")} USD, approved by LM alone, reviewed by LR) leaves {v("rev.drop_gap.1.mean|signed")} ({v("rev.drop_gap.1.ci|ci")}) and {v("rev.drop_gap.2.mean|signed")} ({v("rev.drop_gap.2.ci|ci")}).]
+LM alone − LR on the final test is {v("rev.drop_amount.0.mean|signed")} USD per window ({v("rev.drop_amount.0.ci|ci")}, held-out). Removing the largest 1 and 2 frauds by amount ({v("rev.drop_amount.2.amounts.0|usd2")} and {v("rev.drop_amount.2.amounts.1|usd2")} USD), which both setups reviewed, leaves {v("rev.drop_amount.1.mean|signed")} and {v("rev.drop_amount.2.mean|signed")} (read-out). Post-hoc read-out, not registered: removing the 1 and 2 frauds with the largest cost gap ({v("rev.drop_gap.2.amounts.0|usd2")} and {v("rev.drop_gap.2.amounts.1|usd2")} USD, approved by LM alone, reviewed by LR) leaves {v("rev.drop_gap.1.mean|signed")} ({v("rev.drop_gap.1.ci|ci")}) and {v("rev.drop_gap.2.mean|signed")} ({v("rev.drop_gap.2.ci|ci")}).]
 """
     return t + "\n" + drop
 

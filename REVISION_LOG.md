@@ -745,3 +745,156 @@ floor used is about ±100 USD/window.
     Removing them needs a GitHub Support request (Juji's action).
   - The repo's `user.email` is now set to the no-reply address, so new commits stay clean.
   - Commits after 82c89b9 reach GitHub only when Juji pushes.
+
+### Stage 5 verdict, round 2
+
+paper-driver: **APPROVE**.
+- It checked:
+  - the remote refs against the local refs;
+  - all local history for IDs, paths and the Gmail address;
+  - `docs/commit-map.txt` (259 → 258);
+  - the tree fixes;
+  - the PDF build.
+- Carried forward to the Stage 6 report:
+  - the GitHub Support purge request, since `docs/commit-map.txt` indexes the old commits that GitHub still serves;
+  - Juji must push the commits after 82c89b9 himself.
+- Stage 5 took five commits, as forced by the escalation and the external push. That is accepted.
+
+## Stage 6: verify and report (2026-11-20)
+
+### 1. Rebuild from a clean checkout
+
+- **Rebuild:** cloned 99fc0ac to a scratch folder and ran `python paper/build_data.py` and
+  `typst compile paper/main.typ`.
+  - `paper/data.json` is byte-identical to the committed file.
+  - The PDF text (`pdftotext`) is identical, and so is the size (491,791 bytes). Only the PDF's creation timestamp
+    differs.
+  - The 8 known font warnings remain, with no errors.
+  - `tests/test_paper.py` passes (9).
+- **After the label fixes below:** rebuilt again, 10 pages. `pytest -m "not model"` passes (492).
+
+### 2. Numbers and labels
+
+- **Numbers (Observed).**
+  - The PDF text was split into numeric tokens, giving 420 in the body before the reference list. Each was checked
+    against the 897 values in `data.json`. 18 tokens are not data values, and all of them are structural:
+    - citation numbers;
+    - the axis ticks of Figs. 2 and 3, computed in Typst from the data range;
+    - the date of the System One credit.
+  - A source-side scan of the prose in `main.typ` (outside `v()`, the generated block and the references) found no
+    typed result number. Only layout constants, e⁰ = 1, model names and dates remain.
+  - The illustrative p ≈ 0.2536 is `illustration.rule.p`, rounded in Typst.
+- **Labels (Observed).**
+  - The source was split into paragraphs and figure blocks, giving 33 that carry result keys. Each needs dev, held-out
+    or read-out, matching the split of its keys.
+  - Seven were found missing a label, and one mixed paragraph lacked the label for its final-test half. Fixed in this
+    commit:
+    - the ranking-drop note: "held-out" on the registered difference, "read-out" on the drops, and "post-hoc
+      read-out" on the largest-gap variant;
+    - approve-all accuracy: held-out;
+    - final-test ROC-AUC range: read-out;
+    - the largest model difference from LR: held-out;
+    - "registered interval" → "held-out interval";
+    - the latency: held-out;
+    - the final-test customer line: held-out;
+    - the seed noise: dev.
+  - **Left by design:**
+    - the test-set description (counts, not results);
+    - the 825 rule result, which is marked "earlier test windows" (Stage 4 ruling).
+
+### 3. Decisions not implemented, or implemented differently
+
+1. **Main text length:** pages 1–6, references on page 7, appendices A–H on pages 8–10, against "about 8 pages of main
+   text". Accepted at Stage 4 without padding.
+2. **PDF filename** `paper/exports/transforming-llms-fraud.pdf` is kept, although the title changed. Links and the
+   README name it.
+3. **Stage 1 main path** (`heldout_v2`) was not possible: 0 untouched windows. The fallback read-out was run instead, on
+   Juji's choice.
+4. **Stage 5 "prepare, do not push"** was overridden by Juji: the history was rewritten and published, with a final yes
+   to the exact commands.
+5. **Abstract:** 197 words and 3 numbers (825, 1,000, 524), within "about 200 words, at most 4 numbers".
+
+All other decisions were checked present in the PDF:
+- the title;
+- the narrowed research question;
+- the three contributions;
+- the honest gap;
+- the rule-first headline;
+- the PaySim pipeline subsection (830 vs 808, 3,853 of 3,862, no 190,910);
+- the classification head in Future Work;
+- 30 themed references with the System One footnote;
+- the temperature source, the letter vs full-vocabulary loss, why two models, and LM λ on more dev windows;
+- the context block as an untested human step;
+- generalisability;
+- the customer line as "a cheap knob";
+- standard terms named;
+- no course traces, with an acknowledgement;
+- the appendices as specified;
+- the prompts verbatim with one example row.
+
+### 4. Final report
+
+**Audit.** All 118 IEEE-CIS test windows had already been scored. 108 rows were left, and no untouched window remained.
+So the GBDT read-out was used (Stage 1 fallback).
+
+**Final test, 20 windows, USD per window. Held-out (pre-registered), except the GBDT row (read-out):**
+
+| setup | mean (interval) | vs LR | MDE |
+|---|---|---|---:|
+| LR + cost rule | 2,106 (1,946–2,292) | — | |
+| LM + tree | 1,943 (1,651–2,338) | −163 (−462 to 238), n.d. | 524 |
+| LM alone | 2,427 (2,023–2,896) | +321 (−74 to 774), n.d. | 626 |
+| LM + tree + customer line | 1,992 (1,683–2,383) | −115 (−391 to 273), n.d. | 498 |
+| approve all | 5,233 (4,312–6,121) | | |
+| GBDT alone (read-out) | 1,897 (1,640–2,212) | −209 (−430 to 57), n.d. | 357 |
+
+- **Other comparisons:**
+  - LM alone − LM + tree: +484 (103 to 972), distinguishable.
+  - Customer line on LM + tree: +49 (−47 to 160), n.d.
+  - LM + tree − GBDT: +46 (−375 to 489), n.d. (read-out).
+  - LM alone − GBDT: +530 (219 to 865), distinguishable (read-out).
+- **Rule vs fixed cut-offs**, earlier test windows: −825 (−1,307 to −464).
+
+**New dev results:**
+- **Option-order bias:**
+  - Top-answer flip rate: 0.5% (LM alone) and 1.0% (LM + tree).
+  - Forward − reversed: LM alone −43 (−88 to −6), distinguishable; LM + tree −27 (−95 to 15).
+  - Averaging the two orders: −23 (−59 to 6), n.d.
+- **Feature parity** (204 fields):
+  - Parity LR costs 2,327 and parity trees 2,034, so both cost more than with all features: +210 and +204.
+  - LM alone − parity LR: −215 (−353 to −73), distinguishable.
+  - LM alone − parity trees: +77 (−90 to 235), n.d.
+  - LM + tree − parity trees: −114 (−240 to 4), n.d.
+- **No C columns:**
+  - Every setup got dearer: LR +167, trees +261, LM alone +311.
+  - LM alone − LR without C: +140 (17 to 259), distinguishable. With C it was −13 (−142 to 125). The ranking changed.
+- **Customer-line sweep** (LR): good customers declined fall from 4,003 to 933 by 10 USD, at a cost of 2,125 vs 2,128.
+  At 60 USD the cost is 2,424.
+- **Seed noise:** −102 (−205 to 6), giving a floor of about ±100.
+
+**Read-outs on the saved final outputs:**
+- **ROC-AUC:** LR .853 (.820–.880), LM .859 (.830–.885), LM + tree .883 (.860–.905), GBDT .878 (.852–.902).
+- **PR-AUC:** .374, .346, .446 and .448.
+- **Robustness:** block and BCa intervals change no conclusion. Only the block-4 interval for GBDT − LR (−349 to −1)
+  excludes zero, by a margin within Monte Carlo error.
+- **Largest frauds:** dropping the 1–2 largest leaves +321, since both setups reviewed them. The post-hoc largest-gap
+  drop gives +246 and +194, both n.d.
+- **Price grid:** of 27 cells, GBDT is cheapest in 24 and LM + tree in 3. The cheapest setup is distinguishable from LR
+  in 6.
+- **Disparity check on proxies:**
+  - The groups differ more than the setups do.
+  - The customer line moves the good-declined rate more than any model choice does.
+
+**Pages:** 10 (main text pages 1–6, references page 7, appendices pages 8–10).
+
+**Open issues (Juji's actions):**
+1. **Purge:** GitHub still serves the pre-rewrite commits by their old IDs, and `docs/commit-map.txt` lists them. A
+   purge request to GitHub Support is needed to remove them.
+2. **Push:** the commits after 82c89b9 (99fc0ac and this Stage 6 commit) are local. Juji must push them; this session
+   has no GitHub login.
+3. **Co-authors:** they should be told that their student IDs were public until the rewrite.
+4. **Leftovers:**
+   - The backup mirror `local-system-one-before-rewrite.git` (Desktop) still holds the old history. Keep it or delete
+     it.
+   - So does the local branch `claude/remove-coauthored-by-3y241l`, rewritten and kept only locally.
+   - `CLAUDE.md` shows as modified, but only its line endings changed. Left untouched.
