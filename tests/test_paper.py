@@ -90,7 +90,7 @@ def typst() -> str | None:
 
 
 def body_text(typ: str) -> str:
-    """The prose a reader sees, as source: no "Code and data" footnote, no v() keys, no import or data-file line, no comments."""
+    """The prose a reader sees, as source: no "Code and results" footnote, no v() keys, no import or data-file line, no comments."""
     typ = FOOTNOTE.sub(" ", typ)
     typ = re.sub(r'#?v\(\s*"[^"]*"\s*\)', " ", typ)
     typ = re.sub(r'(?m)^#import .*$|json\("data\.json"\)', " ", typ)
@@ -148,7 +148,7 @@ def test_paper_text_follows_the_rules():
         assert rule_breaks(bad), bad
     assert not rule_breaks("a rule-based baseline, the final test, data, final-rich-amtx, a logistic regression")
     footnotes = FOOTNOTE.findall(typ)
-    assert len(footnotes) == 1 and "footnote" in footnotes[0] and "Code and data" in footnotes[0]
+    assert len(footnotes) == 1 and "footnote" in footnotes[0] and "Code and results" in footnotes[0]
     body = body_text(typ)
     assert rule_breaks(body) == []
     flat = re.sub(r"\s+", " ", body)
