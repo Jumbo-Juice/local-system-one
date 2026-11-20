@@ -48,6 +48,20 @@ personal Gmail address. The refs are `main`, `paper-revision`, `origin/claude/re
 3. Every history rewrite, force-push, branch or tag deletion, or visibility change is repeated to Juji for a final yes
    before it runs.
 
+**Done (2026-11-20), after Juji's final yes to the exact commands:**
+- **Backup:** the old history was saved as a mirror clone outside the repository.
+- **Rewrite:** `git filter-repo` rewrote every local branch and tag. It was first run as a trial in a scratch copy and
+  checked there:
+  - no student ID, local path or Gmail address is left in any blob, message or author line;
+  - every commit keeps its dates, subject and author name;
+  - the tags map to the matching rewritten commits;
+  - the newest tree is byte-identical to the one before the rewrite.
+  The real run gave the same IDs as the trial. The commit count went from 259 to 258, because GitHub's two "Initial
+  commit"s differed only in a signature and now coincide.
+- **Map:** `docs/commit-map.txt`, old commit ID to new.
+- **Publish:** force-pushed `main` (now the revision) and the tags `fraud-phase-0..5`, and deleted the stale branch
+  `claude/remove-coauthored-by-3y241l` on GitHub. It was never merged.
+
 **After publishing:**
 - The old commits stay reachable on GitHub by their old hashes until GitHub garbage-collects them. GitHub Support can be
   asked to purge cached views.

@@ -24,6 +24,8 @@ Every command, with its flags, is in `RUN-GUIDE.md` → Fraud app and → Paper.
 The registrations work like this. Each pre-registration is a commit whose date precedes the results files it governs.
 - `git log --follow <eval script>` and `git log -- fraud/results/<script>/` show the order.
 - `REVISION_LOG.md` gives the commit for every registration and result of the revision.
+- Before publication, the history was rewritten to remove personal data (`docs/public-release.md`). This changed every
+  commit ID but no date. The log cites the old IDs, and `docs/commit-map.txt` gives the new one for each.
 
 ## Data
 

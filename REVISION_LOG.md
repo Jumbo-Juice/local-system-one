@@ -726,3 +726,13 @@ floor used is about ±100 USD/window.
   - student IDs removed from the title slide and the plan doc (names kept);
   - local paths redacted in the two bench JSONs and `slides-handoff.md`.
   - Tests pass and the PDF is rebuilt.
+- **Juji's final yes (2026-11-20, "Yes, run all") to the exact commands:**
+  1. backup mirror;
+  2. `git filter-repo --replace-text --mailmap --force`;
+  3. commit map;
+  4. force-push `main` and the tags;
+  5. delete the stale remote branch.
+- **History rewritten.** The trial and the real run gave the same IDs. The tip tree is unchanged. The commit count went
+  from 259 to 258, because the two GitHub "Initial commit"s now coincide.
+- **Commit IDs.** From here on, IDs are new. Every older ID in this log is an old ID: look it up in
+  `docs/commit-map.txt`. For example, the Stage 5 commits 28fbd03 → 86fe05d and 49ab841 → 9580ac9.
