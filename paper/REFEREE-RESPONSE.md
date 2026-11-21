@@ -110,7 +110,7 @@ Before changing anything, I checked each point against the repo. "Referee right"
 |---|---|---|
 | Units in cost tables | Table II: mean, interval and differences are USD per window; good customers declined and frauds stopped are totals over the 20 windows. Fig. 2: cost per window, axes are totals. Appendices F and G: USD per window. Table III and Appendix B already said so. | l. 196; `gen_tables.py` → Fig. 2, App. F, G |
 | 1/1.07 shown as 0.94 | The worked example now shows 1 / 1.066 ≈ 0.938, with three digits from the raw values (`calc.round`), and says it appears as 0.94 elsewhere. 0.94 is correct for the unrounded sum; the 1.07 was the rounded one. | IV-C, l. 552 |
-| Fig. 3 omits a setup in Table II | "LM alone, customer line (read-out)" is added as a second open dot, and the caption names both read-outs. | l. 164, 168 |
+| Fig. 3 omits a setup in Table II | "LM alone, customer line (read-out)" is added as a second open dot, and the caption names both read-outs. | l. 163, 168 |
 | The LM's fraud score for Platt scaling | Defined: the softmax score of the decline option. For LR and GBDT, the predicted fraud probability. | IV-A, l. 542 |
 | How d1-Omni-2B option scores are obtained | The last hidden state at the answer position, dotted with each letter's token embedding (the larger of "A" and " A" when the latter is one token), divided by the shipped temperature 3.383, then a softmax over the three (`fraud/d1torch.py` `logits`). | IV-C, l. 554 |
 | "Frozen check" without numbers | Now given (dev): ROC-AUC .985 for d1-Omni-2B against .903 for frozen Qwen on 2,194 PaySim dev rows. Also added: below LR's .992 (the gate it failed); 91 ms p90; LFM3-1.7B took 454–1,061 ms in a smoke test. | IV-F, l. 563 |
