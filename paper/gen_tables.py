@@ -55,7 +55,7 @@ def robust() -> str:
     rows = [[n, v(f"rev.cmp.{k}.label"), v(f"rev.cmp.{k}.mean|signed"), v(f"rev.cmp.{k}.ci|ci"), v(f"rev.cmp.{k}.block2|ci"), v(f"rev.cmp.{k}.block4|ci"),
              v(f"rev.cmp.{k}.bca|ci"), v(f"rev.cmp.{k}.sd|int"), v(f"rev.cmp.{k}.mde|int")] for k, n in CMP]
     return small_table("(auto, auto, auto, auto, auto, auto, auto, auto, auto)", ["a − b", "label", "mean", "percentile (registered)", "block 2", "block 4", "BCa", "paired SD", "MDE"], rows,
-                       "Every final-test comparison, USD per window. The registered percentile interval is the headline; the block bootstraps (blocks of 2 and 4 windows in time order) and BCa intervals, the paired SD and the MDE are read-outs. The block-4 interval of GBDT − LR excludes zero only by a margin within Monte Carlo error, so it is borderline. \\*GBDT is a read-out on the same windows.",
+                       "Every final-test comparison, USD per window. The registered percentile interval is the headline; the block bootstraps (blocks of 2 and 4 windows in time order) and BCa intervals, the paired standard deviation (SD) and the minimum detectable effect (MDE) are read-outs; the MDE is post hoc, computed from the observed paired SD. Every interval resamples windows only and leaves out training-seed variance. The block-4 interval of GBDT − LR excludes zero only by a margin within Monte Carlo error, so it is borderline. \\*GBDT is a read-out on the same windows.",
                        "table-robust", "6.5pt", True)
 
 
@@ -63,7 +63,7 @@ def ranking() -> str:
     rows = [[n, v(f"rev.ranking.{k}.roc_auc|auc"), v(f"rev.ranking.{k}.roc_auc_ci|aucrange"), v(f"rev.ranking.{k}.pr_auc|auc"), v(f"rev.ranking.{k}.pr_auc_ci|aucrange"),
              v(f"rev.by_action.{k}.fraud_let_through|int"), v(f"rev.by_action.{k}.good_declined|int"), v(f"rev.by_action.{k}.review_fees|int")] for k, n in SETUPS]
     t = small_table("(auto, auto, auto, auto, auto, auto, auto, auto)", ["setup", "ROC-AUC", "95% CI", "PR-AUC", "95% CI", "fraud let through", "good declined", "review fees"], rows,
-                    "Ranking and where the money goes on the final test (read-out). Intervals: window bootstrap, #v(\"manual.recipe.boot_reps|int\") resamples. Costs: USD per window by part of Eq. 1. \\*Read-out setup.",
+                    "Ranking and where the money goes on the final test (read-out). ROC-AUC: area under the receiver operating characteristic curve; PR-AUC: area under the precision-recall curve. Intervals: window bootstrap, #v(\"manual.recipe.boot_reps|int\") resamples. Costs: USD per window by part of Eq. 1. \\*Read-out setup.",
                     "table-ranking", "6.5pt", True)
     drop = f"""#let ranking-drop = block(inset: (y: 3pt))[#set text(8pt)
 #set par(first-line-indent: 0pt)
@@ -141,7 +141,7 @@ def tradeoff() -> str:
     return f"""#let fig-tradeoff = [#figure(
   placement: top,
   scatter(({", ".join(series)}), [good customers declined (#v("manual.tabular_dev.chains") dev windows)], [frauds stopped (of #v("rev.custline.logreg.frauds|int"))]),
-  caption: [The customer line moves the operating point (dev). Each point is a price per good customer turned away, from #v(\"rev.custline.logreg.points.0.price\") to #v(\"rev.custline.logreg.points.12.price\") USD in steps of #v(\"rev.custline.logreg.points.1.price\"), added to the rule's decision only; notes give the price and the mean cost per window. Grey circles: LR; blue squares: LM + tree. Fewer good customers declined comes with fewer frauds stopped and equal or higher cost.],
+  caption: [The customer line moves the operating point (dev). Each point is a price per good customer turned away, from #v(\"rev.custline.logreg.points.0.price\") to #v(\"rev.custline.logreg.points.12.price\") USD in steps of #v(\"rev.custline.logreg.points.1.price\"), added to the rule's decision only; notes give the price and the mean cost in USD per window; both axes are totals over the windows. Gray circles: LR; blue squares: LM + tree. Fewer good customers declined comes with fewer frauds stopped and equal or higher cost. LR at 0 USD is the paper's baseline, with $lambda$ picked on the #v(\"rev.protocol.dev_windows_30\") dev windows.],
 ) <tradeoff>]
 """
 
@@ -155,7 +155,7 @@ def sources() -> str:
             ["LM alone: forward − scored option order", v("rev.order.lm-rich.fwd_rev.mean|signed"), v("rev.order.lm-rich.fwd_rev.ci|ci"), v("rev.order.lm-rich.fwd_rev|dist")],
             ["LM, second − first training seed", v("rev.seed.mean|signed"), v("rev.seed.ci|ci"), "not distinguishable"]]
     t = small_table("(1fr, auto, auto, auto)", ["dev comparison, USD per window", "mean", "95% interval", "verdict"], rows,
-                    "Where the difference comes from (dev, " + v("manual.tabular_dev.chains") + " windows; every read involving a language-model setup is flattered by $lambda$ picked on these windows). The first row is the registered setups' dev comparison; the rest are the revision's dev experiments (Appendices E–G).",
+                    "Where the difference comes from (dev, " + v("manual.tabular_dev.chains") + " windows; every read involving a language-model setup is flattered by $lambda$ picked on these windows). The first row is the registered setups' dev comparison; the rest are the revision's dev experiments (Appendices E–G). Intervals resample windows only.",
                     "table-sources", "7pt")
     return t.replace("placement: none,", "placement: top,", 1)
 
@@ -181,7 +181,7 @@ def parity() -> str:
             ("par-logreg__tab-logreg", "LR: prompt's fields − all columns"), ("par-trees__tab-all", "GBDT: prompt's fields − all columns"))
     rows += [[n, v(f"rev.parity.cmp.{k}.mean|signed"), f'{v(f"rev.parity.cmp.{k}.ci|ci")}, {v(f"rev.parity.cmp.{k}|dist")}'] for k, n in cmps]
     return small_table("(1fr, auto, auto)", ["setup or difference", "USD / window", "AUC, or 95% interval"], rows,
-                       "Feature parity on " + v("manual.tabular_dev.chains") + " dev windows (dev): LR and GBDT refitted on exactly the richer prompt's fields and its card and address history. $p$ on " + v("rev.protocol.dev_windows_30") + " dev windows and $lambda$ on all " + v("rev.protocol.dev_windows_all") + " for every row, so LR here differs slightly from the paper's baseline.",
+                       "Feature parity on " + v("manual.tabular_dev.chains") + " dev windows (dev): LR and GBDT refitted on exactly the richer prompt's fields and its card and address history. $p$ on " + v("rev.protocol.dev_windows_30") + " dev windows and $lambda$ on all " + v("rev.protocol.dev_windows_all") + " for every row. LR's $lambda$ is " + v("rev.lam.lr_118") + " here, against " + v("rev.lam.lr_30") + " for the paper's baseline, which picks it on the " + v("rev.protocol.dev_windows_30") + " windows only; so LR, all columns, costs " + v("rev.parity.setups.tab-logreg.mean|int") + " here against " + v("rev.custline.logreg.points.0.cost|int") + " for the baseline on the same windows (Fig. 2 at 0 USD).",
                        "table-parity")
 
 
@@ -190,7 +190,7 @@ def noc() -> str:
             for a, b, n in (("tab-all", "noc-trees", "GBDT"), ("lm-rich", "lm-rich-noc", "LM alone"), ("tab-logreg", "noc-logreg", "LR"))]
     rows += [[n, "", "", f'{v(f"rev.noc.cmp.{k}.mean|signed")} ({v(f"rev.noc.cmp.{k}.ci|ci")})'] for k, n in (("noc-trees__noc-logreg", "GBDT − LR, no C"), ("lm-rich-noc__noc-logreg", "LM alone − LR, no C"), ("lm-rich-noc__noc-trees", "LM alone − GBDT, no C"))]
     return small_table("(1fr, auto, auto, auto)", ["setup", "with C", "without C", "difference (95% interval)"], rows,
-                       "Without any C column, " + v("manual.tabular_dev.chains") + " dev windows (dev): LR and GBDT refitted without C1–C14; one LoRA retrain of LM alone with no C column in its prompt or context, same rows and settings. Every setup gets distinguishably dearer, and the ranking of LM alone and LR changes. LM + tree was not run without C.",
+                       "Without any C column, " + v("manual.tabular_dev.chains") + " dev windows (dev): LR and GBDT refitted without C1–C14; one LoRA retrain of LM alone with no C column in its prompt or context, same rows and settings. Every setup gets distinguishably dearer, and the ranking of LM alone and LR changes. LM + tree was not run without C. Costs and differences in USD per window; LR as in Appendix E.",
                        "table-noc")
 
 
@@ -198,7 +198,7 @@ def order() -> str:
     rows = [[n, f'{v(f"rev.order.{k}.flip_pct")}%', v(f"rev.order.{k}.rev|int"), v(f"rev.order.{k}.fwd|int"), f'{v(f"rev.order.{k}.fwd_rev.mean|signed")} ({v(f"rev.order.{k}.fwd_rev.ci|ci")})']
             for k, n in (("lm-rich", "LM alone"), ("lm-signal", "LM + tree"))]
     t = small_table("(1fr, auto, auto, auto, auto)", ["setup", "top answer flips", "as scored", "forward", "forward − as scored"], rows,
-                    "Option-order bias on " + v("manual.tabular_dev.chains") + " dev windows (dev). As scored: A decline, B review, C approve; forward: A approve, B review, C decline. Averaging both orders for LM alone, triggered by the registered rule, changed its cost by " + v("rev.order.lm-rich.avg_rev.mean|signed") + " (" + v("rev.order.lm-rich.avg_rev.ci|ci") + ").",
+                    "Option-order bias on " + v("manual.tabular_dev.chains") + " dev windows (dev). Costs in USD per window. As scored: A decline, B review, C approve; forward: A approve, B review, C decline. Averaging both orders for LM alone, triggered by the registered rule, changed its cost by " + v("rev.order.lm-rich.avg_rev.mean|signed") + " (" + v("rev.order.lm-rich.avg_rev.ci|ci") + ").",
                     "table-order")
     return t
 

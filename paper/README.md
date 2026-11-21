@@ -36,7 +36,7 @@ quantile).
 ## Rules the text follows (checked by `tests/test_paper.py`)
 
 - No phase numbers, setup ids, window ids, file paths or "econometric" in the body. File paths appear only in the
-  "Code and results" footnote, between the `code-and-data` markers.
+  "Code and results" availability statement (Data and Code Availability, after the conclusion), between the `code-and-data` markers.
 - Every number carries its label: `dev`, `held-out` (the registered final test) or `read-out`.
 - The settled framing appears verbatim: the evaluation title, "no detectable saving", "not a fairness audit". The
   standard terms are named: Bayes minimum-risk rule, Platt scaling, operating point, verbalizer, option-order bias,
