@@ -929,3 +929,11 @@ and where, the numbers traced to files other than results JSON, and the question
 the rule claim is limited to LR's scores on earlier windows (the language model of that time: −397, n.d.); "mostly
 information" is withdrawn; the λ asymmetry, seed variance and the post-hoc MDE are disclosed; the title says "Language
 Model". 11 pages; 492 tests pass.
+
+### Referee revision: LR with λ on all 118 dev windows on FINAL (read-out, 2026-11-21)
+
+Owner: "Register and run it". Registration `fraud/prereg/final_lr_lambda118_readout.md` (`32ba6fe`), amendment 1 (`2a51237`):
+the FINAL traces aren't on this machine, so LR was refitted deterministically and had to reproduce Phase 23's window costs
+exactly, which it did (gap 0). LR(118) − LR(dev30) +18 (−184 to 270), n.d.; no language-model verdict changes; GBDT − LR(118)
+−227 (−406 to −53), distinguishable, against −209 n.d. with the registered LR. The paper reports the GBDT comparison as
+fragile to LR's λ (V-D, VII-C, abstract, conclusion). Details in `paper/REFEREE-RESPONSE.md`.

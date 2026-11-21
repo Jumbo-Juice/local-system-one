@@ -40,7 +40,7 @@ REV_SOURCES = {
     "audit": "window_audit.json", "readout": "eval_gbdt_readout/20261119-231754.json", "readouts": "eval_readouts/20261120-075713.json",
     "parity": "eval_parity/20261119-232618.json", "noc": "eval_noc/20261120-074245.json", "order": "eval_order_bias/20261120-045604.json",
     "custline": "eval_customer_line/20261119-232409.json", "lm_nuc": "eval_lm_nuc/20261104-090217.json", "prompt": "prompt_example.json",
-    "amount": "eval_ieee_amount/20261103-164830.json", "lfm": "eval_lfm/20261030-122539.json",
+    "amount": "eval_ieee_amount/20261103-164830.json", "lfm": "eval_lfm/20261030-122539.json", "lam118": "eval_lr_lambda118/20261121-202021.json",
 }
 SETUP_KEY = {"final-logreg-amt": "lr", "final-signal-amt": "lmtree", "final-signal-cust": "lmtree_cust", "final-rich-amt": "lm", "final-tab-all-amt": "gbdt", "ieee-approve-all": "approve_all"}
 SETUP_NAME = {"lr": "LR", "lmtree": "LM + tree", "lmtree_cust": "LM + tree, customer line", "lm": "LM alone", "gbdt": "GBDT alone"}
@@ -145,6 +145,12 @@ def revision() -> dict:
     # LR's lambda on 30 dev windows (the baseline) and on all 118 (Appendices E-F); the tree score alone against LM + tree (dev).
     nuc = _j("lm_nuc")
     out["lam"] = {"lr_30": nuc["fits"]["tab-logreg"]["lambda_on_30"], "lr_118": par["setups"]["tab-logreg"]["lambda"]}
+    # LR with lambda on all 118 dev windows, applied to FINAL (read-out, fraud/prereg/final_lr_lambda118_readout.md).
+    l118 = _j("lam118")
+    key = {"final-signal-amt": "lmtree", "final-signal-cust": "lmtree_cust", "final-rich-amt": "lm", "final-tab-all-amt": "gbdt"}
+    out["lam118"] = {"mean": l118["mean_cost"]["final-logreg-amt-lam118"],
+                     "primary": _diff(l118["primary"]["mean_diff_a_minus_b"], l118["primary"]["ci95"], "read-out"),
+                     "vs": {key[s]: _diff(x["mean_diff_a_minus_b"], x["ci95"], "read-out") for s, x in l118["against_lr118"].items()}}
     out["signal_alone"] = {"mean": nuc["setups"]["signal-alone-amt"]["mean_cost"], "lm_signal": nuc["setups"]["lm-signal-amt"]["mean_cost"],
                            "distinguishable": nuc["verdict"]["against_signal"][0]["distinguishable"]}
     pe = _j("prompt")

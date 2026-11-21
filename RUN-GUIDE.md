@@ -749,6 +749,17 @@ It takes about 30 min on the CPU. Results go to `fraud/results/eval_readouts/<ev
 .venv/Scripts/python -m fraud.eval_readouts
 ```
 
+LR with λ picked on all 118 dev windows, the same way as every other setup, applied to the final test. This is a read-out for the
+referee revision; the registration is `fraud/prereg/final_lr_lambda118_readout.md`.
+- It refits LR on the fit rows. The fit is deterministic and takes about 2.5 min on the CPU. It needs `python -m fraud.history`
+  first.
+- It stops unless λ on the 30 dev windows reproduces the final test's saved LR window costs exactly.
+- Results go to `fraud/results/eval_lr_lambda118/<eval id>.json` and `.md`.
+
+```bash
+.venv/Scripts/python -m fraud.eval_lr_lambda118
+```
+
 Logreg's time per payment, which the final test didn't record (it scored logreg a window at a time). One payment at a time on the
 30 dev windows, not FINAL rows; about a minute, most of it the fit. Needs `python -m fraud.history` first. Result:
 `fraud/results/time_logreg/<time>.json`, read by the final test's console page.

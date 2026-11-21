@@ -81,7 +81,9 @@ Before changing anything, I checked each point against the repo. "Referee right"
     - the price grid;
     - every dev comparison.
 - **The size on dev.** VII-C gives it: picking LR's λ on 118 windows moves it from 10 to 5, and LR's cost from 2,125 to
-  2,117 USD per window, in-sample. The effect on the final test was **not measured**; see the open questions below.
+  2,117 USD per window, in-sample.
+- **The size on the final test.** This was measured afterwards, at the owner's request: a registered read-out, see below. The
+  result is in V-D (l. 589) and VII-C (l. 630).
 
 ### 4. Statistics. Referee right.
 
@@ -123,7 +125,7 @@ Before changing anything, I checked each point against the repo. "Referee right"
 
 Other changes:
 
-- The abstract was trimmed to 249 words, within IEEE's limit.
+- The abstract was trimmed to 247 words, within IEEE's limit.
 - In V-E, "with C columns LM alone and LR tie" now reads "are not distinguishable", so a null is not read as a tie.
 
 ## Checks
@@ -161,11 +163,51 @@ All of these are in `paper/revision_manual.json` → `claims`, with their source
    you can cite, add it to VII-J. I added none, because I couldn't verify one from the repo.
 3. **Currency of amounts.** `fraud/DATA-IEEE.md` records "USD" as unverified, from memory of the competition page.
    VII-A now says so.
-4. **The λ asymmetry on the final test.** Its effect on the held-out comparisons was not measured. LR's λ refitted on 118
-   dev windows could be applied to the saved final-test scores. That needs no model run, but it is a new, unregistered
-   read-out, so I didn't run it under this brief's no-rerun rule. Say if you want it registered and run.
+4. **The λ asymmetry on the final test: resolved** (see the read-out below). One consequence is yours to weigh. GBDT's
+   distinguishability from LR depends on which λ LR gets, and neither choice is clearly the right one. The paper now says
+   the comparison is fragile; it does not pick a side.
 5. **Seed variance on held-out data.** Quantifying it needs retraining, so it was not done. The paper now states the
    omission.
 6. **Length.** The PDF grew from 10 to 11 pages, and the main text from about 6.5 to about 7 pages.
 7. **References.** No citation was added or changed. The 30 references were verified in the earlier revision
    (`REVISION_LOG.md`, Stage 4), and I didn't re-verify them online.
+
+## Added afterwards: LR with λ picked on all 118 dev windows, on the final test (read-out)
+
+The owner asked for this on 2026-11-21 ("Register and run it"). It measures referee point 3 on the final test.
+
+- **Registration:** `fraud/prereg/final_lr_lambda118_readout.md`, committed before the run (`32ba6fe`).
+- **Script:** `fraud/eval_lr_lambda118.py`.
+- **Result:** `fraud/results/eval_lr_lambda118/20261121-202021.json`.
+
+**Amendment 1** (`2a51237`, committed before the run). The final-test traces are not on this machine: no run after 2026-11-03 is in
+`fraud/runs/`. So LR was refitted exactly as Phase 23 did it. It is deterministic IRLS, with no seed and no saved model. The
+other setups' per-window costs were read from the committed results JSONs.
+
+**Both checks passed** before anything was reported:
+
+- λ on the 30 dev windows is 10, as Phase 21 recorded.
+- With that λ, the refitted LR reproduces Phase 23's 20 per-window LR costs exactly, with a gap of 0 USD. So the scores
+  make the same decisions as the missing traces.
+
+**Results.** All are read-outs, with 95% window-bootstrap percentile intervals.
+
+| | mean, USD per window | interval | verdict |
+|---|---:|---|---|
+| LR with λ on 118 (λ = 5) − registered LR (λ = 10) | +18 | −184 to 270 | not distinguishable |
+| LM + tree − LR (λ on 118) | −181 | −608 to 283 | not distinguishable (registered LR: −163) |
+| LM + tree, customer line − LR (λ on 118) | −133 | −501 to 297 | not distinguishable (registered LR: −115) |
+| LM alone − LR (λ on 118) | +303 | −46 to 680 | not distinguishable (registered LR: +321) |
+| GBDT − LR (λ on 118) | −227 | −406 to −53 | **distinguishable** (registered LR: −209, −430 to 57, not distinguishable) |
+
+**Reading.**
+
+- On average the asymmetry did not flatter the other setups on the final test: LR with the other setups' recipe costs 18 USD
+  per window *more*.
+- No language-model verdict changes.
+- The prediction "no verdict changes" was **wrong** for GBDT. Against LR given the same λ recipe, GBDT is distinguishably
+  cheaper.
+- GBDT is itself a read-out on reused windows, and the comparisons are not corrected for multiplicity. The paper reports this
+  in V-D and VII-C as fragility, not as a finding that GBDT wins.
+- The abstract, "In short" and the Conclusion now say GBDT was distinguishable only against LR with its review price picked
+  like GBDT's.
