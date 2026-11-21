@@ -74,3 +74,25 @@ SD and the post-hoc MDE, 2.8 × SD / √20, both labelled read-out. There is no 
 - `python -m fraud.eval_lr_lambda118` writes `fraud/results/eval_lr_lambda118/<eval id>.json` and `.md`.
 - The JSON has `"label": "read-out"`.
 - No traces are written, because no new scoring is done.
+
+## Amendment 1 (2026-11-21), before any run
+
+The first attempt stopped at load time, before anything was computed on FINAL:
+`fraud/runs/20261104-090649_eval_final-logreg-amt_final0.jsonl` does not exist on this machine.
+
+- Observed: this machine's `fraud/runs/` holds no run after `20261103-164830`. The FINAL traces and the GBDT read-out traces
+  were written on the machine that ran the final test.
+- The results JSONs are committed, and they hold every setup's per-window FINAL costs:
+  - `eval_final/20261104-090649.json` → `setups.<setup>.windows`;
+  - `eval_gbdt_readout/20261119-231754.json`, the same for GBDT.
+
+**The change.** The design above is unchanged except where LR's FINAL scores come from.
+
+- **Scores.** LR is refitted on fit rows exactly as Phase 23 did. `eval_tabular.fit("tab-logreg", …)` uses IRLS on the
+  583 features, has no randomness and loads no saved model. It scores the dev windows and the 20 FINAL windows (`et.score`).
+- **Labels.** No FINAL label enters any fit. Labels are used only to cost decisions, as in every read-out.
+- **Check 2 (stronger).** With λ_30, the 20 recomputed LR window costs must equal Phase 23's saved per-window LR costs within
+  1e-6 USD. That holds only if these scores make every decision Phase 23 made. If it fails, the script stops, and nothing is
+  reported but the failure.
+- **Check 1.** It now compares λ_30 with Phase 21's recorded `tab-logreg` `lambda_on_30`, which is 10.
+- **Other setups.** Their per-window costs are read from the two results JSONs above, not from traces.

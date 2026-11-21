@@ -1,11 +1,13 @@
 """LR with lambda picked on all 118 dev windows, applied to its saved FINAL scores: one labelled read-out → fraud/results/eval_lr_lambda118/.
 
-    python -m fraud.eval_lr_lambda118     # a few minutes on the CPU (LR is refitted on fit rows for its dev scores); no model touches FINAL
+    python -m fraud.eval_lr_lambda118     # a few minutes on the CPU: LR refitted on fit rows (deterministic), scored on dev and FINAL
 
 REGISTRATION: fraud/prereg/final_lr_lambda118_readout.md, committed with this script before it ran (referee revision, 2026-11-21).
 Why: the baseline's lambda comes from the 30 dev windows, every other setup's from all 118 (REVISION_LOG.md Stage 0, section 3).
-This measures what that asymmetry does on FINAL. Nothing is re-scored: LR's FINAL scores come from its Phase 23 traces, and the
-decisions are recomputed with the same rule and costs, as eval_readouts.section_grid does. Every number is labelled "read-out".
+This measures what that asymmetry does on FINAL. Amendment 1 of the registration: the Phase 23 traces are not on this machine, so
+LR (deterministic IRLS, no seed) is refitted exactly as Phase 23 did and scored on FINAL; with lambda on dev30 its 20 window costs
+must equal Phase 23's saved ones, or the script stops. Other setups' window costs come from the committed results JSONs. The
+decisions use the same rule and costs as eval_readouts.section_grid. Every number is labelled "read-out".
 """
 
 from __future__ import annotations
@@ -17,7 +19,7 @@ from pathlib import Path
 
 import numpy as np
 
-from . import costs, eval_final as ef, eval_gbdt_readout as gr, eval_ieee as ev, eval_ieee_amount as am, eval_readouts as ro, final_test as ft, ieee_data, tabular as tb
+from . import costs, eval_final as ef, eval_gbdt_readout as gr, eval_ieee as ev, eval_ieee_amount as am, eval_readouts as ro, eval_tabular as et, final_test as ft, history, ieee_data, tabular as tb
 from .runs import stamp
 
 ROOT = Path(__file__).resolve().parent
@@ -25,6 +27,17 @@ RESULTS = ROOT / "results" / "eval_lr_lambda118"
 LABEL = "read-out"
 LR118 = "final-logreg-amt-lam118"
 OTHERS = (ef.SIGNAL_AMT, ef.SIGNAL_CUST, ef.RICH_AMT, gr.SETUP)
+FINAL_JSON = ROOT / "results" / "eval_final" / f"{gr.FINAL_EVAL}.json"
+GBDT_JSON = ROOT / "results" / "eval_gbdt_readout" / "20261119-231754.json"
+PHASE21 = ROOT / "results" / "eval_lm_nuc" / "20261104-090217.json"
+
+
+def saved_window_costs() -> dict[str, np.ndarray]:
+    """Every setup's per-window FINAL cost, from the committed results (the traces aren't on this machine)."""
+    fin = json.loads(FINAL_JSON.read_text(encoding="utf-8"))["setups"]
+    out = {s: np.array(fin[s]["windows"], float) for s in (ef.BASELINE, ef.SIGNAL_AMT, ef.SIGNAL_CUST, ef.RICH_AMT)}
+    out[gr.SETUP] = np.array(json.loads(GBDT_JSON.read_text(encoding="utf-8"))["setups"][gr.SETUP]["windows"], float)
+    return out
 
 
 def window_costs(pol: tb.Policy, lam: float, q_fin: list[np.ndarray], windows, t) -> np.ndarray:
@@ -47,19 +60,21 @@ def run(log=print) -> dict:
     t = ieee_data.load()
     n = len(t)
     windows = ft.final_windows(n)
-    tr = ro.traces()
-    by = {s: tb.window_costs(v) for s, v in tr.items()}
+    by = saved_window_costs()
 
     dev, held = tb.dev30(n), tb.heldout_dev(n)
-    q_dev = ro.dev_scores(t, log)[ef.BASELINE]
+    kind, parts, drop = et.SETS["tab-logreg"]
+    m, f = et.fit("tab-logreg", kind, parts, drop, t, history.load(), log)
+    q_dev = et.score(m, f, t, dev + held)
+    q_all = et.score(m, f, t, windows)
     pol = tb.fit_policy(q_dev, t, dev)
     lam30 = pol.lam
-    saved_lam = tr[ef.BASELINE][0][0]["policy"]["lambda"]
+    saved_lam = json.loads(PHASE21.read_text(encoding="utf-8"))["fits"]["tab-logreg"]["lambda_on_30"]
     if lam30 != saved_lam:
-        raise SystemExit(f"check 1 failed: lambda on dev30 is {lam30}, the saved LR trace has {saved_lam}")
+        raise SystemExit(f"check 1 failed: lambda on dev30 is {lam30}, Phase 21 recorded {saved_lam}")
     lam118 = am.pick_lambda([pol.p(q_dev[w.rows]) for w in dev + held], [t.is_fraud[w.rows].astype(int) for w in dev + held], [t.amount[w.rows] for w in dev + held], ev.COSTS)[0]
 
-    q_fin = ro.arr(tr[ef.BASELINE], "q")
+    q_fin = [q_all[w.rows] for w in windows]
     again = window_costs(pol, lam30, q_fin, windows, t)
     gap = float(np.abs(again - by[ef.BASELINE]).max())
     if gap > 1e-6:
@@ -68,8 +83,8 @@ def run(log=print) -> dict:
     log(f"lambda dev30 {lam30}, all 118 {lam118}; LR mean {by[ef.BASELINE].mean():,.2f} -> {by[LR118].mean():,.2f} USD/window")
 
     out = {"eval": stamp(), "script": "fraud/eval_lr_lambda118.py", "label": LABEL, "prereg": "fraud/prereg/final_lr_lambda118_readout.md",
-           "created": time.strftime("%Y-%m-%dT%H:%M:%S"), "sources": {"phase23": gr.FINAL_EVAL, "gbdt_readout": ro._readout_id()}, "costs": ev.COSTS.as_dict(),
-           "lambda": {"dev30": lam30, "all_118": lam118}, "checks": {"lambda_dev30_matches_trace": True, "reproduces_saved_lr_max_gap": gap},
+           "created": time.strftime("%Y-%m-%dT%H:%M:%S"), "sources": {"phase23": f"fraud/results/eval_final/{gr.FINAL_EVAL}.json", "gbdt_readout": "fraud/results/eval_gbdt_readout/20261119-231754.json", "lr_scores": "refitted (amendment 1)"}, "costs": ev.COSTS.as_dict(),
+           "lambda": {"dev30": lam30, "all_118": lam118}, "checks": {"lambda_dev30_matches_phase21": True, "reproduces_saved_lr_max_gap": gap},
            "mean_cost": {s: float(v.mean()) for s, v in by.items()},
            "primary": diff(by, LR118, ef.BASELINE),
            "against_lr118": {s: diff(by, s, LR118) for s in OTHERS},
