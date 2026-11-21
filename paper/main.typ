@@ -1,4 +1,4 @@
-// The paper: Can a small fine-tuned LLM make fraud decisions? IEEE two-column, built with Typst.
+// The paper: Can a small fine-tuned language model make fraud decisions? IEEE two-column, built with Typst.
 // Every number comes from data.json through v() with a "path|format" key; run `python paper/build_data.py` after adding a key.
 // The blocks between "generated: start" and "generated: end" are written by `python paper/gen_tables.py`; edit that script, not the block.
 #import "vendor/charged-ieee/lib.typ": ieee
@@ -21,7 +21,7 @@
 #show footnote.entry: set text(font: times)
 
 #show: ieee.with(
-  title: [Can a Small Fine-Tuned LLM Make Fraud Decisions? A Locked, Cost-Based Evaluation],
+  title: [Can a Small Fine-Tuned Language Model Make Fraud Decisions? A Locked, Cost-Based Evaluation],
   authors: (
     (name: "Juji Vongvilay", organization: [Siam University]),
     (name: "Thu Ya Aung", organization: [Siam University]),

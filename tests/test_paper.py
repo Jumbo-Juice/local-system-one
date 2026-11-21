@@ -155,7 +155,7 @@ def test_paper_text_follows_the_rules():
     assert rule_breaks(body) == []
     flat = re.sub(r"\s+", " ", body)
     # the settled framing (REVISION_PROMPT.md, Stage 4)
-    assert "Can a Small Fine-Tuned LLM Make Fraud Decisions? A Locked, Cost-Based Evaluation" in flat
+    assert "Can a Small Fine-Tuned Language Model Make Fraud Decisions? A Locked, Cost-Based Evaluation" in flat
     assert "no detectable saving" in flat and "not a fairness audit" in flat and "This is the part that is new" not in flat
     assert "Bayes minimum-risk" in flat and "Platt scaling" in flat and "operating point" in flat and "verbalizer" in flat
     assert "option-order bias" in flat and "post-hoc" in flat and "Two flips" not in flat

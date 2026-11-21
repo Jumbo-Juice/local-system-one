@@ -9,7 +9,7 @@ report what worked and what didn't.
 *The Qwen2.5 3B model plays the shooter, replayed from a recorded run. Every move, target and
 shot is a multiple-choice question the model answered in one forward pass.*
 
-**The paper:** *Can a Small Fine-Tuned LLM Make Fraud Decisions? A Locked, Cost-Based Evaluation*.
+**The paper:** *Can a Small Fine-Tuned Language Model Make Fraud Decisions? A Locked, Cost-Based Evaluation*.
 - The PDF is `paper/exports/transforming-llms-fraud.pdf`.
 - How to get the data and rebuild it: `REPRODUCE.md`.
 

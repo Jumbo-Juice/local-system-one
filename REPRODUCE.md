@@ -1,6 +1,6 @@
 # Reproducing the paper
 
-*Can a Small Fine-Tuned LLM Make Fraud Decisions? A Locked, Cost-Based Evaluation*: the paper is in `paper/`, and the
+*Can a Small Fine-Tuned Language Model Make Fraud Decisions? A Locked, Cost-Based Evaluation*: the paper is in `paper/`, and the
 experiments are in `fraud/`.
 
 This page covers:

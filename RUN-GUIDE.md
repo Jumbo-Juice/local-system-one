@@ -800,7 +800,7 @@ Keys: space, N, the right arrow and a clicker's page keys walk the talk, one ste
 
 ## Paper (`paper/`)
 
-The IEEE two-column paper, *Can a Small Fine-Tuned LLM Make Fraud Decisions? A Locked, Cost-Based Evaluation*, in Typst 0.15.1 with the vendored `charged-ieee` template (`paper/vendor/`).
+The IEEE two-column paper, *Can a Small Fine-Tuned Language Model Make Fraud Decisions? A Locked, Cost-Based Evaluation*, in Typst 0.15.1 with the vendored `charged-ieee` template (`paper/vendor/`).
 - Every number comes from `paper/data.json`.
 - `data.json` is built from the deck's build plus the revision's results files (the `rev` block in `paper/build_data.py`).
 - The build runs no model and needs no network.

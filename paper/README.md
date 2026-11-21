@@ -1,6 +1,6 @@
 # The paper (Typst, IEEE two-column)
 
-*Can a Small Fine-Tuned LLM Make Fraud Decisions? A Locked, Cost-Based Evaluation*: the portfolio version of the
+*Can a Small Fine-Tuned Language Model Make Fraud Decisions? A Locked, Cost-Based Evaluation*: the portfolio version of the
 paper, revised under `REVISION_PROMPT.md` (every step and decision in `REVISION_LOG.md`).
 
 It is an evaluation study. It asks whether a small fine-tuned language model, read as a single-pass three-way
