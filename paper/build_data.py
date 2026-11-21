@@ -40,6 +40,7 @@ REV_SOURCES = {
     "audit": "window_audit.json", "readout": "eval_gbdt_readout/20261119-231754.json", "readouts": "eval_readouts/20261120-075713.json",
     "parity": "eval_parity/20261119-232618.json", "noc": "eval_noc/20261120-074245.json", "order": "eval_order_bias/20261120-045604.json",
     "custline": "eval_customer_line/20261119-232409.json", "lm_nuc": "eval_lm_nuc/20261104-090217.json", "prompt": "prompt_example.json",
+    "amount": "eval_ieee_amount/20261103-164830.json", "lfm": "eval_lfm/20261030-122539.json",
 }
 SETUP_KEY = {"final-logreg-amt": "lr", "final-signal-amt": "lmtree", "final-signal-cust": "lmtree_cust", "final-rich-amt": "lm", "final-tab-all-amt": "gbdt", "ieee-approve-all": "approve_all"}
 SETUP_NAME = {"lr": "LR", "lmtree": "LM + tree", "lmtree_cust": "LM + tree, customer line", "lm": "LM alone", "gbdt": "GBDT alone"}
@@ -116,7 +117,36 @@ def revision() -> dict:
                                                                "vs0": _diff(c["vs_price_0"]["mean_diff"], c["vs_price_0"]["mean_diff_ci95"], "dev") if c["vs_price_0"] else None}
                                                               for c in x["curve"].values()], "frauds": next(iter(x["curve"].values()))["frauds"]}
                        for s, x in cl["setups"].items()}
-    out["protocol"] = json.loads((ROOT / "paper" / "revision_manual.json").read_text(encoding="utf-8"))["protocol"]
+    manual = json.loads((ROOT / "paper" / "revision_manual.json").read_text(encoding="utf-8"))
+    out["protocol"] = manual["protocol"]
+    out["claims"] = manual["claims"]
+
+    # Which test windows were used when (the window audit): every earlier evaluation before FINAL, contiguous or chained.
+    src = _j("audit")
+    earlier = [s for s in src["sources"] if s["name"] != "final"]
+    out["windows"] = {"earlier": sum(s["windows_n"] for s in earlier), "earlier_contiguous": sum(s["windows_n"] for s in earlier if all(w["contiguous"] for w in s["windows"])),
+                      "earlier_chains": sum(s["windows_n"] for s in earlier if not all(w["contiguous"] for w in s["windows"])),
+                      "final": next(s["windows_n"] for s in src["sources"] if s["name"] == "final"), "rows_scored_twice": src["test"]["rows_scored_twice"]}
+
+    # The earlier test windows of the rule's result: the rule against two fixed cut-offs, for LR and for the language model then in use.
+    am = _j("amount")
+    v = am["verdict"]
+    rep = {(r["a"], r["b"]): r for r in v["reported"]}
+    lr_cut30 = rep[("ieee-logreg-all-dev30", "ieee-logreg-all")]
+    out["earlier"] = {"lm_rule_vs_cutoffs": _diff(v["second"]["mean_diff"], v["second"]["mean_diff_ci95"], "earlier test windows"),
+                      "lr_cutoffs30_vs_cutoffs": _diff(lr_cut30["mean_diff"], lr_cut30["mean_diff_ci95"], "earlier test windows"),
+                      "dev_windows": len(am["dev_windows"])}
+
+    # The frozen check that chose d1-Omni-2B (PaySim dev rows).
+    lf = _j("lfm")["dev"]
+    out["frozen"] = {"d1_auc": lf["d1-omni-2b"]["auc"][lf["d1-omni-2b"]["variant"]], "qwen_auc": lf["frozen_1.5b"]["auc"]["both"], "logreg_auc": lf["logreg"]["auc"],
+                     "rows": lf["d1-omni-2b"]["rows"], "d1_p90_ms": lf["d1-omni-2b"]["latency_single_dev0"]["p90"], "gate_pass": lf["d1-omni-2b"]["gate"]["pass"]}
+
+    # LR's lambda on 30 dev windows (the baseline) and on all 118 (Appendices E-F); the tree score alone against LM + tree (dev).
+    nuc = _j("lm_nuc")
+    out["lam"] = {"lr_30": nuc["fits"]["tab-logreg"]["lambda_on_30"], "lr_118": par["setups"]["tab-logreg"]["lambda"]}
+    out["signal_alone"] = {"mean": nuc["setups"]["signal-alone-amt"]["mean_cost"], "lm_signal": nuc["setups"]["lm-signal-amt"]["mean_cost"],
+                           "distinguishable": nuc["verdict"]["against_signal"][0]["distinguishable"]}
     pe = _j("prompt")
     out["prompt"] = {k: pe[k] for k in ("context", "question", "state_plain", "state_rich", "signal_line", "full_rich", "is_fraud")}
     out["prompt"]["options"] = pe["options"]

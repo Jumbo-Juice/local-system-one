@@ -8,5 +8,14 @@
   "mde_factor": 2.8,
   "mde_power_pct": 80,
   "mde_alpha_pct": 5
+ },
+ "claims": {
+  "_source": "Referee revision (2026-11-21). cutoff_dev_windows: fraud/eval_ieee.py DEV_WINDOWS = 10 (pick_thresholds on Phase 11's 10 dev windows; Phase 14's 'thresholds as they are' are Phase 12's values from those windows, fraud/eval_ieee_amount.py docstring). lfm3_smoke_ms: fraud/RESULTS-LFM.md, Short answer (smoke latency of LFM3-1.7B per transaction, the candidate dropped as too slow; not in the results JSON). gbdt_oof_folds: fraud/lm_signal.py FOLDS = 4. stress_refit_max_usd: fraud/RESULTS-COST-STRESS.md, Short answer (rule told the new costs: distinguishable everywhere tested, up to 200 USD per good customer declined). signal_trees: fraud/lm_signal.py TREES = 400 (the tree score LM + tree reads is the first 400 of GBDT's 800 trees; REVISION_LOG.md Stage 0 correction).",
+  "cutoff_dev_windows": 10,
+  "lfm3_smoke_ms_lo": 454,
+  "lfm3_smoke_ms_hi": 1061,
+  "gbdt_oof_folds": 4,
+  "stress_refit_max_usd": 200,
+  "signal_trees": 400
  }
 }
