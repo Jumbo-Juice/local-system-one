@@ -920,3 +920,12 @@ paper-driver: **APPROVE WITH FIXES**.
   - **Final-report table:** added the registered setup LM alone + customer line: 2,417 (2,030–2,867), +311 (−75 to
     746), n.d.
 - No further review is needed. Stage 6 is the last stage.
+
+## Referee revision (2026-11-21)
+
+A writing and claim-scoping pass from an independent review: no model run, no result changed. Every point, what changed
+and where, the numbers traced to files other than results JSON, and the questions left for the owner are in
+`paper/REFEREE-RESPONSE.md`. In short: the test part's earlier use (98 windows) and the final windows' draw are stated;
+the rule claim is limited to LR's scores on earlier windows (the language model of that time: −397, n.d.); "mostly
+information" is withdrawn; the λ asymmetry, seed variance and the post-hoc MDE are disclosed; the title says "Language
+Model". 11 pages; 492 tests pass.
