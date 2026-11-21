@@ -937,3 +937,12 @@ the FINAL traces aren't on this machine, so LR was refitted deterministically an
 exactly, which it did (gap 0). LR(118) − LR(dev30) +18 (−184 to 270), n.d.; no language-model verdict changes; GBDT − LR(118)
 −227 (−406 to −53), distinguishable, against −209 n.d. with the registered LR. The paper reports the GBDT comparison as
 fragile to LR's λ (V-D, VII-C, abstract, conclusion). Details in `paper/REFEREE-RESPONSE.md`.
+
+### paper-driver, referee revision (2026-11-21): APPROVE WITH FIXES
+
+Checked data.json == render(), traced the new numbers (eval_ieee_amount, eval_lfm, eval_lr_lambda118, code constants,
+RESULTS-COST-STRESS/LFM), the registration → amendment → result order of the λ-118 read-out and its gap-0 check, and the
+11 rendered pages; accepted the title change and the availability statement. Fixes made: abstract back within the Stage 4
+limit (208 words, 4 numerals: 825, 397, 462, 524; "no registered setup"); "tie"/"ran level" wording in V-E and V-F replaced by
+"not distinguishable" (hard rule 5); V-B "none of which was distinguishable against the registered LR". Two items added for
+the owner in paper/REFEREE-RESPONSE.md: confirm the read-out go-ahead, and the GBDT "fragile" framing. No further gate.

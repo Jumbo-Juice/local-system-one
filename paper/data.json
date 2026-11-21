@@ -899,7 +899,6 @@
  "rev.windows.earlier": "98",
  "rev.windows.earlier_chains": "38",
  "rev.windows.earlier_contiguous": "60",
- "rev.windows.final": "20",
  "rev.windows.rows_scored_twice": "0",
  "rule.phase14.diff.ci|ci": "−1,307 to −464",
  "rule.phase14.diff.mean|abs": "825",

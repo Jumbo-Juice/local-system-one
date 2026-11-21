@@ -125,7 +125,7 @@ Before changing anything, I checked each point against the repo. "Referee right"
 
 Other changes:
 
-- The abstract was trimmed to 247 words, within IEEE's limit.
+- The abstract is 208 words with 4 numerals (825, 397, 462, 524), per the Stage 4 settled limit of about 200 words and at most 4 numbers (paper-driver fix, see below).
 - In V-E, "with C columns LM alone and LR tie" now reads "are not distinguishable", so a null is not read as a tie.
 
 ## Checks
@@ -171,6 +171,11 @@ All of these are in `paper/revision_manual.json` → `claims`, with their source
 6. **Length.** The PDF grew from 10 to 11 pages, and the main text from about 6.5 to about 7 pages.
 7. **References.** No citation was added or changed. The 30 references were verified in the earlier revision
    (`REVISION_LOG.md`, Stage 4), and I didn't re-verify them online.
+8. **Your go-ahead for the read-out.** paper-driver accepted the λ-118 read-out on the FINAL windows on the strength of the
+   worker's report that you said "Register and run it", which the repo cannot show. Please confirm.
+9. **GBDT under the matched λ recipe.** GBDT is distinguishably cheaper than LR (read-out, reused windows, no multiplicity
+   correction). This leaves the language-model verdicts and the rule-versus-model headline (825 against 227) unchanged, so
+   paper-driver did not escalate it. Decide whether you are content with the "fragile" framing.
 
 ## Added afterwards: LR with λ picked on all 118 dev windows, on the final test (read-out)
 
@@ -211,3 +216,22 @@ other setups' per-window costs were read from the committed results JSONs.
   in V-D and VII-C as fragility, not as a finding that GBDT wins.
 - The abstract, "In short" and the Conclusion now say GBDT was distinguishable only against LR with its review price picked
   like GBDT's.
+
+## paper-driver review (2026-11-21): APPROVE WITH FIXES
+
+The reviewer checked:
+
+- `data.json` equals `render()`;
+- the new numbers trace to their sources;
+- the order of the read-out (registration, then amendment, then result) and its exact-reproduction check;
+- the title change and the footnote move, both accepted;
+- all 11 rendered pages.
+
+Fixes made, in one commit:
+
+1. **Abstract.** Cut to 208 words and 4 numerals, from 247 words and 8, because Stage 4 had settled "about 200 words, at most
+   4 numbers". It now says "no *registered* setup was distinguishably cheaper than LR".
+2. **V-F.** "LM alone's dev tie with LR" is now "dev difference from LR, −13 (−142 to 125), not distinguishable".
+3. **V-E.** "already ran level with LR" is now "was not distinguishable from LR".
+4. **V-B.** "none of which was distinguishable" is now "… against the registered LR".
+5. **Rebuild.** The PDF is 11 pages with no `??`, and 492 tests pass. This verdict is logged in `REVISION_LOG.md`.
