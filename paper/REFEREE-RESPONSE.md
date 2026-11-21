@@ -4,8 +4,8 @@ A writing and claim-scoping pass on `paper/main.typ`, from an independent review
 and no result changed. Every number is still read through `v()` from `paper/data.json`. New numbers come from committed
 results or from `paper/revision_manual.json` → `claims`, and each one has its source there.
 
-Line numbers refer to `paper/main.typ` after the revision. Sections use the PDF numbering. Commits: `468365f` (data keys),
-`bc322bf` (text), `000cc7b` (title), then the abstract trim, the PDF and this log.
+Line numbers refer to `paper/main.typ` after the revision. Sections use the PDF numbering. Commits: `3e0652e` (data keys),
+`f093508` (text), `aafe81c` (title), then the abstract trim, the PDF and this log.
 
 Before changing anything, I checked each point against the repo. "Referee right" means the source confirmed the finding.
 
@@ -120,7 +120,7 @@ Before changing anything, I checked each point against the repo. "Referee right"
 | The two LR baselines, 2,125 and 2,117 | Same LR and the same 88 dev windows. λ = 10 picked on 30 windows (the paper's baseline) against λ = 5 picked on 118 (Appendices E–F). Explained in the Appendix E caption, the Fig. 2 caption and VII-C. | |
 | Acronyms at first use | LoRA, LIFT and LM-BFF are expanded in Related Work, CRISP-DM in III-A, SD in III-D, ROC-AUC in IV-F, PR-AUC in V-E, LM in the Abstract. The Appendix A and B captions are expanded too. | |
 | File-path footnote | Moved to an unnumbered *Data and Code Availability* section before the Acknowledgement, at 8 pt and unjustified. The System One footnote stays, because it credits an idea and holds no path. `tests/test_paper.py` checks the new place. | l. 659 |
-| "LLM" in the title, "small language model" in the body | The title is now "Can a Small Fine-Tuned **Language Model** Make Fraud Decisions?". README, REPRODUCE, RUN-GUIDE and the paper test follow. Commit `000cc7b` holds this change alone. | l. 24 |
+| "LLM" in the title, "small language model" in the body | The title is now "Can a Small Fine-Tuned **Language Model** Make Fraud Decisions?". README, REPRODUCE, RUN-GUIDE and the paper test follow. Commit `aafe81c` holds this change alone. | l. 24 |
 | American spelling | serializes, minimizes, neighboring, toward, labeled, anonymized, modeling, Labeling, Generalizability, Gray. The reference title "CRISP-DM: Towards…" is kept as published. | |
 
 Other changes:
@@ -157,7 +157,7 @@ All of these are in `paper/revision_manual.json` → `claims`, with their source
 
 ## For the author to decide
 
-1. **The title.** It was a settled decision of the earlier revision. Revert `000cc7b` if "LLM" should stay. If it does,
+1. **The title.** It was a settled decision of the earlier revision. Revert `aafe81c` if "LLM" should stay. If it does,
    the body needs to say "LLM" for a 2B-parameter model, which the referee would query.
 2. **IEEE-CIS label construction.** The repo doesn't document how the provider assigned `isFraud`. If you have a source
    you can cite, add it to VII-J. I added none, because I couldn't verify one from the repo.
@@ -181,11 +181,11 @@ All of these are in `paper/revision_manual.json` → `claims`, with their source
 
 The owner asked for this on 2026-11-21 ("Register and run it"). It measures referee point 3 on the final test.
 
-- **Registration:** `fraud/prereg/final_lr_lambda118_readout.md`, committed before the run (`32ba6fe`).
+- **Registration:** `fraud/prereg/final_lr_lambda118_readout.md`, committed before the run (`2d845c1`).
 - **Script:** `fraud/eval_lr_lambda118.py`.
 - **Result:** `fraud/results/eval_lr_lambda118/20261121-202021.json`.
 
-**Amendment 1** (`2a51237`, committed before the run). The final-test traces are not on this machine: no run after 2026-11-03 is in
+**Amendment 1** (`0a697f7`, committed before the run). The final-test traces are not on this machine: no run after 2026-11-03 is in
 `fraud/runs/`. So LR was refitted exactly as Phase 23 did it. It is deterministic IRLS, with no seed and no saved model. The
 other setups' per-window costs were read from the committed results JSONs.
 

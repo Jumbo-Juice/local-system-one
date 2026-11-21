@@ -932,7 +932,7 @@ Model". 11 pages; 492 tests pass.
 
 ### Referee revision: LR with λ on all 118 dev windows on FINAL (read-out, 2026-11-21)
 
-Owner: "Register and run it". Registration `fraud/prereg/final_lr_lambda118_readout.md` (`32ba6fe`), amendment 1 (`2a51237`):
+Owner: "Register and run it". Registration `fraud/prereg/final_lr_lambda118_readout.md` (`2d845c1`), amendment 1 (`0a697f7`):
 the FINAL traces aren't on this machine, so LR was refitted deterministically and had to reproduce Phase 23's window costs
 exactly, which it did (gap 0). LR(118) − LR(dev30) +18 (−184 to 270), n.d.; no language-model verdict changes; GBDT − LR(118)
 −227 (−406 to −53), distinguishable, against −209 n.d. with the registered LR. The paper reports the GBDT comparison as
