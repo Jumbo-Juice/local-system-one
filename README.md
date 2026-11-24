@@ -9,9 +9,19 @@ report what worked and what didn't.
 *The Qwen2.5 3B model plays the shooter, replayed from a recorded run. Every move, target and
 shot is a multiple-choice question the model answered in one forward pass.*
 
-**The paper:** *Can a Small Fine-Tuned Language Model Make Fraud Decisions? A Locked, Cost-Based Evaluation*.
-- The PDF is `paper/exports/transforming-llms-fraud.pdf`.
-- How to get the data and rebuild it: `REPRODUCE.md`.
+**Three ways in:**
+
+- **The paper:** *Can a Small Fine-Tuned Language Model Make Fraud Decisions? A Locked, Cost-Based
+  Evaluation*, [`paper/exports/transforming-llms-fraud.pdf`](paper/exports/transforming-llms-fraud.pdf).
+  How to get the data and rebuild it: [`REPRODUCE.md`](REPRODUCE.md).
+- **The story:** one scroll page of the whole project for a newcomer, six trials of one question
+  (*can a model that never writes be trusted to decide?*), each ending yes, no, only with help or
+  can't tell. See [`story/`](story/README.md); it needs no network.
+- **The replays:** `python -m viewer` for the games, `python -m fraud.viewer` for fraud.
+
+**Where it stands (2026-11-24):** the game demos are finished, and the fraud paper has been
+through its referee revision. The repository is public; the datasets and trained adapters are not
+included (see [`REPRODUCE.md`](REPRODUCE.md)).
 
 ## The idea
 
@@ -69,14 +79,19 @@ batched forward pass per tick. This demo runs live in a window and is not record
 
 ### Fraud detection (a separate, serious app)
 
-The same engine decides **approve / send for a check / decline** for every payment in PaySim, a
-public simulated mobile-money dataset (CC BY-SA 4.0). We compared it with six hand-written rules
-and with logistic regression. It lives in its own folder, [`fraud/`](fraud/CLAUDE.md), with its
-own replay console.
-Write-ups: [`fraud/RESULTS.md`](fraud/RESULTS.md) (the model as it comes),
-[`fraud/RESULTS-FT.md`](fraud/RESULTS-FT.md) (after fine-tuning), and the Decision 3.0
-model d3-nano as it comes ([`fraud/RESULTS-D3.md`](fraud/RESULTS-D3.md)) and fine-tuned
-([`fraud/RESULTS-D3FT.md`](fraud/RESULTS-D3FT.md)).
+The same kind of one-look decision says **approve / send for a review / decline** for every
+payment, and each wrong call has a price in dollars. It lives in its own folder,
+[`fraud/`](fraud/CLAUDE.md), with its own replay console (`python -m fraud.viewer`). It ran in two
+stages:
+
+1. **PaySim** (simulated mobile money, CC BY-SA 4.0): building and testing the pipeline with
+   Qwen2.5-1.5B against six hand-written rules and logistic regression.
+   Write-ups: [`fraud/RESULTS.md`](fraud/RESULTS.md) (the model as it comes) and
+   [`fraud/RESULTS-FT.md`](fraud/RESULTS-FT.md) (after fine-tuning).
+2. **IEEE-CIS** (real card payments, Kaggle): the paper's evaluation. A fine-tuned d1-Omni-2B
+   against logistic regression and boosted trees, with a decision rule that prices each action,
+   ending in a final test that was registered in advance and scored once.
+   Write-ups: [`fraud/RESULTS-FINAL.md`](fraud/RESULTS-FINAL.md) and the paper.
 
 ![The fraud console replaying the fine-tuned model on one test window: payments arrive, each decision shows its scores, signals, cost and decision time](docs/media/fraud.gif)
 
@@ -121,7 +136,7 @@ report the failures as well.
 
 ![The larger model steps into a bullet at 99% instead of staying put; 29 of 30 and 66 of 67 hits came from choosing a move labelled as dangerous](docs/media/warned-hits.png)
 
-**Fraud detection**
+**Fraud detection, stage 1: PaySim**
 
 - **Fast enough for a payment stream:** 127 ms per payment for 9 payments in 10, with each
   question asked in both orders.
@@ -133,13 +148,40 @@ report the failures as well.
   logistic regression in 19 of 20 new test windows, at the same speed.
 - **It learned the rule book, blind spot included.** It wanted the same decision as the six rules
   on 99.8% of payments, and never beat them. In this simulated data, two clues give almost every
-  fraud away, so there is little room for a model to add value.
+  fraud away, so there is little room for a model to add value. That is why stage 2 moved to real
+  payments.
 
 ![3,853 of 3,862 decisions matched the hand-written rules; the 9 differences were fraudulent 10M transfers sent for a check instead of declined; average costs: rules 808, trained model 830, logistic regression 190,910, untrained model 5.1 million](docs/media/fraud-rule-book.png)
 
+**Fraud detection, stage 2: IEEE-CIS (the paper)**
+
+Costs are USD per test window; intervals are 95%. *Held-out* means the registered final test
+(20 windows, 20,000 payments, 630 frauds, scored once); *read-out* means computed afterwards on
+the same windows, not a fresh test.
+
+- **The decision rule mattered most.** On earlier test windows with logistic regression's scores,
+  pricing each action for each payment, with a review budget, cost 825 less per window than two
+  cost-tuned fixed cut-offs (−1,307 to −464). With the language model's scores the saving (397)
+  was not distinguishable.
+- **The fine-tuned model showed no detectable saving.** Reading the boosted trees' score, it cost
+  1,943 against logistic regression's 2,106: −163 (−462 to 238), held-out. On its own it cost
+  2,427: +321 (−74 to 774). No registered setup was distinguishably cheaper than logistic
+  regression, and the test could miss differences of about 500 per window.
+- **Boosted trees were cheapest, but only as a read-out:** 1,897. Whether that beats logistic
+  regression distinguishably depends on how logistic regression's review price is picked:
+  −209 (−430 to 57) against the registered one, −227 (−406 to −53) against the other choice.
+  The paper calls this verdict fragile.
+- **Part of the model's gap is information, not judgement.** On development data, given only the
+  fields in its prompt, the model was cheaper than logistic regression and tied with trees. That
+  does not explain its gap on the final test.
+- **Fast enough:** 56 ms per payment at the 90th percentile, on one desktop graphics card.
+- **All prices are assumed.** For a team that already runs a tabular model, the paper's advice is
+  to test the decision rule first, with its prices measured.
+
 Every claim in the write-ups is labelled as Documented (with a source), Observed (measured here),
 Inferred or an Implementation choice. Seeds, setups and pass/fail rules were written down and
-committed before each evaluation ran. Sources and measured results:
+committed before each evaluation ran (for fraud: `fraud/prereg/` and each eval script's
+docstring; the paper's revision is logged step by step in `REVISION_LOG.md`). Sources and measured results:
 [`docs/research.md`](docs/research.md). What went wrong along the way, and what we learned from
 it: [`docs/lessons-learned.md`](docs/lessons-learned.md).
 
@@ -154,15 +196,18 @@ it: [`docs/lessons-learned.md`](docs/lessons-learned.md).
 | see the evidence | [`docs/research.md`](docs/research.md) (sources and Observed results), `bench/results/<benchmark>/` (raw data) |
 | learn from past runs | [`docs/lessons-learned.md`](docs/lessons-learned.md) |
 | read or change the engine | `system_one/` (see How it works below) |
-| see the fraud app (separate, serious) | [`fraud/`](fraud/CLAUDE.md): approve / review / decline on PaySim; results in [`fraud/RESULTS.md`](fraud/RESULTS.md) and, for the fine-tuned brain, [`fraud/RESULTS-FT.md`](fraud/RESULTS-FT.md); console `python -m fraud.viewer` |
+| see the fraud app (separate, serious) | [`fraud/`](fraud/CLAUDE.md): its guide, phases and commands; [`fraud/RESULTS-FINAL.md`](fraud/RESULTS-FINAL.md) for the final test; console `python -m fraud.viewer` |
+| read the paper | [`paper/`](paper/README.md): Typst, IEEE two-column, PDF in `paper/exports/`; the referee response is `paper/REFEREE-RESPONSE.md` |
+| rebuild the paper or rerun the fraud work | [`REPRODUCE.md`](REPRODUCE.md): data downloads, pinned model revisions, environment (`requirements-lock.txt`) |
 | see the final presentation | [`slides/`](slides/README.md): the reveal.js deck on the fraud results, with its PDF export |
-| read the paper | [`paper/`](paper/README.md): the IEEE paper on turning a small language model into a fraud decision model, Typst, PDF in `paper/exports/` |
-| read the whole project as one story | [`story/`](story/README.md): a scroll page for newcomers, six trials of one question; `python -m http.server 8001 --directory story` |
-| understand the statistics behind the methods (for the presenters) | [`docs/econometrics-primer.md`](docs/econometrics-primer.md): eight topics in plain words, each with a small worked example and the slide and paper section where it appears |
+| read the whole project as one story | [`story/`](story/README.md): a scroll page for newcomers; `python -m http.server 8001 --directory story` |
+| understand the statistics behind the methods | [`docs/econometrics-primer.md`](docs/econometrics-primer.md): eight topics in plain words, each with a small worked example |
+| look up a word or a decision | [`GLOSSARY.md`](GLOSSARY.md), [`docs/adr/`](docs/adr/) |
 
 ## Quick start
 
-All commands, without the explanations: [RUN-GUIDE.md](RUN-GUIDE.md).
+All commands, without the explanations: [RUN-GUIDE.md](RUN-GUIDE.md). This section covers the
+engine and the games; the fraud data and the paper build are in [`REPRODUCE.md`](REPRODUCE.md).
 
 ```bash
 py -3.13 -m venv .venv
@@ -391,14 +436,22 @@ viewer/                the Master Viewer (python -m viewer): index.html, shell.j
                         server.py; games/ holds one renderer per game demo
 runs/                  captured runs, one flat pool per game (shooter/, dungeon/); only *.pinned.jsonl
                         is committed
-fraud/                 the fraud app (separate): data, rules, baselines, model brain, eval, fine-tune,
-                        its own runs/, results/, write-ups (uppercase .md at its root) and console (python -m fraud.viewer)
+fraud/                 the fraud app (separate): data, rules, baselines, model brain, evals, fine-tuning,
+                        prereg/ (registrations), results/ (committed), runs/, viewer/ (python -m fraud.viewer)
+                        and its write-ups (uppercase .md at its root)
+paper/                 the IEEE paper (Typst): main.typ, build_data.py -> data.json, exports/ (the PDF)
+slides/                the final deck (reveal.js) and its PDF export
+story/                 the one-page scroll story of the whole project (vendored GSAP and font, no network)
 bench/                 evaluations and benchmarks, one script each; results/<script>/ holds their output
 config/                default.toml (1.5B, default), lenovo-3b.toml (3B alternative),
                         nuc.example.toml (larger-hardware example, 7B), mock.toml (no model)
 docs/                  shooter.md, dungeon.md, grid.md (the demos), research.md (sources + Observed
-                        results), lessons-learned.md, machine.md, deep-research-report.md (JEV background);
-                        media/ holds the README's GIFs and figures
+                        results), lessons-learned.md, machine.md, econometrics-primer.md,
+                        deep-research-report.md (Jev background), public-release.md and commit-map.txt
+                        (the history rewrite before publishing), adr/ (decisions); media/ holds the
+                        README's GIFs and figures
+REPRODUCE.md           how to get the data and rebuild the paper
+REVISION_LOG.md        every step and decision of the paper's revision
 tests/                 pytest suite (mock tests always; `model` tests when weights are cached)
 ```
 
@@ -430,7 +483,7 @@ tests/                 pytest suite (mock tests always; `model` tests when weigh
   (3B navigation 94% → 62–81%). The cache needs full-attention models; it turns itself off
   otherwise.
 - Not implemented in the engine: Score and yes/no question types, quantised backends,
-  calibration. (The fraud app fine-tunes one model with LoRA, outside the engine.)
+  calibration. (The fraud app fine-tunes its models with LoRA, outside the engine.)
 - The eval sets are small (58 items; 30 problems per tournament cell). Treat the accuracy
   numbers as smoke tests.
 - **Averages hide traps.** Single decisions were 97–100% correct in a move probe. But a
@@ -455,7 +508,10 @@ tests/                 pytest suite (mock tests always; `model` tests when weigh
 ## Credits
 
 - The System One idea and Jev: the articles listed in [The idea](#the-idea).
-- Models: [Qwen2.5](https://huggingface.co/Qwen) 0.5B, 1.5B (Apache 2.0) and 3B (Qwen Research licence, non-commercial).
+- Models: [Qwen2.5](https://huggingface.co/Qwen) 0.5B, 1.5B (Apache 2.0) and 3B (Qwen Research licence, non-commercial);
+  for IEEE-CIS, [LiquidAI/d1-Omni-2B](https://huggingface.co/LiquidAI/d1-Omni-2B) (LFM Open License v1.0).
 - Fraud data: PaySim by E. A. Lopez-Rojas, A. Elmir and S. Axelsson, from the Kaggle dataset
   [`sriharshaeedala/financial-fraud-detection-dataset`](https://www.kaggle.com/datasets/sriharshaeedala/financial-fraud-detection-dataset)
   (CC BY-SA 4.0); see [`fraud/DATA.md`](fraud/DATA.md).
+- IEEE-CIS Fraud Detection: IEEE Computational Intelligence Society and Vesta Corporation (2019),
+  Kaggle competition data, not redistributed; see [`fraud/DATA-IEEE.md`](fraud/DATA-IEEE.md).
